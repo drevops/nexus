@@ -596,6 +596,9 @@ function buildController(model, options = {}) {
     }
   });
   cy.on('tap', 'node[group="entity"]', (evt) => {
+    if (window.__nexusBuild) {
+      return;
+    }
     focusEntity(evt.target.id());
   });
   cy.on('render', () => {
@@ -673,8 +676,14 @@ function wire() {
   Array.prototype.forEach.call(document.querySelectorAll('.panel__close'), (btn) => {
     btn.addEventListener('click', () => {
       const id = btn.getAttribute('data-close');
+      if (!id) {
+        return;
+      }
       $(id).hidden = true;
-      $(id + '-toggle').classList.remove('is-active');
+      const toggle = $(id + '-toggle');
+      if (toggle) {
+        toggle.classList.remove('is-active');
+      }
     });
   });
 

@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { readFileSync } from 'node:fs';
 
 const FIXTURE_DIR = join(dirname(fileURLToPath(import.meta.url)), 'fixtures', 'config-min');
 
@@ -94,6 +95,33 @@ test('saves and reloads a Nexus diagram document', async ({ page }) => {
 
   expect(await entityCount(page)).toBe(before);
   expect(await page.evaluate(() => window.__nexus.cy.getElementById('node.program').length)).toBe(1);
+});
+
+test('builds a new entity and field and saves them', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+
+  await page.click('#mode-build');
+  await page.click('#add-entity');
+  await page.fill('[data-new-bundle]', 'campaign');
+  await page.fill('[data-new-label]', 'Campaign');
+  await page.click('[data-create-entity]');
+  expect(await page.evaluate(() => window.__nexus.cy.getElementById('node.campaign').length)).toBe(1);
+
+  await page.click('[data-add-field]');
+  await page.fill('[data-new-name]', 'field_body');
+  await page.fill('[data-new-label]', 'Body');
+  await page.click('[data-create-field]');
+  expect(await page.evaluate(() => window.__nexus.cy.getElementById('field:node.campaign:field_body').length)).toBe(1);
+
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.click('#doc-save'),
+  ]);
+  const doc = JSON.parse(readFileSync(await download.path(), 'utf8'));
+  const campaign = doc.entities.find((e) => e.entityType === 'node' && e.bundle === 'campaign');
+  expect(campaign).toBeTruthy();
+  expect(campaign.fields.some((f) => f.name === 'field_body')).toBe(true);
 });
 
 test('exports the diagram as PNG', async ({ page }) => {

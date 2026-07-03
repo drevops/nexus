@@ -13,6 +13,14 @@
     <span id="diagram-title" class="toolbar__title"></span>
   </div>
   <div class="toolbar__actions">
+    <div class="toolbar__group">
+      <button id="mode-view" class="toolbar__button is-active" type="button">View</button>
+      <button id="mode-build" class="toolbar__button" type="button">Build</button>
+    </div>
+    <div id="build-tools" class="toolbar__group" hidden>
+      <button id="add-entity" class="toolbar__button" type="button">+ Entity</button>
+      <button id="add-annotation" class="toolbar__button" type="button">+ Note</button>
+    </div>
     <input id="search" class="toolbar__search" type="search" placeholder="Find entity…" autocomplete="off">
     <div class="toolbar__group">
       <button id="zoom-out" class="toolbar__button" type="button" title="Zoom out">&minus;</button>
@@ -67,6 +75,14 @@
     </div>
     <div class="table-wrap"><table id="field-table" class="field-table"></table></div>
   </section>
+
+  <aside id="inspector" class="panel panel--right panel--inspector" aria-label="Inspector" hidden>
+    <div class="panel__head">
+      <span class="panel__title">Inspector</span>
+      <button class="panel__close" type="button" aria-label="Close">&times;</button>
+    </div>
+    <div id="inspector-body" class="inspector-body"></div>
+  </aside>
 
   <aside id="legend" class="legend" aria-label="Legend" hidden></aside>
   <div id="tooltip" class="tooltip" role="tooltip" hidden></div>

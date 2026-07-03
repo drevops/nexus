@@ -11,6 +11,7 @@ import { applyAnnotations } from './annotations.js';
 import { render } from './render.js';
 import { exportPng, exportPdf } from './export.js';
 import { documentFromGraph, documentToModel } from './document.js';
+import { initBuilder, attachBuilder } from './builder.js';
 
 const EXAMPLE_BASE = 'examples/example/';
 
@@ -31,8 +32,9 @@ function showError(message) {
   $('landing-error').textContent = message || '';
 }
 
-function showDiagram(modelData) {
-  render(modelData);
+function showDiagram(modelData, options) {
+  render(modelData, options || {});
+  attachBuilder(window.__nexus.cy);
   const title = (modelData.meta && modelData.meta.title) || 'Content model';
   $('diagram-title').textContent = title;
   document.title = title + ' - Nexus';
@@ -229,11 +231,7 @@ async function openDocument(file) {
   showError('');
   try {
     const doc = documentToModel(JSON.parse(await file.text()));
-    render(doc.modelData, { layout: doc.layout, colors: doc.colors });
-    const title = (doc.modelData.meta && doc.modelData.meta.title) || 'Content model';
-    $('diagram-title').textContent = title;
-    document.title = title + ' - Nexus';
-    $('landing').hidden = true;
+    showDiagram(doc.modelData, { layout: doc.layout, colors: doc.colors });
   }
   catch (e) {
     $('landing').hidden = false;
@@ -242,10 +240,7 @@ async function openDocument(file) {
 }
 
 function newDocument() {
-  render({ meta: { title: 'New content model', entityCount: 0 }, nodes: [], edges: [] });
-  $('diagram-title').textContent = 'New content model';
-  document.title = 'New content model - Nexus';
-  $('landing').hidden = true;
+  showDiagram({ meta: { title: 'New content model', entityCount: 0 }, nodes: [], edges: [] });
 }
 
 function wireDocument() {
@@ -262,3 +257,4 @@ function wireDocument() {
 wireLanding();
 wireExports();
 wireDocument();
+initBuilder();

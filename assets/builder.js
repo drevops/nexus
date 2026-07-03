@@ -1,0 +1,371 @@
+/**
+ * Build mode: turn the viewer into an editor.
+ *
+ * Adds entities, fields, references and annotation nodes to the live Cytoscape
+ * graph, edits them through an inspector panel, deletes them and drags them
+ * around. Machine names and entity types are immutable after creation (as in
+ * Drupal), so element ids never change and there is no cascade to manage. The
+ * graph is the source of truth; save/load reads it via document.js.
+ */
+
+const ENTITY_TYPES = [
+  ['node', 'Content type'],
+  ['taxonomy_term', 'Vocabulary'],
+  ['media', 'Media'],
+  ['paragraph', 'Paragraph'],
+  ['block_content', 'Block'],
+  ['user', 'User'],
+];
+
+const FIELD_TYPES = [
+  'string', 'string_long', 'text_long', 'text_with_summary', 'boolean', 'integer', 'decimal',
+  'datetime', 'link', 'email', 'list_string', 'image', 'file', 'entity_reference', 'entity_reference_revisions',
+];
+
+const REFERENCE_TYPES = ['entity_reference', 'entity_reference_revisions'];
+
+const ANNOTATION_KINDS = [['event', 'Event'], ['api', 'API'], ['callback', 'Callback']];
+
+const TYPE_LABELS = Object.fromEntries(ENTITY_TYPES);
+
+let cy = null;
+let buildMode = false;
+let counter = 0;
+
+function $(id) {
+  return document.getElementById(id);
+}
+
+function esc(value) {
+  return String(value === null || value === undefined ? '' : value).replace(/[&<>"]/g, (c) => {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+  });
+}
+
+function slug(text) {
+  return String(text).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+}
+
+function viewportCenter() {
+  const extent = cy.extent();
+  return { x: Math.round((extent.x1 + extent.x2) / 2), y: Math.round((extent.y1 + extent.y2) / 2) };
+}
+
+function options(list, selected) {
+  return list.map((item) => {
+    const value = Array.isArray(item) ? item[0] : item;
+    const label = Array.isArray(item) ? item[1] : item;
+    return '<option value="' + esc(value) + '"' + (value === selected ? ' selected' : '') + '>' + esc(label) + '</option>';
+  }).join('');
+}
+
+export function initBuilder() {
+  $('mode-view').addEventListener('click', () => setMode(false));
+  $('mode-build').addEventListener('click', () => setMode(true));
+  $('add-entity').addEventListener('click', () => openEntityForm());
+  $('add-annotation').addEventListener('click', () => openAnnotationForm());
+  $('inspector').querySelector('.panel__close').addEventListener('click', closeInspector);
+  $('inspector-body').addEventListener('input', onInspectorInput);
+  $('inspector-body').addEventListener('change', onInspectorInput);
+  $('inspector-body').addEventListener('click', onInspectorClick);
+}
+
+export function attachBuilder(instance) {
+  cy = instance;
+  cy.on('tap', 'node', (evt) => {
+    if (buildMode) {
+      selectNode(evt.target.id());
+    }
+  });
+  applyMode();
+}
+
+function setMode(build) {
+  buildMode = build;
+  applyMode();
+}
+
+function applyMode() {
+  window.__nexusBuild = buildMode;
+  if (!cy) {
+    return;
+  }
+  cy.autoungrabify(!buildMode);
+  $('build-tools').hidden = !buildMode;
+  $('mode-view').classList.toggle('is-active', !buildMode);
+  $('mode-build').classList.toggle('is-active', buildMode);
+
+  if (buildMode) {
+    const fields = $('fields-toggle');
+    if (!fields.classList.contains('is-active')) {
+      fields.click();
+    }
+  }
+  else {
+    closeInspector();
+  }
+}
+
+function closeInspector() {
+  $('inspector').hidden = true;
+}
+
+function openInspector(html) {
+  $('inspector-body').innerHTML = html;
+  $('inspector').hidden = false;
+}
+
+/* Selection ------------------------------------------------------------- */
+
+function selectNode(id) {
+  const node = cy.getElementById(id);
+  if (node.empty()) {
+    return;
+  }
+  const group = node.data('group');
+  if (group === 'entity') {
+    openInspector(entityForm(node));
+  }
+  else if (group === 'field') {
+    openInspector(fieldForm(node));
+  }
+  else if (group === 'annotation') {
+    openInspector(annotationForm(node));
+  }
+}
+
+/* Forms ----------------------------------------------------------------- */
+
+function entityForm(node) {
+  const id = node.id();
+  const fields = cy.nodes('[group="field"][entity="' + id + '"]').map((f) => {
+    return '<button class="insp__field" data-select="' + esc(f.id()) + '">' + esc(f.data('label')) + ' <code>' + esc(f.data('name')) + '</code></button>';
+  }).join('') || '<p class="insp__empty">No fields yet.</p>';
+
+  return '<div class="insp" data-id="' + esc(id) + '">' +
+    header('Entity') +
+    row('Label', '<input class="insp__input" data-edit="label" value="' + esc(node.data('label')) + '">') +
+    row('Type', '<span class="insp__ro">' + esc(TYPE_LABELS[node.data('entityType')] || node.data('entityType')) + '</span>') +
+    row('Machine name', '<code>' + esc(node.data('bundle')) + '</code>') +
+    '<div class="insp__section"><div class="insp__sectionhead"><span>Fields</span><button class="insp__btn" data-add-field>+ Field</button></div>' + fields + '</div>' +
+    '<button class="insp__delete" data-delete>Delete entity</button></div>';
+}
+
+function fieldForm(node) {
+  const id = node.id();
+  const isRef = REFERENCE_TYPES.includes(node.data('fieldType'));
+  const targets = cy.getElementById(id).connectedEdges('[group="ref"]').map((e) => e.target().id());
+  const entityOptions = cy.nodes('[group="entity"]').map((e) => '<option value="' + esc(e.id()) + '">' + esc(e.data('label')) + '</option>').join('');
+
+  let refs = '';
+  if (isRef) {
+    const list = targets.map((t) => {
+      const target = cy.getElementById(t);
+      const label = target.nonempty() ? target.data('label') : t;
+      return '<div class="insp__ref">' + esc(label) + '<button class="insp__x" data-unref="' + esc(t) + '">&times;</button></div>';
+    }).join('') || '<p class="insp__empty">No references.</p>';
+    refs = '<div class="insp__section"><div class="insp__sectionhead"><span>References</span></div>' + list +
+      '<div class="insp__row"><select class="insp__input" data-ref-target><option value="">Add target…</option>' + entityOptions + '</select></div></div>';
+  }
+
+  return '<div class="insp" data-id="' + esc(id) + '">' +
+    header('Field') +
+    row('Label', '<input class="insp__input" data-edit="label" value="' + esc(node.data('label')) + '">') +
+    row('Machine name', '<code>' + esc(node.data('name')) + '</code>') +
+    row('Type', '<select class="insp__input" data-edit="fieldType">' + options(FIELD_TYPES, node.data('fieldType')) + '</select>') +
+    row('Cardinality', '<select class="insp__input" data-edit="kind"><option value="single"' + (node.data('kind') === 'single' ? ' selected' : '') + '>Single</option><option value="multi"' + (node.data('kind') === 'multi' ? ' selected' : '') + '>Multiple</option></select>') +
+    row('Required', '<input type="checkbox" data-edit="required"' + (node.data('required') ? ' checked' : '') + '>') +
+    refs +
+    '<button class="insp__delete" data-delete>Delete field</button></div>';
+}
+
+function annotationForm(node) {
+  return '<div class="insp" data-id="' + esc(node.id()) + '">' +
+    header('Annotation') +
+    row('Label', '<input class="insp__input" data-edit="label" value="' + esc(node.data('label')) + '">') +
+    row('Kind', '<select class="insp__input" data-edit="kind">' + options(ANNOTATION_KINDS, node.data('kind')) + '</select>') +
+    row('Method', '<input class="insp__input" data-edit="method" value="' + esc(node.data('method') || '') + '" placeholder="POST, GET…">') +
+    '<button class="insp__delete" data-delete>Delete</button></div>';
+}
+
+function header(title) {
+  return '<p class="insp__title">' + esc(title) + '</p>';
+}
+
+function row(label, control) {
+  return '<div class="insp__row"><label>' + esc(label) + '</label>' + control + '</div>';
+}
+
+/* Creation -------------------------------------------------------------- */
+
+function openEntityForm() {
+  openInspector('<div class="insp" data-new="entity">' + header('New entity') +
+    row('Type', '<select class="insp__input" data-new-type>' + options(ENTITY_TYPES) + '</select>') +
+    row('Machine name', '<input class="insp__input" data-new-bundle placeholder="e.g. article">') +
+    row('Label', '<input class="insp__input" data-new-label placeholder="e.g. Article">') +
+    '<button class="insp__create" data-create-entity>Create entity</button></div>');
+}
+
+function openAnnotationForm() {
+  openInspector('<div class="insp" data-new="annotation">' + header('New annotation') +
+    row('Kind', '<select class="insp__input" data-new-kind>' + options(ANNOTATION_KINDS) + '</select>') +
+    row('Label', '<input class="insp__input" data-new-label placeholder="e.g. Sync API">') +
+    row('Method', '<input class="insp__input" data-new-method placeholder="POST, GET…">') +
+    '<button class="insp__create" data-create-annotation>Create annotation</button></div>');
+}
+
+function openFieldForm(entityId) {
+  openInspector('<div class="insp" data-new="field" data-entity="' + esc(entityId) + '">' + header('New field') +
+    row('Machine name', '<input class="insp__input" data-new-name placeholder="e.g. field_body">') +
+    row('Label', '<input class="insp__input" data-new-label placeholder="e.g. Body">') +
+    row('Type', '<select class="insp__input" data-new-fieldtype>' + options(FIELD_TYPES) + '</select>') +
+    row('Cardinality', '<select class="insp__input" data-new-kind><option value="single">Single</option><option value="multi">Multiple</option></select>') +
+    '<button class="insp__create" data-create-field>Create field</button></div>');
+}
+
+/* Mutations ------------------------------------------------------------- */
+
+function addEntity(entityType, bundle, label) {
+  const id = entityType + '.' + bundle;
+  if (cy.getElementById(id).nonempty()) {
+    return null;
+  }
+  cy.add({ group: 'nodes', data: { id: id, group: 'entity', entityType: entityType, bundle: bundle, label: label }, position: viewportCenter() });
+  return id;
+}
+
+function addField(entityId, name, label, fieldType, kind) {
+  const fieldId = 'field:' + entityId + ':' + name;
+  if (cy.getElementById(fieldId).nonempty()) {
+    return null;
+  }
+  const anchor = cy.getElementById(entityId).position();
+  cy.add({ group: 'nodes', data: { id: fieldId, group: 'field', name: name, label: label, fieldType: fieldType, kind: kind, required: false, entity: entityId }, position: { x: anchor.x + 200, y: anchor.y + (counter++ % 6) * 44 - 110 } });
+  cy.add({ group: 'edges', data: { id: 'has:' + fieldId, source: entityId, target: fieldId, group: 'has' } });
+  return fieldId;
+}
+
+function addAnnotation(kind, label, method) {
+  const id = 'note-' + (++counter);
+  const data = { id: id, group: 'annotation', kind: kind, label: label };
+  if (method) {
+    data.method = method;
+  }
+  cy.add({ group: 'nodes', data: data, position: viewportCenter() });
+  return id;
+}
+
+function addReference(fieldId, targetId) {
+  const id = 'ref:' + fieldId + '>' + targetId;
+  if (cy.getElementById(id).nonempty() || cy.getElementById(targetId).empty()) {
+    return;
+  }
+  const card = cy.getElementById(fieldId).data('kind') === 'multi' ? '1..n' : '1';
+  cy.add({ group: 'edges', data: { id: id, source: fieldId, target: targetId, group: 'ref', cardinality: card } });
+}
+
+function deleteNode(id) {
+  const node = cy.getElementById(id);
+  if (node.data('group') === 'entity') {
+    cy.nodes('[group="field"][entity="' + id + '"]').remove();
+  }
+  node.remove();
+  closeInspector();
+}
+
+/* Inspector events ------------------------------------------------------ */
+
+function onInspectorInput(evt) {
+  const insp = evt.target.closest('.insp');
+  if (!insp) {
+    return;
+  }
+  const id = insp.getAttribute('data-id');
+  const edit = evt.target.getAttribute('data-edit');
+
+  if (id && edit) {
+    const node = cy.getElementById(id);
+    const value = evt.target.type === 'checkbox' ? evt.target.checked : evt.target.value;
+    node.data(edit, value);
+    if (edit === 'kind') {
+      node.connectedEdges('[group="ref"]').data('cardinality', value === 'multi' ? '1..n' : '1');
+    }
+    if (edit === 'fieldType') {
+      selectNode(id);
+    }
+    return;
+  }
+
+  if (evt.target.hasAttribute('data-ref-target') && evt.target.value) {
+    addReference(id, evt.target.value);
+    selectNode(id);
+  }
+}
+
+function onInspectorClick(evt) {
+  const insp = evt.target.closest('.insp');
+  if (!insp) {
+    return;
+  }
+  const id = insp.getAttribute('data-id');
+
+  if (evt.target.closest('[data-delete]')) {
+    deleteNode(id);
+  }
+  else if (evt.target.closest('[data-add-field]')) {
+    openFieldForm(id);
+  }
+  else if (evt.target.closest('[data-select]')) {
+    selectNode(evt.target.closest('[data-select]').getAttribute('data-select'));
+  }
+  else if (evt.target.closest('[data-unref]')) {
+    const target = evt.target.closest('[data-unref]').getAttribute('data-unref');
+    cy.getElementById('ref:' + id + '>' + target).remove();
+    selectNode(id);
+  }
+  else if (evt.target.closest('[data-create-entity]')) {
+    createEntity(insp);
+  }
+  else if (evt.target.closest('[data-create-field]')) {
+    createField(insp);
+  }
+  else if (evt.target.closest('[data-create-annotation]')) {
+    createAnnotation(insp);
+  }
+}
+
+function createEntity(insp) {
+  const entityType = insp.querySelector('[data-new-type]').value;
+  const bundle = slug(insp.querySelector('[data-new-bundle]').value);
+  const label = insp.querySelector('[data-new-label]').value.trim() || bundle;
+  if (!bundle) {
+    return;
+  }
+  const id = addEntity(entityType, bundle, label);
+  if (id) {
+    selectNode(id);
+  }
+}
+
+function createField(insp) {
+  const entityId = insp.getAttribute('data-entity');
+  const name = slug(insp.querySelector('[data-new-name]').value);
+  const label = insp.querySelector('[data-new-label]').value.trim() || name;
+  const fieldType = insp.querySelector('[data-new-fieldtype]').value;
+  const kind = insp.querySelector('[data-new-kind]').value;
+  if (!name) {
+    return;
+  }
+  const id = addField(entityId, name, label, fieldType, kind);
+  if (id) {
+    selectNode(id);
+  }
+}
+
+function createAnnotation(insp) {
+  const kind = insp.querySelector('[data-new-kind]').value;
+  const label = insp.querySelector('[data-new-label]').value.trim() || 'Note';
+  const method = insp.querySelector('[data-new-method]').value.trim();
+  const id = addAnnotation(kind, label, method);
+  selectNode(id);
+}

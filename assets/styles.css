@@ -663,3 +663,153 @@ body {
   overflow: hidden;
   clip: rect(0 0 0 0);
 }
+
+/* Inspector (build mode). */
+.panel--inspector {
+  width: 320px;
+}
+
+.inspector-body {
+  overflow: auto;
+  padding: 0.85rem 1rem;
+}
+
+.insp__title {
+  margin: 0 0 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.insp__row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.55rem;
+}
+
+.insp__row > label {
+  flex: 0 0 92px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.insp__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.85rem;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.insp__ro {
+  font-size: 0.85rem;
+}
+
+.insp__section {
+  margin: 0.8rem 0;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--border);
+}
+
+.insp__sectionhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.insp__btn {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  color: var(--accent);
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.insp__field {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.35rem 0.5rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.82rem;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.insp__field:hover {
+  border-color: var(--accent);
+}
+
+.insp__field code,
+.insp__row code {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.insp__empty {
+  margin: 0.2rem 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.insp__ref {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.3rem 0.5rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.82rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.insp__x {
+  padding: 0 0.4rem;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--muted);
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.insp__create {
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  font-size: 0.85rem;
+  color: #fff;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.insp__delete {
+  width: 100%;
+  margin-top: 0.9rem;
+  padding: 0.45rem;
+  font-size: 0.82rem;
+  color: #b3261e;
+  background: #fff;
+  border: 1px solid #f0c6c2;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.insp__delete:hover {
+  background: #fdf1f0;
+}
