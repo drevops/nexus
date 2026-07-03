@@ -1,0 +1,16 @@
+{
+  "name": "nexus",
+  "version": "1.0.0",
+  "description": "Draw a Drupal content model from exported configuration, entirely in the browser.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node test/server.mjs",
+    "test:unit": "node --test test/unit/*.test.js",
+    "test:e2e": "playwright test",
+    "test": "npm run test:unit && npm run test:e2e"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0"
+  }
+}

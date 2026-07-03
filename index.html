@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nexus - Drupal content-model diagrams</title>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<header class="toolbar">
+  <div class="toolbar__actions">
+    <span class="toolbar__brand">Nexus</span>
+    <span id="diagram-title" class="toolbar__title"></span>
+  </div>
+  <div class="toolbar__actions">
+    <input id="search" class="toolbar__search" type="search" placeholder="Find entity…" autocomplete="off">
+    <div class="toolbar__group">
+      <button id="zoom-out" class="toolbar__button" type="button" title="Zoom out">&minus;</button>
+      <button id="zoom-in" class="toolbar__button" type="button" title="Zoom in">&plus;</button>
+      <button id="fit" class="toolbar__button" type="button">Fit</button>
+      <button id="reset" class="toolbar__button" type="button">Reset</button>
+    </div>
+    <div class="toolbar__group">
+      <button id="fields-toggle" class="toolbar__button" type="button">Show fields</button>
+      <button id="layout-toggle" class="toolbar__button" type="button">Layout: LR</button>
+      <label class="toolbar__check"><input id="machine-names" type="checkbox"> Machine names</label>
+    </div>
+    <div class="toolbar__group">
+      <button id="entities-toggle" class="toolbar__button" type="button">Entities</button>
+      <button id="table-toggle" class="toolbar__button" type="button">Table</button>
+      <button id="legend-toggle" class="toolbar__button" type="button">Legend</button>
+      <button id="settings-toggle" class="toolbar__button" type="button">Settings</button>
+    </div>
+    <div class="toolbar__group">
+      <button id="export-png" class="toolbar__button" type="button">PNG</button>
+      <button id="export-pdf" class="toolbar__button" type="button">PDF</button>
+      <button id="open-toggle" class="toolbar__button" type="button">Open…</button>
+    </div>
+  </div>
+</header>
+
+<main class="stage">
+  <div id="cy" class="cy"></div>
+  <div id="captions" class="captions" aria-hidden="true"></div>
+
+  <aside id="entities" class="panel panel--left" aria-label="Entities" hidden>
+    <div class="panel__head">
+      <span class="panel__title">Entities</span>
+      <button class="panel__close" type="button" data-close="entities" aria-label="Close">&times;</button>
+    </div>
+    <div id="type-filters" class="filters"></div>
+    <div id="entity-list" class="entity-list"></div>
+  </aside>
+
+  <section id="table" class="panel panel--right" aria-label="Fields" hidden>
+    <div class="panel__head">
+      <span class="panel__title">Fields</span>
+      <select id="table-entity" class="panel__select"></select>
+      <input id="table-search" class="panel__search" type="search" placeholder="Filter fields…" autocomplete="off">
+      <button class="panel__close" type="button" data-close="table" aria-label="Close">&times;</button>
+    </div>
+    <div class="table-wrap"><table id="field-table" class="field-table"></table></div>
+  </section>
+
+  <aside id="legend" class="legend" aria-label="Legend" hidden></aside>
+  <div id="tooltip" class="tooltip" role="tooltip" hidden></div>
+
+  <div id="settings-overlay" class="modal-overlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Settings">
+      <div class="modal__head">
+        <span class="modal__title">Settings</span>
+        <button class="modal__close" type="button" data-close-settings aria-label="Close">&times;</button>
+      </div>
+      <div class="modal__body">
+        <section class="settings-section">
+          <h3 class="settings-section__title">Entity colours</h3>
+          <div id="color-settings" class="color-settings"></div>
+        </section>
+      </div>
+      <div class="modal__foot">
+        <span class="modal__note">Saved to this browser and reused across diagrams.</span>
+        <button id="settings-reset" class="toolbar__button" type="button">Reset to defaults</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div id="landing" class="landing">
+  <div class="landing__card">
+    <p class="landing__logo">Nexus</p>
+    <p class="landing__tag">Draw a Drupal site's content model from its exported configuration - entirely in your browser.</p>
+    <div id="dropzone" class="dropzone">
+      <p class="dropzone__hint">Drop a Drupal <strong>config</strong> folder here, or choose one. Your files never leave this page.</p>
+      <div class="landing__actions">
+        <label class="btn btn--primary" for="folder-input">Choose a config folder</label>
+        <input id="folder-input" class="visually-hidden" type="file" webkitdirectory directory multiple>
+        <button id="example-btn" class="btn" type="button">Try the PBS example</button>
+      </div>
+    </div>
+    <p id="landing-error" class="landing__error" role="alert"></p>
+    <p class="landing__note">Point at an exported config sync directory (the folder of <code>*.yml</code> files) or a module's <code>config/install</code>. Add an <code>annotations.yml</code> to overlay events, APIs and callbacks.</p>
+  </div>
+</div>
+
+<script src="assets/vendor/cytoscape.min.js"></script>
+<script src="assets/vendor/dagre.min.js"></script>
+<script src="assets/vendor/cytoscape-dagre.js"></script>
+<script src="assets/vendor/js-yaml.min.js"></script>
+<script src="assets/vendor/jspdf.umd.min.js"></script>
+<script type="module" src="assets/app.js"></script>
+</body>
+</html>

@@ -4,11 +4,16 @@
 /.artifacts
 /.idea
 .DS_Store
+
+# JavaScript toolchain and test/deploy output.
+/node_modules
+/test-results
+/playwright-report
+/_site
+
+# PHP build artifacts (retired).
 /.logs
 /.phpunit.cache
 /composer.lock
 /vendor
 /vendor-bin
-
-# Claude Code fetches the project update skill on demand; do not commit it.
-/.claude/skills/update-consumer-scaffold/
