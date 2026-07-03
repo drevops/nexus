@@ -1,0 +1,17 @@
+uuid: ce7516e2-5403-4e6c-a7ab-99552883c42b
+langcode: en
+status: true
+dependencies:
+  module:
+    - simpleads
+title: 'Default cron handler'
+id: simpleads_cron
+weight: 0
+module: simpleads
+callback: 'simpleads#cron'
+scheduler:
+  id: simple
+launcher:
+  id: serial
+logger:
+  id: database

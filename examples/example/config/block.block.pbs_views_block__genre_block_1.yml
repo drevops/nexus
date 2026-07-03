@@ -1,0 +1,24 @@
+uuid: af7019b7-be29-4218-9fff-759426e07d7c
+langcode: en
+status: true
+dependencies:
+  config:
+    - views.view.genre
+  module:
+    - views
+  theme:
+    - pbs
+id: pbs_views_block__genre_block_1
+theme: pbs
+region: footer_upper_content_2
+weight: -5
+provider: null
+plugin: 'views_block:genre-block_1'
+settings:
+  id: 'views_block:genre-block_1'
+  label: ''
+  label_display: '0'
+  provider: views
+  views_label: ''
+  items_per_page: null
+visibility: {  }

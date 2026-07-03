@@ -1,0 +1,9 @@
+uuid: 0c18bd15-676c-4ea5-8b45-ab32cc5d7e1e
+langcode: en
+status: true
+dependencies: {  }
+name: 'News Alerts'
+vid: news_alerts
+description: 'Use News Alerts to highlight News entities with extra information.'
+weight: 0
+new_revision: false

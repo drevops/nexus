@@ -1,0 +1,8 @@
+_core:
+  default_config_hash: lq0FwWhr9hTxVJjivfvfMWosjzudBB66RLYBEWo7TLg
+desktop_media_query: '(min-width: 992px)'
+tablet_media_query: '(min-width: 768px)'
+mobile_media_query: '(max-width: 767px)'
+stats_view_mode: statistics
+ads_view_mode: advertisement
+stats_date_format: advertisement_statistics

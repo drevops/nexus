@@ -1,0 +1,66 @@
+uuid: 947c45df-6dd3-44b1-9398-12c4bd76ac9d
+langcode: en
+status: true
+dependencies:
+  config:
+    - filter.format.full_html
+    - media.type.audio
+    - media.type.document
+    - media.type.image
+    - media.type.remote_audio
+    - media.type.remote_video
+    - media.type.video
+    - node.type.episode
+  module:
+    - filter
+    - media
+    - node
+    - system
+    - toolbar
+    - view_unpublished
+    - workbench_access
+id: announcer
+label: Announcer
+weight: 9
+is_admin: false
+permissions:
+  - 'access content overview'
+  - 'access media overview'
+  - 'access toolbar'
+  - 'create audio media'
+  - 'create document media'
+  - 'create episode content'
+  - 'create image media'
+  - 'create remote_audio media'
+  - 'create remote_video media'
+  - 'create video media'
+  - 'delete own document media'
+  - 'delete own image media'
+  - 'delete own remote_audio media'
+  - 'delete own remote_video media'
+  - 'delete own video media'
+  - 'edit any episode content'
+  - 'edit any video media'
+  - 'edit own audio media'
+  - 'edit own document media'
+  - 'edit own episode content'
+  - 'edit own image media'
+  - 'edit own remote_audio media'
+  - 'edit own remote_video media'
+  - 'edit own video media'
+  - 'revert episode revisions'
+  - 'update media'
+  - 'use text format full_html'
+  - 'use workbench access'
+  - 'view any audio media revisions'
+  - 'view any document media revisions'
+  - 'view any image media revisions'
+  - 'view any remote_audio media revisions'
+  - 'view any remote_video media revisions'
+  - 'view any unpublished episode content'
+  - 'view any video media revisions'
+  - 'view episode revisions'
+  - 'view media'
+  - 'view own unpublished content'
+  - 'view own unpublished media'
+  - 'view the administration theme'

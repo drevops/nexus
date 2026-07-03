@@ -1,0 +1,1411 @@
+/* Nexus content-model diagram. */
+
+:root {
+  --bg: var(--sl-color-neutral-100);
+  --panel-bg: var(--sl-color-neutral-0);
+  --border: var(--sl-color-neutral-200);
+  --text: var(--sl-color-neutral-900);
+  --muted: var(--sl-color-neutral-500);
+  --accent: var(--sl-color-primary-600);
+  --surface: var(--sl-color-neutral-50);
+  --surface-2: var(--sl-color-neutral-100);
+  --grid: rgba(0, 0, 0, 0.035);
+}
+
+html.sl-theme-dark {
+  --grid: rgba(255, 255, 255, 0.05);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+}
+
+.toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.55rem 1rem;
+  background: var(--panel-bg);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  z-index: 3;
+}
+
+/* Row 1: brand and title on the left; GitHub, theme and settings on the right. */
+.toolbar__brandline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+/* Row 2: the tool groups, always shown, wrapping if they do not fit. */
+.toolbar__tools {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+}
+
+/* Row 2: the edit palette - a single, non-wrapping row shown only in edit
+   mode, scrolling horizontally if it overflows (ribbon-style). */
+.toolbar__palette {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.toolbar__palette[hidden] {
+  display: none;
+}
+
+.toolbar__palette .toolbar__button,
+.toolbar__palette .palette__swatch {
+  flex: 0 0 auto;
+}
+
+.toolbar__palette-label {
+  flex: 0 0 auto;
+  padding-right: 0.15rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.toolbar__palette-sep {
+  flex: 0 0 auto;
+  width: 1px;
+  height: 20px;
+  margin: 0 0.25rem;
+  background: var(--border);
+}
+
+sl-input.toolbar__title {
+  min-width: 170px;
+}
+
+sl-input.toolbar__title::part(base) {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+sl-input.toolbar__title::part(input) {
+  font-weight: 500;
+}
+
+sl-input.toolbar__title:hover::part(base) {
+  border-color: var(--border);
+}
+
+sl-input.toolbar__title:focus-within::part(base) {
+  border-color: var(--accent);
+  background: var(--panel-bg);
+}
+
+/* Shoelace toolbar buttons: neutralise the generic host box (Shoelace draws
+   the box on ::part(base)) and drive the active toggle state through the
+   part. */
+sl-button.toolbar__button {
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+sl-button.toolbar__button::part(base) {
+  font-size: 0.82rem;
+}
+
+sl-button.toolbar__button.is-active::part(base) {
+  background: var(--sl-color-primary-600);
+  border-color: var(--sl-color-primary-600);
+  color: #fff;
+}
+
+sl-button.toolbar__button svg.icon {
+  margin-inline-end: 0.35rem;
+}
+
+sl-button.toolbar__button--icon svg.icon {
+  margin: 0;
+}
+
+/* Nudge slot-injected icons to the optical centre of a Shoelace button: inside
+   the inline label slot 'vertical-align: middle' lands ~1.5px low. */
+sl-button svg.icon {
+  transform: translateY(-1.5px);
+}
+
+sl-button-group.toolbar__group {
+  background: none;
+  padding: 0;
+}
+
+.loader {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  background: var(--sl-color-neutral-50);
+}
+
+.loader[hidden] {
+  display: none;
+}
+
+.loader__spinner {
+  font-size: 2.6rem;
+  --track-width: 4px;
+  --indicator-color: var(--accent);
+  --track-color: var(--border);
+}
+
+.loader__text {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.about p {
+  margin: 0 0 0.85rem;
+  line-height: 1.55;
+}
+
+.about p:last-child {
+  margin-bottom: 0;
+}
+
+.about__version {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.toolbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+/* Segmented control: buttons grouped inside a soft pill. */
+.toolbar__group {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  background: var(--surface-2);
+  border-radius: 9px;
+}
+
+sl-input.toolbar__search {
+  min-width: 180px;
+}
+
+.toolbar__search-icon {
+  display: inline-flex;
+  color: var(--muted);
+}
+
+sl-button#zoom-level::part(base) {
+  min-width: 4.1rem;
+  justify-content: space-between;
+}
+
+.toolbar__button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.85rem;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  cursor: pointer;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.toolbar__button--icon {
+  padding: 0.35rem 0.45rem;
+}
+
+.palette__swatch {
+  flex: 0 0 auto;
+  width: 12px;
+  height: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 3px;
+}
+
+.icon {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+}
+
+.toolbar__button:hover {
+  background: var(--panel-bg);
+  color: var(--accent);
+}
+
+.toolbar__button.is-active {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Standalone buttons (outside a segmented group) keep an outline. */
+.toolbar__actions > .toolbar__button {
+  background: var(--panel-bg);
+  border-color: var(--border);
+}
+
+.toolbar__actions > .toolbar__button:hover {
+  border-color: var(--accent);
+}
+
+.toolbar__actions > .toolbar__button.is-active {
+  border-color: var(--accent);
+}
+
+.stage {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* A short status bar: a live hover hint on the left, zoom controls on the right.
+   It sits above the floating panels so its upward-opening zoom menu is not
+   covered; the landing and loader overlays sit above it in turn. */
+.statusbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2px 0.7rem;
+  background: var(--panel-bg);
+  border-top: 1px solid var(--border);
+  z-index: 40;
+}
+
+.statusbar__hint,
+.statusbar__tips {
+  min-width: 0;
+  color: var(--muted);
+  font-size: 0.77rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.statusbar__hint {
+  flex: 1 1 0;
+}
+
+.statusbar__tips {
+  flex: 0 1 auto;
+  text-align: center;
+}
+
+.statusbar__zoom {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.1rem;
+  flex: 1 1 0;
+}
+
+.stage__canvas {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Side rail: any number of pinned panels stack and scroll, and dragging the
+   inner edge resizes the rail. Width is driven by the store, applied
+   inline. */
+.dock {
+  position: relative;
+  flex: 0 0 auto;
+  background: var(--surface-2);
+}
+
+#dock-left {
+  border-right: 1px solid var(--border);
+}
+
+#dock-right {
+  border-left: 1px solid var(--border);
+}
+
+.dock__scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  height: 100%;
+  padding: 0.6rem;
+  overflow-y: auto;
+}
+
+.dock__resize {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  cursor: col-resize;
+  z-index: 5;
+}
+
+.dock__resize:hover {
+  background: rgba(47, 109, 179, 0.22);
+}
+
+.dock__resize--left {
+  right: 0;
+}
+
+.dock__resize--right {
+  left: 0;
+}
+
+/* Drop affordance while dragging a panel toward a side. */
+.stage.drop-left::before,
+.stage.drop-right::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 84px;
+  background: rgba(47, 109, 179, 0.12);
+  border: 2px dashed var(--accent);
+  pointer-events: none;
+  z-index: 6;
+}
+
+.stage.drop-left::before {
+  left: 0;
+}
+
+.stage.drop-right::after {
+  right: 0;
+}
+
+.cy {
+  position: absolute;
+  inset: 0;
+  cursor: grab;
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+
+.cy:active {
+  cursor: grabbing;
+}
+
+.captions {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.caption {
+  position: absolute;
+  transform: translate(-50%, 0);
+  padding: 0 3px;
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  color: var(--muted);
+  background: var(--surface-2);
+  border-radius: 3px;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+/* A quiet sub-label inside the entity box. The box keeps its light pastel fill
+   in both themes, so the colour is pinned (not themed) to stay legible on it. */
+.caption--type {
+  font-family: inherit;
+  font-style: italic;
+  font-weight: 400;
+  color: rgba(31, 41, 51, 0.6);
+  background: none;
+}
+
+/* Build-mode "+" field handles around a selected entity. */
+.handles {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.handles[hidden] {
+  display: none;
+}
+
+/* Note badges: the layer sets pointer-events: none so the canvas stays
+   draggable. Each badge sets pointer-events: auto so it can be hovered and
+   clicked. */
+.notes {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.note-badge {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: #fff;
+  background: var(--accent);
+  border: 1.5px solid var(--panel-bg);
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.note-badge svg.icon {
+  width: 62%;
+  height: 62%;
+}
+
+.handle {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+  color: #fff;
+  background: var(--accent);
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.handle:hover {
+  background: #1b6cc9;
+}
+
+/* Floating panels: entities, table, inspector, settings, legend. */
+.panel {
+  position: absolute;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  width: 320px;
+  max-height: calc(100% - 2rem);
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.14);
+  overflow: hidden;
+}
+
+.panel--wide {
+  width: 560px;
+  max-width: calc(100% - 2rem);
+}
+
+.panel--legend {
+  width: 240px;
+}
+
+.panel[hidden] {
+  display: none;
+}
+
+/* Docked into a side rail: static, fills the rail width, keeps a height
+   resizable from the bottom edge and scrolls its body. */
+.panel.is-docked {
+  position: relative;
+  flex: 0 0 auto;
+  width: auto;
+  max-width: none;
+  max-height: none;
+  min-height: 90px;
+  box-shadow: none;
+  border-radius: 8px;
+}
+
+.panel.is-docked .panel__body {
+  padding-bottom: 10px;
+}
+
+.panel__vresize {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: row-resize;
+  z-index: 3;
+}
+
+.panel__vresize::after {
+  content: '';
+  width: 34px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--border);
+}
+
+.panel__vresize:hover::after {
+  background: var(--accent);
+}
+
+.panel__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+.panel__toolbar {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+}
+
+#inspector .panel__body {
+  padding: 0.85rem 1rem;
+}
+
+.panel__head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  cursor: move;
+  user-select: none;
+}
+
+.panel.is-docked .panel__head {
+  cursor: default;
+}
+
+.panel__title {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.panel__spacer {
+  flex: 1 1 auto;
+}
+
+.panel__search {
+  flex: 1 1 auto;
+  min-width: 60px;
+}
+
+.panel__select {
+  flex: 0 0 auto;
+  min-width: 120px;
+}
+
+.panel__pin,
+.panel__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border: none;
+  background: none;
+  line-height: 1;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.panel__pin:hover,
+.panel__close:hover {
+  color: var(--text);
+}
+
+.panel.is-docked .panel__pin {
+  color: var(--accent);
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.filters__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.45rem;
+  font-size: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.filters__item input {
+  margin: 0;
+}
+
+.filters__swatch {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+}
+
+.entity-list {
+  overflow: auto;
+  padding: 0.4rem;
+}
+
+.entity-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.4rem 0.5rem;
+  border-radius: 7px;
+}
+
+.entity-row:hover {
+  background: var(--surface-2);
+}
+
+.entity-row__name {
+  flex: 1 1 auto;
+  text-align: left;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--text);
+  padding: 0;
+}
+
+.entity-row__name b {
+  font-weight: 600;
+}
+
+.entity-row__type {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.entity-row__count {
+  font-size: 0.72rem;
+  color: var(--muted);
+  min-width: 1.4rem;
+  text-align: right;
+}
+
+.entity-row__fields {
+  border: 1px solid var(--border);
+  background: var(--panel-bg);
+  border-radius: 6px;
+  font-size: 0.72rem;
+  padding: 0.15rem 0.4rem;
+  cursor: pointer;
+  color: var(--muted);
+}
+
+.entity-row__fields:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.table-wrap {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.field-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.field-table th,
+.field-table td {
+  text-align: left;
+  padding: 0.35rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.field-table th:nth-child(1),
+.field-table td:nth-child(1) {
+  width: 27%;
+}
+
+.field-table th:nth-child(2),
+.field-table td:nth-child(2) {
+  width: 21%;
+}
+
+.field-table th:nth-child(3),
+.field-table td:nth-child(3) {
+  width: 13%;
+}
+
+.field-table th:nth-child(4),
+.field-table td:nth-child(4) {
+  width: 8%;
+}
+
+.field-table th:nth-child(5),
+.field-table td:nth-child(5) {
+  width: 31%;
+}
+
+.table__reflink {
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.table__reflink:hover {
+  text-decoration: underline;
+}
+
+.field-table th {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.field-table code {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.field-table tr:hover td {
+  background: var(--surface);
+}
+
+.field-table .is-group td {
+  background: var(--surface-2);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.badge--multi {
+  border-color: var(--sl-color-neutral-700);
+  color: var(--sl-color-neutral-700);
+}
+
+.badge--system {
+  border-style: dashed;
+}
+
+.badge--calculated {
+  background: #ffd966;
+  border-color: #c9a227;
+  color: #6a5410;
+}
+
+.legend-body {
+  padding: 0.85rem 1rem;
+  font-size: 0.8rem;
+}
+
+.legend__item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.2rem 0;
+}
+
+.legend__swatch {
+  flex: 0 0 34px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.legend__label {
+  line-height: 1.2;
+}
+
+.tooltip {
+  position: absolute;
+  z-index: 6;
+  max-width: 280px;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: #fff;
+  background: rgba(24, 30, 38, 0.94);
+  border-radius: 8px;
+  pointer-events: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.tooltip[hidden] {
+  display: none;
+}
+
+.tooltip__note {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Settings panel body. */
+#settings .panel__body {
+  padding: 0.9rem 1rem;
+}
+
+.settings-reset {
+  margin-top: 0.9rem;
+}
+
+.settings-reset svg.icon {
+  margin-inline-end: 0.35rem;
+}
+
+.panel__note {
+  margin: 0.6rem 0 0;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.settings-section__title {
+  margin: 0 0 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.color-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.color-row__label {
+  flex: 1 1 auto;
+  font-size: 0.85rem;
+}
+
+.color-row input[type="color"] {
+  width: 44px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+}
+
+.type-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.type-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.type-row__label {
+  font-size: 0.82rem;
+}
+
+.type-row__controls,
+.type-add__controls,
+.type-add__names {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.type-row__symbol {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.type-row__preview {
+  display: inline-flex;
+  align-items: center;
+}
+
+.type-row__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px;
+  color: var(--muted);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.type-row__remove:hover {
+  color: #b3261e;
+  border-color: #b3261e;
+}
+
+.type-add {
+  margin-top: 0.7rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.type-add__input {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0.3rem 0.45rem;
+  font-size: 0.82rem;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+}
+
+.tooltip__name {
+  font-weight: 600;
+}
+
+.tooltip__meta {
+  color: #b9c2cf;
+}
+
+/* Landing / upload screen. */
+.landing {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  overflow-y: auto;
+  padding: 1.5rem;
+  background: var(--bg);
+}
+
+.landing[hidden] {
+  display: none;
+}
+
+/* When the card is taller than the window, its auto margins drop to 0, so
+   the overlay scrolls to its top instead of clipping it. */
+.landing__card {
+  width: 560px;
+  max-width: 100%;
+  margin: auto;
+}
+
+.landing__card::part(base) {
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.landing__card::part(body) {
+  padding: 2rem;
+  text-align: center;
+}
+
+.landing__logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 0 0.25rem;
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.landing__logo .icon--nexus {
+  width: 64px;
+  height: 64px;
+}
+
+.landing__version {
+  margin: 0 0 1rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+}
+
+.landing__tag {
+  margin: 0 0 1.5rem;
+  color: var(--muted);
+}
+
+.dropzone {
+  padding: 2rem 1.5rem;
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.dropzone.is-drag {
+  border-color: var(--accent);
+  background: var(--sl-color-primary-100);
+}
+
+.dropzone__hint {
+  margin: 0.5rem 0 1rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.landing__actions {
+  --button-width: min(13rem, 100%);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, var(--button-width));
+  gap: 0.6rem;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+/* A 5th button would sit alone in the left column, so Cancel spans the row,
+   centred at the width of 1 column. */
+.landing__cancel {
+  grid-column: 1 / -1;
+  justify-self: center;
+  width: var(--button-width);
+}
+
+.landing__actions sl-button svg.icon {
+  margin-inline-end: 0.4rem;
+}
+
+/* Honour the hidden attribute on Shoelace buttons: the component sets its own
+   host display, which would otherwise override the UA [hidden] rule. */
+sl-button[hidden] {
+  display: none;
+}
+
+.landing__note {
+  margin-top: 1.5rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.landing__error {
+  margin-top: 1rem;
+  text-align: left;
+}
+
+.toolbar__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 700;
+}
+
+.toolbar__brand .icon--nexus {
+  width: 20px;
+  height: 20px;
+}
+
+.icon--nexus .ink {
+  fill: #333e43;
+}
+
+.icon--nexus .ref {
+  fill: #53b4eb;
+}
+
+html.sl-theme-dark .icon--nexus .ink {
+  fill: #fff;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+/* Inspector (build mode). */
+.panel--inspector {
+  width: 320px;
+}
+
+.inspector-body {
+  overflow: auto;
+  padding: 0.85rem 1rem;
+}
+
+.insp__title {
+  margin: 0 0 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.insp__row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.55rem;
+}
+
+.insp__row > label {
+  flex: 0 0 92px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+/* Shoelace inspector controls: full width in the form grid, and neutralise the
+   native-button host boxes (styling is on ::part). */
+.insp sl-input,
+.insp sl-select,
+.insp__note sl-textarea {
+  width: 100%;
+}
+
+.insp__note {
+  margin-bottom: 0.6rem;
+}
+
+.insp__note > label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.insp sl-button.insp__create,
+.insp sl-button.insp__delete {
+  display: block;
+  width: 100%;
+  margin-top: 0.7rem;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.insp sl-button.insp__create::part(base),
+.insp sl-button.insp__delete::part(base) {
+  width: 100%;
+}
+
+.insp__reftag {
+  margin: 0 0.3rem 0.35rem 0;
+}
+
+.insp__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.85rem;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.insp__ro {
+  font-size: 0.85rem;
+}
+
+.insp__section {
+  margin: 0.8rem 0;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--border);
+}
+
+.insp__sectionhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.insp__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  color: var(--accent);
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.insp__btn .icon,
+.insp__x .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.insp__field {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.35rem 0.5rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.82rem;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.insp__field:hover {
+  border-color: var(--accent);
+}
+
+.insp__field code,
+.insp__row code {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.insp__empty {
+  margin: 0.2rem 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.insp__hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.insp__ref {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.3rem 0.5rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.82rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.insp__x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.15rem 0.3rem;
+  line-height: 1;
+  color: var(--muted);
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.insp__create {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  font-size: 0.85rem;
+  color: #fff;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.insp__delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  margin-top: 0.9rem;
+  padding: 0.45rem;
+  font-size: 0.82rem;
+  color: #b3261e;
+  background: var(--panel-bg);
+  border: 1px solid #f0c6c2;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.insp__delete:hover {
+  background: #fdf1f0;
+}

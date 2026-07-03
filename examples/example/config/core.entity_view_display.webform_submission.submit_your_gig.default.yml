@@ -1,0 +1,17 @@
+uuid: 5685b542-9ebd-4041-a0c3-60bf4a6e19c1
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.webform_submission.submit_your_gig.field_event
+    - field.field.webform_submission.submit_your_gig.field_gig_submission_state
+    - webform.webform.submit_your_gig
+id: webform_submission.submit_your_gig.default
+targetEntityType: webform_submission
+bundle: submit_your_gig
+mode: default
+content: {  }
+hidden:
+  field_event: true
+  field_gig_submission_state: true
+  search_api_excerpt: true

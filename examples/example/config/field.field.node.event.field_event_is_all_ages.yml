@@ -1,0 +1,21 @@
+uuid: 6d9b3b5c-3296-417b-ba60-addad01befa5
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_event_is_all_ages
+    - node.type.event
+id: node.event.field_event_is_all_ages
+field_name: field_event_is_all_ages
+entity_type: node
+bundle: event
+label: 'All Ages'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

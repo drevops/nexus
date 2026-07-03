@@ -1,0 +1,10 @@
+uuid: 25656fb0-abd2-4079-8f12-471e01393cfd
+langcode: en
+status: true
+dependencies: {  }
+id: content
+label: Content
+icon_uuid: null
+icon_default: null
+description: 'A content paragraph provides a WYSIWYG editor.'
+behavior_plugins: {  }

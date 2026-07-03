@@ -1,0 +1,23 @@
+uuid: 66446e4f-5d9d-47bb-9418-61ab5df5d868
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.webform_submission.field_gig_submission_state
+    - webform.webform.submit_your_gig
+  module:
+    - workflows_field
+id: webform_submission.submit_your_gig.field_gig_submission_state
+field_name: field_gig_submission_state
+entity_type: webform_submission
+bundle: submit_your_gig
+label: State
+description: ''
+required: true
+translatable: false
+default_value:
+  -
+    value: submitted
+default_value_callback: ''
+settings: {  }
+field_type: workflows_field_item

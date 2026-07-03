@@ -1,0 +1,64 @@
+uuid: 52f52dcf-fe88-4f53-9bdf-cbe5f1db8072
+langcode: en
+status: true
+dependencies:
+  config:
+    - filter.format.full_html
+    - media.type.document
+    - media.type.image
+    - node.type.event
+    - taxonomy.vocabulary.event_types
+    - taxonomy.vocabulary.venues
+  module:
+    - contextual
+    - file
+    - filter
+    - media
+    - node
+    - pbs_event
+    - system
+    - taxonomy
+    - toolbar
+    - webform
+    - workflows_field
+id: gig_manager
+label: 'Gig manager'
+weight: 7
+is_admin: null
+permissions:
+  - 'access administration pages'
+  - 'access content overview'
+  - 'access contextual links'
+  - 'access files overview'
+  - 'access toolbar'
+  - 'access webform help'
+  - 'access webform overview'
+  - 'convert gig_submission_to_event_node'
+  - 'create document media'
+  - 'create event content'
+  - 'create image media'
+  - 'create terms in event_types'
+  - 'create terms in venues'
+  - 'delete any document media'
+  - 'delete any event content'
+  - 'delete any image media'
+  - 'delete event revisions'
+  - 'delete media'
+  - 'delete own document media'
+  - 'delete own event content'
+  - 'delete own image media'
+  - 'edit any event content'
+  - 'edit own document media'
+  - 'edit own event content'
+  - 'edit own image media'
+  - 'edit terms in event_types'
+  - 'edit terms in venues'
+  - 'revert event revisions'
+  - 'update media'
+  - 'use gig_submission transition approve'
+  - 'use gig_submission transition convert_to_event'
+  - 'use gig_submission transition decline'
+  - 'use gig_submission transition resubmit'
+  - 'use text format full_html'
+  - 'view event revisions'
+  - 'view the administration theme'

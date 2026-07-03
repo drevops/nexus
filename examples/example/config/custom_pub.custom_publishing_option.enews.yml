@@ -1,0 +1,8 @@
+uuid: 27d0e965-1ecd-4906-91a8-adeaf7a25332
+langcode: en
+status: true
+dependencies: {  }
+id: enews
+label: eNews
+description: eNews
+publish_under_promote_options: true

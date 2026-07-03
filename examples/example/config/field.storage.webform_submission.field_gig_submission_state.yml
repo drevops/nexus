@@ -1,0 +1,21 @@
+uuid: 119739fa-c918-4236-98f4-376de253d518
+langcode: en
+status: true
+dependencies:
+  config:
+    - workflows.workflow.gig_submission
+  module:
+    - webform
+id: webform_submission.field_gig_submission_state
+field_name: field_gig_submission_state
+entity_type: webform_submission
+type: workflows_field_item
+settings:
+  workflow: gig_submission
+module: workflows_field
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

@@ -1,0 +1,14 @@
+uuid: 6e616b1d-604e-4b87-b2a6-54497ac7f2af
+langcode: en
+status: true
+dependencies: {  }
+id: node__program
+label: 'Content: Program'
+tags:
+  schema_movie_actor: 'a:2:{s:5:"@type";s:6:"Person";s:4:"name";s:19:"[node:field_author]";}'
+  schema_movie_description: '[node:field_summary]'
+  schema_movie_id: '[node:url]'
+  schema_movie_image: 'a:4:{s:5:"@type";s:11:"ImageObject";s:3:"url";s:67:"[node:field_featured_media:entity:field_media_image:open_graph:url]";s:5:"width";s:69:"[node:field_featured_media:entity:field_media_image:open_graph:width]";s:6:"height";s:70:"[node:field_featured_media:entity:field_media_image:open_graph:height]";}'
+  schema_movie_name: '[node:title]'
+  schema_movie_type: PodcastSeries
+  schema_movie_url: '[node:url]'

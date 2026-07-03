@@ -1,0 +1,8 @@
+uuid: 1d38468f-cdb2-4a1b-9599-a0661433d99c
+langcode: en
+status: true
+dependencies: {  }
+id: spotlight
+label: Spotlight
+description: Spotlight
+publish_under_promote_options: true

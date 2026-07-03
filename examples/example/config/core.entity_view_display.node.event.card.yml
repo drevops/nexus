@@ -1,0 +1,143 @@
+uuid: 7324bae0-5101-4998-bf8e-9a96ce873d31
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.card
+    - field.field.node.event.field_artist
+    - field.field.node.event.field_body
+    - field.field.node.event.field_date_range
+    - field.field.node.event.field_event_is_all_ages
+    - field.field.node.event.field_event_is_free
+    - field.field.node.event.field_event_link
+    - field.field.node.event.field_event_is_national_tour
+    - field.field.node.event.field_event_type
+    - field.field.node.event.field_featured_media
+    - field.field.node.event.field_genre
+    - field.field.node.event.field_media
+    - field.field.node.event.field_price_text
+    - field.field.node.event.field_subgenre
+    - field.field.node.event.field_summary
+    - field.field.node.event.field_venue
+    - node.type.event
+  module:
+    - link
+    - smart_date
+    - text
+    - user
+id: node.event.card
+targetEntityType: node
+bundle: event
+mode: card
+content:
+  field_artist:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 102
+    region: content
+  field_body:
+    type: text_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 107
+    region: content
+  field_date_range:
+    type: smartdate_default
+    label: above
+    settings:
+      timezone_override: ''
+      format_type: medium
+      format: default
+      force_chronological: false
+      add_classes: false
+      time_wrapper: true
+      localize: false
+      parts:
+        - start
+        - end
+      duration:
+        separator: ' | '
+        unit: ''
+        decimals: 2
+        suffix: h
+    third_party_settings: {  }
+    weight: 114
+    region: content
+  field_event_link:
+    type: link
+    label: above
+    settings:
+      trim_length: 80
+      url_only: false
+      url_plain: false
+      rel: ''
+      target: ''
+    third_party_settings: {  }
+    weight: 104
+    region: content
+  field_event_type:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 102
+    region: content
+  field_featured_media:
+    type: entity_reference_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: false
+    third_party_settings: {  }
+    weight: 104
+    region: content
+  field_genre:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 101
+    region: content
+  field_media:
+    type: entity_reference_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: false
+    third_party_settings: {  }
+    weight: 111
+    region: content
+  field_summary:
+    type: basic_string
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 102
+    region: content
+  field_venue:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 103
+    region: content
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 100
+    region: content
+hidden:
+  field_event_is_all_ages: true
+  field_event_is_free: true
+  field_event_is_national_tour: true
+  field_price_text: true
+  field_subgenre: true
+  langcode: true
+  search_api_excerpt: true

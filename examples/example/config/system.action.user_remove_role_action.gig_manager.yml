@@ -1,0 +1,14 @@
+uuid: 5f1e7422-ade8-4a47-9a73-6605700fbcf4
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.gig_manager
+  module:
+    - user
+id: user_remove_role_action.gig_manager
+label: 'Remove the Gig manager role from the selected user(s)'
+type: user
+plugin: user_remove_role_action
+configuration:
+  rid: gig_manager

@@ -1,0 +1,14 @@
+langcode: en
+status: true
+id: node.page.field_components
+field_name: field_components
+entity_type: node
+bundle: page
+label: Components
+required: false
+field_type: entity_reference_revisions
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    target_bundles: null
+    negate: 0

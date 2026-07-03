@@ -1,0 +1,215 @@
+uuid: 41be483a-1d57-4337-976a-bc6c45c885e6
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.episode
+id: node--episode
+disabled: false
+path: episode
+resourceType: episode
+resourceFields:
+  nid:
+    disabled: false
+    fieldName: nid
+    publicName: nid
+    enhancer:
+      id: ''
+  uuid:
+    disabled: false
+    fieldName: uuid
+    publicName: uuid
+    enhancer:
+      id: ''
+  vid:
+    disabled: false
+    fieldName: vid
+    publicName: vid
+    enhancer:
+      id: ''
+  langcode:
+    disabled: false
+    fieldName: langcode
+    publicName: langcode
+    enhancer:
+      id: ''
+  type:
+    disabled: false
+    fieldName: type
+    publicName: type
+    enhancer:
+      id: ''
+  revision_timestamp:
+    disabled: false
+    fieldName: revision_timestamp
+    publicName: revision_timestamp
+    enhancer:
+      id: ''
+  revision_uid:
+    disabled: false
+    fieldName: revision_uid
+    publicName: revision_uid
+    enhancer:
+      id: ''
+  revision_log:
+    disabled: false
+    fieldName: revision_log
+    publicName: revision_log
+    enhancer:
+      id: ''
+  status:
+    disabled: false
+    fieldName: status
+    publicName: status
+    enhancer:
+      id: ''
+  uid:
+    disabled: false
+    fieldName: uid
+    publicName: uid
+    enhancer:
+      id: ''
+  title:
+    disabled: false
+    fieldName: title
+    publicName: title
+    enhancer:
+      id: ''
+  created:
+    disabled: false
+    fieldName: created
+    publicName: created
+    enhancer:
+      id: ''
+  changed:
+    disabled: false
+    fieldName: changed
+    publicName: changed
+    enhancer:
+      id: ''
+  promote:
+    disabled: false
+    fieldName: promote
+    publicName: promote
+    enhancer:
+      id: ''
+  sticky:
+    disabled: false
+    fieldName: sticky
+    publicName: sticky
+    enhancer:
+      id: ''
+  default_langcode:
+    disabled: false
+    fieldName: default_langcode
+    publicName: default_langcode
+    enhancer:
+      id: ''
+  revision_default:
+    disabled: false
+    fieldName: revision_default
+    publicName: revision_default
+    enhancer:
+      id: ''
+  revision_translation_affected:
+    disabled: false
+    fieldName: revision_translation_affected
+    publicName: revision_translation_affected
+    enhancer:
+      id: ''
+  enews:
+    disabled: false
+    fieldName: enews
+    publicName: enews
+    enhancer:
+      id: ''
+  spotlight:
+    disabled: false
+    fieldName: spotlight
+    publicName: spotlight
+    enhancer:
+      id: ''
+  metatag:
+    disabled: false
+    fieldName: metatag
+    publicName: metatag
+    enhancer:
+      id: ''
+  path:
+    disabled: false
+    fieldName: path
+    publicName: path
+    enhancer:
+      id: ''
+  menu_link:
+    disabled: false
+    fieldName: menu_link
+    publicName: menu_link
+    enhancer:
+      id: ''
+  field_acl:
+    disabled: false
+    fieldName: field_acl
+    publicName: field_acl
+    enhancer:
+      id: ''
+  field_api_slug:
+    disabled: false
+    fieldName: field_api_slug
+    publicName: field_api_slug
+    enhancer:
+      id: ''
+  field_api_sync:
+    disabled: false
+    fieldName: field_api_sync
+    publicName: field_api_sync
+    enhancer:
+      id: ''
+  field_api_uuid:
+    disabled: false
+    fieldName: field_api_uuid
+    publicName: field_api_uuid
+    enhancer:
+      id: ''
+  field_audio_url:
+    disabled: false
+    fieldName: field_audio_url
+    publicName: field_audio_url
+    enhancer:
+      id: ''
+  field_body:
+    disabled: false
+    fieldName: field_body
+    publicName: field_body
+    enhancer:
+      id: ''
+  field_date_range:
+    disabled: false
+    fieldName: field_date_range
+    publicName: field_date_range
+    enhancer:
+      id: ''
+  field_media:
+    disabled: false
+    fieldName: field_media
+    publicName: field_media
+    enhancer:
+      id: ''
+  field_program:
+    disabled: false
+    fieldName: field_program
+    publicName: field_program
+    enhancer:
+      id: ''
+  field_summary:
+    disabled: false
+    fieldName: field_summary
+    publicName: field_summary
+    enhancer:
+      id: ''
+  field_tracks:
+    disabled: false
+    fieldName: field_tracks
+    publicName: field_tracks
+    enhancer:
+      id: ''

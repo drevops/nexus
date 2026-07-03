@@ -1,0 +1,275 @@
+uuid: 712affbe-9151-4a60-bab0-86563d645c0a
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.program
+id: node--program
+disabled: false
+path: program
+resourceType: program
+resourceFields:
+  nid:
+    disabled: false
+    fieldName: nid
+    publicName: nid
+    enhancer:
+      id: ''
+  uuid:
+    disabled: false
+    fieldName: uuid
+    publicName: uuid
+    enhancer:
+      id: ''
+  vid:
+    disabled: false
+    fieldName: vid
+    publicName: vid
+    enhancer:
+      id: ''
+  langcode:
+    disabled: false
+    fieldName: langcode
+    publicName: langcode
+    enhancer:
+      id: ''
+  type:
+    disabled: false
+    fieldName: type
+    publicName: type
+    enhancer:
+      id: ''
+  revision_timestamp:
+    disabled: false
+    fieldName: revision_timestamp
+    publicName: revision_timestamp
+    enhancer:
+      id: ''
+  revision_uid:
+    disabled: false
+    fieldName: revision_uid
+    publicName: revision_uid
+    enhancer:
+      id: ''
+  revision_log:
+    disabled: false
+    fieldName: revision_log
+    publicName: revision_log
+    enhancer:
+      id: ''
+  status:
+    disabled: false
+    fieldName: status
+    publicName: status
+    enhancer:
+      id: ''
+  uid:
+    disabled: false
+    fieldName: uid
+    publicName: uid
+    enhancer:
+      id: ''
+  title:
+    disabled: false
+    fieldName: title
+    publicName: title
+    enhancer:
+      id: ''
+  created:
+    disabled: false
+    fieldName: created
+    publicName: created
+    enhancer:
+      id: ''
+  changed:
+    disabled: false
+    fieldName: changed
+    publicName: changed
+    enhancer:
+      id: ''
+  promote:
+    disabled: false
+    fieldName: promote
+    publicName: promote
+    enhancer:
+      id: ''
+  sticky:
+    disabled: false
+    fieldName: sticky
+    publicName: sticky
+    enhancer:
+      id: ''
+  default_langcode:
+    disabled: false
+    fieldName: default_langcode
+    publicName: default_langcode
+    enhancer:
+      id: ''
+  revision_default:
+    disabled: false
+    fieldName: revision_default
+    publicName: revision_default
+    enhancer:
+      id: ''
+  revision_translation_affected:
+    disabled: false
+    fieldName: revision_translation_affected
+    publicName: revision_translation_affected
+    enhancer:
+      id: ''
+  enews:
+    disabled: false
+    fieldName: enews
+    publicName: enews
+    enhancer:
+      id: ''
+  spotlight:
+    disabled: false
+    fieldName: spotlight
+    publicName: spotlight
+    enhancer:
+      id: ''
+  metatag:
+    disabled: false
+    fieldName: metatag
+    publicName: metatag
+    enhancer:
+      id: ''
+  path:
+    disabled: false
+    fieldName: path
+    publicName: path
+    enhancer:
+      id: ''
+  menu_link:
+    disabled: false
+    fieldName: menu_link
+    publicName: menu_link
+    enhancer:
+      id: ''
+  field_acl:
+    disabled: false
+    fieldName: field_acl
+    publicName: field_acl
+    enhancer:
+      id: ''
+  field_api_slug:
+    disabled: false
+    fieldName: field_api_slug
+    publicName: field_api_slug
+    enhancer:
+      id: ''
+  field_api_sync:
+    disabled: false
+    fieldName: field_api_sync
+    publicName: field_api_sync
+    enhancer:
+      id: ''
+  field_api_uuid:
+    disabled: false
+    fieldName: field_api_uuid
+    publicName: field_api_uuid
+    enhancer:
+      id: ''
+  field_author:
+    disabled: false
+    fieldName: field_author
+    publicName: field_author
+    enhancer:
+      id: ''
+  field_body:
+    disabled: false
+    fieldName: field_body
+    publicName: field_body
+    enhancer:
+      id: ''
+  field_create_future_episodes:
+    disabled: false
+    fieldName: field_create_future_episodes
+    publicName: field_create_future_episodes
+    enhancer:
+      id: ''
+  field_featured_media:
+    disabled: false
+    fieldName: field_featured_media
+    publicName: field_featured_media
+    enhancer:
+      id: ''
+  field_genre:
+    disabled: false
+    fieldName: field_genre
+    publicName: field_genre
+    enhancer:
+      id: ''
+  field_link_facebook:
+    disabled: false
+    fieldName: field_link_facebook
+    publicName: field_link_facebook
+    enhancer:
+      id: ''
+  field_link_instagram:
+    disabled: false
+    fieldName: field_link_instagram
+    publicName: field_link_instagram
+    enhancer:
+      id: ''
+  field_link_x:
+    disabled: false
+    fieldName: field_link_x
+    publicName: field_link_x
+    enhancer:
+      id: ''
+  field_media:
+    disabled: false
+    fieldName: field_media
+    publicName: field_media
+    enhancer:
+      id: ''
+  field_rec_autochapters:
+    disabled: false
+    fieldName: field_rec_autochapters
+    publicName: field_rec_autochapters
+    enhancer:
+      id: ''
+  field_rec_enabled:
+    disabled: false
+    fieldName: field_rec_enabled
+    publicName: field_rec_enabled
+    enhancer:
+      id: ''
+  field_rec_episode_visibility:
+    disabled: false
+    fieldName: field_rec_episode_visibility
+    publicName: field_rec_episode_visibility
+    enhancer:
+      id: ''
+  field_rec_mode:
+    disabled: false
+    fieldName: field_rec_mode
+    publicName: field_rec_mode
+    enhancer:
+      id: ''
+  field_rec_schedule:
+    disabled: false
+    fieldName: field_rec_schedule
+    publicName: field_rec_schedule
+    enhancer:
+      id: ''
+  field_subgenre:
+    disabled: false
+    fieldName: field_subgenre
+    publicName: field_subgenre
+    enhancer:
+      id: ''
+  field_summary:
+    disabled: false
+    fieldName: field_summary
+    publicName: field_summary
+    enhancer:
+      id: ''
+  field_tagline:
+    disabled: false
+    fieldName: field_tagline
+    publicName: field_tagline
+    enhancer:
+      id: ''

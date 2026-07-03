@@ -1,0 +1,29 @@
+uuid: b328a1c2-0051-422a-b8af-a5dc37293c6c
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_news_alert
+    - node.type.news
+    - taxonomy.vocabulary.news_alerts
+id: node.news.field_news_alert
+field_name: field_news_alert
+entity_type: node
+bundle: news
+label: Alert
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      news_alerts: news_alerts
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

@@ -1,0 +1,14 @@
+uuid: ca37e0d7-288e-44e1-9f3c-d0ab08b3ff5a
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.ad_manager
+  module:
+    - user
+id: user_add_role_action.ad_manager
+label: 'Add the Ad manager role to the selected user(s)'
+type: user
+plugin: user_add_role_action
+configuration:
+  rid: ad_manager

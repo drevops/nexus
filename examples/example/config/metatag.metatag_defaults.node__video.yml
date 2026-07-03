@@ -1,0 +1,17 @@
+uuid: 543ccb74-4b7c-4276-9eb4-da0ddb12564e
+langcode: en
+status: true
+dependencies: {  }
+id: node__video
+label: 'Content: Video'
+tags:
+  og_image: '[node:field_media:entity:thumbnail:open_graph:url]'
+  og_image_height: '[node:field_media:entity:thumbnail:open_graph:height]'
+  og_video_width: '[node:field_media:entity:thumbnail:open_graph:width]'
+  schema_video_object_description: '[node:field_summary]'
+  schema_video_object_embed_url: '[node:field_media:entity:field_media_oembed_video]'
+  schema_video_object_id: '[node:url]'
+  schema_video_object_name: '[node:title]'
+  schema_video_object_thumbnail_url: '[node:field_media:entity:thumbnail:open_graph:url]'
+  schema_video_object_type: VideoObject
+  schema_video_object_upload_date: '[node:created:custom:c]'

@@ -1,0 +1,19 @@
+uuid: f8b93311-5fda-47c2-968d-db3f1182ecf4
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_track_marker
+    - paragraphs.paragraphs_type.track
+id: paragraph.track.field_track_marker
+field_name: field_track_marker
+entity_type: paragraph
+bundle: track
+label: 'Time marker'
+description: 'Format: HH:MM:SS'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

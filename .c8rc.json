@@ -1,0 +1,12 @@
+{
+    "all": false,
+    "include": [
+        "src/*.js"
+    ],
+    "reporter": [
+        "text",
+        "lcov",
+        "cobertura"
+    ],
+    "reports-dir": ".logs"
+}

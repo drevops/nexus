@@ -1,0 +1,19 @@
+uuid: 5fbd8066-b649-43f2-96c7-bad547ab674b
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_api_uuid
+    - node.type.program
+id: node.program.field_api_uuid
+field_name: field_api_uuid
+entity_type: node
+bundle: program
+label: 'API UUID'
+description: 'UUID ID from API.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

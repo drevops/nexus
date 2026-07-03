@@ -1,0 +1,23 @@
+uuid: 09034871-a55a-4aa8-a678-907f0f63bf53
+langcode: en
+status: true
+dependencies:
+  module:
+    - focal_point
+name: cropped_wide_2x
+label: 'Cropped Wide 2x | 800×450px (16:9)'
+effects:
+  ec569be3-eecd-4949-b190-5c3047f07fd2:
+    uuid: ec569be3-eecd-4949-b190-5c3047f07fd2
+    id: focal_point_scale_and_crop
+    weight: 1
+    data:
+      width: 1600
+      height: 900
+      crop_type: focal_point
+  66a6fcc9-1b2f-43f4-9168-9e3522b361e1:
+    uuid: 66a6fcc9-1b2f-43f4-9168-9e3522b361e1
+    id: image_convert
+    weight: 2
+    data:
+      extension: webp

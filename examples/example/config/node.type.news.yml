@@ -1,0 +1,17 @@
+uuid: e9ac8d88-165c-4699-9de3-3b2ab6744eb2
+langcode: en
+status: true
+dependencies:
+  module:
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus: {  }
+    parent: ''
+name: News
+type: news
+description: 'Use <em>News</em> for different types of news content.'
+help: null
+new_revision: true
+preview_mode: 1
+display_submitted: false

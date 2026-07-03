@@ -1,0 +1,58 @@
+uuid: 9ccec3e7-0a49-4473-87a2-6dca09b91a9a
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: UkgfnPWpw3pkmKefa-XmBbKkcw4iZOcEX3QqE_zPcvw
+id: pbs_media_remote_audio
+class: null
+field_plugin_method: null
+cck_plugin_method: null
+migration_tags: {  }
+migration_group: pbs_d7
+label: '03 Remote audio (SoundCloud)'
+source:
+  plugin: pbs_media_remote_audio_sql
+  high_water_property:
+    name: timestamp
+process:
+  name: name
+  embed_url:
+    -
+      plugin: str_replace
+      search: 'soundcloud://u/'
+      replace: 'https://soundcloud.com/'
+      source: path
+    -
+      plugin: str_replace
+      search: /a/
+      replace: /
+  skip_on_http_code_response_embed_url:
+    -
+      plugin: str_replace
+      search: 'https://soundcloud.com/'
+      replace: 'https://soundcloud.com/oembed?url=https://soundcloud.com/'
+      source: '@embed_url'
+    -
+      plugin: callback
+      callable: _pbs_migrate_get_http_header_response_code
+    -
+      plugin: pbs_skip_on_value
+      value: 200
+      not_equals: true
+      method: row
+      message: 'Response code is %current_value%. Embed URL: %@embed_url%.'
+  field_media_oembed_audio: '@embed_url'
+  changed: changed
+  uid:
+    plugin: default_value
+    default_value: 0
+destination:
+  plugin: 'entity:media'
+  default_bundle: remote_audio
+  validate: true
+idMap: {  }
+migration_dependencies:
+  required: {  }
+  optional: {  }
+include: {  }

@@ -1,0 +1,19 @@
+uuid: a9621ec3-c109-435c-8a0c-a004dc25bf20
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_api_slug
+    - node.type.episode
+id: node.episode.field_api_slug
+field_name: field_api_slug
+entity_type: node
+bundle: episode
+label: 'API slug'
+description: 'URL part (slug) to use in the public program URL within API. If not provided a unique slug will be generated based on the program title.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

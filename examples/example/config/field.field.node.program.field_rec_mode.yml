@@ -1,0 +1,23 @@
+uuid: f0d43633-491c-4609-95e0-770340affd94
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_rec_mode
+    - node.type.program
+  module:
+    - options
+id: node.program.field_rec_mode
+field_name: field_rec_mode
+entity_type: node
+bundle: program
+label: 'Recording mode'
+description: ''
+required: true
+translatable: false
+default_value:
+  -
+    value: Merge
+default_value_callback: ''
+settings: {  }
+field_type: list_string

@@ -1,0 +1,17 @@
+uuid: 89935a5a-4d21-4454-8f68-1adf8f5283fb
+langcode: en
+status: true
+dependencies:
+  module:
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus: {  }
+    parent: ''
+name: Interview
+type: interview
+description: 'Use <em>Interview</em> for items that have audio recordings with an Artist.'
+help: null
+new_revision: true
+preview_mode: 1
+display_submitted: false

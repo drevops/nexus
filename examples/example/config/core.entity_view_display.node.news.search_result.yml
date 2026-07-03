@@ -1,0 +1,51 @@
+uuid: a11671d0-dcb4-4d5c-954f-bfd79353a773
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.search_result
+    - field.field.node.news.field_artist
+    - field.field.node.news.field_author
+    - field.field.node.news.field_body
+    - field.field.node.news.field_date
+    - field.field.node.news.field_featured_media
+    - field.field.node.news.field_genre
+    - field.field.node.news.field_media
+    - field.field.node.news.field_news_alert
+    - field.field.node.news.field_news_type
+    - field.field.node.news.field_subgenre
+    - field.field.node.news.field_summary
+    - node.type.news
+  module:
+    - user
+id: node.news.search_result
+targetEntityType: node
+bundle: news
+mode: search_result
+content:
+  field_summary:
+    type: basic_string
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  search_api_excerpt:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+hidden:
+  body: true
+  field_artist: true
+  field_author: true
+  field_body: true
+  field_date: true
+  field_featured_media: true
+  field_genre: true
+  field_media: true
+  field_news_alert: true
+  field_news_type: true
+  field_subgenre: true
+  langcode: true
+  links: true

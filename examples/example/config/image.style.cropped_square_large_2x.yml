@@ -1,0 +1,23 @@
+uuid: f4d1cd46-573a-4558-a3f2-ccbfbe2c032e
+langcode: en
+status: true
+dependencies:
+  module:
+    - focal_point
+name: cropped_square_large_2x
+label: 'Cropped Square Large 2x | 800×800px (1:1)'
+effects:
+  7148d02a-7125-424c-a53d-97ec8156e648:
+    uuid: 7148d02a-7125-424c-a53d-97ec8156e648
+    id: focal_point_scale_and_crop
+    weight: 1
+    data:
+      width: 1600
+      height: 1600
+      crop_type: focal_point
+  c5add68b-9cd8-4bc0-9768-b3b656443cb5:
+    uuid: c5add68b-9cd8-4bc0-9768-b3b656443cb5
+    id: image_convert
+    weight: 2
+    data:
+      extension: webp

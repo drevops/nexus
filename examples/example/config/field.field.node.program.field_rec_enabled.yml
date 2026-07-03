@@ -1,0 +1,23 @@
+uuid: efad3951-837b-4241-8b8e-4c7dcf6f7d48
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_rec_enabled
+    - node.type.program
+id: node.program.field_rec_enabled
+field_name: field_rec_enabled
+entity_type: node
+bundle: program
+label: 'Enable automatic recording'
+description: 'At the end of a recording schedule time, automatically create an Episode using the recordings created during the schedule.'
+required: false
+translatable: false
+default_value:
+  -
+    value: 1
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

@@ -1,0 +1,25 @@
+uuid: 172d7b0d-c372-4765-a3ea-99025c612e57
+langcode: en
+status: true
+dependencies:
+  module:
+    - system
+  theme:
+    - pbs
+_core:
+  default_config_hash: FMA0I9nDtnnXj7gNNMW7zfKuHtu1fIbwV_z5Xf6giTk
+id: pbs_branding
+theme: pbs
+region: navbar_branding
+weight: -1
+provider: null
+plugin: system_branding_block
+settings:
+  id: system_branding_block
+  label: 'Site branding'
+  label_display: '0'
+  provider: system
+  use_site_logo: true
+  use_site_name: false
+  use_site_slogan: false
+visibility: {  }

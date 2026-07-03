@@ -1,0 +1,160 @@
+uuid: dc7e325d-455b-460f-b8c7-e7019a6e07f4
+langcode: en
+status: true
+dependencies:
+  config:
+    - filter.format.full_html
+  module:
+    - ckeditor5
+_core:
+  default_config_hash: lurcn8yf33g3Dkzdc55cTfJa9salGp9ytSYyG1s7QMI
+format: full_html
+editor: ckeditor5
+settings:
+  toolbar:
+    items:
+      - bold
+      - italic
+      - strikethrough
+      - superscript
+      - subscript
+      - removeFormat
+      - alignment
+      - '|'
+      - link
+      - '|'
+      - bulletedList
+      - numberedList
+      - indent
+      - outdent
+      - '|'
+      - blockQuote
+      - drupalMedia
+      - insertTable
+      - horizontalLine
+      - '|'
+      - '-'
+      - heading
+      - style
+      - '|'
+      - specialCharacters
+      - codeBlock
+      - '|'
+      - sourceEditing
+      - showBlocks
+  plugins:
+    ckeditor5_alignment:
+      enabled_alignments:
+        - center
+        - justify
+        - left
+        - right
+    ckeditor5_codeBlock:
+      languages:
+        -
+          label: 'Plain text'
+          language: plaintext
+        -
+          label: C
+          language: c
+        -
+          label: 'C#'
+          language: cs
+        -
+          label: C++
+          language: cpp
+        -
+          label: CSS
+          language: css
+        -
+          label: Diff
+          language: diff
+        -
+          label: HTML
+          language: html
+        -
+          label: Java
+          language: java
+        -
+          label: JavaScript
+          language: javascript
+        -
+          label: PHP
+          language: php
+        -
+          label: Python
+          language: python
+        -
+          label: Ruby
+          language: ruby
+        -
+          label: TypeScript
+          language: typescript
+        -
+          label: XML
+          language: xml
+    ckeditor5_heading:
+      enabled_headings:
+        - heading2
+        - heading3
+        - heading4
+        - heading5
+        - heading6
+    ckeditor5_list:
+      properties:
+        reversed: true
+        startIndex: true
+        styles: true
+      multiBlock: true
+    ckeditor5_sourceEditing:
+      allowed_tags: {  }
+    ckeditor5_style:
+      styles:
+        -
+          label: 'Primary button'
+          element: '<a class="btn btn-primary">'
+        -
+          label: 'Primary outline button'
+          element: '<a class="btn btn-outline-primary">'
+        -
+          label: 'Secondary button'
+          element: '<a class="btn btn-secondary">'
+        -
+          label: 'Secondary outline button'
+          element: '<a class="btn btn-outline-secondary">'
+        -
+          label: 'Large Button'
+          element: '<a class="btn btn-lg">'
+        -
+          label: 'Small Button'
+          element: '<a class="btn btn-sm">'
+        -
+          label: 'Lead paragraph'
+          element: '<p class="text-large">'
+        -
+          label: Small
+          element: '<p class="text-small">'
+    ckeditor_media_image_style_mediaImageStyle:
+      enabled: true
+      image_styles:
+        - article_2x
+        - cropped_card_2x
+        - cropped_portrait_2x
+        - cropped_square_large_2x
+        - cropped_square_medium_2x
+        - cropped_tall_2x
+        - cropped_wide_2x
+        - wide
+    linkit_extension:
+      linkit_enabled: true
+      linkit_profile: default
+    media_media:
+      allow_view_mode_override: false
+image_upload:
+  status: true
+  scheme: public
+  directory: inline-images
+  max_size: null
+  max_dimensions:
+    width: null
+    height: null

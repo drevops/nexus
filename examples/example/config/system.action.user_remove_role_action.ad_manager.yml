@@ -1,0 +1,14 @@
+uuid: 6d59bf26-ec5c-4f21-9984-0619c9f77c29
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.ad_manager
+  module:
+    - user
+id: user_remove_role_action.ad_manager
+label: 'Remove the Ad manager role from the selected user(s)'
+type: user
+plugin: user_remove_role_action
+configuration:
+  rid: ad_manager

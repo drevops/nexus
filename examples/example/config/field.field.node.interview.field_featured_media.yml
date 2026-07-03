@@ -1,0 +1,33 @@
+uuid: aacba415-f1c7-4efa-91f4-e28cdffdd53a
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_featured_media
+    - media.type.image
+    - media.type.remote_video
+    - media.type.video
+    - node.type.interview
+id: node.interview.field_featured_media
+field_name: field_featured_media
+entity_type: node
+bundle: interview
+label: 'Featured media'
+description: "Images and Videos used in the banner area of the page.<br/>\r\nMultiple items will be shown as a slide show."
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:media'
+  handler_settings:
+    target_bundles:
+      image: image
+      remote_video: remote_video
+      video: video
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: image
+field_type: entity_reference

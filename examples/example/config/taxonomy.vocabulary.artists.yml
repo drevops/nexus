@@ -1,0 +1,9 @@
+uuid: de2d1352-470b-4628-8c0f-f72079ea3aa1
+langcode: en
+status: true
+dependencies: {  }
+name: Artists
+vid: artists
+description: null
+weight: 0
+new_revision: false

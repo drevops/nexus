@@ -1,0 +1,29 @@
+uuid: 0efa5cb2-40cf-41f3-9664-8c156a7848cc
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_acl
+    - node.type.episode
+    - taxonomy.vocabulary.acl_programs
+id: node.episode.field_acl
+field_name: field_acl
+entity_type: node
+bundle: episode
+label: 'ACL program'
+description: 'Internal field to track access control using workbench_access. Visible only to super-admins.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      acl_programs: acl_programs
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

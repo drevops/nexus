@@ -1,0 +1,71 @@
+uuid: b81a23fc-e783-4a2b-94f8-06f3f67916df
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.full
+    - field.field.node.interview.field_artist
+    - field.field.node.interview.field_body
+    - field.field.node.interview.field_date
+    - field.field.node.interview.field_featured_media
+    - field.field.node.interview.field_genre
+    - field.field.node.interview.field_media
+    - field.field.node.interview.field_program
+    - field.field.node.interview.field_subgenre
+    - field.field.node.interview.field_summary
+    - node.type.interview
+  module:
+    - text
+    - user
+id: node.interview.full
+targetEntityType: node
+bundle: interview
+mode: full
+content:
+  field_artist:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 102
+    region: content
+  field_body:
+    type: text_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 107
+    region: content
+  field_media:
+    type: entity_reference_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: false
+    third_party_settings: {  }
+    weight: 104
+    region: content
+  field_program:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 103
+    region: content
+  field_summary:
+    type: basic_string
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 102
+    region: content
+hidden:
+  field_date: true
+  field_featured_media: true
+  field_genre: true
+  field_subgenre: true
+  langcode: true
+  links: true
+  search_api_excerpt: true

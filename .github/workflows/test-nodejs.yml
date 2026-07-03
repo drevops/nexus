@@ -1,0 +1,171 @@
+name: Test Node.js
+
+on:
+  schedule:
+    - cron: '23 4 * * *'
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+      - 'feature/**'
+  workflow_dispatch:
+    inputs:
+      enable_terminal:
+        type: boolean
+        description: 'Enable terminal session.'
+        required: false
+        default: false
+
+# A pull request push cancels its superseded run; pushes and manual runs on a
+# branch share 1 queue, so the newest commit deploys last. Scheduled runs get
+# their own group, so they never replace a queued deploy.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || (github.event_name == 'schedule' && 'schedule') || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test-nodejs:
+    name: Node.js ${{ matrix.node }}
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [22, 24]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check coding standards
+        if: matrix.node == 24
+        run: npm run lint
+        continue-on-error: ${{ vars.CI_LINT_IGNORE_FAILURE == '1' }}
+
+      - name: Run tests
+        run: npm run test-coverage
+        continue-on-error: ${{ vars.CI_TEST_IGNORE_FAILURE == '1' }}
+
+      - name: Check code coverage threshold
+        if: matrix.node == 24
+        run: |
+          RATE=$(grep -o 'line-rate="[0-9.]*"' .logs/cobertura-coverage.xml | head -1 | tr -cd '0-9.')
+          PERCENT=$(awk "BEGIN {printf \"%.2f\", $RATE*100}")
+          echo "Coverage: $PERCENT% (threshold: $CI_CODE_COVERAGE_THRESHOLD%)"
+          if [[ ! $CI_CODE_COVERAGE_THRESHOLD =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+            echo "FAIL: CI_CODE_COVERAGE_THRESHOLD must be a non-negative number"
+            exit 1
+          fi
+          if awk -v p="$PERCENT" -v t="$CI_CODE_COVERAGE_THRESHOLD" 'BEGIN { exit !(p + 0 < t + 0) }'; then
+            echo "FAIL: coverage too low"
+            exit 1
+          fi
+        env:
+          CI_CODE_COVERAGE_THRESHOLD: ${{ vars.CI_CODE_COVERAGE_THRESHOLD || '80' }}
+
+      - name: Upload coverage report as an artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: ${{github.job}}-code-coverage-report-${{ matrix.node }}
+          path: .logs
+          include-hidden-files: true
+          if-no-files-found: error
+
+      - name: Upload coverage report to Codecov
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7
+        if: matrix.node == 24 && env.CODECOV_TOKEN != ''
+        with:
+          files: .logs/cobertura-coverage.xml
+          fail_ci_if_error: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Setup tmate session
+        if: ${{ !cancelled() && github.event.inputs.enable_terminal == 'true' }}
+        uses: mxschmitt/action-tmate@35b54afac29c97fb54faba5b513f8fbd1882f113 # v3
+        timeout-minutes: 30
+
+  test-e2e:
+    name: End-to-end
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run end-to-end tests
+        run: npm run test-e2e
+        continue-on-error: ${{ vars.CI_TEST_IGNORE_FAILURE == '1' }}
+
+  deploy:
+    name: Deploy to Netlify
+    needs:
+      - test-nodejs
+      - test-e2e
+    if: github.event_name != 'schedule' && vars.NETLIFY_SITE_ID != ''
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pull-requests: write # 'actions-netlify' posts the deploy URL as a pull request comment.
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Assemble static site
+        run: npm run assemble
+
+      - name: Deploy to Netlify
+        if: env.NETLIFY_AUTH_TOKEN != ''
+        uses: nwtgck/actions-netlify@d22a32a27c918fe470bbc562e984f80ec48c2668 # v4.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          publish-dir: _site
+          production-branch: main
+          alias: ${{ github.event_name == 'pull_request' && format('deploy-preview-{0}', github.event.pull_request.number) || '' }}
+          deploy-message: 'Deploy from GitHub Actions'
+          enable-pull-request-comment: true
+          overwrites-pull-request-comment: true
+          enable-commit-comment: false
+          enable-commit-status: false
+          enable-github-deployment: false
+        env:
+          NETLIFY_SITE_ID: ${{ vars.NETLIFY_SITE_ID }}
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+        timeout-minutes: 5

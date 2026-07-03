@@ -1,0 +1,29 @@
+uuid: efcb6182-e205-4941-8cc9-a17cc4fe4849
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_genre
+    - node.type.interview
+    - taxonomy.vocabulary.genres
+id: node.interview.field_genre
+field_name: field_genre
+entity_type: node
+bundle: interview
+label: Genre
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      genres: genres
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

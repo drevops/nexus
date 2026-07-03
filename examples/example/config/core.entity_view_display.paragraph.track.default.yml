@@ -1,0 +1,77 @@
+uuid: 83b2d083-543c-4874-a59d-5d79be509bd5
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.paragraph.track.field_album
+    - field.field.paragraph.track.field_artist
+    - field.field.paragraph.track.field_body
+    - field.field.paragraph.track.field_descriptors
+    - field.field.paragraph.track.field_title
+    - field.field.paragraph.track.field_track_id
+    - field.field.paragraph.track.field_track_marker
+    - paragraphs.paragraphs_type.track
+  module:
+    - options
+    - text
+id: paragraph.track.default
+targetEntityType: paragraph
+bundle: track
+mode: default
+content:
+  field_album:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 2
+    region: content
+  field_artist:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  field_body:
+    type: text_default
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  field_descriptors:
+    type: list_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 4
+    region: content
+  field_title:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 3
+    region: content
+  field_track_id:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 5
+    region: content
+  field_track_marker:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 0
+    region: content
+hidden:
+  search_api_excerpt: true

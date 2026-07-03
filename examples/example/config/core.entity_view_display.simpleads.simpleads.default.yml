@@ -1,0 +1,113 @@
+uuid: d855e2ee-8d71-4cb5-98d5-40946aaf5421
+langcode: en
+status: true
+dependencies:
+  module:
+    - datetime
+    - link
+    - options
+    - simpleads
+_core:
+  default_config_hash: JVNTLWiH9uwW3GKccJNNy6Ecb7vGVBrPzObXKh6QBn4
+id: simpleads.simpleads.default
+targetEntityType: simpleads
+bundle: simpleads
+mode: default
+content:
+  advertisement:
+    type: simpleads_advertisement
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  campaign:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 4
+    region: content
+  end_date:
+    type: datetime_default
+    label: above
+    settings:
+      timezone_override: ''
+      format_type: medium
+    third_party_settings: {  }
+    weight: 6
+    region: content
+  group:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 3
+    region: content
+  start_date:
+    type: datetime_default
+    label: above
+    settings:
+      timezone_override: ''
+      format_type: medium
+    third_party_settings: {  }
+    weight: 5
+    region: content
+  status:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 9
+    region: content
+  title:
+    type: string
+    label: hidden
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  type:
+    type: list_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 2
+    region: content
+  url:
+    type: link
+    label: above
+    settings:
+      trim_length: 80
+      url_only: false
+      url_plain: false
+      rel: ''
+      target: ''
+    third_party_settings: {  }
+    weight: 7
+    region: content
+  url_target:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 8
+    region: content
+hidden:
+  html5: true
+  image: true
+  langcode: true
+  responsive_image_desktop: true
+  responsive_image_mobile: true
+  responsive_image_tablet: true
+  search_api_excerpt: true
+  stats: true

@@ -1,0 +1,52 @@
+uuid: fb6bfb26-fcd3-4a75-b612-1d0a3736ef3a
+langcode: en
+status: true
+dependencies:
+  module:
+    - workflows_field
+id: gig_submission
+label: 'Gig Submission'
+type: workflows_field
+type_settings:
+  initial_state: submitted
+  states:
+    approved:
+      label: Approved
+      weight: 2
+    converted:
+      label: Converted
+      weight: 3
+    declined:
+      label: Declined
+      weight: 1
+    submitted:
+      label: Submitted
+      weight: 0
+  transitions:
+    approve:
+      label: Approve
+      from:
+        - converted
+      to: approved
+      weight: -1
+    convert_to_event:
+      label: 'Convert to Event'
+      from:
+        - submitted
+      to: converted
+      weight: -2
+    decline:
+      label: Decline
+      from:
+        - approved
+        - converted
+        - declined
+        - submitted
+      to: declined
+      weight: 0
+    resubmit:
+      label: Resubmit
+      from:
+        - declined
+      to: submitted
+      weight: 1

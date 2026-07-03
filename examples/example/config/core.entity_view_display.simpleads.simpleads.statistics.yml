@@ -1,0 +1,40 @@
+uuid: c61f02e8-4b5d-444c-ab16-c021e42a0b5c
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.simpleads.statistics
+  module:
+    - simpleads
+_core:
+  default_config_hash: XbMkmBlmvZGj6OpbxJYSOhYNYXnybb9hQMb_gS5Kz0M
+id: simpleads.simpleads.statistics
+targetEntityType: simpleads
+bundle: simpleads
+mode: statistics
+content:
+  stats:
+    type: simpleads_stats_chart
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+hidden:
+  advertisement: true
+  campaign: true
+  end_date: true
+  group: true
+  html5: true
+  image: true
+  langcode: true
+  responsive_image_desktop: true
+  responsive_image_mobile: true
+  responsive_image_tablet: true
+  search_api_excerpt: true
+  start_date: true
+  status: true
+  title: true
+  type: true
+  url: true
+  url_target: true
