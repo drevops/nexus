@@ -29,10 +29,15 @@ fi
 
 mkdir -p "${output_dir}"
 
-name="$(basename "${config_dir}")"
-if [ "${name}" = "config" ]; then
-  name="$(basename "$(dirname "${config_dir}")")"
-fi
+# Derive a report name from the first meaningful path segment, skipping the
+# generic config wrappers (config/install/sync/default), e.g.
+# ".../publica_base/config/install" -> "publica_base".
+name_dir="${config_dir%/}"
+name="$(basename "${name_dir}")"
+while [ "${name}" = "config" ] || [ "${name}" = "install" ] || [ "${name}" = "sync" ] || [ "${name}" = "default" ]; do
+  name_dir="$(dirname "${name_dir}")"
+  name="$(basename "${name_dir}")"
+done
 
 timestamp="$(date +%Y%m%d-%H%M%S)"
 output_file="${output_dir}/${name}-${timestamp}.html"

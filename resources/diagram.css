@@ -93,6 +93,21 @@ body {
   color: #fff;
 }
 
+.toolbar__check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.toolbar__check input {
+  margin: 0;
+}
+
 .stage {
   position: relative;
   flex: 1 1 auto;
@@ -107,6 +122,26 @@ body {
     linear-gradient(rgba(0, 0, 0, 0.035) 1px, transparent 1px),
     linear-gradient(90deg, rgba(0, 0, 0, 0.035) 1px, transparent 1px);
   background-size: 26px 26px;
+}
+
+.captions {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.caption {
+  position: absolute;
+  transform: translate(-50%, 0);
+  padding: 0 3px;
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  color: #55606d;
+  background: rgba(244, 245, 247, 0.82);
+  border-radius: 3px;
+  white-space: nowrap;
+  line-height: 1.2;
 }
 
 /* Panels (entities + table). */

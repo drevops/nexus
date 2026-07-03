@@ -22,6 +22,7 @@
     <div class="toolbar__group">
       <button id="fields-toggle" class="toolbar__button" type="button">Show fields</button>
       <button id="layout-toggle" class="toolbar__button" type="button">Layout: LR</button>
+      <label class="toolbar__check"><input id="machine-names" type="checkbox"> Machine names</label>
     </div>
     <div class="toolbar__group">
       <button id="entities-toggle" class="toolbar__button" type="button">Entities</button>
@@ -32,6 +33,7 @@
 </header>
 <main class="stage">
   <div id="cy" class="cy"></div>
+  <div id="captions" class="captions" aria-hidden="true"></div>
 
   <aside id="entities" class="panel panel--left" aria-label="Entities" hidden>
     <div class="panel__head">

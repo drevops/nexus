@@ -89,6 +89,7 @@ The page opens as an entity-only overview. The toolbar adds:
 - **Zoom / Fit / Reset** and mouse-wheel zoom with drag-to-pan (infinite canvas).
 - **Show fields** - reveal every field ellipse for the full, detailed model.
 - **Layout: LR / TB** - switch the flow direction.
+- **Machine names** - show each bundle/field machine name in monospace beneath its symbol.
 - **Entities** - an index panel with per-type filters and per-entity field counts; click an entity to focus it, or open its field list.
 - **Table** - a searchable table of all fields (or one entity's), with type, cardinality, requiredness and reference targets.
 - **Legend** - the visual-language key.

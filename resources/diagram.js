@@ -34,6 +34,7 @@
 
   var fieldsMode = false;
   var rankDir = 'LR';
+  var showMachineNames = false;
   var typeVisible = {};
 
   function prettify(value) {
@@ -189,7 +190,8 @@
           'taxi-direction': function () {
             return rankDir === 'TB' ? 'vertical' : 'horizontal';
           },
-          'taxi-turn': '40%',
+          'taxi-turn': '50%',
+          'taxi-turn-min-distance': '8px',
           width: 1.2,
           'line-color': '#aeb4bd',
           'target-arrow-shape': 'none',
@@ -308,7 +310,6 @@
       container: document.getElementById('cy'),
       elements: elements,
       style: style(),
-      wheelSensitivity: 0.2,
       minZoom: 0.05,
       maxZoom: 3,
       layout: { name: 'grid' },
@@ -363,13 +364,15 @@
       cy.elements(':visible').layout({
         name: 'dagre',
         rankDir: rankDir,
-        nodeSep: fieldsMode ? 16 : 26,
-        edgeSep: 8,
-        rankSep: fieldsMode ? 70 : 90,
+        ranker: 'network-simplex',
+        nodeSep: fieldsMode ? 26 : 52,
+        edgeSep: 16,
+        rankSep: fieldsMode ? 95 : 150,
         nodeDimensionsIncludeLabels: true,
         animate: false,
       }).run();
-      cy.fit(undefined, 45);
+      cy.fit(undefined, 50);
+      positionCaptions();
     }
 
     function focusEntity(id) {
@@ -386,6 +389,64 @@
 
     function clearFocus() {
       cy.elements().removeClass('faded');
+    }
+
+    // Machine-name captions rendered as a DOM layer below each node, so they
+    // sit outside the shape in a monospace font.
+    var captionsEl = document.getElementById('captions');
+    var captionMap = {};
+
+    function machineNameOf(node) {
+      var group = node.data('group');
+      if (group === 'entity') {
+        return node.data('bundle');
+      }
+      if (group === 'field') {
+        return node.data('name') || '';
+      }
+      return '';
+    }
+
+    function rebuildCaptions() {
+      captionsEl.innerHTML = '';
+      captionMap = {};
+      if (!showMachineNames) {
+        return;
+      }
+      cy.nodes().forEach(function (node) {
+        var name = machineNameOf(node);
+        if (!name) {
+          return;
+        }
+        var div = document.createElement('div');
+        div.className = 'caption';
+        div.textContent = name;
+        captionsEl.appendChild(div);
+        captionMap[node.id()] = div;
+      });
+      positionCaptions();
+    }
+
+    function positionCaptions() {
+      if (!showMachineNames) {
+        return;
+      }
+      var zoom = cy.zoom();
+      var tooSmall = zoom < 0.35;
+      var size = Math.max(7, Math.min(13, 10 * zoom));
+      Object.keys(captionMap).forEach(function (id) {
+        var node = cy.getElementById(id);
+        var div = captionMap[id];
+        if (node.empty() || node.hasClass('hidden') || node.hasClass('faded') || tooSmall) {
+          div.style.display = 'none';
+          return;
+        }
+        var pos = node.renderedPosition();
+        div.style.display = 'block';
+        div.style.left = pos.x + 'px';
+        div.style.top = (pos.y + node.renderedOuterHeight() / 2 + 3) + 'px';
+        div.style.fontSize = size + 'px';
+      });
     }
 
     // Legend.
@@ -592,6 +653,23 @@
       rankDir = rankDir === 'LR' ? 'TB' : 'LR';
       layoutBtn.textContent = 'Layout: ' + rankDir;
       runLayout();
+    });
+
+    document.getElementById('machine-names').addEventListener('change', function (evt) {
+      showMachineNames = evt.target.checked;
+      rebuildCaptions();
+    });
+
+    var captionRaf = false;
+    cy.on('render', function () {
+      if (!showMachineNames || captionRaf) {
+        return;
+      }
+      captionRaf = true;
+      requestAnimationFrame(function () {
+        captionRaf = false;
+        positionCaptions();
+      });
     });
 
     document.getElementById('search').addEventListener('input', function (evt) {
