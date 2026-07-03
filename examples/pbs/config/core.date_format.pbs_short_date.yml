@@ -1,0 +1,8 @@
+uuid: 2a275a94-9d7c-4673-afb8-d5b8fae4f10b
+langcode: en
+status: true
+dependencies: {  }
+id: pbs_short_date
+label: 'PBS short date'
+locked: false
+pattern: d/m/Y

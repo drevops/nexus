@@ -1,0 +1,29 @@
+uuid: a1352944-4cbe-4b72-840c-b1b0e85165a9
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_artist
+    - node.type.news
+    - taxonomy.vocabulary.artists
+id: node.news.field_artist
+field_name: field_artist
+entity_type: node
+bundle: news
+label: Artist
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      artists: artists
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

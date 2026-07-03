@@ -1,0 +1,10 @@
+title: 'Annotated model'
+nodes:
+  - { id: create_program, kind: callback, label: 'Create program', method: POST, attach: node.article }
+  - { id: omny_api, kind: api, label: 'Omny Studio API' }
+  - { id: clip_created, kind: event, label: ClipCreated }
+edges:
+  - { from: omny_api, to: clip_created, label: emits }
+computed_fields:
+  node.article:
+    - { name: computed_url, label: 'Computed URL' }

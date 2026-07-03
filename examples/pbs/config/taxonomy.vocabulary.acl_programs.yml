@@ -1,0 +1,9 @@
+uuid: 6105a828-00a5-4484-a599-ca7c72c6c390
+langcode: en
+status: true
+dependencies: {  }
+name: 'ACL Programs'
+vid: acl_programs
+description: 'DO NOT MODIFY. Internal vocabulary to control program permissions. Used with workbench_access.'
+weight: 0
+new_revision: false

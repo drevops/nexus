@@ -1,0 +1,17 @@
+uuid: 2925b76c-2ca6-42e9-ac99-858db920bc97
+langcode: en
+status: true
+dependencies:
+  module:
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus: {  }
+    parent: ''
+name: Program
+type: program
+description: 'Use <em>Program</em> to capture program details.'
+help: null
+new_revision: true
+preview_mode: 1
+display_submitted: false

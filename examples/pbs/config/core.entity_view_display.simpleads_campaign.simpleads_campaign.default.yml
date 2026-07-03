@@ -1,0 +1,79 @@
+uuid: d60a49e3-8289-4d27-a04e-4941dfc50d16
+langcode: en
+status: true
+dependencies:
+  module:
+    - datetime
+    - options
+    - simpleads
+_core:
+  default_config_hash: C4b4vFsoejMuHdpeztUN0GDF_aXtF-swEh8AD-DMB3g
+id: simpleads_campaign.simpleads_campaign.default
+targetEntityType: simpleads_campaign
+bundle: simpleads_campaign
+mode: default
+content:
+  click:
+    type: number_integer
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  end_date:
+    type: datetime_default
+    label: above
+    settings:
+      timezone_override: ''
+      format_type: medium
+    third_party_settings: {  }
+    weight: 15
+    region: content
+  impression:
+    type: number_integer
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  name:
+    type: string
+    label: hidden
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: -4
+    region: content
+  start_date:
+    type: datetime_default
+    label: above
+    settings:
+      timezone_override: ''
+      format_type: medium
+    third_party_settings: {  }
+    weight: 14
+    region: content
+  status:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 101
+    region: content
+  type:
+    type: list_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+hidden:
+  langcode: true
+  search_api_excerpt: true

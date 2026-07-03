@@ -1,0 +1,37 @@
+uuid: c3f1f64a-77e3-4045-82da-167aca5e55fa
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_tracks
+    - node.type.episode
+    - paragraphs.paragraphs_type.track
+  module:
+    - entity_reference_revisions
+id: node.episode.field_tracks
+field_name: field_tracks
+entity_type: node
+bundle: episode
+label: Tracks
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    target_bundles:
+      track: track
+    negate: 0
+    target_bundles_drag_drop:
+      content:
+        weight: 4
+        enabled: false
+      layout:
+        weight: 5
+        enabled: false
+      track:
+        weight: 6
+        enabled: true
+field_type: entity_reference_revisions

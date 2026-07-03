@@ -1,0 +1,42 @@
+uuid: daf47288-cf94-469d-9e56-e7d1ea762ca8
+langcode: en
+status: true
+dependencies:
+  module:
+    - simpleads
+_core:
+  default_config_hash: 7tx3OOjbNcBkaFwNOputsO20TsxUYr6Csi2vVMCkJ7Q
+id: simpleads_group.simpleads_group.default
+targetEntityType: simpleads_group
+bundle: simpleads_group
+mode: default
+content:
+  description:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: -4
+    region: content
+  name:
+    type: string
+    label: hidden
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: -4
+    region: content
+  status:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 101
+    region: content
+hidden:
+  langcode: true
+  search_api_excerpt: true

@@ -1,0 +1,36 @@
+uuid: 10a56662-4a76-448a-9b1f-0c30bcf7541b
+langcode: en
+status: true
+dependencies:
+  config:
+    - rest.resource.simpleads_click
+    - rest.resource.simpleads_group
+    - rest.resource.simpleads_impression
+    - rest.resource.simpleads_reference
+    - rest.resource.simpleads_views
+    - search_api_autocomplete.search.search_all
+  module:
+    - media
+    - rest
+    - search_api_autocomplete
+    - simpleads
+    - storybook
+    - system
+_core:
+  default_config_hash: 6WavjUYXIegP9AAg2zXGx54MWIVoomC3SZhNiqe-Dyk
+id: anonymous
+label: 'Anonymous user'
+weight: 0
+is_admin: false
+permissions:
+  - 'access content'
+  - 'count simpleads clicks'
+  - 'count simpleads impressions'
+  - 'render storybook stories'
+  - 'restful get simpleads_group'
+  - 'restful get simpleads_reference'
+  - 'restful get simpleads_views'
+  - 'restful post simpleads_click'
+  - 'restful post simpleads_impression'
+  - 'use search_api_autocomplete for search_all'
+  - 'view media'

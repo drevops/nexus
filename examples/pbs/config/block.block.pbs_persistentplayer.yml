@@ -1,0 +1,25 @@
+uuid: 370e7b9c-b473-4e61-a09c-58ff2330ec3d
+langcode: en
+status: true
+dependencies:
+  module:
+    - radio_station
+  theme:
+    - pbs
+id: pbs_persistentplayer
+theme: pbs
+region: fixed_bottom
+weight: 0
+provider: null
+plugin: radio_station_persistent_player
+settings:
+  id: radio_station_persistent_player
+  label: 'Persistent player'
+  label_display: '0'
+  provider: radio_station
+  logo_uri: /themes/custom/pbs/logo-only.svg
+  live_stream_uri: 'https://playerservices.streamtheworld.com/api/livestream-redirect/3PBS_FMAACHIGH.m3u8?dist=3pbswebsite'
+  live_stream_fallback_title: LIVE
+  live_stream_fallback_image_uri: /themes/custom/pbs/logo-only.svg
+  recording_fallback_image_uri: /modules/custom/radio_station/icons/player-recording-image-default.svg
+visibility: {  }

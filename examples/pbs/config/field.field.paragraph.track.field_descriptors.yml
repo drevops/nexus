@@ -1,0 +1,21 @@
+uuid: b1d69898-d3fe-44eb-ad36-628e0aebba9a
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_descriptors
+    - paragraphs.paragraphs_type.track
+  module:
+    - options
+id: paragraph.track.field_descriptors
+field_name: field_descriptors
+entity_type: paragraph
+bundle: track
+label: Descriptors
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

@@ -1,0 +1,44 @@
+uuid: e71cc561-7bd5-43e9-a938-e32c8ed739bb
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.full
+    - field.field.node.video.field_featured_media
+    - field.field.node.video.field_genre
+    - field.field.node.video.field_media
+    - field.field.node.video.field_news_type
+    - field.field.node.video.field_subgenre
+    - field.field.node.video.field_summary
+    - node.type.video
+  module:
+    - user
+id: node.video.full
+targetEntityType: node
+bundle: video
+mode: full
+content:
+  field_media:
+    type: entity_reference_entity_view
+    label: hidden
+    settings:
+      view_mode: default
+      link: false
+    third_party_settings: {  }
+    weight: 104
+    region: content
+  field_summary:
+    type: basic_string
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 102
+    region: content
+hidden:
+  field_featured_media: true
+  field_genre: true
+  field_news_type: true
+  field_subgenre: true
+  langcode: true
+  links: true
+  search_api_excerpt: true

@@ -1,0 +1,71 @@
+uuid: 9d7cbc06-351a-4026-9f36-eb199a2a43ed
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.card
+    - field.field.node.video.field_featured_media
+    - field.field.node.video.field_genre
+    - field.field.node.video.field_media
+    - field.field.node.video.field_news_type
+    - field.field.node.video.field_subgenre
+    - field.field.node.video.field_summary
+    - node.type.video
+  module:
+    - text
+    - user
+id: node.video.card
+targetEntityType: node
+bundle: video
+mode: card
+content:
+  field_featured_media:
+    type: entity_reference_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: false
+    third_party_settings: {  }
+    weight: 104
+    region: content
+  field_genre:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 101
+    region: content
+  field_media:
+    type: entity_reference_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: false
+    third_party_settings: {  }
+    weight: 104
+    region: content
+  field_news_type:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 108
+    region: content
+  field_summary:
+    type: basic_string
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 102
+    region: content
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 100
+    region: content
+hidden:
+  field_subgenre: true
+  langcode: true
+  search_api_excerpt: true

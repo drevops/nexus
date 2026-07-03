@@ -1,0 +1,6 @@
+langcode: en
+status: true
+dependencies: {  }
+name: Page
+type: page
+description: 'A page.'

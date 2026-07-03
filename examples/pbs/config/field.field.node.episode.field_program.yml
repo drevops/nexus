@@ -1,0 +1,25 @@
+uuid: 16d7bd48-6e70-42bd-8390-b242542d0545
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_program
+    - node.type.episode
+id: node.episode.field_program
+field_name: field_program
+entity_type: node
+bundle: episode
+label: Program
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: views
+  handler_settings:
+    view:
+      view_name: programs_lookup
+      display_name: entity_reference_1
+      arguments: {  }
+field_type: entity_reference

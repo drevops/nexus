@@ -1,0 +1,11 @@
+langcode: en
+status: true
+id: node.field_summary
+field_name: field_summary
+entity_type: node
+type: string
+settings:
+  max_length: 255
+module: core
+locked: false
+cardinality: 1

@@ -1,0 +1,115 @@
+uuid: 1kcec3e7-0a49-4473-87a2-6dca09b91aba
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: banj5-bYsy5yG63H3_lmHmi57dBkkTvR1UEIRGZ37GQ
+id: pbs_news
+class: null
+field_plugin_method: null
+cck_plugin_method: null
+migration_tags: {  }
+migration_group: pbs_d7
+label: '07 News'
+source:
+  plugin: pbs_news_sql
+  high_water_property:
+    name: changed
+process:
+  title: title
+  field_date:
+    plugin: default_value
+    source: date_start
+    default_value: '2024-05-14T12:00:00'
+  field_summary: summary
+  field_body/value:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: body
+    -
+      plugin: pbs_media_wysiwyg_filter
+      media_migrations:
+        - pbs_media_local_file
+        - pbs_media_remote_video
+        - pbs_media_remote_audio
+      view_mode_mapping:
+        default: default
+        teaser: default
+        wysiwyg: default
+        preview: default
+  field_body/format:
+    -
+      plugin: default_value
+      default_value: full_html
+  media_lookup:
+    plugin: migration_lookup
+    source: image
+    migration: pbs_media_local_file
+    no_stub: true
+  field_media:
+    plugin: pbs_default_media
+    source: '@media_lookup'
+  featured_media_lookup:
+    plugin: migration_lookup
+    source: background_image
+    migration: pbs_media_local_file
+    no_stub: true
+  field_featured_media:
+    plugin: pbs_default_media
+    source: '@featured_media_lookup'
+  field_news_type:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: category
+    -
+      plugin: migration_lookup
+      migration: pbs_taxonomy_term
+      no_stub: true
+  field_news_alert:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: alert
+    -
+      plugin: migration_lookup
+      migration: pbs_taxonomy_term
+      no_stub: true
+  field_genre:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: genre
+    -
+      plugin: explode
+      delimiter: '|'
+    -
+      plugin: migration_lookup
+      migration: pbs_taxonomy_term
+      no_stub: true
+  status: published
+  promote: promoted
+  enews: enews
+  spotlight: spotlight
+  created: created
+  changed: changed
+  uid:
+    plugin: default_value
+    default_value: 4
+  path/alias: path
+  path/pathauto:
+    plugin: default_value
+    default_value: 0
+destination:
+  plugin: 'entity:node'
+  default_bundle: news
+idMap: {  }
+migration_dependencies:
+  required:
+    - pbs_media_remote_audio
+    - pbs_media_remote_video
+    - pbs_media_local_file
+    - pbs_taxonomy_term
+  optional: {  }
+include: {  }

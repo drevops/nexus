@@ -1,0 +1,14 @@
+uuid: 7b6812d3-05ac-4b89-9249-2647ab03549c
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.announcer
+  module:
+    - user
+id: user_add_role_action.announcer
+label: 'Add the Announcer role to the selected user(s)'
+type: user
+plugin: user_add_role_action
+configuration:
+  rid: announcer

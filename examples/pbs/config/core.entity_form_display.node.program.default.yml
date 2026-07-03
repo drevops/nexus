@@ -1,0 +1,438 @@
+uuid: 36080c7b-bdd5-407a-a45d-d1b94e03be81
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.program.field_acl
+    - field.field.node.program.field_api_slug
+    - field.field.node.program.field_api_sync
+    - field.field.node.program.field_api_uuid
+    - field.field.node.program.field_author
+    - field.field.node.program.field_body
+    - field.field.node.program.field_create_future_episodes
+    - field.field.node.program.field_featured_media
+    - field.field.node.program.field_genre
+    - field.field.node.program.field_link_facebook
+    - field.field.node.program.field_link_instagram
+    - field.field.node.program.field_link_x
+    - field.field.node.program.field_media
+    - field.field.node.program.field_rec_autochapters
+    - field.field.node.program.field_rec_enabled
+    - field.field.node.program.field_rec_episode_visibility
+    - field.field.node.program.field_rec_mode
+    - field.field.node.program.field_rec_schedule
+    - field.field.node.program.field_subgenre
+    - field.field.node.program.field_summary
+    - field.field.node.program.field_tagline
+    - node.type.program
+  module:
+    - date_recur_modular
+    - field_group
+    - link
+    - media_library
+    - path
+    - text
+third_party_settings:
+  field_group:
+    group_socials:
+      children:
+        - field_link_facebook
+        - field_link_instagram
+        - field_link_x
+        - enews
+        - spotlight
+      label: Socials
+      region: content
+      parent_name: group_content
+      weight: '9'
+      format_type: tab
+      format_settings:
+        description: ''
+        formatter: closed
+        required_fields: '1'
+        id: ''
+        classes: ''
+        show_empty_fields: 0
+        label_as_html: 0
+    group_api:
+      children:
+        - field_api_sync
+        - field_api_uuid
+        - field_api_slug
+      label: API
+      region: content
+      parent_name: ''
+      weight: '1'
+      format_type: details_sidebar
+      format_settings:
+        classes: ''
+        show_empty_fields: false
+        id: ''
+        label_as_html: false
+        open: false
+        description: ''
+        required_fields: true
+        weight: 0
+    group_tabs:
+      children:
+        - group_content
+        - group_schedule
+      parent_name: ''
+      weight: '0'
+      format_type: tabs
+      region: content
+      field_layout: null
+      region_mapping: null
+      format_settings:
+        show_empty_fields: 0
+        label_as_html: 0
+        id: ''
+        classes: ''
+        direction: horizontal
+        width_breakpoint: '640'
+      label: Tabs
+    group_content:
+      children:
+        - title
+        - field_summary
+        - field_body
+        - field_tagline
+        - field_author
+        - field_media
+        - field_featured_media
+        - group_socials
+      parent_name: group_tabs
+      weight: '20'
+      format_type: tab
+      region: content
+      field_layout: null
+      region_mapping: null
+      format_settings:
+        show_empty_fields: 0
+        label_as_html: 0
+        id: ''
+        classes: ''
+        description: ''
+        formatter: open
+        required_fields: 1
+      label: Content
+    group_schedule:
+      children:
+        - field_rec_schedule
+        - field_create_future_episodes
+        - field_rec_enabled
+        - group_automatic_recording_settin
+      parent_name: group_tabs
+      weight: '21'
+      format_type: tab
+      region: content
+      field_layout: null
+      region_mapping: null
+      format_settings:
+        show_empty_fields: 0
+        label_as_html: 0
+        id: ''
+        classes: ''
+        description: ''
+        formatter: closed
+        required_fields: 1
+      label: Schedule
+    group_automatic_recording_settin:
+      children:
+        - field_rec_mode
+        - field_rec_autochapters
+        - field_rec_episode_visibility
+      parent_name: group_schedule
+      weight: '14'
+      format_type: fieldset
+      region: content
+      field_layout: null
+      region_mapping: null
+      format_settings:
+        show_empty_fields: 0
+        label_as_html: 0
+        id: ''
+        classes: ''
+        description: ''
+        open: 0
+        required_fields: 1
+      label: 'Automatic recording settings'
+    group_categorise:
+      children:
+        - field_genre
+        - field_subgenre
+      parent_name: ''
+      weight: '3'
+      format_type: details_sidebar
+      region: content
+      field_layout: null
+      region_mapping: null
+      format_settings:
+        show_empty_fields: 0
+        label_as_html: 0
+        id: ''
+        classes: ''
+        description: ''
+        open: 1
+        required_fields: 1
+        weight: '0'
+      label: Categorise
+    group_access_control:
+      children:
+        - field_acl
+      parent_name: ''
+      weight: '2'
+      format_type: details_sidebar
+      region: content
+      field_layout: null
+      region_mapping: null
+      format_settings:
+        show_empty_fields: 0
+        label_as_html: 0
+        id: ''
+        classes: ''
+        description: ''
+        open: 0
+        required_fields: 1
+        weight: '0'
+      label: 'Access control'
+id: node.program.default
+targetEntityType: node
+bundle: program
+mode: default
+content:
+  created:
+    type: datetime_timestamp
+    weight: 5
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  enews:
+    type: boolean_checkbox
+    weight: 20
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  field_acl:
+    type: entity_reference_autocomplete
+    weight: 33
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_api_slug:
+    type: string_textfield
+    weight: 29
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_api_sync:
+    type: boolean_checkbox
+    weight: 26
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  field_api_uuid:
+    type: string_textfield
+    weight: 27
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_author:
+    type: string_textfield
+    weight: 5
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_body:
+    type: text_textarea
+    weight: 3
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+  field_create_future_episodes:
+    type: boolean_checkbox
+    weight: 5
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  field_featured_media:
+    type: media_library_widget
+    weight: 7
+    region: content
+    settings:
+      media_types: {  }
+    third_party_settings: {  }
+  field_genre:
+    type: entity_reference_autocomplete_tags
+    weight: 8
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_link_facebook:
+    type: link_default
+    weight: 17
+    region: content
+    settings:
+      placeholder_url: ''
+      placeholder_title: ''
+    third_party_settings: {  }
+  field_link_instagram:
+    type: link_default
+    weight: 18
+    region: content
+    settings:
+      placeholder_url: ''
+      placeholder_title: ''
+    third_party_settings: {  }
+  field_link_x:
+    type: link_default
+    weight: 19
+    region: content
+    settings:
+      placeholder_url: ''
+      placeholder_title: ''
+    third_party_settings: {  }
+  field_media:
+    type: media_library_widget
+    weight: 6
+    region: content
+    settings:
+      media_types: {  }
+    third_party_settings: {  }
+  field_rec_autochapters:
+    type: boolean_checkbox
+    weight: 30
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  field_rec_enabled:
+    type: boolean_checkbox
+    weight: 6
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  field_rec_episode_visibility:
+    type: options_buttons
+    weight: 32
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_rec_mode:
+    type: options_buttons
+    weight: 29
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_rec_schedule:
+    type: date_recur_modular_oscar
+    weight: 4
+    region: content
+    settings:
+      all_day_toggle: false
+    third_party_settings: {  }
+  field_subgenre:
+    type: entity_reference_autocomplete
+    weight: 9
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_summary:
+    type: string_textarea
+    weight: 2
+    region: content
+    settings:
+      rows: 3
+      placeholder: ''
+    third_party_settings: {  }
+  field_tagline:
+    type: string_textfield
+    weight: 4
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  path:
+    type: path
+    weight: 8
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  promote:
+    type: boolean_checkbox
+    weight: 6
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  spotlight:
+    type: boolean_checkbox
+    weight: 21
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  status:
+    type: boolean_checkbox
+    weight: 10
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  sticky:
+    type: boolean_checkbox
+    weight: 7
+    region: content
+    settings:
+      display_label: true
+    third_party_settings: {  }
+  title:
+    type: string_textfield
+    weight: 1
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  uid:
+    type: entity_reference_autocomplete
+    weight: 11
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  url_redirects:
+    weight: 9
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+hidden:
+  langcode: true

@@ -1,0 +1,23 @@
+uuid: 1fc1ce3f-4bd5-4fc2-bb5a-173b24a72915
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_api_sync
+    - node.type.program
+id: node.program.field_api_sync
+field_name: field_api_sync
+entity_type: node
+bundle: program
+label: 'API sync'
+description: 'Sync data to API'
+required: false
+translatable: false
+default_value:
+  -
+    value: 1
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

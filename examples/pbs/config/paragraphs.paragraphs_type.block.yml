@@ -1,0 +1,10 @@
+uuid: d1446d9f-c0e9-4482-b892-35118b11c991
+langcode: en
+status: true
+dependencies: {  }
+id: block
+label: Block
+icon_uuid: null
+icon_default: null
+description: 'Add a Block inside a Paragraph.'
+behavior_plugins: {  }

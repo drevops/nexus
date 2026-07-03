@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ title }}</title>
+<style>
+{{ styles }}
+</style>
+</head>
+<body>
+<header class="toolbar">
+  <h1 class="toolbar__title">{{ title }}</h1>
+  <div class="toolbar__actions">
+    <input id="search" class="toolbar__search" type="search" placeholder="Find entity…" autocomplete="off">
+    <button id="fit" class="toolbar__button" type="button">Fit</button>
+    <button id="reset" class="toolbar__button" type="button">Reset</button>
+    <button id="legend-toggle" class="toolbar__button" type="button">Legend</button>
+  </div>
+</header>
+<main class="stage">
+  <div id="cy" class="cy"></div>
+  <aside id="legend" class="legend" aria-label="Legend"></aside>
+  <div id="tooltip" class="tooltip" role="tooltip" hidden></div>
+</main>
+<script type="application/json" id="model">
+{{ model }}
+</script>
+<script>
+{{ vendor }}
+</script>
+<script>
+{{ script }}
+</script>
+</body>
+</html>

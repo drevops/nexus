@@ -1,0 +1,23 @@
+uuid: 5a9f0d2b-8c3e-4f6g-b4d7-9e0f1a2b3c4e
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_create_future_episodes
+    - node.type.program
+id: node.program.field_create_future_episodes
+field_name: field_create_future_episodes
+entity_type: node
+bundle: program
+label: 'Automatically create future episodes'
+description: 'When enabled, automatically generates unpublished episodes for upcoming schedule slots.'
+required: false
+translatable: false
+default_value:
+  -
+    value: 1
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

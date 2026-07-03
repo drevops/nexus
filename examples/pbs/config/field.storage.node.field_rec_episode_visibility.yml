@@ -1,0 +1,27 @@
+uuid: 56a7386f-1d3c-4b3f-86da-37e23a7326d0
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - options
+id: node.field_rec_episode_visibility
+field_name: field_rec_episode_visibility
+entity_type: node
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: Private
+      label: Private
+    -
+      value: Public
+      label: Public
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

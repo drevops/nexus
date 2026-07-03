@@ -1,0 +1,14 @@
+uuid: 3607fa14-9e22-4db9-9e46-7c3e69f4ae26
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.interview_manager
+  module:
+    - user
+id: user_add_role_action.interview_manager
+label: 'Add the Interview manager role to the selected user(s)'
+type: user
+plugin: user_add_role_action
+configuration:
+  rid: interview_manager

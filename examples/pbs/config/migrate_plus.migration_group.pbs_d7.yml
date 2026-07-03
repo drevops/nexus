@@ -1,0 +1,12 @@
+uuid: 11f811f9-38d6-4035-ae3a-3c24b0847ff5
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: pgVT6y2kgXY9wAZH_Gd2cWEIGnytqKi8mm7yN6OjDIY
+id: pbs_d7
+label: 'PBS Drupal 7'
+description: 'Migrate content from PBS Drupal7'
+source_type: Drupal7
+module: null
+shared_configuration: null

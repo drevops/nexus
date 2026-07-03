@@ -1,0 +1,143 @@
+uuid: 0jcec3e7-0a49-4473-87a2-6dca09b91aba
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: ddhj5-bYsy5yG63H3_lmHmi57dBkkTvR1UEIRGZ37GQ
+id: pbs_program
+class: null
+field_plugin_method: null
+cck_plugin_method: null
+migration_tags: {  }
+migration_group: pbs_d7
+label: '10 Programs'
+source:
+  plugin: pbs_program_sql
+  high_water_property:
+    name: changed
+  constants:
+    FACEBOOK_BASE_URL: 'https://www.facebook.com'
+    X_BASE_URL: 'https://x.com'
+    INSTAGRAM_BASE_URL: 'https://www.instagram.com'
+process:
+  title:
+    -
+      plugin: skip_on_empty
+      method: row
+      source: title
+  field_api_slug: slug
+  field_tagline: tagline
+  media_lookup:
+    plugin: migration_lookup
+    source: image
+    migration: pbs_media_local_file
+    no_stub: true
+  field_media:
+    plugin: pbs_default_media
+    source: '@media_lookup'
+  featured_media_lookup:
+    plugin: migration_lookup
+    source: background_image
+    migration: pbs_media_local_file
+    no_stub: true
+  field_featured_media:
+    plugin: pbs_default_media
+    source: '@featured_media_lookup'
+  field_genre:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: genre
+    -
+      plugin: explode
+      delimiter: '|'
+    -
+      plugin: migration_lookup
+      migration: pbs_taxonomy_term
+      no_stub: true
+  field_author: broadcasters
+  field_api_sync:
+    plugin: default_value
+    default_value: 0
+  field_body/value:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: description
+    -
+      plugin: pbs_media_wysiwyg_filter
+      media_migrations:
+        - pbs_media_local_file
+        - pbs_media_remote_video
+        - pbs_media_remote_audio
+      view_mode_mapping:
+        default: default
+        teaser: default
+        wysiwyg: default
+        preview: default
+  field_body/format:
+    -
+      plugin: default_value
+      default_value: full_html
+  field_link_facebook:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: facebook_id
+    -
+      plugin: concat
+      delimiter: /
+      source:
+        - constants/FACEBOOK_BASE_URL
+        - facebook_id
+  field_link_x:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: twitter_id
+    -
+      plugin: concat
+      delimiter: /
+      source:
+        - constants/X_BASE_URL
+        - twitter_id
+  field_link_instagram:
+    -
+      plugin: skip_on_empty
+      method: process
+      source: instagram_id
+    -
+      plugin: concat
+      delimiter: /
+      source:
+        - constants/INSTAGRAM_BASE_URL
+        - instagram_id
+  status: published
+  created: created
+  changed: changed
+  uid:
+    -
+      plugin: migration_lookup
+      source: slug
+      migration: pbs_announcer
+      no_stub: true
+    -
+      plugin: default_value
+      default_value: 0
+  path/alias: path
+  path/pathauto:
+    plugin: default_value
+    default_value: 0
+destination:
+  plugin: 'entity:node'
+  default_bundle: program
+idMap: {  }
+migration_dependencies:
+  required:
+    - pbs_announcer
+    - pbs_media_remote_audio
+    - pbs_media_remote_video
+    - pbs_media_local_file
+    - pbs_taxonomy_term
+  optional: {  }
+include: {  }

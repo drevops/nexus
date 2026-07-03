@@ -1,0 +1,29 @@
+uuid: f91ba912-eb7a-4087-aff5-5207b062e580
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_artist
+    - paragraphs.paragraphs_type.track
+    - taxonomy.vocabulary.artists
+id: paragraph.track.field_artist
+field_name: field_artist
+entity_type: paragraph
+bundle: track
+label: Artist
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      artists: artists
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

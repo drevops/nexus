@@ -1,0 +1,11 @@
+uuid: 77d988fa-e75b-4209-bf07-bbdc0f214287
+langcode: en
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.venues
+id: taxonomy_term.venues
+target_entity_type_id: taxonomy_term
+target_bundle: venues
+default_langcode: site_default
+language_alterable: false

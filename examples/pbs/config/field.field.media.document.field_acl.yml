@@ -1,0 +1,29 @@
+uuid: 0d80becf-b0b0-43d0-a49e-e37f928520c9
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.media.field_acl
+    - media.type.document
+    - taxonomy.vocabulary.acl_programs
+id: media.document.field_acl
+field_name: field_acl
+entity_type: media
+bundle: document
+label: 'ACL program'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      acl_programs: acl_programs
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

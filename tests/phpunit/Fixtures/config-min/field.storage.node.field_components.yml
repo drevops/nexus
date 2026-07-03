@@ -1,0 +1,11 @@
+langcode: en
+status: true
+id: node.field_components
+field_name: field_components
+entity_type: node
+type: entity_reference_revisions
+settings:
+  target_type: paragraph
+module: entity_reference_revisions
+locked: false
+cardinality: -1

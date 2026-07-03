@@ -1,0 +1,17 @@
+uuid: 2c3561c1-cb11-46a9-a247-fb38bcee10b0
+langcode: en
+status: true
+dependencies:
+  module:
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus: {  }
+    parent: ''
+name: Episode
+type: episode
+description: 'Use <em>Episode</em> for a single program episode.'
+help: null
+new_revision: true
+preview_mode: 1
+display_submitted: false

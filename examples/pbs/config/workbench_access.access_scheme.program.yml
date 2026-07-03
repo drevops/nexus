@@ -1,0 +1,54 @@
+uuid: 013f391d-b4d0-436e-8fed-5ebd9b674b8c
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.media.audio.field_acl
+    - field.field.media.document.field_acl
+    - field.field.media.image.field_acl
+    - field.field.media.remote_audio.field_acl
+    - field.field.media.remote_video.field_acl
+    - field.field.media.video.field_acl
+    - field.field.node.episode.field_acl
+    - field.field.node.program.field_acl
+    - taxonomy.vocabulary.acl_programs
+id: program
+plural_label: Programs
+label: Program
+scheme: taxonomy
+scheme_settings:
+  vocabularies:
+    - acl_programs
+  fields:
+    -
+      entity_type: media
+      bundle: video
+      field: field_acl
+    -
+      entity_type: media
+      bundle: remote_video
+      field: field_acl
+    -
+      entity_type: media
+      bundle: remote_audio
+      field: field_acl
+    -
+      entity_type: media
+      bundle: image
+      field: field_acl
+    -
+      entity_type: media
+      bundle: document
+      field: field_acl
+    -
+      entity_type: media
+      bundle: audio
+      field: field_acl
+    -
+      entity_type: node
+      bundle: program
+      field: field_acl
+    -
+      entity_type: node
+      bundle: episode
+      field: field_acl

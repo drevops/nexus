@@ -1,0 +1,9 @@
+uuid: a7fcd605-bd33-44d7-94ab-33c0bc07ab3e
+langcode: en
+status: true
+dependencies: {  }
+name: 'News Types'
+vid: news_types
+description: 'Use News Types to group News Entities into categories.'
+weight: 0
+new_revision: false
