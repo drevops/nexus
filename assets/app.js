@@ -186,6 +186,7 @@ function wireLanding() {
 
   $('folder-input').addEventListener('change', (evt) => loadFromFiles(evt.target.files));
   $('example-btn').addEventListener('click', loadExample);
+  $('new-btn').addEventListener('click', newDocument);
   $('open-toggle').addEventListener('click', () => { $('landing').hidden = false; });
 }
 

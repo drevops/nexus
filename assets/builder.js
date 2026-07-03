@@ -30,6 +30,8 @@ const TYPE_LABELS = Object.fromEntries(ENTITY_TYPES);
 
 let cy = null;
 let buildMode = false;
+let connectMode = false;
+let connectSource = null;
 let counter = 0;
 
 function $(id) {
@@ -64,6 +66,10 @@ export function initBuilder() {
   $('mode-build').addEventListener('click', () => setMode(true));
   $('add-entity').addEventListener('click', () => openEntityForm());
   $('add-annotation').addEventListener('click', () => openAnnotationForm());
+  $('connect-toggle').addEventListener('click', () => {
+    connectMode = !connectMode;
+    applyConnect();
+  });
   $('inspector').querySelector('.panel__close').addEventListener('click', closeInspector);
   $('inspector-body').addEventListener('input', onInspectorInput);
   $('inspector-body').addEventListener('change', onInspectorInput);
@@ -72,11 +78,15 @@ export function initBuilder() {
 
 export function attachBuilder(instance) {
   cy = instance;
+  connectSource = null;
   cy.on('tap', 'node', (evt) => {
     if (buildMode) {
       selectNode(evt.target.id());
     }
   });
+  cy.on('tapstart', 'node[group="field"]', (evt) => startConnect(evt.target, evt.position));
+  cy.on('tapdrag', (evt) => moveGhost(evt.position));
+  cy.on('tapend', (evt) => endConnect(evt.target));
   applyMode();
 }
 
@@ -87,13 +97,17 @@ function setMode(build) {
 
 function applyMode() {
   window.__nexusBuild = buildMode;
+  if (!buildMode) {
+    connectMode = false;
+  }
   if (!cy) {
     return;
   }
-  cy.autoungrabify(!buildMode);
   $('build-tools').hidden = !buildMode;
   $('mode-view').classList.toggle('is-active', !buildMode);
   $('mode-build').classList.toggle('is-active', buildMode);
+  $('connect-toggle').classList.toggle('is-active', connectMode);
+  updateInteraction();
 
   if (buildMode) {
     const fields = $('fields-toggle');
@@ -103,7 +117,69 @@ function applyMode() {
   }
   else {
     closeInspector();
+    cleanupGhost();
   }
+}
+
+function applyConnect() {
+  $('connect-toggle').classList.toggle('is-active', connectMode);
+  if (!connectMode) {
+    cleanupGhost();
+  }
+  updateInteraction();
+}
+
+function updateInteraction() {
+  if (!cy) {
+    return;
+  }
+  cy.autoungrabify(!buildMode || connectMode);
+  cy.userPanningEnabled(!connectMode);
+  cy.boxSelectionEnabled(false);
+}
+
+/* Drag-to-connect ------------------------------------------------------- */
+
+function startConnect(field, position) {
+  if (!connectMode) {
+    return;
+  }
+  cleanupGhost();
+  connectSource = field.id();
+  cy.add([
+    { group: 'nodes', data: { id: '__ghost__' }, position: { x: position.x, y: position.y }, grabbable: false, selectable: false },
+    { group: 'edges', data: { id: '__ghostedge__', source: connectSource, target: '__ghost__' } },
+  ]);
+  cy.getElementById('__ghost__').style({ width: 1, height: 1, opacity: 0, events: 'no' });
+  cy.getElementById('__ghostedge__').style({ 'line-color': '#2f6db3', 'line-style': 'dashed', width: 2, 'curve-style': 'straight', 'target-arrow-shape': 'triangle', 'target-arrow-color': '#2f6db3', events: 'no' });
+}
+
+function moveGhost(position) {
+  if (connectSource) {
+    cy.getElementById('__ghost__').position({ x: position.x, y: position.y });
+  }
+}
+
+function endConnect(target) {
+  if (!connectSource) {
+    return;
+  }
+  const source = connectSource;
+  connectSource = null;
+  cleanupGhost();
+
+  if (target && target !== cy && typeof target.isNode === 'function' && target.isNode() && target.data('group') === 'entity') {
+    addReference(source, target.id());
+    selectNode(source);
+  }
+}
+
+function cleanupGhost() {
+  if (!cy) {
+    return;
+  }
+  cy.getElementById('__ghostedge__').remove();
+  cy.getElementById('__ghost__').remove();
 }
 
 function closeInspector() {

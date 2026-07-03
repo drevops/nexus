@@ -124,6 +124,47 @@ test('builds a new entity and field and saves them', async ({ page }) => {
   expect(campaign.fields.some((f) => f.name === 'field_body')).toBe(true);
 });
 
+test('connects a reference by dragging on the canvas', async ({ page }) => {
+  await page.click('#new-btn');
+  await page.click('#mode-build');
+
+  await page.click('#add-entity');
+  await page.fill('[data-new-bundle]', 'a');
+  await page.fill('[data-new-label]', 'A');
+  await page.click('[data-create-entity]');
+  await page.click('[data-add-field]');
+  await page.fill('[data-new-name]', 'field_ref');
+  await page.fill('[data-new-label]', 'Ref');
+  await page.click('[data-create-field]');
+  await page.click('#add-entity');
+  await page.fill('[data-new-bundle]', 'b');
+  await page.fill('[data-new-label]', 'B');
+  await page.click('[data-create-entity]');
+
+  const coords = await page.evaluate(() => {
+    const cy = window.__nexus.cy;
+    cy.resize();
+    cy.getElementById('node.a').position({ x: 120, y: 320 });
+    cy.getElementById('field:node.a:field_ref').position({ x: 140, y: 120 });
+    cy.getElementById('node.b').position({ x: 520, y: 120 });
+    cy.zoom(1);
+    cy.pan({ x: 120, y: 90 });
+    const box = cy.container().getBoundingClientRect();
+    const f = cy.getElementById('field:node.a:field_ref').renderedPosition();
+    const t = cy.getElementById('node.b').renderedPosition();
+    return { fx: box.left + f.x, fy: box.top + f.y, tx: box.left + t.x, ty: box.top + t.y };
+  });
+
+  await page.click('#connect-toggle');
+  await page.mouse.move(coords.fx, coords.fy);
+  await page.mouse.down();
+  await page.mouse.move((coords.fx + coords.tx) / 2, coords.fy, { steps: 6 });
+  await page.mouse.move(coords.tx, coords.ty, { steps: 6 });
+  await page.mouse.up();
+
+  expect(await page.evaluate(() => window.__nexus.cy.getElementById('ref:field:node.a:field_ref>node.b').length)).toBe(1);
+});
+
 test('exports the diagram as PNG', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);
