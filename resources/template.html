@@ -28,6 +28,7 @@
       <button id="entities-toggle" class="toolbar__button" type="button">Entities</button>
       <button id="table-toggle" class="toolbar__button" type="button">Table</button>
       <button id="legend-toggle" class="toolbar__button" type="button">Legend</button>
+      <button id="settings-toggle" class="toolbar__button" type="button">Settings</button>
     </div>
   </div>
 </header>
@@ -56,6 +57,25 @@
 
   <aside id="legend" class="legend" aria-label="Legend" hidden></aside>
   <div id="tooltip" class="tooltip" role="tooltip" hidden></div>
+
+  <div id="settings-overlay" class="modal-overlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Settings">
+      <div class="modal__head">
+        <span class="modal__title">Settings</span>
+        <button class="modal__close" type="button" data-close-settings aria-label="Close">&times;</button>
+      </div>
+      <div class="modal__body">
+        <section class="settings-section">
+          <h3 class="settings-section__title">Entity colours</h3>
+          <div id="color-settings" class="color-settings"></div>
+        </section>
+      </div>
+      <div class="modal__foot">
+        <span class="modal__note">Saved to this browser and reused across diagrams.</span>
+        <button id="settings-reset" class="toolbar__button" type="button">Reset to defaults</button>
+      </div>
+    </div>
+  </div>
 </main>
 <script type="application/json" id="model">
 {{ model }}

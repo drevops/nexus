@@ -445,6 +445,113 @@ body {
   display: none;
 }
 
+/* Settings modal. */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(20, 25, 32, 0.45);
+}
+
+.modal-overlay[hidden] {
+  display: none;
+}
+
+.modal {
+  display: flex;
+  flex-direction: column;
+  width: 400px;
+  max-width: calc(100% - 2rem);
+  max-height: calc(100% - 2rem);
+  background: var(--panel-bg);
+  border-radius: 12px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal__title {
+  font-weight: 600;
+}
+
+.modal__close {
+  border: none;
+  background: none;
+  font-size: 1.4rem;
+  line-height: 1;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.modal__close:hover {
+  color: var(--text);
+}
+
+.modal__body {
+  padding: 1rem;
+  overflow: auto;
+}
+
+.modal__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.modal__note {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.settings-section__title {
+  margin: 0 0 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.color-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.color-row__label {
+  flex: 1 1 auto;
+  font-size: 0.85rem;
+}
+
+.color-row input[type="color"] {
+  width: 44px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+}
+
 .tooltip__name {
   font-weight: 600;
 }
@@ -475,6 +582,7 @@ body {
       <button id="entities-toggle" class="toolbar__button" type="button">Entities</button>
       <button id="table-toggle" class="toolbar__button" type="button">Table</button>
       <button id="legend-toggle" class="toolbar__button" type="button">Legend</button>
+      <button id="settings-toggle" class="toolbar__button" type="button">Settings</button>
     </div>
   </div>
 </header>
@@ -503,6 +611,25 @@ body {
 
   <aside id="legend" class="legend" aria-label="Legend" hidden></aside>
   <div id="tooltip" class="tooltip" role="tooltip" hidden></div>
+
+  <div id="settings-overlay" class="modal-overlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Settings">
+      <div class="modal__head">
+        <span class="modal__title">Settings</span>
+        <button class="modal__close" type="button" data-close-settings aria-label="Close">&times;</button>
+      </div>
+      <div class="modal__body">
+        <section class="settings-section">
+          <h3 class="settings-section__title">Entity colours</h3>
+          <div id="color-settings" class="color-settings"></div>
+        </section>
+      </div>
+      <div class="modal__foot">
+        <span class="modal__note">Saved to this browser and reused across diagrams.</span>
+        <button id="settings-reset" class="toolbar__button" type="button">Reset to defaults</button>
+      </div>
+    </div>
+  </div>
 </main>
 <script type="application/json" id="model">
 {
@@ -9254,11 +9381,11 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__4__;
 (function () {
   'use strict';
 
-  var ENTITY_COLORS = {
+  var DEFAULT_COLORS = {
     node: '#d9e2f3',
     taxonomy_term: '#9fc5e8',
     media: '#f6b26b',
-    paragraph: '#ffffff',
+    paragraph: '#cdbdec',
     block_content: '#b6d7a8',
     user: '#ea9999',
     external: '#ea9999',
@@ -9276,10 +9403,42 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__4__;
 
   var TYPE_ORDER = ['node', 'taxonomy_term', 'media', 'paragraph', 'block_content', 'user', 'external'];
 
+  // Settings are persisted in localStorage so they apply to every diagram
+  // opened in the same browser. The shape is intentionally open-ended
+  // ({ colors: { <entityType>: '#hex' }, ... }) so more settings can be added.
+  var SETTINGS_KEY = 'nexusSettings';
+
+  var settings = loadSettings();
+  var activeColors = {};
+
   var fieldsMode = false;
   var rankDir = 'LR';
   var showMachineNames = false;
   var typeVisible = {};
+
+  function loadSettings() {
+    try {
+      return JSON.parse(window.localStorage.getItem(SETTINGS_KEY)) || {};
+    }
+    catch (e) {
+      return {};
+    }
+  }
+
+  function saveSettings() {
+    try {
+      window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    }
+    catch (e) {
+      // Storage may be unavailable (e.g. private mode); fall back to in-memory.
+    }
+  }
+
+  function initColors() {
+    TYPE_ORDER.forEach(function (type) {
+      activeColors[type] = (settings.colors && settings.colors[type]) || DEFAULT_COLORS[type];
+    });
+  }
 
   function prettify(value) {
     return String(value || '').replace(/[_.]/g, ' ').replace(/\b\w/g, function (c) {
@@ -9292,7 +9451,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__4__;
   }
 
   function entityColor(entityType) {
-    return ENTITY_COLORS[entityType] || '#eceff3';
+    return activeColors[entityType] || '#eceff3';
   }
 
   function esc(value) {
@@ -9539,6 +9698,8 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__4__;
   }
 
   function init() {
+    initColors();
+
     var model = readModel();
     var elements = buildElements(model);
 
@@ -9705,7 +9866,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__4__;
     var filtersEl = document.getElementById('type-filters');
     filtersEl.innerHTML = presentTypes.map(function (t) {
       return '<label class="filters__item"><input type="checkbox" data-type="' + esc(t) + '" checked>' +
-        '<span class="filters__swatch" style="background:' + entityColor(t) + '"></span>' + esc(typeLabel(t)) + '</label>';
+        '<span class="filters__swatch" data-swatch="' + esc(t) + '" style="background:' + entityColor(t) + '"></span>' + esc(typeLabel(t)) + '</label>';
     }).join('');
     filtersEl.addEventListener('change', function (evt) {
       var input = evt.target;
@@ -9841,6 +10002,64 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__4__;
     // Legend on by default.
     document.getElementById('legend').hidden = false;
     legendBtn.classList.add('is-active');
+
+    // Settings: entity colours, persisted to localStorage.
+    var colorSettingsEl = document.getElementById('color-settings');
+    colorSettingsEl.innerHTML = TYPE_ORDER.map(function (type) {
+      return '<div class="color-row">' +
+        '<span class="filters__swatch" data-swatch="' + esc(type) + '" style="background:' + entityColor(type) + '"></span>' +
+        '<span class="color-row__label">' + esc(typeLabel(type)) + '</span>' +
+        '<input type="color" data-color="' + esc(type) + '" value="' + entityColor(type) + '"></div>';
+    }).join('');
+
+    function applyColor(type, color) {
+      activeColors[type] = color;
+      cy.nodes('[group="entity"][entityType="' + type + '"]').style('background-color', color);
+      Array.prototype.forEach.call(document.querySelectorAll('[data-swatch="' + type + '"]'), function (el) {
+        el.style.background = color;
+      });
+    }
+
+    colorSettingsEl.addEventListener('input', function (evt) {
+      var type = evt.target.getAttribute('data-color');
+      if (!type) {
+        return;
+      }
+      settings.colors = settings.colors || {};
+      settings.colors[type] = evt.target.value;
+      saveSettings();
+      applyColor(type, evt.target.value);
+    });
+
+    document.getElementById('settings-reset').addEventListener('click', function () {
+      delete settings.colors;
+      saveSettings();
+      TYPE_ORDER.forEach(function (type) {
+        applyColor(type, DEFAULT_COLORS[type]);
+        var input = colorSettingsEl.querySelector('[data-color="' + type + '"]');
+        if (input) {
+          input.value = DEFAULT_COLORS[type];
+        }
+      });
+    });
+
+    var settingsOverlay = document.getElementById('settings-overlay');
+    document.getElementById('settings-toggle').addEventListener('click', function () {
+      settingsOverlay.hidden = false;
+    });
+    settingsOverlay.addEventListener('click', function (evt) {
+      if (evt.target === settingsOverlay) {
+        settingsOverlay.hidden = true;
+      }
+    });
+    document.querySelector('[data-close-settings]').addEventListener('click', function () {
+      settingsOverlay.hidden = true;
+    });
+    document.addEventListener('keydown', function (evt) {
+      if (evt.key === 'Escape') {
+        settingsOverlay.hidden = true;
+      }
+    });
 
     // Tooltip.
     var tooltip = document.getElementById('tooltip');

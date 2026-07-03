@@ -10,11 +10,11 @@
 (function () {
   'use strict';
 
-  var ENTITY_COLORS = {
+  var DEFAULT_COLORS = {
     node: '#d9e2f3',
     taxonomy_term: '#9fc5e8',
     media: '#f6b26b',
-    paragraph: '#ffffff',
+    paragraph: '#cdbdec',
     block_content: '#b6d7a8',
     user: '#ea9999',
     external: '#ea9999',
@@ -32,10 +32,42 @@
 
   var TYPE_ORDER = ['node', 'taxonomy_term', 'media', 'paragraph', 'block_content', 'user', 'external'];
 
+  // Settings are persisted in localStorage so they apply to every diagram
+  // opened in the same browser. The shape is intentionally open-ended
+  // ({ colors: { <entityType>: '#hex' }, ... }) so more settings can be added.
+  var SETTINGS_KEY = 'nexusSettings';
+
+  var settings = loadSettings();
+  var activeColors = {};
+
   var fieldsMode = false;
   var rankDir = 'LR';
   var showMachineNames = false;
   var typeVisible = {};
+
+  function loadSettings() {
+    try {
+      return JSON.parse(window.localStorage.getItem(SETTINGS_KEY)) || {};
+    }
+    catch (e) {
+      return {};
+    }
+  }
+
+  function saveSettings() {
+    try {
+      window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    }
+    catch (e) {
+      // Storage may be unavailable (e.g. private mode); fall back to in-memory.
+    }
+  }
+
+  function initColors() {
+    TYPE_ORDER.forEach(function (type) {
+      activeColors[type] = (settings.colors && settings.colors[type]) || DEFAULT_COLORS[type];
+    });
+  }
 
   function prettify(value) {
     return String(value || '').replace(/[_.]/g, ' ').replace(/\b\w/g, function (c) {
@@ -48,7 +80,7 @@
   }
 
   function entityColor(entityType) {
-    return ENTITY_COLORS[entityType] || '#eceff3';
+    return activeColors[entityType] || '#eceff3';
   }
 
   function esc(value) {
@@ -295,6 +327,8 @@
   }
 
   function init() {
+    initColors();
+
     var model = readModel();
     var elements = buildElements(model);
 
@@ -461,7 +495,7 @@
     var filtersEl = document.getElementById('type-filters');
     filtersEl.innerHTML = presentTypes.map(function (t) {
       return '<label class="filters__item"><input type="checkbox" data-type="' + esc(t) + '" checked>' +
-        '<span class="filters__swatch" style="background:' + entityColor(t) + '"></span>' + esc(typeLabel(t)) + '</label>';
+        '<span class="filters__swatch" data-swatch="' + esc(t) + '" style="background:' + entityColor(t) + '"></span>' + esc(typeLabel(t)) + '</label>';
     }).join('');
     filtersEl.addEventListener('change', function (evt) {
       var input = evt.target;
@@ -597,6 +631,64 @@
     // Legend on by default.
     document.getElementById('legend').hidden = false;
     legendBtn.classList.add('is-active');
+
+    // Settings: entity colours, persisted to localStorage.
+    var colorSettingsEl = document.getElementById('color-settings');
+    colorSettingsEl.innerHTML = TYPE_ORDER.map(function (type) {
+      return '<div class="color-row">' +
+        '<span class="filters__swatch" data-swatch="' + esc(type) + '" style="background:' + entityColor(type) + '"></span>' +
+        '<span class="color-row__label">' + esc(typeLabel(type)) + '</span>' +
+        '<input type="color" data-color="' + esc(type) + '" value="' + entityColor(type) + '"></div>';
+    }).join('');
+
+    function applyColor(type, color) {
+      activeColors[type] = color;
+      cy.nodes('[group="entity"][entityType="' + type + '"]').style('background-color', color);
+      Array.prototype.forEach.call(document.querySelectorAll('[data-swatch="' + type + '"]'), function (el) {
+        el.style.background = color;
+      });
+    }
+
+    colorSettingsEl.addEventListener('input', function (evt) {
+      var type = evt.target.getAttribute('data-color');
+      if (!type) {
+        return;
+      }
+      settings.colors = settings.colors || {};
+      settings.colors[type] = evt.target.value;
+      saveSettings();
+      applyColor(type, evt.target.value);
+    });
+
+    document.getElementById('settings-reset').addEventListener('click', function () {
+      delete settings.colors;
+      saveSettings();
+      TYPE_ORDER.forEach(function (type) {
+        applyColor(type, DEFAULT_COLORS[type]);
+        var input = colorSettingsEl.querySelector('[data-color="' + type + '"]');
+        if (input) {
+          input.value = DEFAULT_COLORS[type];
+        }
+      });
+    });
+
+    var settingsOverlay = document.getElementById('settings-overlay');
+    document.getElementById('settings-toggle').addEventListener('click', function () {
+      settingsOverlay.hidden = false;
+    });
+    settingsOverlay.addEventListener('click', function (evt) {
+      if (evt.target === settingsOverlay) {
+        settingsOverlay.hidden = true;
+      }
+    });
+    document.querySelector('[data-close-settings]').addEventListener('click', function () {
+      settingsOverlay.hidden = true;
+    });
+    document.addEventListener('keydown', function (evt) {
+      if (evt.key === 'Escape') {
+        settingsOverlay.hidden = true;
+      }
+    });
 
     // Tooltip.
     var tooltip = document.getElementById('tooltip');
