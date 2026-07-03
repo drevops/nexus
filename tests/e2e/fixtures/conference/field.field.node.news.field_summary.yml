@@ -1,0 +1,11 @@
+langcode: en
+status: true
+dependencies: {  }
+id: node.news.field_summary
+field_name: field_summary
+entity_type: node
+bundle: news
+label: 'Summary'
+required: true
+settings: {  }
+field_type: string_long

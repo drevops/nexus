@@ -1,0 +1,6 @@
+langcode: en
+status: true
+dependencies: {  }
+id: basic
+label: 'Basic block'
+description: 'A block with a body.'

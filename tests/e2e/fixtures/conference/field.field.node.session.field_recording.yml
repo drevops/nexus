@@ -1,0 +1,15 @@
+langcode: en
+status: true
+dependencies: {  }
+id: node.session.field_recording
+field_name: field_recording
+entity_type: node
+bundle: session
+label: 'Recording'
+required: false
+settings:
+  handler: 'default:media'
+  handler_settings:
+    target_bundles:
+      remote_video: remote_video
+field_type: entity_reference

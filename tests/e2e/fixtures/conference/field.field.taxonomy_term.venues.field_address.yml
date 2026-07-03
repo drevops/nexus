@@ -1,0 +1,11 @@
+langcode: en
+status: true
+dependencies: {  }
+id: taxonomy_term.venues.field_address
+field_name: field_address
+entity_type: taxonomy_term
+bundle: venues
+label: 'Address'
+required: true
+settings: {  }
+field_type: address

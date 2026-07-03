@@ -1,0 +1,12 @@
+langcode: en
+status: true
+dependencies: {  }
+id: node.field_link_website
+field_name: field_link_website
+entity_type: node
+type: link
+settings: {  }
+module: link
+locked: false
+cardinality: 1
+translatable: true

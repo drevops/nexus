@@ -1,0 +1,11 @@
+langcode: en
+status: true
+dependencies: {  }
+id: media.remote_video.field_media_oembed_video
+field_name: field_media_oembed_video
+entity_type: media
+bundle: remote_video
+label: 'Video URL'
+required: true
+settings: {  }
+field_type: string

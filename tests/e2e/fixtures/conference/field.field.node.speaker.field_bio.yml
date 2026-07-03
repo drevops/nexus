@@ -1,0 +1,11 @@
+langcode: en
+status: true
+dependencies: {  }
+id: node.speaker.field_bio
+field_name: field_bio
+entity_type: node
+bundle: speaker
+label: 'Biography'
+required: false
+settings: {  }
+field_type: text_long

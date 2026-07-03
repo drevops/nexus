@@ -1,0 +1,6 @@
+langcode: en
+status: true
+id: image
+label: Image
+description: ''
+source: image

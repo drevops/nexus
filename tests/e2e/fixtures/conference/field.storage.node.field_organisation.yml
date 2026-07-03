@@ -1,0 +1,12 @@
+langcode: en
+status: true
+dependencies: {  }
+id: node.field_organisation
+field_name: field_organisation
+entity_type: node
+type: string
+settings: {  }
+module: core
+locked: false
+cardinality: 1
+translatable: true

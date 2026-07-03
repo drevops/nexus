@@ -1,0 +1,15 @@
+langcode: en
+status: true
+dependencies: {  }
+id: node.event.field_sponsors
+field_name: field_sponsors
+entity_type: node
+bundle: event
+label: 'Sponsors'
+required: false
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      sponsors: sponsors
+field_type: entity_reference

@@ -1,0 +1,14 @@
+langcode: en
+status: true
+id: node.article.field_tags
+field_name: field_tags
+entity_type: node
+bundle: article
+label: Tags
+required: false
+field_type: entity_reference
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      tags: tags

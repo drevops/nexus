@@ -1,0 +1,11 @@
+langcode: en
+status: true
+dependencies: {  }
+id: node.session.field_summary
+field_name: field_summary
+entity_type: node
+bundle: session
+label: 'Summary'
+required: false
+settings: {  }
+field_type: string_long

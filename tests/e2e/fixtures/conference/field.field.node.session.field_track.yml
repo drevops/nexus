@@ -1,0 +1,15 @@
+langcode: en
+status: true
+dependencies: {  }
+id: node.session.field_track
+field_name: field_track
+entity_type: node
+bundle: session
+label: 'Track'
+required: true
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      tracks: tracks
+field_type: entity_reference

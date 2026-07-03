@@ -1,0 +1,15 @@
+langcode: en
+status: true
+dependencies: {  }
+id: node.news.field_featured_image
+field_name: field_featured_image
+entity_type: node
+bundle: news
+label: 'Featured image'
+required: false
+settings:
+  handler: 'default:media'
+  handler_settings:
+    target_bundles:
+      image: image
+field_type: entity_reference

@@ -1,0 +1,17 @@
+langcode: en
+status: true
+dependencies: {  }
+id: node.page.field_sections
+field_name: field_sections
+entity_type: node
+bundle: page
+label: 'Sections'
+required: false
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    target_bundles:
+      text: text
+      gallery: gallery
+      quote: quote
+field_type: entity_reference_revisions

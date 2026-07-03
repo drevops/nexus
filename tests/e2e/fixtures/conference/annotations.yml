@@ -1,0 +1,19 @@
+title: 'Example content model'
+nodes:
+  - id: ticketing_api
+    kind: api
+    label: 'Ticketing API'
+  - id: sync_registrations
+    kind: callback
+    label: 'Sync registrations'
+    method: POST
+    attach: node.event
+  - id: session_published
+    kind: event
+    label: SessionPublished
+    attach: node.session
+edges:
+  - { from: session_published, to: ticketing_api, label: notifies }
+computed_fields:
+  node.session:
+    - { name: duration, label: 'Duration' }

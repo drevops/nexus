@@ -1,0 +1,12 @@
+langcode: en
+status: true
+dependencies: {  }
+id: node.field_start_time
+field_name: field_start_time
+entity_type: node
+type: datetime
+settings: {  }
+module: datetime
+locked: false
+cardinality: 1
+translatable: true

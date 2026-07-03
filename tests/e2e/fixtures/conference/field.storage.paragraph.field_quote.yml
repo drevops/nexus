@@ -1,0 +1,12 @@
+langcode: en
+status: true
+dependencies: {  }
+id: paragraph.field_quote
+field_name: field_quote
+entity_type: paragraph
+type: string_long
+settings: {  }
+module: core
+locked: false
+cardinality: 1
+translatable: true

@@ -1,0 +1,92 @@
+name: Release
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build and deploy
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url || steps.deployment_retry.outputs.page_url || steps.deployment_retry2.outputs.page_url }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Assemble static site
+        run: npm run assemble
+
+      # The source ships version.js as `dev`; stamp the published release tag so
+      # the deployed build reports its version. Manual runs stay on `dev`.
+      - name: Stamp the release version
+        env:
+          RELEASE_VERSION: ${{ github.event.release.tag_name || 'dev' }}
+        run: echo "export const VERSION = '${RELEASE_VERSION}';" > _site/src/version.js
+
+      # The source ships analytics-id.js empty; stamp the measurement ID so only
+      # the published site reports page views. A quote in the value would break
+      # the stamped module, so a malformed ID fails the release.
+      - name: Stamp the Google Analytics ID
+        if: vars.GOOGLE_ANALYTICS_ID != ''
+        env:
+          GOOGLE_ANALYTICS_ID: ${{ vars.GOOGLE_ANALYTICS_ID }}
+        run: |
+          if [[ ! $GOOGLE_ANALYTICS_ID =~ ^G-[A-Z0-9]+$ ]]; then
+            echo "FAIL: GOOGLE_ANALYTICS_ID must be a measurement ID like G-XXXXXXXXXX"
+            exit 1
+          fi
+          echo "export const GOOGLE_ANALYTICS_ID = '${GOOGLE_ANALYTICS_ID}';" > _site/src/analytics-id.js
+
+      - name: Configure Pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6
+        with:
+          enablement: true
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
+        with:
+          path: _site
+
+      # GitHub Pages intermittently rejects a deployment with "try again later"
+      # while its backend is busy. The deploy is attempted up to 3 times with
+      # a growing pause; an extended outage still needs a re-run.
+      - name: Deploy
+        id: deployment
+        continue-on-error: true
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5
+
+      - name: Pause before retry 1
+        if: steps.deployment.outcome == 'failure'
+        run: sleep 30
+
+      - name: Deploy (retry 1)
+        id: deployment_retry
+        if: steps.deployment.outcome == 'failure'
+        continue-on-error: true
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5
+
+      - name: Pause before retry 2
+        if: steps.deployment.outcome == 'failure' && steps.deployment_retry.outcome == 'failure'
+        run: sleep 60
+
+      - name: Deploy (retry 2)
+        id: deployment_retry2
+        if: steps.deployment.outcome == 'failure' && steps.deployment_retry.outcome == 'failure'
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5

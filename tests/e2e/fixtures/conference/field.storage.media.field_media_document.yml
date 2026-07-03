@@ -1,0 +1,12 @@
+langcode: en
+status: true
+dependencies: {  }
+id: media.field_media_document
+field_name: field_media_document
+entity_type: media
+type: file
+settings: {  }
+module: file
+locked: false
+cardinality: 1
+translatable: true

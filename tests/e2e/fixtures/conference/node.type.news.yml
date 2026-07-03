@@ -1,0 +1,9 @@
+langcode: en
+status: true
+dependencies: {  }
+name: 'News'
+type: news
+description: 'Announcements about upcoming events.'
+new_revision: true
+preview_mode: 1
+display_submitted: false

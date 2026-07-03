@@ -1,0 +1,108 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { ENTITY_TYPES, ENTITY_TYPE_ORDER, findEntityType, formatCount } from '../../src/entity-types.js';
+import { machineName } from '../../src/names.js';
+
+const ROOT = join(import.meta.dirname, '..', '..');
+const INDEX = readFileSync(join(ROOT, 'index.html'), 'utf8');
+
+test('lists each built-in entity type once, in diagram order', () => {
+  assert.deepEqual(ENTITY_TYPE_ORDER, ['node', 'taxonomy_term', 'media', 'paragraph', 'block_content', 'user', 'external']);
+  assert.deepEqual(
+    ENTITY_TYPES.map((entry) => entry.type),
+    ENTITY_TYPE_ORDER,
+  );
+});
+
+test('describes every built-in entity type completely', () => {
+  for (const entry of ENTITY_TYPES) {
+    assert.ok(entry.label, entry.type + ' has no label');
+    assert.match(entry.color, /^#[0-9a-f]{6}$/, entry.type + ' has no hex colour');
+    assert.ok(entry.symbol, entry.type + ' has no symbol');
+    assert.ok(entry.bundleBase, entry.type + ' has no bundle base');
+    assert.equal(machineName(entry.bundleBase), entry.bundleBase, entry.type + ' has a bundle base that is not a machine name');
+  }
+});
+
+test('finds a built-in entity type by its machine name', async (t) => {
+  for (const [name, type, expected] of dataProviderFindEntityType()) {
+    await t.test(name, () => {
+      const entry = findEntityType(type);
+
+      assert.equal(entry ? entry.label : null, expected);
+    });
+  }
+});
+
+function dataProviderFindEntityType() {
+  return [
+    ['a content type', 'node', 'Content type'],
+    ['a vocabulary', 'taxonomy_term', 'Vocabulary'],
+    ['an external entity', 'external', 'External entity'],
+    ['a custom type', 'widget', null],
+    ['an inherited object property', 'constructor', null],
+    ['an empty string', '', null],
+    ['undefined', undefined, null],
+  ];
+}
+
+test('formats a count of bundles in the singular or the plural', async (t) => {
+  for (const [name, type, count, expected] of dataProviderFormatCount()) {
+    await t.test(name, () => {
+      assert.equal(formatCount(type, count), expected);
+    });
+  }
+});
+
+function dataProviderFormatCount() {
+  return [
+    ['1 content type', 'node', 1, '1 content type'],
+    ['7 content types', 'node', 7, '7 content types'],
+    ['1 vocabulary', 'taxonomy_term', 1, '1 vocabulary'],
+    ['9 vocabularies', 'taxonomy_term', 9, '9 vocabularies'],
+    ['0 media types', 'media', 0, '0 media types'],
+    ['31 paragraph types', 'paragraph', 31, '31 paragraph types'],
+    ['5 block types', 'block_content', 5, '5 block types'],
+  ];
+}
+
+test('formats a count for every built-in entity type', () => {
+  for (const type of ENTITY_TYPE_ORDER) {
+    assert.match(formatCount(type, 1), /^1 [a-z ]+[^s]$/, type);
+    assert.match(formatCount(type, 2), /^2 [a-z ]+s$/, type);
+  }
+});
+
+test('refuses to format a count for a type that is not built in', async (t) => {
+  for (const [name, type] of dataProviderUnknownCountType()) {
+    await t.test(name, () => {
+      assert.throws(() => formatCount(type, 1), /Unknown entity type/);
+    });
+  }
+});
+
+function dataProviderUnknownCountType() {
+  return [
+    ['a custom type', 'widget'],
+    ['an inherited object property', 'constructor'],
+    ['an empty string', ''],
+  ];
+}
+
+test('offers a palette button for every built-in entity type, in order', () => {
+  const palette = [...INDEX.matchAll(/data-add-entity="([^"]+)"/g)].map((match) => match[1]);
+
+  assert.deepEqual(palette, ENTITY_TYPE_ORDER);
+});
+
+test('paints no palette swatch colour in the markup', () => {
+  const swatches = [...INDEX.matchAll(/<span class="palette__swatch"[^>]*>/g)].map((match) => match[0]);
+
+  assert.equal(swatches.length, ENTITY_TYPE_ORDER.length);
+  assert.deepEqual(
+    swatches.filter((swatch) => swatch.includes('style=')),
+    [],
+  );
+});

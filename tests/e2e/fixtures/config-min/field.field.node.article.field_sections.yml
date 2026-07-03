@@ -1,0 +1,15 @@
+langcode: en
+status: true
+id: node.article.field_sections
+field_name: field_sections
+entity_type: node
+bundle: article
+label: Sections
+required: false
+field_type: entity_reference_revisions
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    target_bundles:
+      text: text
+      gallery: gallery

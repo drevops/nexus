@@ -1,0 +1,11 @@
+langcode: en
+status: true
+dependencies: {  }
+id: taxonomy_term.sponsors.field_link_website
+field_name: field_link_website
+entity_type: taxonomy_term
+bundle: sponsors
+label: 'Website'
+required: false
+settings: {  }
+field_type: link

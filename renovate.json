@@ -1,0 +1,25 @@
+{
+    "extends": ["config:recommended"],
+    "automerge": true,
+    "rangeStrategy": "bump",
+    "dependencyDashboard": true,
+    "pinDigests": true,
+    "branchPrefix": "deps/",
+    "packageRules": [
+        {
+            "matchDepNames": ["node", "yarn"],
+            "matchManagers": ["npm"],
+            "enabled": false
+        },
+        {
+            "matchManagers": ["npm"],
+            "matchUpdateTypes": ["major"],
+            "enabled": false
+        },
+        {
+            "matchPackageNames": ["*"],
+            "groupName": "all dependencies",
+            "groupSlug": "all"
+        }
+    ]
+}

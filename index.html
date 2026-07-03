@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nexus - Drupal content-model diagrams</title>
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/vendor/shoelace/themes/light.css">
+<link rel="stylesheet" href="assets/vendor/shoelace/themes/dark.css">
+<link rel="stylesheet" href="src/styles.css">
+<script type="importmap">
+{
+  "imports": {
+    "preact": "./assets/vendor/preact.module.js",
+    "preact/hooks": "./assets/vendor/hooks.module.js",
+    "htm": "./assets/vendor/htm.module.js"
+  }
+}
+</script>
+<script type="module">
+  // Pin Shoelace's base path to an absolute URL before the autoloader runs,
+  // so it resolves at the domain root or a subpath (GitHub Pages).
+  // Left unset, it builds a bare import specifier from its script src that
+  // never resolves, so no component upgrades.
+  import { setBasePath } from './assets/vendor/shoelace/utilities/base-path.js';
+  setBasePath(new URL('assets/vendor/shoelace', document.baseURI).href);
+</script>
+<script type="module" src="assets/vendor/shoelace/shoelace-autoloader.js"></script>
+</head>
+<body>
+<header class="toolbar">
+  <div class="toolbar__brandline">
+    <div class="toolbar__actions">
+      <span class="toolbar__brand" data-icon="nexus">Nexus</span>
+      <sl-input id="diagram-title" class="toolbar__title" size="small" placeholder="Untitled content model" title="Rename this content model - used for the saved file names" aria-label="Content model name"></sl-input>
+    </div>
+    <div class="toolbar__actions">
+      <sl-button id="about-toggle" class="toolbar__button toolbar__button--icon" size="small" data-icon="help-circle" title="About Nexus" aria-label="About Nexus"></sl-button>
+      <sl-button id="github-link" class="toolbar__button toolbar__button--icon" size="small" href="https://github.com/drevops/nexus" target="_blank" rel="noopener" data-icon="github" title="View Nexus on GitHub" aria-label="View Nexus on GitHub"></sl-button>
+      <sl-button id="theme-toggle" class="toolbar__button toolbar__button--icon" size="small" data-icon="moon" title="Toggle light / dark theme" aria-label="Toggle theme"></sl-button>
+      <sl-button id="settings-toggle" class="toolbar__button toolbar__button--icon" size="small" data-icon="sliders" title="Toggle the settings panel" aria-label="Settings"></sl-button>
+    </div>
+  </div>
+  <div class="toolbar__tools">
+    <sl-button-group class="toolbar__group" label="Document">
+      <sl-button id="doc-new" class="toolbar__button" size="small" data-icon="file-plus" title="Start a new empty content model">New</sl-button>
+      <sl-button id="doc-import" class="toolbar__button" size="small" data-icon="folder-input" title="Import a Drupal config folder">Import</sl-button>
+      <sl-button id="doc-open-btn" class="toolbar__button" size="small" data-icon="folder-open" title="Open a saved Nexus diagram (.nexus.json)">Open</sl-button>
+      <sl-button id="doc-save" class="toolbar__button" size="small" data-icon="download" title="Save this diagram as a Nexus document (.nexus.json)">Save</sl-button>
+    </sl-button-group>
+    <sl-button-group class="toolbar__group" label="Export">
+      <sl-button id="export-png" class="toolbar__button" size="small" data-icon="image" title="Export the diagram as a PNG image">PNG</sl-button>
+      <sl-button id="export-svg" class="toolbar__button" size="small" data-icon="file-down" title="Export the diagram as a scalable SVG">SVG</sl-button>
+      <sl-button id="export-csv" class="toolbar__button" size="small" data-icon="table" title="Export the fields table as CSV">CSV</sl-button>
+    </sl-button-group>
+    <sl-button-group class="toolbar__group" label="Mode">
+      <sl-button id="mode-view" class="toolbar__button is-active" size="small" data-icon="eye" title="View mode: explore the diagram">View</sl-button>
+      <sl-button id="mode-build" class="toolbar__button" size="small" data-icon="pencil" title="Edit mode: add and change entities and fields">Edit</sl-button>
+    </sl-button-group>
+    <sl-input id="search" class="toolbar__search" size="small" type="search" placeholder="Find entity…" autocomplete="off" clearable title="Type an entity name and press Enter or the search button"></sl-input>
+    <sl-button id="search-btn" class="toolbar__button toolbar__button--icon" size="small" data-icon="search" title="Find the entity and zoom to it" aria-label="Search"></sl-button>
+    <sl-button-group class="toolbar__group" label="Display">
+      <sl-button id="fields-toggle" class="toolbar__button" size="small" data-icon="list" title="Show or hide entity fields">Fields</sl-button>
+      <sl-button id="proxy-toggle" class="toolbar__button" size="small" data-icon="layers" title="Show references as semi-opaque proxies instead of long edges">Proxies</sl-button>
+      <sl-button id="machine-names" class="toolbar__button" size="small" data-icon="code" title="Show or hide machine names under each symbol">Machine names</sl-button>
+    </sl-button-group>
+    <sl-button-group class="toolbar__group" label="Layout">
+      <sl-button id="layout-toggle" class="toolbar__button" size="small" data-icon="layout" title="Switch layout direction (left-right / top-bottom)"><span class="layout-label">Layout: LR</span></sl-button>
+      <sl-button id="tidy" class="toolbar__button" size="small" data-icon="tidy" title="Tidy up: re-run the layout to arrange everything neatly">Tidy</sl-button>
+    </sl-button-group>
+    <sl-button-group class="toolbar__group" label="Panels">
+      <sl-button id="entities-toggle" class="toolbar__button" size="small" data-icon="box" title="Toggle the entities panel">Entities</sl-button>
+      <sl-button id="table-toggle" class="toolbar__button" size="small" data-icon="table" title="Toggle the fields table panel">Table</sl-button>
+      <sl-button id="legend-toggle" class="toolbar__button" size="small" data-icon="info" title="Toggle the legend panel">Legend</sl-button>
+    </sl-button-group>
+  </div>
+  <div id="build-tools" class="toolbar__palette" hidden>
+    <span class="toolbar__palette-label">Add:</span>
+    <button class="toolbar__button palette__btn" type="button" data-add-entity="node" title="Add a content type"><span class="palette__swatch"></span>Content</button>
+    <button class="toolbar__button palette__btn" type="button" data-add-entity="taxonomy_term" title="Add a vocabulary"><span class="palette__swatch"></span>Vocab</button>
+    <button class="toolbar__button palette__btn" type="button" data-add-entity="media" title="Add a media type"><span class="palette__swatch"></span>Media</button>
+    <button class="toolbar__button palette__btn" type="button" data-add-entity="paragraph" title="Add a paragraph type"><span class="palette__swatch"></span>Para</button>
+    <button class="toolbar__button palette__btn" type="button" data-add-entity="block_content" title="Add a block type"><span class="palette__swatch"></span>Block</button>
+    <button class="toolbar__button palette__btn" type="button" data-add-entity="user" title="Add a user reference"><span class="palette__swatch"></span>User</button>
+    <button class="toolbar__button palette__btn" type="button" data-add-entity="external" title="Add an external entity"><span class="palette__swatch"></span>External</button>
+    <span class="toolbar__palette-sep"></span>
+    <button id="add-field" class="toolbar__button" type="button" data-icon="single" title="Add a field to an entity">Field</button>
+    <button class="toolbar__button" type="button" data-add-note="event" data-icon="diamond" title="Place an event note on the canvas">Event</button>
+    <button class="toolbar__button" type="button" data-add-note="api" title="Place an API note on the canvas">API</button>
+    <button class="toolbar__button" type="button" data-add-note="callback" title="Place a callback note on the canvas">Callback</button>
+    <span class="toolbar__palette-sep"></span>
+    <button id="connect-toggle" class="toolbar__button" type="button" data-icon="link" title="Drag from a field to a target entity to create a reference">Connect</button>
+  </div>
+</header>
+
+<main class="stage" id="stage-root"></main>
+
+<footer id="statusbar" class="statusbar">
+  <span id="statusbar-hint" class="statusbar__hint"></span>
+  <span class="statusbar__tips">Click a node to focus · Right-click an entity to isolate &amp; move · Drag the canvas to pan</span>
+  <div class="statusbar__zoom">
+    <sl-button id="reset" class="toolbar__button toolbar__button--icon" size="small" data-icon="rotate-ccw" title="Clear focus and reset the zoom to 100%" aria-label="Reset view"></sl-button>
+    <sl-button id="fit" class="toolbar__button toolbar__button--icon" size="small" data-icon="fit" title="Fit the whole diagram in view" aria-label="Fit to view"></sl-button>
+    <sl-button id="zoom-out" class="toolbar__button toolbar__button--icon" size="small" data-icon="zoom-out" title="Zoom out"></sl-button>
+    <sl-button id="zoom-in" class="toolbar__button toolbar__button--icon" size="small" data-icon="zoom-in" title="Zoom in"></sl-button>
+    <sl-dropdown class="statusbar__zoomlevel" placement="top-end" hoist>
+      <sl-button id="zoom-level" slot="trigger" class="toolbar__button" size="small" caret title="Set the zoom level">100%</sl-button>
+      <sl-menu id="zoom-menu">
+        <sl-menu-item value="fit">Fit</sl-menu-item>
+        <sl-menu-item value="0.25">25%</sl-menu-item>
+        <sl-menu-item value="0.5">50%</sl-menu-item>
+        <sl-menu-item value="0.75">75%</sl-menu-item>
+        <sl-menu-item value="1">100%</sl-menu-item>
+        <sl-menu-item value="1.5">150%</sl-menu-item>
+        <sl-menu-item value="2">200%</sl-menu-item>
+        <sl-menu-item value="3">300%</sl-menu-item>
+      </sl-menu>
+    </sl-dropdown>
+  </div>
+</footer>
+
+<!-- Outside the toolbar, which is inert while the landing screen is open. -->
+<input id="doc-open" class="visually-hidden" type="file" accept=".json,application/json" tabindex="-1">
+
+<div id="landing" class="landing">
+  <sl-card class="landing__card">
+    <sl-button id="landing-cancel" class="landing__close toolbar__button toolbar__button--icon" size="small" data-icon="x" title="Close this screen and keep the current diagram" aria-label="Close" hidden></sl-button>
+    <h1 class="landing__logo" data-icon="nexus">Nexus</h1>
+    <p class="landing__version" id="landing-version" data-version>dev</p>
+    <p class="landing__tag">Draw a Drupal site's content model from its exported configuration - entirely in your browser.</p>
+    <div class="landing__columns">
+      <section aria-labelledby="landing-own-heading">
+        <h2 id="landing-own-heading" class="landing__heading">Your configuration</h2>
+        <div id="dropzone" class="dropzone">
+          <span class="dropzone__glyph" data-icon="folder-input"></span>
+          <p class="dropzone__hint">Drop a Drupal <strong>config</strong> folder here, or choose one.</p>
+          <sl-button id="folder-btn" variant="primary" data-icon="folder-input" title="Import a Drupal config folder">Choose a config folder</sl-button>
+          <input id="folder-input" class="visually-hidden" type="file" webkitdirectory directory multiple tabindex="-1">
+          <p class="dropzone__privacy">Your files never leave this page.</p>
+        </div>
+        <div class="landing__actions">
+          <sl-button id="landing-open" size="small" data-icon="folder-open" title="Open a saved Nexus diagram (.nexus.json)">Open a saved diagram</sl-button>
+          <sl-button id="new-btn" size="small" data-icon="file-plus" title="Start a new empty content model">Start from scratch</sl-button>
+        </div>
+      </section>
+      <section aria-labelledby="landing-templates-heading">
+        <h2 id="landing-templates-heading" class="landing__heading">Start from a template</h2>
+        <div id="template-list" class="template-list"></div>
+        <p class="landing__more">Missing a theme or distribution? <a href="https://github.com/drevops/nexus/issues" target="_blank" rel="noopener">Suggest a template</a>.</p>
+      </section>
+    </div>
+    <sl-alert id="landing-error" class="landing__error" variant="danger" closable><span id="landing-error-text"></span></sl-alert>
+    <p class="landing__note">Point at an exported config sync directory (the folder of <code>*.yml</code> files) or a module's <code>config/install</code>. Add an <code>annotations.yml</code> to overlay events, APIs and callbacks.</p>
+  </sl-card>
+</div>
+
+<div id="loader" class="loader" hidden>
+  <sl-spinner class="loader__spinner"></sl-spinner>
+  <p id="loader-text" class="loader__text">Loading…</p>
+</div>
+
+<sl-dialog id="about-dialog" class="about-dialog" label="About Nexus">
+  <div class="about">
+    <p>Nexus is a content-model visual builder. It reconstructs a Drupal site's content model - its entities, fields and relationships - from exported configuration, and lets you explore and edit it as an interactive diagram.</p>
+    <p>Everything runs in your browser. Any configuration you import and every diagram you build are kept in this browser only - there is no backend, and nothing you provide is uploaded to or processed by any server.</p>
+    <p>The copy hosted at nexus.drevops.com counts visits with Google Analytics, which uses cookies and receives the usual visit details - the page address, your browser and device, and your approximate location - but never your configuration, your diagrams or their titles.</p>
+    <p>Nexus is provided as is, without warranty of any kind. The authors accept no responsibility or liability for any data you load into it or create with it - even though that data never leaves your browser.</p>
+    <p>Nexus is open source - browse the code, report issues or contribute on <a id="about-repo" href="https://github.com/drevops/nexus" target="_blank" rel="noopener">GitHub</a>.</p>
+    <p>Nexus is free software, released under the <a id="about-license" href="https://github.com/drevops/nexus/blob/main/LICENSE" target="_blank" rel="noopener">GNU General Public License, version 2 or later</a> (GPL-2.0-or-later).</p>
+    <p class="about__version">Version <span id="about-version" data-version>dev</span></p>
+  </div>
+  <sl-button id="about-close" slot="footer" variant="primary">Close</sl-button>
+</sl-dialog>
+
+<script src="assets/vendor/cytoscape.min.js"></script>
+<script src="assets/vendor/dagre.min.js"></script>
+<script src="assets/vendor/cytoscape-dagre.js"></script>
+<script src="assets/vendor/cytoscape-svg.js"></script>
+<script src="assets/vendor/js-yaml.min.js"></script>
+<script type="module" src="src/app.js"></script>
+<script type="module">
+  // Imported apart from src/app.js, so an ad blocker that blocks these files
+  // cannot stop the app from loading.
+  import { GOOGLE_ANALYTICS_ID } from './src/analytics-id.js';
+  import { startAnalytics } from './src/analytics.js';
+
+  startAnalytics(GOOGLE_ANALYTICS_ID, window);
+</script>
+</body>
+</html>

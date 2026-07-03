@@ -1,0 +1,14 @@
+langcode: en
+status: true
+id: node.article.field_image
+field_name: field_image
+entity_type: node
+bundle: article
+label: Image
+required: false
+field_type: entity_reference
+settings:
+  handler: 'default:media'
+  handler_settings:
+    target_bundles:
+      image: image

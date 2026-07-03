@@ -1,0 +1,7 @@
+langcode: en
+status: true
+dependencies: {  }
+name: 'Sponsors'
+vid: sponsors
+description: 'Organisations that sponsor events.'
+weight: 0

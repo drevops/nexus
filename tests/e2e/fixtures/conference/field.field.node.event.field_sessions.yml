@@ -1,0 +1,15 @@
+langcode: en
+status: true
+dependencies: {  }
+id: node.event.field_sessions
+field_name: field_sessions
+entity_type: node
+bundle: event
+label: 'Sessions'
+required: false
+settings:
+  handler: 'default:node'
+  handler_settings:
+    target_bundles:
+      session: session
+field_type: entity_reference

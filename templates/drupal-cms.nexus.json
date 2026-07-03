@@ -1,0 +1,616 @@
+{
+  "nexus": 1,
+  "title": "Drupal CMS 2.2.2",
+  "colors": {},
+  "symbols": {},
+  "customTypes": [],
+  "entities": [
+    {
+      "entityType": "node",
+      "bundle": "blog",
+      "label": "Blog post",
+      "note": "",
+      "fields": [
+        {
+          "name": "title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "uid",
+          "label": "Author",
+          "fieldType": "entity_reference",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "created",
+          "label": "Authored on",
+          "fieldType": "created",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_blog__byline",
+          "label": "Byline",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_content",
+          "label": "Content",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_description",
+          "label": "Description",
+          "fieldType": "string_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_featured_image",
+          "label": "Featured image",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": "media",
+          "targetBundles": [
+            "image"
+          ]
+        },
+        {
+          "name": "field_seo_analysis",
+          "label": "SEO analysis",
+          "fieldType": "yoast_seo",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_seo_description",
+          "label": "SEO description",
+          "fieldType": "string_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_seo_image",
+          "label": "SEO image",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": "media",
+          "targetBundles": [
+            "image"
+          ]
+        },
+        {
+          "name": "field_seo_title",
+          "label": "SEO title",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_tags",
+          "label": "Tags",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "taxonomy_term",
+          "targetBundles": [
+            "tags"
+          ]
+        }
+      ]
+    },
+    {
+      "entityType": "node",
+      "bundle": "page",
+      "label": "Utility page",
+      "note": "",
+      "fields": [
+        {
+          "name": "title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "uid",
+          "label": "Author",
+          "fieldType": "entity_reference",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "created",
+          "label": "Authored on",
+          "fieldType": "created",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_content",
+          "label": "Content",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_description",
+          "label": "Description",
+          "fieldType": "string_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_featured_image",
+          "label": "Featured image",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": "media",
+          "targetBundles": [
+            "image"
+          ]
+        },
+        {
+          "name": "field_seo_analysis",
+          "label": "SEO analysis",
+          "fieldType": "yoast_seo",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_seo_description",
+          "label": "SEO description",
+          "fieldType": "string_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_seo_image",
+          "label": "SEO image",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": "media",
+          "targetBundles": [
+            "image"
+          ]
+        },
+        {
+          "name": "field_seo_title",
+          "label": "SEO title",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_tags",
+          "label": "Tags",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "taxonomy_term",
+          "targetBundles": [
+            "tags"
+          ]
+        }
+      ]
+    },
+    {
+      "entityType": "taxonomy_term",
+      "bundle": "tags",
+      "label": "Tags",
+      "note": "",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "description",
+          "label": "Description",
+          "fieldType": "text_long",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "media",
+      "bundle": "document",
+      "label": "Document",
+      "note": "",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_media_document",
+          "label": "Document",
+          "fieldType": "file",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "media",
+      "bundle": "image",
+      "label": "Image",
+      "note": "",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_media_image",
+          "label": "Image",
+          "fieldType": "image",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "media",
+      "bundle": "remote_video",
+      "label": "Remote video",
+      "note": "",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_media_oembed_video",
+          "label": "Video URL",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "media",
+      "bundle": "svg_image",
+      "label": "SVG Image",
+      "note": "",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_media_svg_image",
+          "label": "Image",
+          "fieldType": "image",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "media",
+      "bundle": "video",
+      "label": "Video",
+      "note": "",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_media_video_file",
+          "label": "Video file",
+          "fieldType": "file",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "user",
+      "bundle": "user",
+      "label": "User",
+      "note": "",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Username",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "mail",
+          "label": "Email",
+          "fieldType": "email",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "roles",
+          "label": "Roles",
+          "fieldType": "entity_reference",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "status",
+          "label": "Status",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "user_picture",
+          "label": "Picture",
+          "fieldType": "image",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    }
+  ],
+  "annotations": {
+    "nodes": [],
+    "edges": []
+  },
+  "layout": {},
+  "ui": null
+}

@@ -1,0 +1,15 @@
+langcode: en
+status: true
+dependencies: {  }
+id: paragraph.gallery.field_images
+field_name: field_images
+entity_type: paragraph
+bundle: gallery
+label: 'Images'
+required: true
+settings:
+  handler: 'default:media'
+  handler_settings:
+    target_bundles:
+      image: image
+field_type: entity_reference
