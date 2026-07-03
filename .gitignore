@@ -10,10 +10,3 @@
 /test-results
 /playwright-report
 /_site
-
-# PHP build artifacts (retired).
-/.logs
-/.phpunit.cache
-/composer.lock
-/vendor
-/vendor-bin
