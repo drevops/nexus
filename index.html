@@ -32,9 +32,15 @@
       <button id="settings-toggle" class="toolbar__button" type="button">Settings</button>
     </div>
     <div class="toolbar__group">
+      <button id="doc-new" class="toolbar__button" type="button">New</button>
+      <label class="toolbar__button" for="doc-open">Open</label>
+      <input id="doc-open" class="visually-hidden" type="file" accept=".json,application/json">
+      <button id="doc-save" class="toolbar__button" type="button">Save</button>
+    </div>
+    <div class="toolbar__group">
       <button id="export-png" class="toolbar__button" type="button">PNG</button>
       <button id="export-pdf" class="toolbar__button" type="button">PDF</button>
-      <button id="open-toggle" class="toolbar__button" type="button">Open…</button>
+      <button id="open-toggle" class="toolbar__button" type="button">Config…</button>
     </div>
   </div>
 </header>
@@ -95,6 +101,7 @@
         <label class="btn btn--primary" for="folder-input">Choose a config folder</label>
         <input id="folder-input" class="visually-hidden" type="file" webkitdirectory directory multiple>
         <button id="example-btn" class="btn" type="button">Try the example</button>
+        <label class="btn" for="doc-open">Open a saved diagram</label>
       </div>
     </div>
     <p id="landing-error" class="landing__error" role="alert"></p>

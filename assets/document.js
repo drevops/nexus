@@ -1,0 +1,125 @@
+/**
+ * The Nexus diagram document (".nexus.json") - the save/load "diagram language".
+ *
+ * Schema (version 1):
+ * {
+ *   "nexus": 1,
+ *   "title": "…",
+ *   "colors": { "<entityType>": "#hex" },        // colour overrides
+ *   "entities": [ { entityType, bundle, label, fields: [
+ *       { name, label, fieldType, kind, required, targetType, targetBundles } ] } ],
+ *   "annotations": { nodes: [ { id, kind, label, method? } ], edges: [ { from, to, label } ] },
+ *   "layout": { "<nodeId>": { x, y } }            // exact canvas positions
+ * }
+ *
+ * `documentFromGraph` reads a live Cytoscape instance; `documentToModel` is a
+ * pure transform back to renderable model data (so it can be unit-tested).
+ */
+
+import { ContentModel, Entity, Field } from './model.js';
+import { applyAnnotations } from './annotations.js';
+
+function splitId(id) {
+  const index = id.indexOf('.');
+  return { entityType: id.slice(0, index), bundle: id.slice(index + 1) };
+}
+
+export function documentFromGraph(cy, meta = {}) {
+  const layout = {};
+  cy.nodes().forEach((node) => {
+    const position = node.position();
+    layout[node.id()] = { x: Math.round(position.x), y: Math.round(position.y) };
+  });
+
+  const fieldsByEntity = {};
+  cy.nodes('[group="field"]').forEach((field) => {
+    const owner = field.data('entity');
+    (fieldsByEntity[owner] = fieldsByEntity[owner] || []).push(field);
+  });
+
+  const entities = cy.nodes('[group="entity"]').map((node) => {
+    const fields = (fieldsByEntity[node.id()] || []).map((field) => {
+      let targetType = null;
+      const targetBundles = [];
+
+      field.connectedEdges('[group="ref"]').forEach((edge) => {
+        if (edge.source().id() !== field.id()) {
+          return;
+        }
+        const target = splitId(edge.target().id());
+        targetType = targetType || target.entityType;
+        if (target.bundle !== '*') {
+          targetBundles.push(target.bundle);
+        }
+      });
+
+      return {
+        name: field.data('name'),
+        label: field.data('label'),
+        fieldType: field.data('fieldType'),
+        kind: field.data('kind'),
+        required: !!field.data('required'),
+        targetType: targetType,
+        targetBundles: targetBundles,
+      };
+    });
+
+    return { entityType: node.data('entityType'), bundle: node.data('bundle'), label: node.data('label'), fields: fields };
+  });
+
+  const nodes = cy.nodes('[group="annotation"]').map((node) => {
+    const payload = { id: node.id(), kind: node.data('kind'), label: node.data('label') };
+    if (node.data('method')) {
+      payload.method = node.data('method');
+    }
+    return payload;
+  });
+
+  const edges = cy.edges('[group="annotation"]').map((edge) => ({
+    from: edge.source().id(),
+    to: edge.target().id(),
+    label: edge.data('label') || '',
+  }));
+
+  return {
+    nexus: 1,
+    title: meta.title || 'Content model',
+    colors: meta.colors || {},
+    entities: entities,
+    annotations: { nodes: nodes, edges: edges },
+    layout: layout,
+  };
+}
+
+export function documentToModel(doc) {
+  if (!doc || typeof doc !== 'object' || !Array.isArray(doc.entities)) {
+    throw new Error('Not a valid Nexus document.');
+  }
+
+  const model = new ContentModel(typeof doc.title === 'string' ? doc.title : 'Content model');
+
+  doc.entities.forEach((entity) => {
+    const built = new Entity(entity.entityType, entity.bundle, entity.label != null ? entity.label : entity.bundle);
+    (entity.fields || []).forEach((field) => {
+      built.addField(new Field(
+        field.name,
+        field.label,
+        field.fieldType,
+        field.kind,
+        !!field.required,
+        field.targetType || null,
+        Array.isArray(field.targetBundles) ? field.targetBundles : [],
+      ));
+    });
+    model.addEntity(built);
+  });
+
+  const annotations = doc.annotations || {};
+  applyAnnotations(model, { nodes: annotations.nodes || [], edges: annotations.edges || [] });
+
+  return {
+    modelData: model.toArray(),
+    layout: (doc.layout && typeof doc.layout === 'object') ? doc.layout : {},
+    colors: (doc.colors && typeof doc.colors === 'object') ? doc.colors : {},
+  };
+}

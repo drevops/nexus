@@ -10,6 +10,7 @@ import { parseConfig } from './parser.js';
 import { applyAnnotations } from './annotations.js';
 import { render } from './render.js';
 import { exportPng, exportPdf } from './export.js';
+import { documentFromGraph, documentToModel } from './document.js';
 
 const EXAMPLE_BASE = 'examples/example/';
 
@@ -199,5 +200,65 @@ function wireExports() {
   });
 }
 
+function downloadJson(data, filename) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function slug(text) {
+  return String(text).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'content-model';
+}
+
+function saveDocument() {
+  if (!window.__nexus) {
+    return;
+  }
+  const title = $('diagram-title').textContent || 'Content model';
+  const doc = documentFromGraph(window.__nexus.cy, { title: title, colors: window.__nexus.colors || {} });
+  downloadJson(doc, slug(title) + '.nexus.json');
+}
+
+async function openDocument(file) {
+  showError('');
+  try {
+    const doc = documentToModel(JSON.parse(await file.text()));
+    render(doc.modelData, { layout: doc.layout, colors: doc.colors });
+    const title = (doc.modelData.meta && doc.modelData.meta.title) || 'Content model';
+    $('diagram-title').textContent = title;
+    document.title = title + ' - Nexus';
+    $('landing').hidden = true;
+  }
+  catch (e) {
+    $('landing').hidden = false;
+    showError('Could not open that diagram: ' + e.message);
+  }
+}
+
+function newDocument() {
+  render({ meta: { title: 'New content model', entityCount: 0 }, nodes: [], edges: [] });
+  $('diagram-title').textContent = 'New content model';
+  document.title = 'New content model - Nexus';
+  $('landing').hidden = true;
+}
+
+function wireDocument() {
+  $('doc-save').addEventListener('click', saveDocument);
+  $('doc-new').addEventListener('click', newDocument);
+  $('doc-open').addEventListener('change', (evt) => {
+    if (evt.target.files[0]) {
+      openDocument(evt.target.files[0]);
+    }
+    evt.target.value = '';
+  });
+}
+
 wireLanding();
 wireExports();
+wireDocument();

@@ -296,7 +296,7 @@ function $(id) {
   return document.getElementById(id);
 }
 
-function buildController(model) {
+function buildController(model, options = {}) {
   entityById = {};
   fieldById = {};
   refsByField = {};
@@ -305,6 +305,9 @@ function buildController(model) {
   rankDir = 'LR';
   showMachineNames = false;
   initColors();
+  if (options.colors) {
+    Object.assign(activeColors, options.colors);
+  }
 
   const elements = buildElements(model);
   TYPE_ORDER.forEach((t) => { typeVisible[t] = true; });
@@ -380,6 +383,19 @@ function buildController(model) {
       nodeDimensionsIncludeLabels: true,
       animate: false,
     }).run();
+    cy.fit(undefined, 50);
+    positionCaptions();
+  }
+
+  function applyLayout(layout) {
+    fieldsMode = true;
+    $('fields-toggle').classList.add('is-active');
+    refresh(false);
+    cy.nodes().forEach((node) => {
+      if (layout[node.id()]) {
+        node.position(layout[node.id()]);
+      }
+    });
     cy.fit(undefined, 50);
     positionCaptions();
   }
@@ -550,6 +566,9 @@ function buildController(model) {
     Array.prototype.forEach.call(document.querySelectorAll('[data-swatch="' + type + '"]'), (el) => {
       el.style.background = color;
     });
+    if (window.__nexus) {
+      window.__nexus.colors = { ...activeColors };
+    }
   }
 
   function searchHighlight(term) {
@@ -606,7 +625,7 @@ function buildController(model) {
 
   renderTable();
 
-  return { cy, refresh, runLayout, clearFocus, focusEntity, openTable, renderTable, rebuildCaptions, searchHighlight, applyColor };
+  return { cy, refresh, runLayout, applyLayout, clearFocus, focusEntity, openTable, renderTable, rebuildCaptions, searchHighlight, applyColor };
 }
 
 function wire() {
@@ -719,13 +738,18 @@ function wire() {
   });
 }
 
-export function render(model) {
-  ctx = buildController(model);
+export function render(model, options = {}) {
+  ctx = buildController(model, options);
   if (!wired) {
     wire();
     wired = true;
   }
-  ctx.refresh(true);
-  window.__nexus = { cy: ctx.cy, model };
+  if (options.layout && Object.keys(options.layout).length) {
+    ctx.applyLayout(options.layout);
+  }
+  else {
+    ctx.refresh(true);
+  }
+  window.__nexus = { cy: ctx.cy, model, colors: { ...activeColors } };
   return ctx;
 }

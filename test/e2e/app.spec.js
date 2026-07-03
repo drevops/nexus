@@ -76,6 +76,26 @@ test('persists a custom entity colour across reloads', async ({ page }) => {
   expect(applied.replace(/\s/g, '')).toBe('rgb(17,34,51)');
 });
 
+test('saves and reloads a Nexus diagram document', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+  const before = await entityCount(page);
+
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.click('#doc-save'),
+  ]);
+  expect(download.suggestedFilename()).toMatch(/\.nexus\.json$/);
+  const saved = await download.path();
+
+  await page.goto('/index.html');
+  await page.setInputFiles('#doc-open', saved);
+  await waitForGraph(page);
+
+  expect(await entityCount(page)).toBe(before);
+  expect(await page.evaluate(() => window.__nexus.cy.getElementById('node.program').length)).toBe(1);
+});
+
 test('exports the diagram as PNG', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);
