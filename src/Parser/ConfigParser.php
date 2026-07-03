@@ -312,6 +312,12 @@ class ConfigParser {
    */
   protected function injectBaseFields(ContentModel $model): void {
     foreach ($model->getEntities() as $entity) {
+      // Open-ended "Any <type>" placeholders are abstract targets, not real
+      // bundles, so they carry no base fields.
+      if ($entity->getBundle() === '*') {
+        continue;
+      }
+
       $base = BaseFields::forEntityType($entity->getEntityType());
 
       if ($base !== []) {

@@ -173,6 +173,7 @@ class ContentModel {
           'data' => [
             'id' => $field_id,
             'group' => 'field',
+            'name' => $field->getName(),
             'kind' => $field->getKind(),
             'label' => $field->getLabel(),
             'fieldType' => $field->getFieldType(),

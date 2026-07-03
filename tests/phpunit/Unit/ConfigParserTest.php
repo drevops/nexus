@@ -103,7 +103,11 @@ final class ConfigParserTest extends TestCase {
     $this->assertTrue($components->isReference());
     $this->assertSame('paragraph', $components->getTargetType());
     $this->assertSame([], $components->getTargetBundles());
-    $this->assertTrue($model->hasEntity('paragraph.*'));
+
+    // The synthetic "Any" placeholder is an abstract target with no fields.
+    $any = $model->getEntity('paragraph.*');
+    $this->assertInstanceOf(Entity::class, $any);
+    $this->assertSame([], $any->getFields());
   }
 
   public function testBaseFieldsInjected(): void {

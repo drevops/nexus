@@ -13,14 +13,46 @@
   <h1 class="toolbar__title">{{ title }}</h1>
   <div class="toolbar__actions">
     <input id="search" class="toolbar__search" type="search" placeholder="Find entity…" autocomplete="off">
-    <button id="fit" class="toolbar__button" type="button">Fit</button>
-    <button id="reset" class="toolbar__button" type="button">Reset</button>
-    <button id="legend-toggle" class="toolbar__button" type="button">Legend</button>
+    <div class="toolbar__group">
+      <button id="zoom-out" class="toolbar__button" type="button" title="Zoom out">&minus;</button>
+      <button id="zoom-in" class="toolbar__button" type="button" title="Zoom in">&plus;</button>
+      <button id="fit" class="toolbar__button" type="button">Fit</button>
+      <button id="reset" class="toolbar__button" type="button">Reset</button>
+    </div>
+    <div class="toolbar__group">
+      <button id="fields-toggle" class="toolbar__button" type="button">Show fields</button>
+      <button id="layout-toggle" class="toolbar__button" type="button">Layout: LR</button>
+    </div>
+    <div class="toolbar__group">
+      <button id="entities-toggle" class="toolbar__button" type="button">Entities</button>
+      <button id="table-toggle" class="toolbar__button" type="button">Table</button>
+      <button id="legend-toggle" class="toolbar__button" type="button">Legend</button>
+    </div>
   </div>
 </header>
 <main class="stage">
   <div id="cy" class="cy"></div>
-  <aside id="legend" class="legend" aria-label="Legend"></aside>
+
+  <aside id="entities" class="panel panel--left" aria-label="Entities" hidden>
+    <div class="panel__head">
+      <span class="panel__title">Entities</span>
+      <button class="panel__close" type="button" data-close="entities" aria-label="Close">&times;</button>
+    </div>
+    <div id="type-filters" class="filters"></div>
+    <div id="entity-list" class="entity-list"></div>
+  </aside>
+
+  <section id="table" class="panel panel--right" aria-label="Fields" hidden>
+    <div class="panel__head">
+      <span class="panel__title">Fields</span>
+      <select id="table-entity" class="panel__select"></select>
+      <input id="table-search" class="panel__search" type="search" placeholder="Filter fields…" autocomplete="off">
+      <button class="panel__close" type="button" data-close="table" aria-label="Close">&times;</button>
+    </div>
+    <div class="table-wrap"><table id="field-table" class="field-table"></table></div>
+  </section>
+
+  <aside id="legend" class="legend" aria-label="Legend" hidden></aside>
   <div id="tooltip" class="tooltip" role="tooltip" hidden></div>
 </main>
 <script type="application/json" id="model">
