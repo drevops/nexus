@@ -16,7 +16,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/index.html');
 });
 
-test('renders the bundled PBS example', async ({ page }) => {
+test('renders the bundled example', async ({ page }) => {
   await expect(page.locator('#landing')).toBeVisible();
   await page.click('#example-btn');
 
@@ -25,7 +25,7 @@ test('renders the bundled PBS example', async ({ page }) => {
 
   expect(await entityCount(page)).toBe(30);
   expect(await page.evaluate(() => window.__nexus.cy.getElementById('node.program').length)).toBe(1);
-  await expect(page.locator('#diagram-title')).toHaveText('PBS content model');
+  await expect(page.locator('#diagram-title')).toHaveText('Example content model');
 });
 
 test('parses an uploaded config folder in the browser', async ({ page }) => {
@@ -46,7 +46,7 @@ test('reveals fields, entity index and field table', async ({ page }) => {
   const overview = await page.evaluate(() => window.__nexus.cy.nodes(':visible').length);
 
   await page.click('#fields-toggle');
-  await expect(page.locator('#fields-toggle')).toHaveText('Hide fields');
+  await expect(page.locator('#fields-toggle')).toHaveClass(/is-active/);
   const detailed = await page.evaluate(() => window.__nexus.cy.nodes(':visible').length);
   expect(detailed).toBeGreaterThan(overview);
 

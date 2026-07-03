@@ -11,7 +11,7 @@ import { applyAnnotations } from './annotations.js';
 import { render } from './render.js';
 import { exportPng, exportPdf } from './export.js';
 
-const EXAMPLE_BASE = 'examples/pbs/';
+const EXAMPLE_BASE = 'examples/example/';
 
 function $(id) {
   return document.getElementById(id);

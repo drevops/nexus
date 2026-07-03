@@ -592,10 +592,9 @@ function buildController(model) {
   let captionRaf = false;
 
   // Reset toolbar/panels to their default state for this render.
-  $('fields-toggle').textContent = 'Show fields';
   $('fields-toggle').classList.remove('is-active');
   $('layout-toggle').textContent = 'Layout: LR';
-  $('machine-names').checked = false;
+  $('machine-names').classList.remove('is-active');
   $('search').value = '';
   $('legend').hidden = false;
   $('legend-toggle').classList.add('is-active');
@@ -618,7 +617,6 @@ function wire() {
 
   $('fields-toggle').addEventListener('click', (evt) => {
     fieldsMode = !fieldsMode;
-    evt.target.textContent = fieldsMode ? 'Hide fields' : 'Show fields';
     evt.target.classList.toggle('is-active', fieldsMode);
     ctx.clearFocus();
     ctx.refresh(true);
@@ -630,8 +628,9 @@ function wire() {
     ctx.runLayout();
   });
 
-  $('machine-names').addEventListener('change', (evt) => {
-    showMachineNames = evt.target.checked;
+  $('machine-names').addEventListener('click', (evt) => {
+    showMachineNames = !showMachineNames;
+    evt.target.classList.toggle('is-active', showMachineNames);
     ctx.rebuildCaptions();
   });
 

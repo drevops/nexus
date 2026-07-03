@@ -32,7 +32,7 @@ Nexus is a static web app. Drop a Drupal **exported configuration folder** onto 
 ## Usage
 
 1. Open the app (or run it locally - see [Development](#development)).
-2. **Choose a config folder** or drag one onto the drop zone - the folder of `*.yml` files exported from a Drupal site (its config sync directory), or a module's `config/install`. Or click **Try the PBS example**.
+2. **Choose a config folder** or drag one onto the drop zone - the folder of `*.yml` files exported from a Drupal site (its config sync directory), or a module's `config/install`. Or click **Try the example**.
 3. Explore with the toolbar; export as PNG or PDF.
 
 Add an `annotations.yml` file to the folder to overlay [events, APIs and callbacks](#annotation-overlay).
@@ -70,7 +70,7 @@ The diagram opens as an entity-only overview. The toolbar offers:
 Some architecture is not expressed in Drupal configuration - integration callbacks, external APIs and domain events. Include a YAML overlay named `annotations.yml` in the folder (or as the example ships one):
 
 ```yaml
-title: 'PBS content model'
+title: 'Example content model'
 nodes:
   - { id: omny_api, kind: api, label: 'Omny Studio API' }
   - { id: create_episodes, kind: callback, label: 'Create future episodes', method: POST, attach: node.program }
