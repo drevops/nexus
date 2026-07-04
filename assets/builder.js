@@ -13,6 +13,8 @@
 
 import { openInspector, closeInspector, setBuilder, bump } from './store.js';
 
+const NOTE_LABELS = { event: 'Event', api: 'API', callback: 'Callback' };
+
 let cy = null;
 let buildMode = false;
 let connectMode = false;
@@ -20,6 +22,23 @@ let connectSource = null;
 let counter = 0;
 let handleEntityId = null;
 let handleRaf = false;
+let placeKind = null;
+
+function startPlaceNote(kind) {
+  connectMode = false;
+  applyConnect();
+  placeKind = kind;
+  if (cy) {
+    cy.container().style.cursor = 'crosshair';
+  }
+}
+
+function cancelPlace() {
+  placeKind = null;
+  if (cy) {
+    cy.container().style.cursor = '';
+  }
+}
 
 function $(id) {
   return document.getElementById(id);
@@ -37,8 +56,15 @@ function viewportCenter() {
 export function initBuilder() {
   $('mode-view').addEventListener('click', () => setMode(false));
   $('mode-build').addEventListener('click', () => setMode(true));
-  $('add-entity').addEventListener('click', () => openInspector({ kind: 'new-entity' }));
-  $('add-annotation').addEventListener('click', () => openInspector({ kind: 'new-annotation' }));
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-add-entity]'), (btn) => {
+    btn.addEventListener('click', () => openInspector({ kind: 'new-entity', entityType: btn.getAttribute('data-add-entity') }));
+  });
+  $('add-field').addEventListener('click', () => openInspector({ kind: 'new-field' }));
+  Array.prototype.forEach.call(document.querySelectorAll('[data-add-note]'), (btn) => {
+    btn.addEventListener('click', () => startPlaceNote(btn.getAttribute('data-add-note')));
+  });
+
   $('connect-toggle').addEventListener('click', () => {
     connectMode = !connectMode;
     applyConnect();
@@ -54,6 +80,15 @@ export function initBuilder() {
 export function attachBuilder(instance) {
   cy = instance;
   connectSource = null;
+  cy.on('tap', (evt) => {
+    if (evt.target === cy && placeKind) {
+      const kind = placeKind;
+      cancelPlace();
+      const id = addAnnotation(kind, NOTE_LABELS[kind] || 'Note', '', evt.position);
+      selectNode(id);
+      bump();
+    }
+  });
   cy.on('tap', 'node', (evt) => {
     if (buildMode) {
       selectNode(evt.target.id());
@@ -105,6 +140,7 @@ function applyMode() {
     closeInspector();
     hideHandles();
     cleanupGhost();
+    cancelPlace();
   }
 }
 
@@ -274,13 +310,13 @@ function addField(entityId, name, label, fieldType, kind, side) {
   return fieldId;
 }
 
-function addAnnotation(kind, label, method) {
+function addAnnotation(kind, label, method, position) {
   const id = 'note-' + (++counter);
   const data = { id: id, group: 'annotation', kind: kind, label: label };
   if (method) {
     data.method = method;
   }
-  cy.add({ group: 'nodes', data: data, position: viewportCenter() });
+  cy.add({ group: 'nodes', data: data, position: position || viewportCenter() });
   return id;
 }
 
@@ -325,12 +361,15 @@ function createEntity(form) {
 
 function createField(entityId, form, side) {
   const name = slug(form.name);
-  if (!name) {
+  if (!entityId || !name) {
     return;
   }
   const label = (form.label || '').trim() || name;
   const id = addField(entityId, name, label, form.fieldType, form.kind, side);
   if (id) {
+    if (form.target) {
+      addReference(id, form.target);
+    }
     selectNode(id);
     bump();
   }

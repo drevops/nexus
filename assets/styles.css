@@ -164,6 +164,14 @@ body {
   padding: 0.35rem 0.45rem;
 }
 
+.palette__swatch {
+  flex: 0 0 auto;
+  width: 12px;
+  height: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 3px;
+}
+
 .icon {
   flex: 0 0 auto;
   width: 16px;

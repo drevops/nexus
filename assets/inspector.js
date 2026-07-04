@@ -151,12 +151,12 @@ export function AnnotationForm({ id }) {
     </div>`;
 }
 
-export function NewEntityForm() {
-  const [form, setForm] = useState({ entityType: 'node', bundle: '', label: '' });
+export function NewEntityForm({ entityType }) {
+  const [form, setForm] = useState({ entityType: entityType || 'node', bundle: '', label: '' });
 
   return html`
     <div class="insp" data-new="entity">
-      <p class="insp__title">New entity</p>
+      <p class="insp__title">New ${TYPE_LABELS[form.entityType] || 'entity'}</p>
       <${Row} label="Type"><select class="insp__input" value=${form.entityType} onChange=${(e) => setForm((p) => ({ ...p, entityType: e.target.value }))}>${optionList(ENTITY_TYPES)}</select><//>
       <${Row} label="Machine name"><input class="insp__input" data-new-bundle value=${form.bundle} placeholder="e.g. article" onInput=${(e) => setForm((p) => ({ ...p, bundle: e.target.value }))} /><//>
       <${Row} label="Label"><input class="insp__input" data-new-label value=${form.label} placeholder="e.g. Article" onInput=${(e) => setForm((p) => ({ ...p, label: e.target.value }))} /><//>
@@ -165,17 +165,23 @@ export function NewEntityForm() {
 }
 
 export function NewFieldForm({ entityId, side }) {
-  const [form, setForm] = useState({ name: '', label: '', fieldType: 'string', kind: 'single' });
+  const entities = cy().nodes('[group="entity"]');
+  const [form, setForm] = useState({ entity: entityId || (entities.length ? entities[0].id() : ''), name: '', label: '', fieldType: 'string', kind: 'single', target: '' });
   const existing = existingFields();
 
   function onName(value) {
     const match = existing.find((f) => f.name === value);
-    setForm((prev) => match ? { name: value, label: match.label, fieldType: match.fieldType, kind: match.kind } : { ...prev, name: value });
+    setForm((prev) => match ? { ...prev, name: value, label: match.label, fieldType: match.fieldType, kind: match.kind } : { ...prev, name: value });
   }
+
+  const resolvedEntity = entityId || form.entity;
+  const isRef = REFERENCE_TYPES.includes(form.fieldType);
+  const entityOptions = entities.map((e) => html`<option value=${e.id()}>${e.data('label')}</option>`);
 
   return html`
     <div class="insp" data-new="field" data-side=${side || ''}>
       <p class="insp__title">New field</p>
+      ${!entityId ? html`<${Row} label="On entity"><select class="insp__input" data-new-entity value=${form.entity} onChange=${(e) => setForm((p) => ({ ...p, entity: e.target.value }))}>${entityOptions}</select><//>` : null}
       <${Row} label="Machine name">
         <input class="insp__input" data-new-name list="existing-field-list" value=${form.name} placeholder="e.g. field_body" autocomplete="off" onInput=${(e) => onName(e.target.value)} />
       <//>
@@ -187,8 +193,9 @@ export function NewFieldForm({ entityId, side }) {
           <option value="single">Single</option><option value="multi">Multiple</option>
         </select>
       <//>
+      ${isRef ? html`<${Row} label="Link to"><select class="insp__input" data-new-target value=${form.target} onChange=${(e) => setForm((p) => ({ ...p, target: e.target.value }))}><option value="">(no reference)</option>${entityOptions}</select><//>` : null}
       <p class="insp__hint">Type a new name, or pick an existing field to reuse its definition.</p>
-      <button class="insp__create" data-create-field title="Create the field" onClick=${() => getBuilder().createField(entityId, form, side)}>${rawIcon('check')}Create field</button>
+      <button class="insp__create" data-create-field title="Create the field" onClick=${() => getBuilder().createField(resolvedEntity, form, side)}>${rawIcon('check')}Create field</button>
     </div>`;
 }
 
@@ -219,7 +226,7 @@ export function InspectorBody({ selected }) {
     return html`<${AnnotationForm} key=${selected.id} id=${selected.id} />`;
   }
   if (selected.kind === 'new-entity') {
-    return html`<${NewEntityForm} />`;
+    return html`<${NewEntityForm} entityType=${selected.entityType} />`;
   }
   if (selected.kind === 'new-annotation') {
     return html`<${NewAnnotationForm} />`;

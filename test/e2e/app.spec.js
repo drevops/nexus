@@ -320,7 +320,7 @@ test('builds a new entity and field and saves them', async ({ page }) => {
   await waitForGraph(page);
 
   await page.click('#mode-build');
-  await page.click('#add-entity');
+  await page.click('[data-add-entity="node"]');
   await page.fill('[data-new-bundle]', 'campaign');
   await page.fill('[data-new-label]', 'Campaign');
   await page.click('[data-create-entity]');
@@ -346,7 +346,7 @@ test('connects a reference by dragging on the canvas', async ({ page }) => {
   await page.click('#new-btn');
   await page.click('#mode-build');
 
-  await page.click('#add-entity');
+  await page.click('[data-add-entity="node"]');
   await page.fill('[data-new-bundle]', 'a');
   await page.fill('[data-new-label]', 'A');
   await page.click('[data-create-entity]');
@@ -354,7 +354,7 @@ test('connects a reference by dragging on the canvas', async ({ page }) => {
   await page.fill('[data-new-name]', 'field_ref');
   await page.fill('[data-new-label]', 'Ref');
   await page.click('[data-create-field]');
-  await page.click('#add-entity');
+  await page.click('[data-add-entity="node"]');
   await page.fill('[data-new-bundle]', 'b');
   await page.fill('[data-new-label]', 'B');
   await page.click('[data-create-entity]');
@@ -387,7 +387,7 @@ test('adds a field from an entity + handle', async ({ page }) => {
   await page.click('#new-btn');
   await page.click('#mode-build');
 
-  await page.click('#add-entity');
+  await page.click('[data-add-entity="node"]');
   await page.fill('[data-new-bundle]', 'story');
   await page.fill('[data-new-label]', 'Story');
   await page.click('[data-create-entity]');
@@ -425,6 +425,44 @@ test('reuses an existing field via autocomplete', async ({ page }) => {
   });
   expect(prefill.label).toBe('Body');
   expect(prefill.type).toBe('text_with_summary');
+});
+
+test('adds an entity from a palette type button', async ({ page }) => {
+  await page.click('#new-btn');
+  await page.click('#mode-build');
+
+  await page.click('[data-add-entity="media"]');
+  await expect(page.locator('[data-new="entity"]')).toBeVisible();
+  await page.fill('[data-new-bundle]', 'photo');
+  await page.click('[data-create-entity]');
+
+  expect(await page.evaluate(() => window.__nexus.cy.getElementById('media.photo').length)).toBe(1);
+});
+
+test('adds a field from the toolbar field tool', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+  await page.click('#mode-build');
+
+  await page.click('#add-field');
+  await expect(page.locator('[data-new="field"]')).toBeVisible();
+  await page.selectOption('[data-new-entity]', 'node.program');
+  await page.fill('[data-new-name]', 'field_tagline');
+  await page.click('[data-create-field]');
+
+  expect(await page.evaluate(() => window.__nexus.cy.getElementById('field:node.program:field_tagline').length)).toBe(1);
+});
+
+test('places a note anywhere on the canvas', async ({ page }) => {
+  await page.click('#new-btn');
+  await page.click('#mode-build');
+
+  await page.click('[data-add-note="event"]');
+  const box = await page.locator('#cy').boundingBox();
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+
+  await page.waitForFunction(() => window.__nexus.cy.nodes('[group="annotation"]').length === 1);
+  expect(await page.evaluate(() => window.__nexus.cy.nodes('[group="annotation"]').first().data('kind'))).toBe('event');
 });
 
 test('exports the diagram as PNG named after the title', async ({ page }) => {
