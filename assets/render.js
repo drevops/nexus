@@ -559,8 +559,8 @@ function buildController(model, options = {}) {
   function rebuildNotes() {
     notesEl.innerHTML = '';
     noteMap = {};
-    cy.nodes('[group="entity"]').forEach((node) => {
-      if (!(node.data('note') || '').trim()) {
+    cy.nodes().forEach((node) => {
+      if (node.data('group') === 'proxy' || !(node.data('note') || '').trim()) {
         return;
       }
       const badge = document.createElement('button');

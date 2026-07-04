@@ -46,6 +46,17 @@ function slOptions(list) {
   });
 }
 
+// A note on any node; writing to it live rebuilds the canvas badge. Forms are
+// keyed by node id, so this remounts (and re-reads the note) per selection.
+function NoteField({ node }) {
+  const [note, setNote] = useState(node.data('note') || '');
+  return html`
+    <div class="insp__note">
+      <label>Note</label>
+      <sl-textarea size="small" data-note rows="3" resize="auto" placeholder="Add a note - shows as a badge on the canvas…" value=${note} onsl-input=${(e) => { setNote(e.target.value); node.data('note', e.target.value); getController().rebuildNotes(); bump(); }}></sl-textarea>
+    </div>`;
+}
+
 export function existingFields() {
   const byName = {};
   cy().nodes('[group="field"]').forEach((f) => {
@@ -68,7 +79,6 @@ function refTargets(fieldId) {
 export function EntityForm({ id }) {
   const node = cy().getElementById(id);
   const [label, setLabel] = useState(node.data('label'));
-  const [note, setNote] = useState(node.data('note') || '');
 
   const fields = fieldsOf(id).map((f) => html`
     <button class="insp__field" title="Inspect this field" onClick=${() => openInspector({ kind: 'field', id: f.id() })}>${f.data('label')} <code>${f.data('name')}</code></button>`);
@@ -81,10 +91,7 @@ export function EntityForm({ id }) {
       <//>
       <${Row} label="Type"><span class="insp__ro">${TYPE_LABELS[node.data('entityType')] || node.data('entityType')}</span><//>
       <${Row} label="Machine name"><sl-input size="small" data-machine-name value=${node.data('bundle')} title="Rename the machine name (updates its fields and references)" onsl-change=${(e) => getBuilder().renameEntity(id, e.target.value)}></sl-input><//>
-      <div class="insp__note">
-        <label>Note</label>
-        <sl-textarea size="small" data-note rows="3" resize="auto" placeholder="Add a note - shows as a badge on the canvas…" value=${note} onsl-input=${(e) => { setNote(e.target.value); node.data('note', e.target.value); getController().rebuildNotes(); bump(); }}></sl-textarea>
-      </div>
+      <${NoteField} node=${node} />
       <div class="insp__section">
         <div class="insp__sectionhead"><span>Fields</span><sl-button size="small" data-add-field title="Add a field to this entity" onClick=${() => openInspector({ kind: 'new-field', entityId: id })}>${rawIcon('plus')}Field</sl-button></div>
         ${fields.length ? fields : html`<p class="insp__empty">No fields yet.</p>`}
@@ -131,6 +138,7 @@ export function FieldForm({ id }) {
             <sl-tag class="insp__reftag" size="small" removable onsl-remove=${() => { getBuilder().removeReference(id, t); bump(); }}>${cy().getElementById(t).data('label') || t}</sl-tag>`) : html`<p class="insp__empty">No references.</p>`}
           <sl-select size="small" placeholder="Add target…" value="" onsl-change=${(e) => { if (e.target.value) { getBuilder().addReference(id, e.target.value); e.target.value = ''; bump(); } }}>${entityOptions}</sl-select>
         </div>`}
+      <${NoteField} node=${node} />
       <sl-button size="small" variant="danger" outline class="insp__delete" title="Delete this field" onClick=${() => getBuilder().deleteNode(id)}>${rawIcon('trash')}Delete field</sl-button>
     </div>`;
 }
@@ -151,6 +159,7 @@ export function AnnotationForm({ id }) {
       <${Row} label="Label"><sl-input size="small" value=${s.label} onsl-input=${(e) => set('label', e.target.value)}></sl-input><//>
       <${Row} label="Kind"><sl-select size="small" value=${s.kind} onsl-change=${(e) => set('kind', e.target.value)}>${slOptions(ANNOTATION_KINDS)}</sl-select><//>
       <${Row} label="Method"><sl-input size="small" value=${s.method} placeholder="POST, GET…" onsl-input=${(e) => set('method', e.target.value)}></sl-input><//>
+      <${NoteField} node=${node} />
       <sl-button size="small" variant="danger" outline class="insp__delete" title="Delete this annotation" onClick=${() => getBuilder().deleteNode(id)}>${rawIcon('trash')}Delete</sl-button>
     </div>`;
 }

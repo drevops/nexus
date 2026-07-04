@@ -63,6 +63,7 @@ export function documentFromGraph(cy, meta = {}) {
         kind: field.data('kind'),
         cardinality: field.data('cardinality') != null ? field.data('cardinality') : 1,
         required: !!field.data('required'),
+        note: field.data('note') || '',
         targetType: targetType,
         targetBundles: targetBundles,
       };
@@ -75,6 +76,9 @@ export function documentFromGraph(cy, meta = {}) {
     const payload = { id: node.id(), kind: node.data('kind'), label: node.data('label') };
     if (node.data('method')) {
       payload.method = node.data('method');
+    }
+    if (node.data('note')) {
+      payload.note = node.data('note');
     }
     return payload;
   });
@@ -107,7 +111,7 @@ export function documentToModel(doc) {
     const built = new Entity(entity.entityType, entity.bundle, entity.label != null ? entity.label : entity.bundle);
     built.note = entity.note || '';
     (entity.fields || []).forEach((field) => {
-      built.addField(new Field(
+      const built_field = new Field(
         field.name,
         field.label,
         field.fieldType,
@@ -116,7 +120,9 @@ export function documentToModel(doc) {
         field.targetType || null,
         Array.isArray(field.targetBundles) ? field.targetBundles : [],
         field.cardinality != null ? field.cardinality : (field.kind === 'multi' ? -1 : 1),
-      ));
+      );
+      built_field.note = field.note || '';
+      built.addField(built_field);
     });
     model.addEntity(built);
   });

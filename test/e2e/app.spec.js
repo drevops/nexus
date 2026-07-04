@@ -720,3 +720,30 @@ test('adds an entity note that badges the canvas and reveals on hover', async ({
   const episode = doc.entities.find((e) => e.entityType === 'node' && e.bundle === 'episode');
   expect(episode.note).toBe('Core content type.');
 });
+
+test('adds a note to a field too, not just entities', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+  await page.click('#mode-build');
+
+  await page.evaluate(() => window.__nexus.cy.nodes('[group="field"]').filter((n) => (n.data('name') || '').startsWith('field_'))[0].emit('tap'));
+  await expect(page.locator('#inspector sl-textarea[data-note]')).toBeVisible();
+
+  await page.locator('#inspector sl-textarea[data-note]').evaluate((el) => {
+    el.value = 'Field-level note';
+    el.dispatchEvent(new Event('sl-input', { bubbles: true }));
+  });
+
+  await expect(page.locator('#notes .note-badge')).toHaveCount(1);
+});
+
+test('resets the singled-out focus when switching modes', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+
+  await page.evaluate(() => window.__nexus.cy.getElementById('node.episode').emit('tap'));
+  await page.waitForFunction(() => window.__nexus.cy.elements('.faded').length > 0);
+
+  await page.click('#mode-build');
+  expect(await page.evaluate(() => window.__nexus.cy.elements('.faded, .trace, .trace-source').length)).toBe(0);
+});

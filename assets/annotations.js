@@ -38,6 +38,9 @@ export function applyAnnotations(model, data) {
     if (node.method != null) {
       payload.method = String(node.method);
     }
+    if (node.note != null) {
+      payload.note = String(node.note);
+    }
     model.addExtraNode(payload);
 
     if (typeof node.attach === 'string') {

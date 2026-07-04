@@ -39,6 +39,7 @@ export class Field {
     this.targetType = targetType;
     this.targetBundles = [...targetBundles];
     this.cardinality = cardinality;
+    this.note = '';
   }
 
   isReference() {
@@ -152,6 +153,7 @@ export class ContentModel {
             label: fieldItem.label,
             fieldType: fieldItem.fieldType,
             required: fieldItem.required,
+            note: fieldItem.note || '',
             entity: entity.id(),
           },
         });

@@ -12,7 +12,7 @@
  */
 
 import { cardinalityLabel } from './model.js';
-import { openInspector, closeInspector, setBuilder, bump } from './store.js';
+import { openInspector, closeInspector, setBuilder, bump, getController } from './store.js';
 
 const NOTE_LABELS = { event: 'Event', api: 'API', callback: 'Callback' };
 
@@ -219,6 +219,13 @@ function applyMode() {
   $('mode-build').classList.toggle('is-active', buildMode);
   $('connect-toggle').classList.toggle('is-active', connectMode);
   updateInteraction();
+
+  // Switching modes drops any singled-out focus so neither mode inherits the
+  // other's trace/fade highlight.
+  const controller = getController();
+  if (controller) {
+    controller.clearFocus();
+  }
 
   if (buildMode) {
     const fields = $('fields-toggle');
