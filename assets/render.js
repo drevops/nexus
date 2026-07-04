@@ -8,7 +8,7 @@
  * call repeatedly - each call tears down the previous graph.
  */
 
-import { openPanel, closePanel } from './panels.js';
+import { openPanel, closePanel, setController, bump } from './store.js';
 
 const DEFAULT_COLORS = {
   node: '#d9e2f3',
@@ -277,37 +277,6 @@ function style() {
   ];
 }
 
-const SWATCHES = {
-  entity: '<svg width="34" height="24"><rect x="2" y="4" width="30" height="16" rx="3" fill="#9fc5e8" stroke="#5b6470"/></svg>',
-  single: '<svg width="34" height="24"><ellipse cx="17" cy="12" rx="14" ry="9" fill="#fff" stroke="#555c66"/></svg>',
-  multi: '<svg width="34" height="24"><ellipse cx="17" cy="12" rx="14" ry="9" fill="#fff" stroke="#3d444d"/><ellipse cx="17" cy="12" rx="11" ry="6.5" fill="none" stroke="#3d444d"/></svg>',
-  system: '<svg width="34" height="24"><ellipse cx="17" cy="12" rx="14" ry="9" fill="#fff" stroke="#98a2b3" stroke-dasharray="3 2"/></svg>',
-  calculated: '<svg width="34" height="24"><ellipse cx="17" cy="12" rx="14" ry="9" fill="#ffd966" stroke="#c9a227"/></svg>',
-  event: '<svg width="34" height="24"><polygon points="17,3 31,12 17,21 3,12" fill="#fff" stroke="#333b45"/></svg>',
-  api: '<svg width="34" height="24"><polygon points="10,3 24,3 32,12 24,21 10,21 2,12" fill="#fff" stroke="#333b45"/></svg>',
-  callback: '<svg width="34" height="24"><rect x="2" y="4" width="30" height="16" rx="2" fill="#fff" stroke="#333b45"/><line x1="2" y1="13" x2="32" y2="13" stroke="#333b45"/></svg>',
-};
-
-const LEGEND_ITEMS = [
-  ['entity', 'Entity (name / type)'],
-  ['single', 'Single-value field'],
-  ['multi', 'Multi-value field'],
-  ['system', 'System field'],
-  ['calculated', 'Calculated field'],
-  ['event', 'Event'],
-  ['api', 'API'],
-  ['callback', 'Callback / method'],
-];
-
-function buildLegend(container) {
-  let html = '';
-  LEGEND_ITEMS.forEach((item) => {
-    html += '<div class="legend__item"><span class="legend__swatch">' + SWATCHES[item[0]] +
-      '</span><span class="legend__label">' + item[1] + '</span></div>';
-  });
-  container.innerHTML = html;
-}
-
 function fieldReferences(fieldId) {
   return (refsByField[fieldId] || []).map((target) => (entityById[target] ? entityById[target].label : target));
 }
@@ -536,105 +505,29 @@ function buildController(model, options = {}) {
     });
   }
 
-  buildLegend($('legend-body'));
-
-  const presentTypes = TYPE_ORDER.filter((t) => Object.keys(entityById).some((id) => entityById[id].entityType === t));
-  $('type-filters').innerHTML = presentTypes.map((t) => {
-    return '<label class="filters__item"><input type="checkbox" data-type="' + esc(t) + '" checked>' +
-      '<span class="filters__swatch" data-swatch="' + esc(t) + '" style="background:' + entityColor(t) + '"></span>' + esc(typeLabel(t)) + '</label>';
-  }).join('');
-
-  $('entity-list').innerHTML = Object.keys(entityById).map((id) => {
-    const e = entityById[id];
-    const count = cy.nodes('[group="field"][entity="' + id + '"]').length;
-    return '<div class="entity-row" data-type="' + esc(e.entityType) + '">' +
-      '<button class="entity-row__name" data-id="' + esc(id) + '"><b>' + esc(e.label) + '</b> ' +
-      '<span class="entity-row__type">' + esc(typeLabel(e.entityType)) + '</span></button>' +
-      '<span class="entity-row__count">' + count + '</span>' +
-      '<button class="entity-row__fields" data-fields="' + esc(id) + '">fields</button></div>';
-  }).join('');
-
-  const records = [];
-  cy.nodes('[group="field"]').forEach((f) => {
-    const entity = entityById[f.data('entity')] || { label: f.data('entity'), entityType: '' };
-    records.push({
-      entityId: f.data('entity'),
-      entity: entity.label,
-      entityType: entity.entityType,
-      field: f.data('label'),
-      name: f.data('name') || '',
-      type: f.data('fieldType'),
-      kind: f.data('kind'),
-      required: !!f.data('required'),
-      refs: fieldReferences(f.id()),
-    });
-  });
-
-  const tableEntity = $('table-entity');
-  tableEntity.innerHTML = '<option value="__all__">All entities</option>' + Object.keys(entityById).map((id) => {
-    return '<option value="' + esc(id) + '">' + esc(entityById[id].label) + '</option>';
-  }).join('');
-  tableEntity.value = '__all__';
-  $('table-search').value = '';
-
-  function kindBadge(kind) {
-    return '<span class="badge badge--' + esc(kind) + '">' + esc(kind) + '</span>';
-  }
-
-  function renderTable() {
-    const filter = tableEntity.value;
-    const term = $('table-search').value.trim().toLowerCase();
-    const rows = records.filter((r) => {
-      if (filter && filter !== '__all__' && r.entityId !== filter) {
-        return false;
-      }
-      if (term) {
-        const hay = (r.entity + ' ' + r.field + ' ' + r.name + ' ' + r.type + ' ' + r.refs.join(' ')).toLowerCase();
-        if (hay.indexOf(term) === -1) {
-          return false;
-        }
-      }
-      return true;
-    });
-
-    let html = '<thead><tr><th>Field</th><th>Type</th><th>Card.</th><th>Req</th><th>References</th></tr></thead><tbody>';
-    let current = null;
-    rows.forEach((r) => {
-      if (r.entityId !== current) {
-        current = r.entityId;
-        html += '<tr class="is-group"><td colspan="5">' + esc(r.entity) + ' · ' + esc(typeLabel(r.entityType)) + '</td></tr>';
-      }
-      html += '<tr><td>' + esc(r.field) + '<br><code>' + esc(r.name) + '</code></td><td>' + esc(r.type) +
-        '</td><td>' + kindBadge(r.kind) + '</td><td>' + (r.required ? '✓' : '') + '</td><td>' + esc(r.refs.join(', ')) + '</td></tr>';
-    });
-    if (!rows.length) {
-      html += '<tr><td colspan="5">No fields match.</td></tr>';
-    }
-    $('field-table').innerHTML = html + '</tbody>';
-  }
-
-  function openTable(entityId) {
-    tableEntity.value = entityId;
-    renderTable();
-    openPanel('table');
-  }
-
-  $('color-settings').innerHTML = TYPE_ORDER.map((type) => {
-    return '<div class="color-row">' +
-      '<span class="filters__swatch" data-swatch="' + esc(type) + '" style="background:' + entityColor(type) + '"></span>' +
-      '<span class="color-row__label">' + esc(typeLabel(type)) + '</span>' +
-      '<input type="color" data-color="' + esc(type) + '" value="' + entityColor(type) + '"></div>';
-  }).join('');
-
   function applyColor(type, color) {
     activeColors[type] = color;
     cy.nodes('[group="entity"][entityType="' + type + '"]').style('background-color', color);
-    Array.prototype.forEach.call(document.querySelectorAll('[data-swatch="' + type + '"]'), (el) => {
-      el.style.background = color;
+    settings.colors = settings.colors || {};
+    settings.colors[type] = color;
+    saveSettings();
+    if (window.__nexus) {
+      window.__nexus.colors = { ...activeColors };
+    }
+    bump();
+  }
+
+  function resetColors() {
+    delete settings.colors;
+    saveSettings();
+    TYPE_ORDER.forEach((type) => {
+      activeColors[type] = DEFAULT_COLORS[type];
+      cy.nodes('[group="entity"][entityType="' + type + '"]').style('background-color', DEFAULT_COLORS[type]);
     });
     if (window.__nexus) {
       window.__nexus.colors = { ...activeColors };
     }
+    bump();
   }
 
   function searchHighlight(term) {
@@ -691,7 +584,27 @@ function buildController(model, options = {}) {
   });
   let captionRaf = false;
 
-  // Reset toolbar/panels to their default state for this render.
+  const controller = {
+    cy,
+    refresh, runLayout, applyLayout, clearFocus, focusEntity, focusField, rebuildCaptions, searchHighlight, applyColor, resetColors,
+    typeLabel,
+    colorFor: entityColor,
+    allTypes: () => TYPE_ORDER.slice(),
+    entities: () => cy.nodes('[group="entity"]').map((e) => ({ id: e.id(), label: e.data('label'), entityType: e.data('entityType'), fieldCount: cy.nodes('[group="field"][entity="' + e.id() + '"]').length })),
+    records: () => cy.nodes('[group="field"]').map((f) => {
+      const owner = cy.getElementById(f.data('entity'));
+      const refs = f.connectedEdges('[group="ref"]').filter((e) => e.source().id() === f.id()).map((e) => {
+        const target = cy.getElementById(e.target().id());
+        return target.nonempty() ? target.data('label') : e.target().id();
+      });
+      return { entityId: f.data('entity'), entity: owner.nonempty() ? owner.data('label') : f.data('entity'), entityType: owner.nonempty() ? owner.data('entityType') : '', field: f.data('label'), name: f.data('name') || '', type: f.data('fieldType'), kind: f.data('kind'), required: !!f.data('required'), refs: refs };
+    }),
+    presentTypes: () => TYPE_ORDER.filter((t) => cy.nodes('[group="entity"][entityType="' + t + '"]').nonempty()).map((t) => ({ type: t, label: typeLabel(t), color: entityColor(t), visible: typeVisible[t] !== false })),
+    setTypeVisible: (type, vis) => { typeVisible[type] = vis; refresh(true); bump(); },
+  };
+  setController(controller);
+
+  // Reset the toolbar and panels to their default state for this render.
   $('fields-toggle').classList.add('is-active');
   $('proxy-toggle').classList.remove('is-active');
   $('layout-toggle').querySelector('.layout-label').textContent = 'Layout: LR';
@@ -703,9 +616,7 @@ function buildController(model, options = {}) {
   closePanel('settings');
   closePanel('inspector');
 
-  renderTable();
-
-  return { cy, refresh, runLayout, applyLayout, clearFocus, focusEntity, focusField, openTable, renderTable, rebuildCaptions, searchHighlight, applyColor };
+  return controller;
 }
 
 function wire() {
@@ -751,52 +662,6 @@ function wire() {
       return;
     }
     ctx.searchHighlight(term);
-  });
-
-  $('type-filters').addEventListener('change', (evt) => {
-    const type = evt.target.getAttribute && evt.target.getAttribute('data-type');
-    if (type) {
-      typeVisible[type] = evt.target.checked;
-      ctx.refresh(true);
-    }
-  });
-
-  $('entity-list').addEventListener('click', (evt) => {
-    const focus = evt.target.closest('.entity-row__name');
-    if (focus) {
-      ctx.focusEntity(focus.getAttribute('data-id'));
-      return;
-    }
-    const fields = evt.target.closest('.entity-row__fields');
-    if (fields) {
-      ctx.openTable(fields.getAttribute('data-fields'));
-    }
-  });
-
-  $('table-entity').addEventListener('change', () => ctx.renderTable());
-  $('table-search').addEventListener('input', () => ctx.renderTable());
-
-  $('color-settings').addEventListener('input', (evt) => {
-    const type = evt.target.getAttribute && evt.target.getAttribute('data-color');
-    if (!type) {
-      return;
-    }
-    settings.colors = settings.colors || {};
-    settings.colors[type] = evt.target.value;
-    saveSettings();
-    ctx.applyColor(type, evt.target.value);
-  });
-
-  $('settings-reset').addEventListener('click', () => {
-    delete settings.colors;
-    saveSettings();
-    TYPE_ORDER.forEach((type) => {
-      ctx.applyColor(type, DEFAULT_COLORS[type]);
-      const input = $('color-settings').querySelector('[data-color="' + type + '"]');
-      if (input) {
-        input.value = DEFAULT_COLORS[type];
-      }
-    });
   });
 }
 

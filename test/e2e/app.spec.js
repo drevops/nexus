@@ -74,7 +74,7 @@ test('floats, pins, unpins and closes a panel', async ({ page }) => {
   await expect(entities).not.toHaveClass(/is-docked/);
 
   await page.click('#entities .panel__pin');
-  expect(await entities.evaluate((el) => el.parentElement.id)).toBe('dock-left');
+  expect(await entities.evaluate((el) => el.closest('.dock').id)).toBe('dock-left');
   await expect(entities).toHaveClass(/is-docked/);
 
   await page.click('#entities .panel__pin');
@@ -100,6 +100,48 @@ test('drags a panel by its header', async ({ page }) => {
   const pos = await page.locator('#entities').evaluate((el) => ({ left: parseFloat(el.style.left), top: parseFloat(el.style.top) }));
   expect(pos.left).toBeGreaterThan(120);
   expect(pos.top).toBeGreaterThan(120);
+});
+
+test('stacks pinned panels in a side dock and resizes it', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+
+  await page.click('#legend .panel__pin');
+  await page.click('#table-toggle');
+  await page.click('#table .panel__pin');
+
+  const dockRight = page.locator('#dock-right');
+  await expect(dockRight).toBeVisible();
+  await expect(dockRight.locator('.panel')).toHaveCount(2);
+
+  const before = (await dockRight.boundingBox()).width;
+  const handle = await page.locator('#dock-right .dock__resize').boundingBox();
+  await page.mouse.move(handle.x + handle.width / 2, handle.y + 120);
+  await page.mouse.down();
+  await page.mouse.move(handle.x - 130, handle.y + 120, { steps: 6 });
+  await page.mouse.up();
+  const after = (await dockRight.boundingBox()).width;
+  expect(after).toBeGreaterThan(before + 60);
+});
+
+test('docks a panel by dragging it to the screen edge', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+  await page.click('#entities-toggle');
+
+  const entities = page.locator('#entities');
+  await expect(entities).not.toHaveClass(/is-docked/);
+
+  const head = await entities.locator('.panel__head').boundingBox();
+  const stage = await page.locator('#stage-root').boundingBox();
+  await page.mouse.move(head.x + 40, head.y + head.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(stage.x + stage.width - 200, head.y + 150, { steps: 6 });
+  await page.mouse.move(stage.x + stage.width - 20, head.y + 150, { steps: 6 });
+  await page.mouse.up();
+
+  await expect(entities).toHaveClass(/is-docked/);
+  expect(await entities.evaluate((el) => el.closest('.dock').id)).toBe('dock-right');
 });
 
 test('traces a field\'s inbound and outbound connections', async ({ page }) => {

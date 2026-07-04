@@ -5,6 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Nexus - Drupal content-model diagrams</title>
 <link rel="stylesheet" href="assets/styles.css">
+<script type="importmap">
+{
+  "imports": {
+    "preact": "./assets/vendor/preact.module.js",
+    "preact/hooks": "./assets/vendor/hooks.module.js",
+    "htm": "./assets/vendor/htm.module.js"
+  }
+}
+</script>
 </head>
 <body>
 <header class="toolbar">
@@ -58,76 +67,7 @@
   </div>
 </header>
 
-<main class="stage">
-  <div id="dock-left" class="dock"></div>
-  <div class="stage__canvas">
-    <div id="cy" class="cy"></div>
-    <div id="captions" class="captions" aria-hidden="true"></div>
-    <div id="handles" class="handles" hidden></div>
-
-    <aside id="entities" class="panel" data-toggle="entities-toggle" aria-label="Entities" hidden>
-      <div class="panel__head">
-        <span class="panel__title">Entities</span>
-        <span class="panel__spacer"></span>
-        <button class="panel__pin" type="button" data-icon="pin" title="Pin to side" aria-label="Pin"></button>
-        <button class="panel__close" type="button" data-icon="x" aria-label="Close"></button>
-      </div>
-      <div class="panel__body">
-        <div id="type-filters" class="filters"></div>
-        <div id="entity-list" class="entity-list"></div>
-      </div>
-    </aside>
-
-    <section id="table" class="panel panel--wide" data-toggle="table-toggle" aria-label="Fields" hidden>
-      <div class="panel__head">
-        <span class="panel__title">Fields</span>
-        <select id="table-entity" class="panel__select"></select>
-        <input id="table-search" class="panel__search" type="search" placeholder="Filter fields…" autocomplete="off">
-        <button class="panel__pin" type="button" data-icon="pin" title="Pin to side" aria-label="Pin"></button>
-        <button class="panel__close" type="button" data-icon="x" aria-label="Close"></button>
-      </div>
-      <div class="panel__body table-wrap"><table id="field-table" class="field-table"></table></div>
-    </section>
-
-    <aside id="inspector" class="panel panel--inspector" aria-label="Inspector" hidden>
-      <div class="panel__head">
-        <span class="panel__title">Inspector</span>
-        <span class="panel__spacer"></span>
-        <button class="panel__pin" type="button" data-icon="pin" title="Pin to side" aria-label="Pin"></button>
-        <button class="panel__close" type="button" data-icon="x" aria-label="Close"></button>
-      </div>
-      <div id="inspector-body" class="panel__body inspector-body"></div>
-    </aside>
-
-    <aside id="settings" class="panel" data-toggle="settings-toggle" aria-label="Settings" hidden>
-      <div class="panel__head">
-        <span class="panel__title">Settings</span>
-        <span class="panel__spacer"></span>
-        <button class="panel__pin" type="button" data-icon="pin" title="Pin to side" aria-label="Pin"></button>
-        <button class="panel__close" type="button" data-icon="x" aria-label="Close"></button>
-      </div>
-      <div class="panel__body">
-        <h3 class="settings-section__title">Entity colours</h3>
-        <div id="color-settings" class="color-settings"></div>
-        <button id="settings-reset" class="toolbar__button settings-reset" type="button">Reset to defaults</button>
-        <p class="panel__note">Saved to this browser and reused across diagrams.</p>
-      </div>
-    </aside>
-
-    <aside id="legend" class="panel panel--legend" data-toggle="legend-toggle" aria-label="Legend" hidden>
-      <div class="panel__head">
-        <span class="panel__title">Legend</span>
-        <span class="panel__spacer"></span>
-        <button class="panel__pin" type="button" data-icon="pin" title="Pin to side" aria-label="Pin"></button>
-        <button class="panel__close" type="button" data-icon="x" aria-label="Close"></button>
-      </div>
-      <div id="legend-body" class="panel__body legend-body"></div>
-    </aside>
-
-    <div id="tooltip" class="tooltip" role="tooltip" hidden></div>
-  </div>
-  <div id="dock-right" class="dock"></div>
-</main>
+<main class="stage" id="stage-root"></main>
 
 <div id="landing" class="landing">
   <div class="landing__card">

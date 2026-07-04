@@ -139,6 +139,7 @@ body {
 }
 
 .stage {
+  position: relative;
   display: flex;
   flex: 1 1 auto;
   min-height: 0;
@@ -150,19 +151,12 @@ body {
   min-width: 0;
 }
 
+/* Side rail: any number of pinned panels stack and scroll; drag the inner
+   edge to resize. Width is driven by the store, applied inline. */
 .dock {
-  display: flex;
+  position: relative;
   flex: 0 0 auto;
-  flex-direction: column;
-  gap: 0.75rem;
-  width: 340px;
-  padding: 0.75rem;
-  overflow: auto;
   background: #eef1f5;
-}
-
-.dock:empty {
-  display: none;
 }
 
 #dock-left {
@@ -171,6 +165,58 @@ body {
 
 #dock-right {
   border-left: 1px solid var(--border);
+}
+
+.dock__scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  height: 100%;
+  padding: 0.6rem;
+  overflow-y: auto;
+}
+
+.dock__resize {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  cursor: col-resize;
+  z-index: 5;
+}
+
+.dock__resize:hover {
+  background: rgba(47, 109, 179, 0.22);
+}
+
+.dock__resize--left {
+  right: 0;
+}
+
+.dock__resize--right {
+  left: 0;
+}
+
+/* Drop affordance while dragging a panel toward a side. */
+.stage.drop-left::before,
+.stage.drop-right::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 84px;
+  background: rgba(47, 109, 179, 0.12);
+  border: 2px dashed var(--accent);
+  pointer-events: none;
+  z-index: 6;
+}
+
+.stage.drop-left::before {
+  left: 0;
+}
+
+.stage.drop-right::after {
+  right: 0;
 }
 
 .cy {
@@ -269,21 +315,34 @@ body {
   display: none;
 }
 
-/* Docked into a side rail: static, fills the rail, shares its height. */
+/* Docked into a side rail: static, fills the rail width, and shares the
+   rail height with any sibling panels while its body scrolls internally. */
 .panel.is-docked {
   position: static;
   flex: 1 1 auto;
   width: auto;
   max-width: none;
   max-height: none;
-  min-height: 0;
+  min-height: 140px;
   box-shadow: none;
+  border-radius: 8px;
 }
 
 .panel__body {
   flex: 1 1 auto;
   min-height: 0;
   overflow: auto;
+}
+
+.panel__toolbar {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+}
+
+#inspector .panel__body {
+  padding: 0.85rem 1rem;
 }
 
 .panel__head {
