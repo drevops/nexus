@@ -747,3 +747,52 @@ test('resets the singled-out focus when switching modes', async ({ page }) => {
   await page.click('#mode-build');
   expect(await page.evaluate(() => window.__nexus.cy.elements('.faded, .trace, .trace-source').length)).toBe(0);
 });
+
+test('opens and tidies the diagram at 100% zoom', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+  expect(await page.evaluate(() => window.__nexus.cy.zoom())).toBeCloseTo(1, 2);
+  await expect(page.locator('#zoom-level')).toHaveText('100%');
+
+  await page.evaluate(() => window.__nexus.cy.zoom(0.5));
+  await page.click('#tidy');
+  expect(await page.evaluate(() => window.__nexus.cy.zoom())).toBeCloseTo(1, 2);
+});
+
+test('isolates an entity on double-click and moves it with its fields', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+  await page.click('#mode-build');
+
+  const isolated = await page.evaluate(() => {
+    const cy = window.__nexus.cy;
+    const ep = cy.getElementById('node.episode');
+    ep.emit('tap');
+    ep.emit('tap');
+    return {
+      othersFaded: cy.getElementById('node.program').hasClass('faded'),
+      groupVisible: !ep.hasClass('faded'),
+      groupGrabbable: ep.grabbable(),
+      othersLocked: !cy.getElementById('node.program').grabbable(),
+    };
+  });
+  expect(isolated).toEqual({ othersFaded: true, groupVisible: true, groupGrabbable: true, othersLocked: true });
+
+  const move = await page.evaluate(() => {
+    const cy = window.__nexus.cy;
+    const ep = cy.getElementById('node.episode');
+    const field = cy.nodes('[group="field"][entity="node.episode"]')[0];
+    const fb = { x: field.position('x'), y: field.position('y') };
+    const eb = { x: ep.position('x'), y: ep.position('y') };
+    ep.emit('grab');
+    ep.position({ x: eb.x + 120, y: eb.y + 40 });
+    ep.emit('drag');
+    ep.emit('free');
+    return { fieldDx: Math.round(field.position('x') - fb.x), fieldDy: Math.round(field.position('y') - fb.y) };
+  });
+  expect(move).toEqual({ fieldDx: 120, fieldDy: 40 });
+
+  // A tap on the empty canvas releases the isolation.
+  await page.evaluate(() => window.__nexus.cy.emit('tap', [{ target: window.__nexus.cy }]));
+  expect(await page.evaluate(() => window.__nexus.cy.elements('.faded').length)).toBe(0);
+});

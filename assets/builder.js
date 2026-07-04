@@ -25,6 +25,9 @@ let handleEntityId = null;
 let handleRaf = false;
 let placeKind = null;
 let pendingPosition = null;
+let isolatedIds = new Set();
+let dragLast = null;
+let lastEntityTap = { id: null, t: 0 };
 
 function startPlaceNote(kind) {
   connectMode = false;
@@ -184,6 +187,50 @@ export function attachBuilder(instance) {
       selectNode(evt.target.id());
     }
   });
+
+  // Double-tap an entity to isolate it (and its fields) for moving as a unit; a
+  // tap on the empty canvas releases the isolation.
+  cy.on('tap', 'node[group="entity"]', (evt) => {
+    const id = evt.target.id();
+    const now = Date.now();
+    if (lastEntityTap.id === id && now - lastEntityTap.t < 400) {
+      isolateEntity(id);
+      lastEntityTap = { id: null, t: 0 };
+    }
+    else {
+      lastEntityTap = { id: id, t: now };
+    }
+  });
+  cy.on('tap', (evt) => {
+    if (evt.target === cy) {
+      clearIsolation();
+    }
+  });
+  cy.on('grab', 'node', (evt) => {
+    if (isolatedIds.has(evt.target.id())) {
+      dragLast = { x: evt.target.position('x'), y: evt.target.position('y') };
+    }
+  });
+  cy.on('drag', 'node', (evt) => {
+    if (!dragLast || !isolatedIds.has(evt.target.id())) {
+      return;
+    }
+    const pos = evt.target.position();
+    const dx = pos.x - dragLast.x;
+    const dy = pos.y - dragLast.y;
+    cy.batch(() => {
+      isolatedIds.forEach((id) => {
+        if (id === evt.target.id()) {
+          return;
+        }
+        const other = cy.getElementById(id);
+        other.position({ x: other.position('x') + dx, y: other.position('y') + dy });
+      });
+    });
+    dragLast = { x: pos.x, y: pos.y };
+  });
+  cy.on('free', 'node', () => { dragLast = null; });
+
   cy.on('tapstart', 'node[group="field"]', (evt) => startConnect(evt.target, evt.position));
   cy.on('tapdrag', (evt) => moveGhost(evt.position));
   cy.on('tapend', (evt) => endConnect(evt.target));
@@ -220,8 +267,9 @@ function applyMode() {
   $('connect-toggle').classList.toggle('is-active', connectMode);
   updateInteraction();
 
-  // Switching modes drops any singled-out focus so neither mode inherits the
-  // other's trace/fade highlight.
+  // Switching modes drops any singled-out focus or isolation so neither mode
+  // inherits the other's trace/fade highlight or grab state.
+  clearIsolation();
   const controller = getController();
   if (controller) {
     controller.clearFocus();
@@ -256,6 +304,39 @@ function updateInteraction() {
   cy.autoungrabify(!buildMode || connectMode);
   cy.userPanningEnabled(!connectMode);
   cy.boxSelectionEnabled(false);
+}
+
+// Isolate an entity and its fields (plus their proxies) as a movable unit: fade
+// everything else and make only this group grabbable, so a drag on any member
+// shifts the whole group together (see the grab/drag handlers).
+function isolateEntity(entityId) {
+  const entity = cy.getElementById(entityId);
+  if (entity.empty() || entity.data('group') !== 'entity') {
+    return;
+  }
+  const fields = cy.nodes('[group="field"][entity="' + entityId + '"]');
+  const proxies = fields.connectedEdges('[group="proxyedge"]').targets().filter('[group="proxy"]');
+  const group = entity.union(fields).union(proxies);
+
+  cy.elements().addClass('faded');
+  group.removeClass('faded');
+  group.edgesWith(group).removeClass('faded');
+
+  cy.autoungrabify(false);
+  cy.nodes().ungrabify();
+  group.grabify();
+  isolatedIds = new Set(group.map((node) => node.id()));
+}
+
+function clearIsolation() {
+  if (!isolatedIds.size) {
+    return;
+  }
+  cy.elements().removeClass('faded');
+  isolatedIds = new Set();
+  dragLast = null;
+  cy.nodes().grabify();
+  updateInteraction();
 }
 
 /* Drag-to-connect ------------------------------------------------------- */

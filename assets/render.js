@@ -409,6 +409,13 @@ function buildController(model, options = {}) {
     }
   }
 
+  // The default view is 100%, centred on the diagram. Fitting the whole graph
+  // is left to the explicit Fit control and the zoom dropdown.
+  function resetView() {
+    cy.zoom(1);
+    cy.center();
+  }
+
   function runLayout() {
     // Machine-name captions hang ~16px below each node (outside its Cytoscape
     // box), so widen the in-rank gap to fit them when they are shown.
@@ -423,7 +430,7 @@ function buildController(model, options = {}) {
       nodeDimensionsIncludeLabels: true,
       animate: false,
     }).run();
-    cy.fit(undefined, 45);
+    resetView();
     positionCaptions();
     positionNotes();
   }
@@ -437,7 +444,7 @@ function buildController(model, options = {}) {
         node.position(layout[node.id()]);
       }
     });
-    cy.fit(undefined, 50);
+    resetView();
     positionCaptions();
     positionNotes();
   }
@@ -716,7 +723,7 @@ function buildController(model, options = {}) {
 
   const controller = {
     cy,
-    refresh, runLayout, applyLayout, clearFocus, focusEntity, focusField, rebuildCaptions, rebuildNotes, searchHighlight, applyColor, resetColors,
+    refresh, runLayout, applyLayout, resetView, clearFocus, focusEntity, focusField, rebuildCaptions, rebuildNotes, searchHighlight, applyColor, resetColors,
     applyTheme: () => { cy.style(style()); positionCaptions(); },
     typeLabel,
     colorFor: entityColor,
@@ -751,7 +758,7 @@ function wire() {
   $('zoom-in').addEventListener('click', () => ctx.cy.zoom({ level: ctx.cy.zoom() * 1.25, renderedPosition: { x: ctx.cy.width() / 2, y: ctx.cy.height() / 2 } }));
   $('zoom-out').addEventListener('click', () => ctx.cy.zoom({ level: ctx.cy.zoom() * 0.8, renderedPosition: { x: ctx.cy.width() / 2, y: ctx.cy.height() / 2 } }));
   $('fit').addEventListener('click', () => ctx.cy.fit(undefined, 45));
-  $('reset').addEventListener('click', () => { ctx.clearFocus(); ctx.cy.fit(undefined, 45); });
+  $('reset').addEventListener('click', () => { ctx.clearFocus(); ctx.resetView(); });
   $('tidy').addEventListener('click', () => ctx.runLayout());
 
   $('zoom-menu').addEventListener('sl-select', (evt) => {
