@@ -11,10 +11,26 @@ export const KIND_SYSTEM = 'system';
 export const KIND_CALCULATED = 'calculated';
 
 /**
+ * Human label for a Drupal storage cardinality: 1 is single-valued, -1 is
+ * unlimited, any other N caps the number of values at N.
+ */
+export function cardinalityLabel(cardinality) {
+  if (cardinality === -1) {
+    return '1..n';
+  }
+
+  if (cardinality > 1) {
+    return '1..' + cardinality;
+  }
+
+  return '1';
+}
+
+/**
  * A single field on an entity bundle.
  */
 export class Field {
-  constructor(name, label, fieldType, kind, required = false, targetType = null, targetBundles = []) {
+  constructor(name, label, fieldType, kind, required = false, targetType = null, targetBundles = [], cardinality = 1) {
     this.name = name;
     this.label = label;
     this.fieldType = fieldType;
@@ -22,6 +38,7 @@ export class Field {
     this.required = required;
     this.targetType = targetType;
     this.targetBundles = [...targetBundles];
+    this.cardinality = cardinality;
   }
 
   isReference() {
@@ -129,6 +146,7 @@ export class ContentModel {
             group: 'field',
             name: fieldItem.name,
             kind: fieldItem.kind,
+            cardinality: fieldItem.cardinality,
             label: fieldItem.label,
             fieldType: fieldItem.fieldType,
             required: fieldItem.required,
@@ -153,7 +171,7 @@ export class ContentModel {
               source: fieldId,
               target: targetId,
               group: 'ref',
-              cardinality: fieldItem.kind === KIND_MULTI ? '1..n' : '1',
+              cardinality: cardinalityLabel(fieldItem.cardinality),
             },
           });
         }

@@ -14,11 +14,13 @@ import { h } from 'preact';
 import { useState } from 'preact/hooks';
 import htmBase from 'htm';
 import { icon } from './icons.js';
+import { cardinalityLabel } from './model.js';
 import { getController, getBuilder, openInspector, bump } from './store.js';
 
 const html = htmBase.bind(h);
 
 const ENTITY_TYPES = [['node', 'Content type'], ['taxonomy_term', 'Vocabulary'], ['media', 'Media'], ['paragraph', 'Paragraph'], ['block_content', 'Block'], ['user', 'User']];
+const CARDINALITY_OPTIONS = [['1', 'Single'], ['2', '2'], ['3', '3'], ['4', '4'], ['5', '5'], ['6', '6'], ['7', '7'], ['8', '8'], ['9', '9'], ['10', '10'], ['-1', 'Unlimited']];
 const FIELD_TYPES = ['string', 'string_long', 'text_long', 'text_with_summary', 'boolean', 'integer', 'decimal', 'datetime', 'link', 'email', 'list_string', 'image', 'file', 'entity_reference', 'entity_reference_revisions'];
 const REFERENCE_TYPES = ['entity_reference', 'entity_reference_revisions'];
 const ANNOTATION_KINDS = [['event', 'Event'], ['api', 'API'], ['callback', 'Callback']];
@@ -49,7 +51,7 @@ export function existingFields() {
   cy().nodes('[group="field"]').forEach((f) => {
     const name = f.data('name');
     if (name && !byName[name]) {
-      byName[name] = { name: name, label: f.data('label'), fieldType: f.data('fieldType'), kind: f.data('kind') };
+      byName[name] = { name: name, label: f.data('label'), fieldType: f.data('fieldType'), cardinality: f.data('cardinality') != null ? f.data('cardinality') : 1 };
     }
   });
   return Object.keys(byName).sort().map((name) => byName[name]);
@@ -88,14 +90,20 @@ export function EntityForm({ id }) {
 
 export function FieldForm({ id }) {
   const node = cy().getElementById(id);
-  const [s, setS] = useState({ label: node.data('label'), fieldType: node.data('fieldType'), kind: node.data('kind'), required: !!node.data('required') });
+  const [s, setS] = useState({ label: node.data('label'), fieldType: node.data('fieldType'), cardinality: node.data('cardinality') != null ? node.data('cardinality') : 1, required: !!node.data('required') });
 
   function set(key, value) {
     node.data(key, value);
-    if (key === 'kind') {
-      node.connectedEdges('[group="ref"]').data('cardinality', value === 'multi' ? '1..n' : '1');
-    }
     setS((prev) => ({ ...prev, [key]: value }));
+    bump();
+  }
+
+  function setCardinality(value) {
+    const cardinality = parseInt(value, 10);
+    node.data('cardinality', cardinality);
+    node.data('kind', cardinality === 1 ? 'single' : 'multi');
+    node.connectedEdges('[group="ref"]').data('cardinality', cardinalityLabel(cardinality));
+    setS((prev) => ({ ...prev, cardinality: cardinality }));
     bump();
   }
 
@@ -109,11 +117,7 @@ export function FieldForm({ id }) {
       <${Row} label="Label"><sl-input size="small" value=${s.label} onsl-input=${(e) => set('label', e.target.value)}></sl-input><//>
       <${Row} label="Machine name"><sl-input size="small" data-machine-name value=${node.data('name')} title="Rename the machine name (updates its references)" onsl-change=${(e) => getBuilder().renameField(id, e.target.value)}></sl-input><//>
       <${Row} label="Type"><sl-select size="small" value=${s.fieldType} onsl-change=${(e) => set('fieldType', e.target.value)}>${slOptions(FIELD_TYPES)}</sl-select><//>
-      <${Row} label="Cardinality">
-        <sl-select size="small" value=${s.kind} onsl-change=${(e) => set('kind', e.target.value)}>
-          <sl-option value="single">Single</sl-option><sl-option value="multi">Multiple</sl-option>
-        </sl-select>
-      <//>
+      <${Row} label="Cardinality"><sl-select size="small" data-cardinality value=${String(s.cardinality)} onsl-change=${(e) => setCardinality(e.target.value)}>${slOptions(CARDINALITY_OPTIONS)}</sl-select><//>
       <${Row} label="Required"><sl-switch size="small" checked=${s.required} onsl-change=${(e) => set('required', e.target.checked)}></sl-switch><//>
       ${isRef && html`
         <div class="insp__section">
@@ -161,12 +165,12 @@ export function NewEntityForm({ entityType }) {
 
 export function NewFieldForm({ entityId, side }) {
   const entities = cy().nodes('[group="entity"]');
-  const [form, setForm] = useState({ entity: entityId || (entities.length ? entities[0].id() : ''), name: '', label: '', fieldType: 'string', kind: 'single', target: '' });
+  const [form, setForm] = useState({ entity: entityId || (entities.length ? entities[0].id() : ''), name: '', label: '', fieldType: 'string', cardinality: 1, target: '' });
   const existing = existingFields();
 
   function onName(value) {
     const match = existing.find((f) => f.name === value);
-    setForm((prev) => match ? { ...prev, name: value, label: match.label, fieldType: match.fieldType, kind: match.kind } : { ...prev, name: value });
+    setForm((prev) => match ? { ...prev, name: value, label: match.label, fieldType: match.fieldType, cardinality: match.cardinality } : { ...prev, name: value });
   }
 
   const resolvedEntity = entityId || form.entity;
@@ -183,11 +187,7 @@ export function NewFieldForm({ entityId, side }) {
       <datalist id="existing-field-list">${existing.map((f) => html`<option value=${f.name}>${f.label} (${f.fieldType})</option>`)}</datalist>
       <${Row} label="Label"><sl-input size="small" data-new-label value=${form.label} placeholder="e.g. Body" onsl-input=${(e) => setForm((p) => ({ ...p, label: e.target.value }))}></sl-input><//>
       <${Row} label="Type"><sl-select size="small" data-new-fieldtype value=${form.fieldType} onsl-change=${(e) => setForm((p) => ({ ...p, fieldType: e.target.value }))}>${slOptions(FIELD_TYPES)}</sl-select><//>
-      <${Row} label="Cardinality">
-        <sl-select size="small" value=${form.kind} onsl-change=${(e) => setForm((p) => ({ ...p, kind: e.target.value }))}>
-          <sl-option value="single">Single</sl-option><sl-option value="multi">Multiple</sl-option>
-        </sl-select>
-      <//>
+      <${Row} label="Cardinality"><sl-select size="small" data-new-cardinality value=${String(form.cardinality)} onsl-change=${(e) => setForm((p) => ({ ...p, cardinality: parseInt(e.target.value, 10) }))}>${slOptions(CARDINALITY_OPTIONS)}</sl-select><//>
       ${isRef ? html`<${Row} label="Link to"><sl-select size="small" data-new-target value=${form.target} placeholder="(no reference)" clearable onsl-change=${(e) => setForm((p) => ({ ...p, target: e.target.value }))}>${entityOptions}</sl-select><//>` : null}
       <p class="insp__hint">Type a new name, or pick an existing field to reuse its definition.</p>
       <sl-button size="small" variant="primary" class="insp__create" data-create-field title="Create the field" onClick=${() => getBuilder().createField(resolvedEntity, form, side)}>${rawIcon('check')}Create field</sl-button>

@@ -32,17 +32,16 @@
   <div class="toolbar__main">
   <div class="toolbar__actions">
     <span class="toolbar__brand">Nexus</span>
-    <input id="diagram-title" class="toolbar__title" type="text" placeholder="Untitled content model" title="Rename this content model - used for the saved file names" aria-label="Content model name">
+    <sl-input id="diagram-title" class="toolbar__title" size="small" placeholder="Untitled content model" title="Rename this content model - used for the saved file names" aria-label="Content model name"></sl-input>
   </div>
   <div class="toolbar__actions">
     <sl-button-group class="toolbar__group" label="Mode">
       <sl-button id="mode-view" class="toolbar__button is-active" size="small" data-icon="eye" title="View mode: explore the diagram">View</sl-button>
       <sl-button id="mode-build" class="toolbar__button" size="small" data-icon="pencil" title="Edit mode: add and change entities and fields">Edit</sl-button>
     </sl-button-group>
-    <div class="toolbar__search-wrap">
-      <span class="toolbar__search-icon" data-icon="search"></span>
-      <input id="search" class="toolbar__search" type="search" placeholder="Find entity…" autocomplete="off" title="Find and highlight an entity by name">
-    </div>
+    <sl-input id="search" class="toolbar__search" size="small" type="search" placeholder="Find entity…" autocomplete="off" clearable title="Find and highlight an entity by name">
+      <span slot="prefix" class="toolbar__search-icon" data-icon="search"></span>
+    </sl-input>
     <sl-button-group class="toolbar__group" label="View controls">
       <sl-button id="zoom-out" class="toolbar__button toolbar__button--icon" size="small" data-icon="zoom-out" title="Zoom out"></sl-button>
       <sl-button id="zoom-in" class="toolbar__button toolbar__button--icon" size="small" data-icon="zoom-in" title="Zoom in"></sl-button>
@@ -50,6 +49,19 @@
       <sl-button id="reset" class="toolbar__button" size="small" data-icon="rotate-ccw" title="Clear focus and fit the diagram">Reset</sl-button>
       <sl-button id="tidy" class="toolbar__button" size="small" data-icon="tidy" title="Tidy up: re-run the layout to arrange everything neatly">Tidy</sl-button>
     </sl-button-group>
+    <sl-dropdown class="toolbar__zoom" hoist>
+      <sl-button id="zoom-level" slot="trigger" class="toolbar__button" size="small" caret title="Set the zoom level">100%</sl-button>
+      <sl-menu id="zoom-menu">
+        <sl-menu-item value="fit">Fit</sl-menu-item>
+        <sl-menu-item value="0.25">25%</sl-menu-item>
+        <sl-menu-item value="0.5">50%</sl-menu-item>
+        <sl-menu-item value="0.75">75%</sl-menu-item>
+        <sl-menu-item value="1">100%</sl-menu-item>
+        <sl-menu-item value="1.5">150%</sl-menu-item>
+        <sl-menu-item value="2">200%</sl-menu-item>
+        <sl-menu-item value="3">300%</sl-menu-item>
+      </sl-menu>
+    </sl-dropdown>
     <sl-button-group class="toolbar__group" label="Display">
       <sl-button id="fields-toggle" class="toolbar__button" size="small" data-icon="list" title="Show or hide entity fields">Fields</sl-button>
       <sl-button id="proxy-toggle" class="toolbar__button" size="small" data-icon="layers" title="Show references as semi-opaque proxies instead of long edges">Proxies</sl-button>

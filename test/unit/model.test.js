@@ -10,7 +10,7 @@ test('toArray builds entity and field nodes plus has/ref edges', () => {
   const model = new ContentModel('My model');
   const article = new Entity('node', 'article', 'Article');
   article.addField(new Field('field_summary', 'Summary', 'string', KIND_SINGLE));
-  article.addField(new Field('field_tags', 'Tags', 'entity_reference', KIND_MULTI, false, 'taxonomy_term', ['tags']));
+  article.addField(new Field('field_tags', 'Tags', 'entity_reference', KIND_MULTI, false, 'taxonomy_term', ['tags'], -1));
   model.addEntity(article);
   model.addEntity(new Entity('taxonomy_term', 'tags', 'Tags'));
 
@@ -45,9 +45,19 @@ test('single reference uses the "1" cardinality label', () => {
 test('open-ended reference targets the Any node id', () => {
   const model = new ContentModel();
   const page = new Entity('node', 'page', 'Page');
-  page.addField(new Field('field_components', 'Components', 'entity_reference_revisions', KIND_MULTI, false, 'paragraph', []));
+  page.addField(new Field('field_components', 'Components', 'entity_reference_revisions', KIND_MULTI, false, 'paragraph', [], -1));
   model.addEntity(page);
 
   const ref = edgesByGroup(model.toArray(), 'ref')[0];
   assert.equal(ref.data.target, 'paragraph.*');
+});
+
+test('bounded cardinality uses a "1..N" reference label', () => {
+  const model = new ContentModel();
+  const article = new Entity('node', 'article', 'Article');
+  article.addField(new Field('field_authors', 'Authors', 'entity_reference', KIND_MULTI, false, 'user', ['user'], 3));
+  model.addEntity(article);
+
+  const ref = edgesByGroup(model.toArray(), 'ref')[0];
+  assert.equal(ref.data.cardinality, '1..3');
 });

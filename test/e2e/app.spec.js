@@ -45,7 +45,7 @@ test('renders the bundled example', async ({ page }) => {
 
   expect(await entityCount(page)).toBe(30);
   expect(await page.evaluate(() => window.__nexus.cy.getElementById('node.program').length)).toBe(1);
-  await expect(page.locator('#diagram-title')).toHaveValue('Example content model');
+  await expect(page.locator('#diagram-title')).toHaveJSProperty('value', 'Example content model');
 });
 
 test('parses an uploaded config folder in the browser', async ({ page }) => {
@@ -241,7 +241,7 @@ test('declutters references into faded proxies', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);
 
-  await page.click('#proxy-toggle');
+  // Proxies are enabled by default.
   await expect(page.locator('#proxy-toggle')).toHaveClass(/is-active/);
   await expect(page.locator('#fields-toggle')).toHaveClass(/is-active/);
 
@@ -576,11 +576,49 @@ test('exports the diagram as SVG and honours a renamed title', async ({ page }) 
   await page.click('#example-btn');
   await waitForGraph(page);
 
-  await page.fill('#diagram-title', 'My Model');
+  await slFill(page, '#diagram-title', 'My Model');
 
   const [download] = await Promise.all([
     page.waitForEvent('download'),
     page.click('#export-svg'),
   ]);
   expect(download.suggestedFilename()).toBe('my-model.svg');
+});
+
+test('enables proxy declutter by default on render', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+  await expect(page.locator('#proxy-toggle')).toHaveClass(/is-active/);
+  expect(await page.evaluate(() => window.__nexus.cy.nodes('[group="proxy"]:visible').length)).toBeGreaterThan(0);
+});
+
+test('changes a field cardinality from the inspector', async ({ page }) => {
+  await page.click('#new-btn');
+  await page.click('#mode-build');
+
+  await page.click('[data-add-entity="node"]');
+  await slFill(page, '[data-new-bundle]', 'promo');
+  await page.click('[data-create-entity]');
+
+  await page.click('.handle--right');
+  await page.waitForFunction(() => window.__nexus.cy.nodes('[group="field"]').length === 1);
+
+  await slSelect(page, '#inspector sl-select[data-cardinality]', '5');
+  const data = await page.evaluate(() => {
+    const f = window.__nexus.cy.nodes('[group="field"]').first();
+    return { cardinality: f.data('cardinality'), kind: f.data('kind') };
+  });
+  expect(data.cardinality).toBe(5);
+  expect(data.kind).toBe('multi');
+});
+
+test('sets the zoom level from the toolbar dropdown', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+
+  await page.click('#zoom-level');
+  await page.click('sl-menu-item[value="2"]');
+
+  await page.waitForFunction(() => Math.abs(window.__nexus.cy.zoom() - 2) < 0.01);
+  await expect(page.locator('#zoom-level')).toHaveText(/200%/);
 });

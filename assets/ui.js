@@ -13,6 +13,7 @@ import { h, render, Component } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
 import htmBase from 'htm';
 import { icon } from './icons.js';
+import { cardinalityLabel } from './model.js';
 import { InspectorBody } from './inspector.js';
 import {
   getState, subscribe, getController, togglePanel, closePanel, focusPanel,
@@ -279,6 +280,18 @@ function EntitiesBody({ ctx }) {
     </div>`;
 }
 
+// Base and computed fields carry a category badge; everything else shows its
+// cardinality (1, 1..N, 1..n) coloured by single vs multi.
+function cardBadge(r) {
+  if (r.kind === 'system' || r.kind === 'calculated') {
+    return html`<span class=${'badge badge--' + r.kind}>${r.kind}</span>`;
+  }
+
+  const label = cardinalityLabel(r.cardinality);
+
+  return html`<span class=${'badge badge--' + (r.cardinality === 1 ? 'single' : 'multi')} title=${'Cardinality: ' + label}>${label}</span>`;
+}
+
 function TableBody({ ctx, filter }) {
   const [term, setTerm] = useState('');
   const records = ctx.records().filter((r) => {
@@ -286,7 +299,7 @@ function TableBody({ ctx, filter }) {
       return false;
     }
     if (term) {
-      const hay = (r.entity + ' ' + r.field + ' ' + r.name + ' ' + r.type + ' ' + r.refs.join(' ')).toLowerCase();
+      const hay = (r.entity + ' ' + r.field + ' ' + r.name + ' ' + r.type + ' ' + r.refs.map((x) => x.label).join(' ')).toLowerCase();
       return hay.indexOf(term.toLowerCase()) !== -1;
     }
     return true;
@@ -301,18 +314,18 @@ function TableBody({ ctx, filter }) {
     }
     rows.push(html`<tr>
       <td>${r.field}<br/><code>${r.name}</code></td><td>${r.type}</td>
-      <td><span class=${'badge badge--' + r.kind}>${r.kind}</span></td>
-      <td>${r.required ? '✓' : ''}</td><td>${r.refs.join(', ')}</td>
+      <td>${cardBadge(r)}</td>
+      <td>${r.required ? '✓' : ''}</td><td>${r.refs.map((ref, i) => html`${i ? ', ' : ''}<a class="table__reflink" href="#" title=${'Locate ' + ref.label + ' on the canvas'} onClick=${(e) => { e.preventDefault(); ctx.focusEntity(ref.id); }}>${ref.label}</a>`)}</td>
     </tr>`);
   });
 
   return html`
     <div class="panel__toolbar">
-      <select id="table-entity" class="panel__select" value=${filter} onChange=${(e) => setTableFilter(e.target.value)}>
-        <option value="__all__">All entities</option>
-        ${ctx.entities().map((e) => html`<option value=${e.id}>${e.label}</option>`)}
-      </select>
-      <input id="table-search" class="panel__search" type="search" placeholder="Filter fields…" value=${term} onInput=${(e) => setTerm(e.target.value)} />
+      <sl-select id="table-entity" class="panel__select" size="small" value=${filter} onsl-change=${(e) => setTableFilter(e.target.value)}>
+        <sl-option value="__all__">All entities</sl-option>
+        ${ctx.entities().map((e) => html`<sl-option value=${e.id}>${e.label}</sl-option>`)}
+      </sl-select>
+      <sl-input id="table-search" class="panel__search" size="small" type="search" placeholder="Filter fields…" clearable value=${term} onsl-input=${(e) => setTerm(e.target.value)}></sl-input>
     </div>
     <div class="table-wrap">
       <table id="field-table" class="field-table">

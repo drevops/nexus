@@ -92,29 +92,25 @@ body {
   background: var(--border);
 }
 
-.toolbar__title {
-  margin: 0;
-  min-width: 150px;
-  padding: 0.2rem 0.45rem;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--text);
+sl-input.toolbar__title {
+  min-width: 170px;
+}
+
+sl-input.toolbar__title::part(base) {
   background: transparent;
-  border: 1px solid transparent;
-  border-radius: 6px;
+  border-color: transparent;
+  box-shadow: none;
 }
 
-.toolbar__title::placeholder {
-  color: var(--muted);
-  font-weight: 400;
+sl-input.toolbar__title::part(input) {
+  font-weight: 500;
 }
 
-.toolbar__title:hover {
+sl-input.toolbar__title:hover::part(base) {
   border-color: var(--border);
 }
 
-.toolbar__title:focus {
-  outline: none;
+sl-input.toolbar__title:focus-within::part(base) {
   border-color: var(--accent);
   background: var(--panel-bg);
 }
@@ -143,6 +139,12 @@ sl-button.toolbar__button svg.icon {
 
 sl-button.toolbar__button--icon svg.icon {
   margin: 0;
+}
+
+/* Nudge slot-injected icons to the optical centre of a Shoelace button: inside
+   the inline label slot 'vertical-align: middle' lands ~1.5px low. */
+sl-button svg.icon {
+  transform: translateY(-1.5px);
 }
 
 sl-button-group.toolbar__group {
@@ -196,27 +198,18 @@ sl-button-group.toolbar__group {
   border-radius: 9px;
 }
 
-.toolbar__search-wrap {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
+sl-input.toolbar__search {
+  min-width: 180px;
 }
 
 .toolbar__search-icon {
-  position: absolute;
-  left: 0.6rem;
   display: inline-flex;
   color: var(--muted);
-  pointer-events: none;
 }
 
-.toolbar__search {
-  padding: 0.4rem 0.65rem 0.4rem 2rem;
-  font-size: 0.85rem;
-  background: var(--panel-bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  min-width: 160px;
+sl-button#zoom-level::part(base) {
+  min-width: 4.1rem;
+  justify-content: space-between;
 }
 
 .toolbar__button {
@@ -250,6 +243,7 @@ sl-button-group.toolbar__group {
   flex: 0 0 auto;
   width: 16px;
   height: 16px;
+  vertical-align: middle;
 }
 
 .toolbar__button:hover {
@@ -540,17 +534,14 @@ sl-button-group.toolbar__group {
   flex: 1 1 auto;
 }
 
-.panel__select,
-.panel__search {
-  padding: 0.3rem 0.5rem;
-  font-size: 0.8rem;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-}
-
 .panel__search {
   flex: 1 1 auto;
   min-width: 60px;
+}
+
+.panel__select {
+  flex: 0 0 auto;
+  min-width: 120px;
 }
 
 .panel__pin,
@@ -667,11 +658,13 @@ sl-button-group.toolbar__group {
 }
 
 .table-wrap {
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .field-table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: 0.78rem;
 }
@@ -680,8 +673,44 @@ sl-button-group.toolbar__group {
 .field-table td {
   text-align: left;
   padding: 0.35rem 0.6rem;
-  border-bottom: 1px solid #edf0f3;
+  border-bottom: 1px solid var(--border);
   vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.field-table th:nth-child(1),
+.field-table td:nth-child(1) {
+  width: 27%;
+}
+
+.field-table th:nth-child(2),
+.field-table td:nth-child(2) {
+  width: 21%;
+}
+
+.field-table th:nth-child(3),
+.field-table td:nth-child(3) {
+  width: 13%;
+}
+
+.field-table th:nth-child(4),
+.field-table td:nth-child(4) {
+  width: 8%;
+}
+
+.field-table th:nth-child(5),
+.field-table td:nth-child(5) {
+  width: 31%;
+}
+
+.table__reflink {
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.table__reflink:hover {
+  text-decoration: underline;
 }
 
 .field-table th {

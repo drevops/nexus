@@ -61,6 +61,7 @@ export function documentFromGraph(cy, meta = {}) {
         label: field.data('label'),
         fieldType: field.data('fieldType'),
         kind: field.data('kind'),
+        cardinality: field.data('cardinality') != null ? field.data('cardinality') : 1,
         required: !!field.data('required'),
         targetType: targetType,
         targetBundles: targetBundles,
@@ -113,6 +114,7 @@ export function documentToModel(doc) {
         !!field.required,
         field.targetType || null,
         Array.isArray(field.targetBundles) ? field.targetBundles : [],
+        field.cardinality != null ? field.cardinality : (field.kind === 'multi' ? -1 : 1),
       ));
     });
     model.addEntity(built);

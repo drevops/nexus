@@ -301,7 +301,7 @@ function wireDocument() {
     }
     evt.target.value = '';
   });
-  $('diagram-title').addEventListener('input', () => {
+  $('diagram-title').addEventListener('sl-input', () => {
     document.title = ($('diagram-title').value || 'Untitled') + ' - Nexus';
   });
 }

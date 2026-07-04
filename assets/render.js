@@ -323,7 +323,7 @@ function buildController(model, options = {}) {
   refsByField = {};
   typeVisible = {};
   fieldsMode = true;
-  proxyMode = false;
+  proxyMode = true;
   rankDir = 'LR';
   showMachineNames = true;
   initColors();
@@ -543,8 +543,24 @@ function buildController(model, options = {}) {
   function searchHighlight(term) {
     cy.elements().addClass('faded');
     const matches = cy.nodes('[group="entity"]').filter((n) => (n.data('label') + ' ' + n.data('bundle')).toLowerCase().indexOf(term) !== -1);
+    if (matches.empty()) {
+      return;
+    }
     matches.union(matches.closedNeighborhood().closedNeighborhood()).removeClass('faded');
+
+    // Bring the match into view: a lone hit gets centred and zoomed in, several
+    // hits are framed together so they all land in the viewport.
+    if (matches.length === 1) {
+      cy.animate({ center: { eles: matches }, zoom: Math.min(1.2, cy.maxZoom()) }, { duration: 350 });
+    }
+    else {
+      cy.animate({ fit: { eles: matches, padding: 100 } }, { duration: 350 });
+    }
   }
+
+  cy.on('zoom', () => {
+    $('zoom-level').textContent = Math.round(cy.zoom() * 100) + '%';
+  });
 
   cy.on('mouseover', 'node', (evt) => {
     const tooltip = $('tooltip');
@@ -606,9 +622,9 @@ function buildController(model, options = {}) {
       const owner = cy.getElementById(f.data('entity'));
       const refs = f.connectedEdges('[group="ref"]').filter((e) => e.source().id() === f.id()).map((e) => {
         const target = cy.getElementById(e.target().id());
-        return target.nonempty() ? target.data('label') : e.target().id();
+        return { id: e.target().id(), label: target.nonempty() ? target.data('label') : e.target().id() };
       });
-      return { entityId: f.data('entity'), entity: owner.nonempty() ? owner.data('label') : f.data('entity'), entityType: owner.nonempty() ? owner.data('entityType') : '', field: f.data('label'), name: f.data('name') || '', type: f.data('fieldType'), kind: f.data('kind'), required: !!f.data('required'), refs: refs };
+      return { entityId: f.data('entity'), entity: owner.nonempty() ? owner.data('label') : f.data('entity'), entityType: owner.nonempty() ? owner.data('entityType') : '', field: f.data('label'), name: f.data('name') || '', type: f.data('fieldType'), kind: f.data('kind'), cardinality: f.data('cardinality') != null ? f.data('cardinality') : 1, required: !!f.data('required'), refs: refs };
     }),
     presentTypes: () => TYPE_ORDER.filter((t) => cy.nodes('[group="entity"][entityType="' + t + '"]').nonempty()).map((t) => ({ type: t, label: typeLabel(t), color: entityColor(t), visible: typeVisible[t] !== false })),
     setTypeVisible: (type, vis) => { typeVisible[type] = vis; refresh(true); bump(); },
@@ -618,7 +634,7 @@ function buildController(model, options = {}) {
   // Reset the toolbar view state for this render; the panel layout persists
   // across renders and sessions, so it is deliberately left untouched here.
   $('fields-toggle').classList.add('is-active');
-  $('proxy-toggle').classList.remove('is-active');
+  $('proxy-toggle').classList.add('is-active');
   $('layout-toggle').querySelector('.layout-label').textContent = 'Layout: LR';
   $('machine-names').classList.add('is-active');
   $('search').value = '';
@@ -633,6 +649,15 @@ function wire() {
   $('fit').addEventListener('click', () => ctx.cy.fit(undefined, 45));
   $('reset').addEventListener('click', () => { ctx.clearFocus(); ctx.cy.fit(undefined, 45); });
   $('tidy').addEventListener('click', () => ctx.runLayout());
+
+  $('zoom-menu').addEventListener('sl-select', (evt) => {
+    const value = evt.detail.item.value;
+    if (value === 'fit') {
+      ctx.cy.fit(undefined, 45);
+      return;
+    }
+    ctx.cy.zoom({ level: parseFloat(value), renderedPosition: { x: ctx.cy.width() / 2, y: ctx.cy.height() / 2 } });
+  });
 
   $('fields-toggle').addEventListener('click', (evt) => {
     fieldsMode = !fieldsMode;
@@ -664,7 +689,7 @@ function wire() {
     ctx.rebuildCaptions();
   });
 
-  $('search').addEventListener('input', (evt) => {
+  $('search').addEventListener('sl-input', (evt) => {
     const term = evt.target.value.trim().toLowerCase();
     if (!term) {
       ctx.clearFocus();

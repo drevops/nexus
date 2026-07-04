@@ -135,7 +135,7 @@ function addFieldInstance(model, data, storages) {
   const targetType = isReference ? storage.targetType : null;
   const targetBundles = isReference ? extractTargetBundles(data) : [];
 
-  entity.addField(new Field(fieldName, label, fieldType, kind, required, targetType, targetBundles));
+  entity.addField(new Field(fieldName, label, fieldType, kind, required, targetType, targetBundles, storage.cardinality));
 }
 
 function extractTargetBundles(data) {

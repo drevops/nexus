@@ -11,6 +11,7 @@
  * these mutations through the builder controller on the store.
  */
 
+import { cardinalityLabel } from './model.js';
 import { openInspector, closeInspector, setBuilder, bump } from './store.js';
 
 const NOTE_LABELS = { event: 'Event', api: 'API', callback: 'Callback' };
@@ -99,7 +100,7 @@ function onCanvasDrop(evt) {
     const entityId = entityAt(position) || nearestEntity(position);
     if (entityId) {
       const name = uniqueFieldName(entityId);
-      const id = addField(entityId, name, prettify(name), 'string', 'single', null, position);
+      const id = addField(entityId, name, prettify(name), 'string', 1, null, position);
       if (id) {
         selectNode(id);
         bump();
@@ -157,7 +158,7 @@ export function initBuilder() {
     const btn = evt.target.closest('.handle');
     if (btn && handleEntityId) {
       const name = uniqueFieldName(handleEntityId);
-      const id = addField(handleEntityId, name, prettify(name), 'string', 'single', btn.getAttribute('data-side'));
+      const id = addField(handleEntityId, name, prettify(name), 'string', 1, btn.getAttribute('data-side'));
       if (id) {
         selectNode(id);
         bump();
@@ -498,13 +499,14 @@ function fieldPlacement(anchor, side) {
   return { x: anchor.x + distance, y: anchor.y + spread };
 }
 
-function addField(entityId, name, label, fieldType, kind, side, position) {
+function addField(entityId, name, label, fieldType, cardinality, side, position) {
   const fieldId = 'field:' + entityId + ':' + name;
   if (cy.getElementById(fieldId).nonempty()) {
     return null;
   }
+  const kind = cardinality === 1 ? 'single' : 'multi';
   const anchor = cy.getElementById(entityId).position();
-  cy.add({ group: 'nodes', data: { id: fieldId, group: 'field', name: name, label: label, fieldType: fieldType, kind: kind, required: false, entity: entityId }, position: position || fieldPlacement(anchor, side) });
+  cy.add({ group: 'nodes', data: { id: fieldId, group: 'field', name: name, label: label, fieldType: fieldType, kind: kind, cardinality: cardinality, required: false, entity: entityId }, position: position || fieldPlacement(anchor, side) });
   cy.add({ group: 'edges', data: { id: 'has:' + fieldId, source: entityId, target: fieldId, group: 'has' } });
   return fieldId;
 }
@@ -524,7 +526,8 @@ function addReference(fieldId, targetId) {
   if (cy.getElementById(id).nonempty() || cy.getElementById(targetId).empty()) {
     return;
   }
-  const card = cy.getElementById(fieldId).data('kind') === 'multi' ? '1..n' : '1';
+  const field = cy.getElementById(fieldId);
+  const card = cardinalityLabel(field.data('cardinality') != null ? field.data('cardinality') : 1);
   cy.add({ group: 'edges', data: { id: id, source: fieldId, target: targetId, group: 'ref', cardinality: card } });
 }
 
@@ -566,7 +569,7 @@ function createField(entityId, form, side) {
     return;
   }
   const label = (form.label || '').trim() || name;
-  const id = addField(entityId, name, label, form.fieldType, form.kind, side, pendingPosition);
+  const id = addField(entityId, name, label, form.fieldType, form.cardinality != null ? form.cardinality : 1, side, pendingPosition);
   pendingPosition = null;
   if (id) {
     if (form.target) {
