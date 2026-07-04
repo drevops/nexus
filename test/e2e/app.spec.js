@@ -98,6 +98,35 @@ test('drags a panel by its header', async ({ page }) => {
   expect(pos.top).toBeGreaterThan(120);
 });
 
+test('traces a field\'s inbound and outbound connections', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+  await page.click('#fields-toggle');
+
+  const result = await page.evaluate(() => {
+    const cy = window.__nexus.cy;
+    const refEdge = cy.edges('[group="ref"]').first();
+    const field = refEdge.source();
+    const hasEdge = field.connectedEdges('[group="has"]');
+    field.emit('tap');
+    return {
+      sourceTraced: field.hasClass('trace-source'),
+      outboundEdgeTraced: refEdge.hasClass('trace'),
+      targetTraced: refEdge.target().hasClass('trace'),
+      inboundEdgeTraced: hasEdge.hasClass('trace'),
+      ownerTraced: hasEdge.source().hasClass('trace'),
+      unrelatedFaded: cy.nodes().some((n) => n.hasClass('faded') && !n.hasClass('trace') && !n.hasClass('trace-source')),
+    };
+  });
+
+  expect(result.sourceTraced).toBe(true);
+  expect(result.outboundEdgeTraced).toBe(true);
+  expect(result.targetTraced).toBe(true);
+  expect(result.inboundEdgeTraced).toBe(true);
+  expect(result.ownerTraced).toBe(true);
+  expect(result.unrelatedFaded).toBe(true);
+});
+
 test('persists a custom entity colour across reloads', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);

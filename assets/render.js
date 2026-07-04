@@ -234,6 +234,9 @@ function style() {
     { selector: '.faded', style: { opacity: 0.1 } },
     { selector: '.hidden', style: { display: 'none' } },
     { selector: '.highlight', style: { 'border-color': '#2f6db3', 'border-width': 3 } },
+    { selector: 'node.trace', style: { opacity: 1, 'border-color': '#0f9d8f', 'border-width': 3 } },
+    { selector: 'edge.trace', style: { opacity: 1, 'line-color': '#0f9d8f', 'target-arrow-color': '#0f9d8f', width: 2.6, 'z-index': 20 } },
+    { selector: 'node.trace-source', style: { opacity: 1, 'border-color': '#0b7a70', 'border-width': 4, 'background-color': '#c3f0e8' } },
   ];
 }
 
@@ -408,14 +411,29 @@ function buildController(model, options = {}) {
       return;
     }
     const hood = node.closedNeighborhood().closedNeighborhood();
-    cy.elements().addClass('faded');
+    cy.elements().removeClass('trace trace-source').addClass('faded');
     hood.removeClass('faded');
     node.removeClass('faded');
     cy.animate({ center: { eles: node }, zoom: Math.max(cy.zoom(), 0.8) }, { duration: 350 });
   }
 
+  function focusField(id) {
+    const node = cy.getElementById(id);
+    if (node.empty()) {
+      return;
+    }
+
+    // A field's closed neighbourhood is exactly its inbound owner (via the
+    // has-edge) and outbound reference targets - the connections to trace.
+    const hood = node.closedNeighborhood();
+    cy.elements().removeClass('trace trace-source').addClass('faded');
+    hood.removeClass('faded').addClass('trace');
+    node.removeClass('trace').addClass('trace-source');
+    cy.animate({ center: { eles: hood }, zoom: Math.max(cy.zoom(), 0.8) }, { duration: 350 });
+  }
+
   function clearFocus() {
-    cy.elements().removeClass('faded');
+    cy.elements().removeClass('faded trace trace-source');
   }
 
   function machineNameOf(node) {
@@ -602,6 +620,12 @@ function buildController(model, options = {}) {
     }
     focusEntity(evt.target.id());
   });
+  cy.on('tap', 'node[group="field"]', (evt) => {
+    if (window.__nexusBuild) {
+      return;
+    }
+    focusField(evt.target.id());
+  });
   cy.on('render', () => {
     if (!showMachineNames || captionRaf) {
       return;
@@ -627,7 +651,7 @@ function buildController(model, options = {}) {
 
   renderTable();
 
-  return { cy, refresh, runLayout, applyLayout, clearFocus, focusEntity, openTable, renderTable, rebuildCaptions, searchHighlight, applyColor };
+  return { cy, refresh, runLayout, applyLayout, clearFocus, focusEntity, focusField, openTable, renderTable, rebuildCaptions, searchHighlight, applyColor };
 }
 
 function wire() {
