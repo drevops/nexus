@@ -40,16 +40,20 @@ test('parses an uploaded config folder in the browser', async ({ page }) => {
   expect(await page.evaluate(() => window.__nexus.cy.getElementById('node.article').length)).toBe(1);
 });
 
-test('reveals fields, entity index and field table', async ({ page }) => {
+test('shows fields by default and collapses to an overview', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);
 
-  const overview = await page.evaluate(() => window.__nexus.cy.nodes(':visible').length);
+  // Fields and machine names are shown by default.
+  await expect(page.locator('#fields-toggle')).toHaveClass(/is-active/);
+  await expect(page.locator('#machine-names')).toHaveClass(/is-active/);
+  expect(await page.locator('#captions .caption').count()).toBeGreaterThan(0);
+  const detailed = await page.evaluate(() => window.__nexus.cy.nodes(':visible').length);
 
   await page.click('#fields-toggle');
-  await expect(page.locator('#fields-toggle')).toHaveClass(/is-active/);
-  const detailed = await page.evaluate(() => window.__nexus.cy.nodes(':visible').length);
-  expect(detailed).toBeGreaterThan(overview);
+  await expect(page.locator('#fields-toggle')).not.toHaveClass(/is-active/);
+  const overview = await page.evaluate(() => window.__nexus.cy.nodes(':visible').length);
+  expect(overview).toBeLessThan(detailed);
 
   await page.click('#entities-toggle');
   await expect(page.locator('#entity-list .entity-row').first()).toBeVisible();
@@ -101,7 +105,6 @@ test('drags a panel by its header', async ({ page }) => {
 test('traces a field\'s inbound and outbound connections', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);
-  await page.click('#fields-toggle');
 
   const result = await page.evaluate(() => {
     const cy = window.__nexus.cy;

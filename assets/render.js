@@ -343,10 +343,10 @@ function buildController(model, options = {}) {
   fieldById = {};
   refsByField = {};
   typeVisible = {};
-  fieldsMode = false;
+  fieldsMode = true;
   proxyMode = false;
   rankDir = 'LR';
-  showMachineNames = false;
+  showMachineNames = true;
   initColors();
   if (options.colors) {
     Object.assign(activeColors, options.colors);
@@ -692,10 +692,10 @@ function buildController(model, options = {}) {
   let captionRaf = false;
 
   // Reset toolbar/panels to their default state for this render.
-  $('fields-toggle').classList.remove('is-active');
+  $('fields-toggle').classList.add('is-active');
   $('proxy-toggle').classList.remove('is-active');
   $('layout-toggle').textContent = 'Layout: LR';
-  $('machine-names').classList.remove('is-active');
+  $('machine-names').classList.add('is-active');
   $('search').value = '';
   openPanel('legend');
   closePanel('entities');
@@ -812,6 +812,7 @@ export function render(model, options = {}) {
   else {
     ctx.refresh(true);
   }
+  ctx.rebuildCaptions();
   window.__nexus = { cy: ctx.cy, model, colors: { ...activeColors } };
   return ctx;
 }
