@@ -8,7 +8,7 @@
  * call repeatedly - each call tears down the previous graph.
  */
 
-import { openPanel, closePanel, setController, bump } from './store.js';
+import { setController, bump, closeInspector } from './store.js';
 
 const DEFAULT_COLORS = {
   node: '#d9e2f3',
@@ -398,13 +398,13 @@ function buildController(model, options = {}) {
       name: 'dagre',
       rankDir: rankDir,
       ranker: 'network-simplex',
-      nodeSep: fieldsMode ? 26 : 52,
-      edgeSep: 16,
-      rankSep: fieldsMode ? 95 : 150,
+      nodeSep: fieldsMode ? 10 : 34,
+      edgeSep: 6,
+      rankSep: fieldsMode ? 62 : 120,
       nodeDimensionsIncludeLabels: true,
       animate: false,
     }).run();
-    cy.fit(undefined, 50);
+    cy.fit(undefined, 45);
     positionCaptions();
   }
 
@@ -604,17 +604,14 @@ function buildController(model, options = {}) {
   };
   setController(controller);
 
-  // Reset the toolbar and panels to their default state for this render.
+  // Reset the toolbar view state for this render; the panel layout persists
+  // across renders and sessions, so it is deliberately left untouched here.
   $('fields-toggle').classList.add('is-active');
   $('proxy-toggle').classList.remove('is-active');
   $('layout-toggle').querySelector('.layout-label').textContent = 'Layout: LR';
   $('machine-names').classList.add('is-active');
   $('search').value = '';
-  openPanel('legend');
-  closePanel('entities');
-  closePanel('table');
-  closePanel('settings');
-  closePanel('inspector');
+  closeInspector();
 
   return controller;
 }
@@ -624,6 +621,7 @@ function wire() {
   $('zoom-out').addEventListener('click', () => ctx.cy.zoom({ level: ctx.cy.zoom() * 0.8, renderedPosition: { x: ctx.cy.width() / 2, y: ctx.cy.height() / 2 } }));
   $('fit').addEventListener('click', () => ctx.cy.fit(undefined, 45));
   $('reset').addEventListener('click', () => { ctx.clearFocus(); ctx.cy.fit(undefined, 45); });
+  $('tidy').addEventListener('click', () => ctx.runLayout());
 
   $('fields-toggle').addEventListener('click', (evt) => {
     fieldsMode = !fieldsMode;

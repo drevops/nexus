@@ -1,6 +1,16 @@
 /**
- * Client-side exports of the diagram canvas. Nothing is uploaded.
+ * Client-side exports of the diagram canvas. Nothing is uploaded - the PNG is
+ * rasterised by Cytoscape and the SVG is produced by the cytoscape-svg
+ * extension entirely in the browser.
  */
+
+if (window.cytoscape && window.cytoscapeSvg) {
+  window.cytoscape.use(window.cytoscapeSvg);
+}
+
+function slug(text) {
+  return String(text || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'content-model';
+}
 
 function downloadUri(uri, filename) {
   const link = document.createElement('a');
@@ -11,35 +21,30 @@ function downloadUri(uri, filename) {
   document.body.removeChild(link);
 }
 
-/**
- * Export the whole graph (not just the viewport) as a PNG.
- */
-export function exportPng(cy) {
-  if (!cy) {
-    return;
-  }
-  downloadUri(cy.png({ full: true, scale: 2, bg: '#ffffff' }), 'content-model.png');
+function downloadText(text, mime, filename) {
+  const blob = new Blob([text], { type: mime });
+  const url = URL.createObjectURL(blob);
+  downloadUri(url, filename);
+  URL.revokeObjectURL(url);
 }
 
 /**
- * Export the whole graph as a single-page PDF sized to the image.
+ * Export the whole graph (not just the viewport) as a PNG named after the
+ * given diagram title.
  */
-export function exportPdf(cy) {
+export function exportPng(cy, title) {
   if (!cy) {
     return;
   }
+  downloadUri(cy.png({ full: true, scale: 2, bg: '#ffffff' }), slug(title) + '.png');
+}
 
-  const uri = cy.png({ full: true, scale: 2, bg: '#ffffff' });
-  const image = new Image();
-
-  image.onload = () => {
-    const width = image.width;
-    const height = image.height;
-    const JsPdf = window.jspdf.jsPDF;
-    const pdf = new JsPdf({ orientation: width >= height ? 'landscape' : 'portrait', unit: 'pt', format: [width, height] });
-    pdf.addImage(uri, 'PNG', 0, 0, width, height);
-    pdf.save('content-model.pdf');
-  };
-
-  image.src = uri;
+/**
+ * Export the whole graph as a scalable SVG named after the diagram title.
+ */
+export function exportSvg(cy, title) {
+  if (!cy || typeof cy.svg !== 'function') {
+    return;
+  }
+  downloadText(cy.svg({ full: true, bg: '#ffffff' }), 'image/svg+xml', slug(title) + '.svg');
 }

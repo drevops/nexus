@@ -91,6 +91,7 @@ export function documentFromGraph(cy, meta = {}) {
     entities: entities,
     annotations: { nodes: nodes, edges: edges },
     layout: layout,
+    ui: meta.ui || null,
   };
 }
 
@@ -124,5 +125,6 @@ export function documentToModel(doc) {
     modelData: model.toArray(),
     layout: (doc.layout && typeof doc.layout === 'object') ? doc.layout : {},
     colors: (doc.colors && typeof doc.colors === 'object') ? doc.colors : {},
+    ui: (doc.ui && typeof doc.ui === 'object') ? doc.ui : null,
   };
 }

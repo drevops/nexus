@@ -3,17 +3,18 @@
  *
  * Loads a Drupal config folder entirely in the browser (nothing is uploaded),
  * parses it, and renders the content-model diagram. Also handles the bundled
- * example and PNG/PDF exports.
+ * example, PNG/SVG exports and the loading overlay.
  */
 
 import { parseConfig } from './parser.js';
 import { applyAnnotations } from './annotations.js';
 import { render } from './render.js';
-import { exportPng, exportPdf } from './export.js';
+import { exportPng, exportSvg } from './export.js';
 import { documentFromGraph, documentToModel } from './document.js';
 import { initBuilder, attachBuilder } from './builder.js';
 import { initUI } from './ui.js';
 import { initIcons } from './icons.js';
+import { exportLayout, importLayout } from './store.js';
 
 const EXAMPLE_BASE = 'examples/example/';
 
@@ -34,11 +35,20 @@ function showError(message) {
   $('landing-error').textContent = message || '';
 }
 
+function showLoader(message) {
+  $('loader-text').textContent = message || 'Loading…';
+  $('loader').hidden = false;
+}
+
+function hideLoader() {
+  $('loader').hidden = true;
+}
+
 function showDiagram(modelData, options) {
   render(modelData, options || {});
   attachBuilder(window.__nexus.cy);
   const title = (modelData.meta && modelData.meta.title) || 'Content model';
-  $('diagram-title').textContent = title;
+  $('diagram-title').value = title;
   document.title = title + ' - Nexus';
   $('landing').hidden = true;
 }
@@ -66,36 +76,43 @@ function buildAndShow(map, annotations) {
 
 async function loadFromFiles(fileList) {
   showError('');
-  const map = {};
-  let annotations = null;
+  showLoader('Reading configuration…');
+  try {
+    const map = {};
+    let annotations = null;
 
-  for (const file of fileList) {
-    const name = basename(file.webkitRelativePath || file.name);
-    if (!isYaml(name)) {
-      continue;
+    for (const file of fileList) {
+      const name = basename(file.webkitRelativePath || file.name);
+      if (!isYaml(name)) {
+        continue;
+      }
+
+      let data;
+      try {
+        data = window.jsyaml.load(await file.text());
+      }
+      catch (e) {
+        continue;
+      }
+
+      if (name === 'annotations.yml' || name === 'nexus.annotations.yml') {
+        annotations = data;
+      }
+      else if (data && typeof data === 'object') {
+        map[name] = data;
+      }
     }
 
-    let data;
-    try {
-      data = window.jsyaml.load(await file.text());
-    }
-    catch (e) {
-      continue;
-    }
-
-    if (name === 'annotations.yml' || name === 'nexus.annotations.yml') {
-      annotations = data;
-    }
-    else if (data && typeof data === 'object') {
-      map[name] = data;
-    }
+    buildAndShow(map, annotations);
   }
-
-  buildAndShow(map, annotations);
+  finally {
+    hideLoader();
+  }
 }
 
 async function loadExample() {
   showError('');
+  showLoader('Loading the example…');
   try {
     const manifest = await fetch(EXAMPLE_BASE + 'manifest.json').then((r) => r.json());
     const map = {};
@@ -122,6 +139,9 @@ async function loadExample() {
   }
   catch (e) {
     showError('Could not load the example: ' + e.message);
+  }
+  finally {
+    hideLoader();
   }
 }
 
@@ -204,12 +224,12 @@ function showLanding() {
 function wireExports() {
   $('export-png').addEventListener('click', () => {
     if (window.__nexus) {
-      exportPng(window.__nexus.cy);
+      exportPng(window.__nexus.cy, $('diagram-title').value);
     }
   });
-  $('export-pdf').addEventListener('click', () => {
+  $('export-svg').addEventListener('click', () => {
     if (window.__nexus) {
-      exportPdf(window.__nexus.cy);
+      exportSvg(window.__nexus.cy, $('diagram-title').value);
     }
   });
 }
@@ -234,20 +254,27 @@ function saveDocument() {
   if (!window.__nexus) {
     return;
   }
-  const title = $('diagram-title').textContent || 'Content model';
-  const doc = documentFromGraph(window.__nexus.cy, { title: title, colors: window.__nexus.colors || {} });
+  const title = $('diagram-title').value || 'Content model';
+  const doc = documentFromGraph(window.__nexus.cy, { title: title, colors: window.__nexus.colors || {}, ui: exportLayout() });
   downloadJson(doc, slug(title) + '.nexus.json');
 }
 
 async function openDocument(file) {
   showError('');
+  showLoader('Opening diagram…');
   try {
     const doc = documentToModel(JSON.parse(await file.text()));
     showDiagram(doc.modelData, { layout: doc.layout, colors: doc.colors });
+    if (doc.ui) {
+      importLayout(doc.ui);
+    }
   }
   catch (e) {
     $('landing').hidden = false;
     showError('Could not open that diagram: ' + e.message);
+  }
+  finally {
+    hideLoader();
   }
 }
 
@@ -263,6 +290,9 @@ function wireDocument() {
       openDocument(evt.target.files[0]);
     }
     evt.target.value = '';
+  });
+  $('diagram-title').addEventListener('input', () => {
+    document.title = ($('diagram-title').value || 'Untitled') + ' - Nexus';
   });
 }
 

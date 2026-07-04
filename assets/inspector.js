@@ -67,7 +67,7 @@ export function EntityForm({ id }) {
   const [label, setLabel] = useState(node.data('label'));
 
   const fields = fieldsOf(id).map((f) => html`
-    <button class="insp__field" onClick=${() => openInspector({ kind: 'field', id: f.id() })}>${f.data('label')} <code>${f.data('name')}</code></button>`);
+    <button class="insp__field" title="Inspect this field" onClick=${() => openInspector({ kind: 'field', id: f.id() })}>${f.data('label')} <code>${f.data('name')}</code></button>`);
 
   return html`
     <div class="insp">
@@ -78,10 +78,10 @@ export function EntityForm({ id }) {
       <${Row} label="Type"><span class="insp__ro">${TYPE_LABELS[node.data('entityType')] || node.data('entityType')}</span><//>
       <${Row} label="Machine name"><code>${node.data('bundle')}</code><//>
       <div class="insp__section">
-        <div class="insp__sectionhead"><span>Fields</span><button class="insp__btn" data-add-field onClick=${() => openInspector({ kind: 'new-field', entityId: id })}>${rawIcon('plus')}Field</button></div>
+        <div class="insp__sectionhead"><span>Fields</span><button class="insp__btn" data-add-field title="Add a field to this entity" onClick=${() => openInspector({ kind: 'new-field', entityId: id })}>${rawIcon('plus')}Field</button></div>
         ${fields.length ? fields : html`<p class="insp__empty">No fields yet.</p>`}
       </div>
-      <button class="insp__delete" onClick=${() => getBuilder().deleteNode(id)}>${rawIcon('trash')}Delete entity</button>
+      <button class="insp__delete" title="Delete this entity and its fields" onClick=${() => getBuilder().deleteNode(id)}>${rawIcon('trash')}Delete entity</button>
     </div>`;
 }
 
@@ -119,7 +119,7 @@ export function FieldForm({ id }) {
           <div class="insp__sectionhead"><span>References</span></div>
           ${targets.length ? targets.map((t) => html`
             <div class="insp__ref">${cy().getElementById(t).data('label') || t}
-              <button class="insp__x" aria-label="Remove" onClick=${() => { getBuilder().removeReference(id, t); bump(); }}>${rawIcon('x', 14)}</button>
+              <button class="insp__x" aria-label="Remove" title="Remove this reference" onClick=${() => { getBuilder().removeReference(id, t); bump(); }}>${rawIcon('x', 14)}</button>
             </div>`) : html`<p class="insp__empty">No references.</p>`}
           <div class="insp__row">
             <select class="insp__input" value="" onChange=${(e) => { if (e.target.value) { getBuilder().addReference(id, e.target.value); e.target.value = ''; bump(); } }}>
@@ -127,7 +127,7 @@ export function FieldForm({ id }) {
             </select>
           </div>
         </div>`}
-      <button class="insp__delete" onClick=${() => getBuilder().deleteNode(id)}>${rawIcon('trash')}Delete field</button>
+      <button class="insp__delete" title="Delete this field" onClick=${() => getBuilder().deleteNode(id)}>${rawIcon('trash')}Delete field</button>
     </div>`;
 }
 
@@ -147,7 +147,7 @@ export function AnnotationForm({ id }) {
       <${Row} label="Label"><input class="insp__input" value=${s.label} onInput=${(e) => set('label', e.target.value)} /><//>
       <${Row} label="Kind"><select class="insp__input" value=${s.kind} onChange=${(e) => set('kind', e.target.value)}>${optionList(ANNOTATION_KINDS)}</select><//>
       <${Row} label="Method"><input class="insp__input" value=${s.method} placeholder="POST, GET…" onInput=${(e) => set('method', e.target.value)} /><//>
-      <button class="insp__delete" onClick=${() => getBuilder().deleteNode(id)}>${rawIcon('trash')}Delete</button>
+      <button class="insp__delete" title="Delete this annotation" onClick=${() => getBuilder().deleteNode(id)}>${rawIcon('trash')}Delete</button>
     </div>`;
 }
 
@@ -160,7 +160,7 @@ export function NewEntityForm() {
       <${Row} label="Type"><select class="insp__input" value=${form.entityType} onChange=${(e) => setForm((p) => ({ ...p, entityType: e.target.value }))}>${optionList(ENTITY_TYPES)}</select><//>
       <${Row} label="Machine name"><input class="insp__input" data-new-bundle value=${form.bundle} placeholder="e.g. article" onInput=${(e) => setForm((p) => ({ ...p, bundle: e.target.value }))} /><//>
       <${Row} label="Label"><input class="insp__input" data-new-label value=${form.label} placeholder="e.g. Article" onInput=${(e) => setForm((p) => ({ ...p, label: e.target.value }))} /><//>
-      <button class="insp__create" data-create-entity onClick=${() => getBuilder().createEntity(form)}>${rawIcon('check')}Create entity</button>
+      <button class="insp__create" data-create-entity title="Create the entity" onClick=${() => getBuilder().createEntity(form)}>${rawIcon('check')}Create entity</button>
     </div>`;
 }
 
@@ -188,7 +188,7 @@ export function NewFieldForm({ entityId, side }) {
         </select>
       <//>
       <p class="insp__hint">Type a new name, or pick an existing field to reuse its definition.</p>
-      <button class="insp__create" data-create-field onClick=${() => getBuilder().createField(entityId, form, side)}>${rawIcon('check')}Create field</button>
+      <button class="insp__create" data-create-field title="Create the field" onClick=${() => getBuilder().createField(entityId, form, side)}>${rawIcon('check')}Create field</button>
     </div>`;
 }
 
@@ -201,7 +201,7 @@ export function NewAnnotationForm() {
       <${Row} label="Kind"><select class="insp__input" value=${form.kind} onChange=${(e) => setForm((p) => ({ ...p, kind: e.target.value }))}>${optionList(ANNOTATION_KINDS)}</select><//>
       <${Row} label="Label"><input class="insp__input" data-new-label value=${form.label} placeholder="e.g. Sync API" onInput=${(e) => setForm((p) => ({ ...p, label: e.target.value }))} /><//>
       <${Row} label="Method"><input class="insp__input" value=${form.method} placeholder="POST, GET…" onInput=${(e) => setForm((p) => ({ ...p, method: e.target.value }))} /><//>
-      <button class="insp__create" data-create-annotation onClick=${() => getBuilder().createAnnotation(form)}>${rawIcon('check')}Create annotation</button>
+      <button class="insp__create" data-create-annotation title="Create the annotation" onClick=${() => getBuilder().createAnnotation(form)}>${rawIcon('check')}Create annotation</button>
     </div>`;
 }
 

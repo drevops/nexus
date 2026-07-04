@@ -17,28 +17,85 @@ const DEFAULT_POS = {
   legend: { right: 16, bottom: 16 },
 };
 
+const LAYOUT_KEY = 'nexusLayout';
+
 let zCounter = 10;
 let controller = null;
 let builder = null;
+let saveTimer = null;
 
 function initialPanels() {
   const panels = {};
   Object.keys(DEFAULT_POS).forEach((id) => {
-    panels[id] = { open: false, dock: null, pos: { ...DEFAULT_POS[id] }, z: 4 };
+    panels[id] = { open: false, dock: null, pos: { ...DEFAULT_POS[id] }, z: 4, height: 260 };
   });
   return panels;
 }
 
-let state = {
-  panels: initialPanels(),
-  dockWidth: { left: 320, right: 340 },
-  selected: null,
-  tableFilter: '__all__',
-  version: 0,
-};
+function layoutSnapshot() {
+  const panels = {};
+  Object.keys(state.panels).forEach((id) => {
+    const p = state.panels[id];
+    panels[id] = { open: p.open, dock: p.dock, pos: p.pos, height: p.height };
+  });
+  return { panels: panels, dockWidth: state.dockWidth };
+}
+
+function mergeLayout(panels, saved) {
+  Object.keys(panels).forEach((id) => {
+    const entry = saved.panels && saved.panels[id];
+    if (entry) {
+      panels[id] = { ...panels[id], open: !!entry.open, dock: entry.dock || null, pos: entry.pos || panels[id].pos, height: entry.height || panels[id].height };
+    }
+  });
+}
+
+function loadLayout() {
+  try {
+    return JSON.parse(window.localStorage.getItem(LAYOUT_KEY));
+  }
+  catch (e) {
+    return null;
+  }
+}
+
+function saveLayout() {
+  try {
+    window.localStorage.setItem(LAYOUT_KEY, JSON.stringify(layoutSnapshot()));
+  }
+  catch (e) {
+    // Storage may be unavailable (private mode); keep the in-memory layout.
+  }
+}
+
+function scheduleSave() {
+  if (saveTimer) {
+    return;
+  }
+  saveTimer = setTimeout(() => { saveTimer = null; saveLayout(); }, 400);
+}
+
+function initialState() {
+  const panels = initialPanels();
+  let dockWidth = { left: 320, right: 340 };
+  const saved = loadLayout();
+  if (saved && saved.panels) {
+    mergeLayout(panels, saved);
+    if (saved.dockWidth) {
+      dockWidth = saved.dockWidth;
+    }
+  }
+  else {
+    panels.legend.open = true;
+  }
+  return { panels: panels, dockWidth: dockWidth, selected: null, tableFilter: '__all__', version: 0 };
+}
+
+let state = initialState();
 
 function emit(next) {
   state = { ...state, ...next };
+  scheduleSave();
   listeners.forEach((fn) => fn());
 }
 
@@ -134,6 +191,25 @@ export function togglePin(id, side) {
 
 export function setDockWidth(side, width) {
   emit({ dockWidth: { ...state.dockWidth, [side]: Math.max(220, Math.min(680, Math.round(width))) } });
+}
+
+export function setPanelHeight(id, height) {
+  patchPanel(id, { height: Math.max(90, Math.min(900, Math.round(height))) });
+}
+
+// The panel layout persists to localStorage on every change; these let a saved
+// Nexus document carry its own layout so it round-trips with the project.
+export function exportLayout() {
+  return layoutSnapshot();
+}
+
+export function importLayout(layout) {
+  if (!layout || !layout.panels) {
+    return;
+  }
+  const panels = { ...state.panels };
+  mergeLayout(panels, layout);
+  emit({ panels: panels, dockWidth: layout.dockWidth || state.dockWidth });
 }
 
 export function openInspector(selected) {

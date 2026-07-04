@@ -16,7 +16,7 @@ import { icon } from './icons.js';
 import { InspectorBody } from './inspector.js';
 import {
   getState, subscribe, getController, togglePanel, closePanel, focusPanel,
-  movePanel, pinPanel, unpinPanel, setDockWidth, setTableFilter, openTableFor,
+  movePanel, pinPanel, unpinPanel, setDockWidth, setPanelHeight, setTableFilter, openTableFor,
 } from './store.js';
 
 const html = htmBase.bind(h);
@@ -142,24 +142,44 @@ function startResize(side, evt) {
   evt.preventDefault();
 }
 
+function startVResize(id, evt, el) {
+  const startY = evt.clientY;
+  const startH = el.getBoundingClientRect().height;
+
+  function move(e) {
+    setPanelHeight(id, startH + (e.clientY - startY));
+  }
+
+  function up() {
+    document.removeEventListener('mousemove', move);
+    document.removeEventListener('mouseup', up);
+  }
+
+  document.addEventListener('mousemove', move);
+  document.addEventListener('mouseup', up);
+  evt.preventDefault();
+  evt.stopPropagation();
+}
+
 /* Shell ------------------------------------------------------------------- */
 
 function Panel({ id, panel, header, children }) {
   const ref = useRef(null);
   const docked = !!panel.dock;
   const cls = 'panel' + (WIDE[id] ? ' panel--wide' : '') + (id === 'legend' ? ' panel--legend' : '') + (docked ? ' is-docked' : '');
-  const style = docked ? { zIndex: panel.z } : floatStyle(panel);
+  const style = docked ? { zIndex: panel.z, height: (panel.height || 260) + 'px' } : floatStyle(panel);
 
   return html`
     <section id=${id} ref=${ref} class=${cls} style=${style} onMouseDown=${() => focusPanel(id)}>
-      <div class="panel__head" onMouseDown=${(e) => startDrag(id, e, ref.current)}>
+      <div class="panel__head" onMouseDown=${(e) => startDrag(id, e, ref.current)} title="Drag to move, drop at an edge to dock">
         <span class="panel__title">${TITLES[id]}</span>
         ${header}
         <span class="panel__spacer"></span>
-        <button class="panel__pin" type="button" title="Pin to side" aria-label="Pin" onClick=${() => pinFromButton(id, ref.current)} dangerouslySetInnerHTML=${{ __html: icon('pin') }}></button>
-        <button class="panel__close" type="button" aria-label="Close" onClick=${() => closePanel(id)} dangerouslySetInnerHTML=${{ __html: icon('x') }}></button>
+        <button class="panel__pin" type="button" title=${docked ? 'Unpin from side' : 'Pin to a side'} aria-label="Pin" onClick=${() => pinFromButton(id, ref.current)} dangerouslySetInnerHTML=${{ __html: icon('pin') }}></button>
+        <button class="panel__close" type="button" title="Close panel" aria-label="Close" onClick=${() => closePanel(id)} dangerouslySetInnerHTML=${{ __html: icon('x') }}></button>
       </div>
       <div class="panel__body">${children}</div>
+      ${docked ? html`<div class="panel__vresize" title="Drag to resize height" onMouseDown=${(e) => startVResize(id, e, ref.current)}></div>` : null}
     </section>`;
 }
 
@@ -252,9 +272,9 @@ function EntitiesBody({ ctx }) {
     <div id="entity-list" class="entity-list">
       ${ctx.entities().map((e) => html`
         <div class="entity-row" data-type=${e.entityType}>
-          <button class="entity-row__name" onClick=${() => ctx.focusEntity(e.id)}><b>${e.label}</b> <span class="entity-row__type">${ctx.typeLabel(e.entityType)}</span></button>
+          <button class="entity-row__name" title="Focus this entity on the canvas" onClick=${() => ctx.focusEntity(e.id)}><b>${e.label}</b> <span class="entity-row__type">${ctx.typeLabel(e.entityType)}</span></button>
           <span class="entity-row__count">${e.fieldCount}</span>
-          <button class="entity-row__fields" onClick=${() => openTableFor(e.id)}>fields</button>
+          <button class="entity-row__fields" title="Show this entity's fields in the table" onClick=${() => openTableFor(e.id)}>fields</button>
         </div>`)}
     </div>`;
 }
@@ -314,7 +334,7 @@ function SettingsBody({ ctx }) {
             <input type="color" data-color=${t} value=${ctx.colorFor(t)} onInput=${(e) => ctx.applyColor(t, e.target.value)} />
           </div>`)}
       </div>
-      <button id="settings-reset" class="toolbar__button settings-reset" type="button" onClick=${() => ctx.resetColors()}>Reset to defaults</button>
+      <button id="settings-reset" class="settings-reset" type="button" title="Restore the default entity colours" onClick=${() => ctx.resetColors()}>${rawIcon('rotate-ccw')}Reset to defaults</button>
       <p class="panel__note">Saved to this browser and reused across diagrams.</p>
     </div>`;
 }
@@ -342,4 +362,5 @@ export function initUI() {
   });
 
   subscribe(syncToggles);
+  syncToggles();
 }

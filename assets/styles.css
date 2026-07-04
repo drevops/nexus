@@ -43,10 +43,66 @@ body {
 
 .toolbar__title {
   margin: 0;
+  min-width: 150px;
+  padding: 0.2rem 0.45rem;
   font-size: 0.9rem;
   font-weight: 500;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+}
+
+.toolbar__title::placeholder {
   color: var(--muted);
-  white-space: nowrap;
+  font-weight: 400;
+}
+
+.toolbar__title:hover {
+  border-color: var(--border);
+}
+
+.toolbar__title:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: #fff;
+}
+
+.loader {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  background: rgba(244, 245, 247, 0.92);
+}
+
+.loader[hidden] {
+  display: none;
+}
+
+.loader__spinner {
+  width: 44px;
+  height: 44px;
+  border: 4px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: nexus-spin 0.8s linear infinite;
+}
+
+@keyframes nexus-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loader__text {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
 }
 
 .toolbar__actions {
@@ -315,17 +371,31 @@ body {
   display: none;
 }
 
-/* Docked into a side rail: static, fills the rail width, and shares the
-   rail height with any sibling panels while its body scrolls internally. */
+/* Docked into a side rail: static, fills the rail width, keeps a
+   user-resizable height (drag the bottom edge) and scrolls its body. */
 .panel.is-docked {
   position: static;
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   width: auto;
   max-width: none;
   max-height: none;
-  min-height: 140px;
+  min-height: 90px;
   box-shadow: none;
   border-radius: 8px;
+}
+
+.panel__vresize {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 7px;
+  cursor: row-resize;
+  z-index: 3;
+}
+
+.panel__vresize:hover {
+  background: rgba(47, 109, 179, 0.25);
 }
 
 .panel__body {
@@ -609,7 +679,22 @@ body {
 }
 
 .settings-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   margin-top: 0.9rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.82rem;
+  color: var(--text);
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.settings-reset:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .panel__note {

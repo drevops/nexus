@@ -26,7 +26,7 @@ test('renders the bundled example', async ({ page }) => {
 
   expect(await entityCount(page)).toBe(30);
   expect(await page.evaluate(() => window.__nexus.cy.getElementById('node.program').length)).toBe(1);
-  await expect(page.locator('#diagram-title')).toHaveText('Example content model');
+  await expect(page.locator('#diagram-title')).toHaveValue('Example content model');
 });
 
 test('parses an uploaded config folder in the browser', async ({ page }) => {
@@ -142,6 +142,52 @@ test('docks a panel by dragging it to the screen edge', async ({ page }) => {
 
   await expect(entities).toHaveClass(/is-docked/);
   expect(await entities.evaluate((el) => el.closest('.dock').id)).toBe('dock-right');
+});
+
+test('resizes a docked panel vertically', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+
+  await page.click('#legend .panel__pin');
+  await page.click('#table-toggle');
+  await page.click('#table .panel__pin');
+
+  const before = (await page.locator('#table').boundingBox()).height;
+  const handle = await page.locator('#table .panel__vresize').boundingBox();
+  await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(handle.x + handle.width / 2, handle.y + 150, { steps: 6 });
+  await page.mouse.up();
+  const after = (await page.locator('#table').boundingBox()).height;
+  expect(after).toBeGreaterThan(before + 70);
+});
+
+test('remembers the panel layout across reloads', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+
+  await page.click('#entities-toggle');
+  await page.click('#entities .panel__pin');
+  await expect(page.locator('#entities')).toHaveClass(/is-docked/);
+  await page.waitForTimeout(500);
+
+  await page.reload();
+  await page.click('#example-btn');
+  await waitForGraph(page);
+
+  await expect(page.locator('#entities')).toHaveClass(/is-docked/);
+  expect(await page.locator('#entities').evaluate((el) => el.closest('.dock').id)).toBe('dock-left');
+});
+
+test('shows a loading screen while the example loads', async ({ page }) => {
+  await page.route('**/manifest.json', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    route.continue();
+  });
+  await page.click('#example-btn');
+  await expect(page.locator('#loader')).toBeVisible();
+  await waitForGraph(page);
+  await expect(page.locator('#loader')).toBeHidden();
 });
 
 test('traces a field\'s inbound and outbound connections', async ({ page }) => {
@@ -381,7 +427,7 @@ test('reuses an existing field via autocomplete', async ({ page }) => {
   expect(prefill.type).toBe('text_with_summary');
 });
 
-test('exports the diagram as PNG', async ({ page }) => {
+test('exports the diagram as PNG named after the title', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);
 
@@ -389,16 +435,18 @@ test('exports the diagram as PNG', async ({ page }) => {
     page.waitForEvent('download'),
     page.click('#export-png'),
   ]);
-  expect(download.suggestedFilename()).toBe('content-model.png');
+  expect(download.suggestedFilename()).toBe('example-content-model.png');
 });
 
-test('exports the diagram as PDF', async ({ page }) => {
+test('exports the diagram as SVG and honours a renamed title', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);
 
+  await page.fill('#diagram-title', 'My Model');
+
   const [download] = await Promise.all([
     page.waitForEvent('download'),
-    page.click('#export-pdf'),
+    page.click('#export-svg'),
   ]);
-  expect(download.suggestedFilename()).toBe('content-model.pdf');
+  expect(download.suggestedFilename()).toBe('my-model.svg');
 });
