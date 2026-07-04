@@ -515,7 +515,10 @@ function buildController(model, options = {}) {
   function positionCaptions() {
     const zoom = cy.zoom();
     const tooSmall = zoom < 0.35;
-    const size = Math.max(7, Math.min(13, 10 * zoom));
+    // Scale the type with the zoom so captions grow and shrink with the canvas
+    // (Cytoscape's own node labels are 12px in model space); a flat clamp made
+    // them look pinned at high zoom.
+    const size = 10 * zoom;
     Object.keys(captionMap).forEach((id) => {
       const node = cy.getElementById(id);
       const divs = captionMap[id];
@@ -524,19 +527,20 @@ function buildController(model, options = {}) {
         return;
       }
       const pos = node.renderedPosition();
+      const halfH = node.renderedOuterHeight() / 2;
       // Machine-name lines stack just below the node; the entity type sits over
       // the reserved blank line inside the box, so it reads as a sub-label.
-      let below = pos.y + node.renderedOuterHeight() / 2 + 3;
+      let below = pos.y + halfH + 3 * zoom;
       divs.forEach((div) => {
         div.style.display = 'block';
         div.style.left = pos.x + 'px';
         div.style.fontSize = size + 'px';
         if (div.classList.contains('caption--type')) {
-          div.style.top = (pos.y + node.renderedOuterHeight() / 2 - size - 5 * zoom) + 'px';
+          div.style.top = (pos.y + halfH - size - 5 * zoom) + 'px';
         }
         else {
           div.style.top = below + 'px';
-          below += size + 2;
+          below += size + 2 * zoom;
         }
       });
     });

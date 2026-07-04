@@ -631,3 +631,21 @@ test('labels each entity with its type in the caption layer', async ({ page }) =
   expect(types.length).toBeGreaterThan(0);
   expect(types).toContain('Content type');
 });
+
+test('scales node captions with the canvas zoom', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+
+  const sizeAtZoom = (zoom) => page.evaluate((z) => new Promise((resolve) => {
+    window.__nexus.cy.zoom(z);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const cap = [...document.querySelectorAll('#captions .caption--type')].find((c) => c.style.display === 'block');
+      resolve(cap ? parseFloat(cap.style.fontSize) : 0);
+    }));
+  }), zoom);
+
+  const small = await sizeAtZoom(1);
+  const large = await sizeAtZoom(2.5);
+  expect(small).toBeGreaterThan(0);
+  expect(large).toBeGreaterThan(small * 2);
+});
