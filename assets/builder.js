@@ -8,6 +8,8 @@
  * graph is the source of truth; save/load reads it via document.js.
  */
 
+import { openPanel, closePanel } from './panels.js';
+
 const ENTITY_TYPES = [
   ['node', 'Content type'],
   ['taxonomy_term', 'Vocabulary'],
@@ -70,7 +72,6 @@ export function initBuilder() {
     connectMode = !connectMode;
     applyConnect();
   });
-  $('inspector').querySelector('.panel__close').addEventListener('click', closeInspector);
   $('inspector-body').addEventListener('input', onInspectorInput);
   $('inspector-body').addEventListener('change', onInspectorInput);
   $('inspector-body').addEventListener('click', onInspectorClick);
@@ -183,12 +184,12 @@ function cleanupGhost() {
 }
 
 function closeInspector() {
-  $('inspector').hidden = true;
+  closePanel('inspector');
 }
 
 function openInspector(html) {
   $('inspector-body').innerHTML = html;
-  $('inspector').hidden = false;
+  openPanel('inspector');
 }
 
 /* Selection ------------------------------------------------------------- */

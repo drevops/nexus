@@ -8,6 +8,8 @@
  * call repeatedly - each call tears down the previous graph.
  */
 
+import { openPanel, closePanel } from './panels.js';
+
 const DEFAULT_COLORS = {
   node: '#d9e2f3',
   taxonomy_term: '#9fc5e8',
@@ -258,7 +260,7 @@ const LEGEND_ITEMS = [
 ];
 
 function buildLegend(container) {
-  let html = '<p class="legend__title">Legend</p>';
+  let html = '';
   LEGEND_ITEMS.forEach((item) => {
     html += '<div class="legend__item"><span class="legend__swatch">' + SWATCHES[item[0]] +
       '</span><span class="legend__label">' + item[1] + '</span></div>';
@@ -469,7 +471,7 @@ function buildController(model, options = {}) {
     });
   }
 
-  buildLegend($('legend'));
+  buildLegend($('legend-body'));
 
   const presentTypes = TYPE_ORDER.filter((t) => Object.keys(entityById).some((id) => entityById[id].entityType === t));
   $('type-filters').innerHTML = presentTypes.map((t) => {
@@ -549,8 +551,7 @@ function buildController(model, options = {}) {
   function openTable(entityId) {
     tableEntity.value = entityId;
     renderTable();
-    $('table').hidden = false;
-    $('table-toggle').classList.add('is-active');
+    openPanel('table');
   }
 
   $('color-settings').innerHTML = TYPE_ORDER.map((type) => {
@@ -618,13 +619,11 @@ function buildController(model, options = {}) {
   $('layout-toggle').textContent = 'Layout: LR';
   $('machine-names').classList.remove('is-active');
   $('search').value = '';
-  $('legend').hidden = false;
-  $('legend-toggle').classList.add('is-active');
-  $('entities').hidden = true;
-  $('entities-toggle').classList.remove('is-active');
-  $('table').hidden = true;
-  $('table-toggle').classList.remove('is-active');
-  $('settings-overlay').hidden = true;
+  openPanel('legend');
+  closePanel('entities');
+  closePanel('table');
+  closePanel('settings');
+  closePanel('inspector');
 
   renderTable();
 
@@ -663,28 +662,6 @@ function wire() {
       return;
     }
     ctx.searchHighlight(term);
-  });
-
-  ['entities', 'table', 'legend'].forEach((id) => {
-    $(id + '-toggle').addEventListener('click', () => {
-      const panel = $(id);
-      panel.hidden = !panel.hidden;
-      $(id + '-toggle').classList.toggle('is-active', !panel.hidden);
-    });
-  });
-
-  Array.prototype.forEach.call(document.querySelectorAll('.panel__close'), (btn) => {
-    btn.addEventListener('click', () => {
-      const id = btn.getAttribute('data-close');
-      if (!id) {
-        return;
-      }
-      $(id).hidden = true;
-      const toggle = $(id + '-toggle');
-      if (toggle) {
-        toggle.classList.remove('is-active');
-      }
-    });
   });
 
   $('type-filters').addEventListener('change', (evt) => {
@@ -731,19 +708,6 @@ function wire() {
         input.value = DEFAULT_COLORS[type];
       }
     });
-  });
-
-  $('settings-toggle').addEventListener('click', () => { $('settings-overlay').hidden = false; });
-  $('settings-overlay').addEventListener('click', (evt) => {
-    if (evt.target === $('settings-overlay')) {
-      $('settings-overlay').hidden = true;
-    }
-  });
-  document.querySelector('[data-close-settings]').addEventListener('click', () => { $('settings-overlay').hidden = true; });
-  document.addEventListener('keydown', (evt) => {
-    if (evt.key === 'Escape') {
-      $('settings-overlay').hidden = true;
-    }
   });
 }
 

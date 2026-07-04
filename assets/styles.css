@@ -112,9 +112,38 @@ body {
 }
 
 .stage {
-  position: relative;
+  display: flex;
   flex: 1 1 auto;
   min-height: 0;
+}
+
+.stage__canvas {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.dock {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 340px;
+  padding: 0.75rem;
+  overflow: auto;
+  background: #eef1f5;
+}
+
+.dock:empty {
+  display: none;
+}
+
+#dock-left {
+  border-right: 1px solid var(--border);
+}
+
+#dock-right {
+  border-left: 1px solid var(--border);
 }
 
 .cy {
@@ -147,15 +176,14 @@ body {
   line-height: 1.2;
 }
 
-/* Panels (entities + table). */
+/* Floating panels: entities, table, inspector, settings, legend. */
 .panel {
   position: absolute;
-  top: 1rem;
-  bottom: 1rem;
   z-index: 4;
   display: flex;
   flex-direction: column;
   width: 320px;
+  max-height: calc(100% - 2rem);
   background: var(--panel-bg);
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -163,18 +191,34 @@ body {
   overflow: hidden;
 }
 
-.panel--left {
-  left: 1rem;
-}
-
-.panel--right {
-  right: 1rem;
+.panel--wide {
   width: 560px;
   max-width: calc(100% - 2rem);
 }
 
+.panel--legend {
+  width: 240px;
+}
+
 .panel[hidden] {
   display: none;
+}
+
+/* Docked into a side rail: static, fills the rail, shares its height. */
+.panel.is-docked {
+  position: static;
+  flex: 1 1 auto;
+  width: auto;
+  max-width: none;
+  max-height: none;
+  min-height: 0;
+  box-shadow: none;
+}
+
+.panel__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
 }
 
 .panel__head {
@@ -183,11 +227,21 @@ body {
   gap: 0.5rem;
   padding: 0.6rem 0.75rem;
   border-bottom: 1px solid var(--border);
+  cursor: move;
+  user-select: none;
+}
+
+.panel.is-docked .panel__head {
+  cursor: default;
 }
 
 .panel__title {
   font-weight: 600;
   font-size: 0.9rem;
+}
+
+.panel__spacer {
+  flex: 1 1 auto;
 }
 
 .panel__select,
@@ -203,18 +257,31 @@ body {
   min-width: 60px;
 }
 
+.panel__pin,
 .panel__close {
-  margin-left: auto;
   border: none;
   background: none;
-  font-size: 1.3rem;
   line-height: 1;
   color: var(--muted);
   cursor: pointer;
 }
 
+.panel__pin {
+  font-size: 1.05rem;
+  padding: 0;
+}
+
+.panel__close {
+  font-size: 1.3rem;
+}
+
+.panel__pin:hover,
 .panel__close:hover {
   color: var(--text);
+}
+
+.panel.is-docked .panel__pin {
+  color: var(--accent);
 }
 
 .filters {
@@ -375,33 +442,9 @@ body {
   color: #6a5410;
 }
 
-.legend {
-  position: absolute;
-  right: 1rem;
-  bottom: 1rem;
-  width: 240px;
-  max-height: calc(100% - 2rem);
-  overflow: auto;
+.legend-body {
   padding: 0.85rem 1rem;
-  background: var(--panel-bg);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
   font-size: 0.8rem;
-  z-index: 4;
-}
-
-.legend[hidden] {
-  display: none;
-}
-
-.legend__title {
-  margin: 0 0 0.6rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
 }
 
 .legend__item {
@@ -441,73 +484,17 @@ body {
   display: none;
 }
 
-/* Settings modal. */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(20, 25, 32, 0.45);
+/* Settings panel body. */
+#settings .panel__body {
+  padding: 0.9rem 1rem;
 }
 
-.modal-overlay[hidden] {
-  display: none;
+.settings-reset {
+  margin-top: 0.9rem;
 }
 
-.modal {
-  display: flex;
-  flex-direction: column;
-  width: 400px;
-  max-width: calc(100% - 2rem);
-  max-height: calc(100% - 2rem);
-  background: var(--panel-bg);
-  border-radius: 12px;
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.3);
-  overflow: hidden;
-}
-
-.modal__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.8rem 1rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.modal__title {
-  font-weight: 600;
-}
-
-.modal__close {
-  border: none;
-  background: none;
-  font-size: 1.4rem;
-  line-height: 1;
-  color: var(--muted);
-  cursor: pointer;
-}
-
-.modal__close:hover {
-  color: var(--text);
-}
-
-.modal__body {
-  padding: 1rem;
-  overflow: auto;
-}
-
-.modal__foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.7rem 1rem;
-  border-top: 1px solid var(--border);
-}
-
-.modal__note {
+.panel__note {
+  margin: 0.6rem 0 0;
   font-size: 0.72rem;
   color: var(--muted);
 }

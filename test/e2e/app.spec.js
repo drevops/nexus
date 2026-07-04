@@ -59,6 +59,45 @@ test('reveals fields, entity index and field table', async ({ page }) => {
   await expect(page.locator('#field-table')).toContainText('field_media');
 });
 
+test('floats, pins, unpins and closes a panel', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+
+  const entities = page.locator('#entities');
+  await page.click('#entities-toggle');
+  await expect(entities).toBeVisible();
+  expect(await entities.evaluate((el) => el.parentElement.classList.contains('stage__canvas'))).toBe(true);
+  await expect(entities).not.toHaveClass(/is-docked/);
+
+  await page.click('#entities .panel__pin');
+  expect(await entities.evaluate((el) => el.parentElement.id)).toBe('dock-left');
+  await expect(entities).toHaveClass(/is-docked/);
+
+  await page.click('#entities .panel__pin');
+  expect(await entities.evaluate((el) => el.parentElement.classList.contains('stage__canvas'))).toBe(true);
+  await expect(entities).not.toHaveClass(/is-docked/);
+
+  await page.click('#entities .panel__close');
+  await expect(entities).toBeHidden();
+  await expect(page.locator('#entities-toggle')).not.toHaveClass(/is-active/);
+});
+
+test('drags a panel by its header', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+
+  await page.click('#entities-toggle');
+  const box = await page.locator('#entities .panel__head').boundingBox();
+  await page.mouse.move(box.x + 40, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 260, box.y + 200, { steps: 8 });
+  await page.mouse.up();
+
+  const pos = await page.locator('#entities').evaluate((el) => ({ left: parseFloat(el.style.left), top: parseFloat(el.style.top) }));
+  expect(pos.left).toBeGreaterThan(120);
+  expect(pos.top).toBeGreaterThan(120);
+});
+
 test('persists a custom entity colour across reloads', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);

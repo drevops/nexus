@@ -12,6 +12,7 @@ import { render } from './render.js';
 import { exportPng, exportPdf } from './export.js';
 import { documentFromGraph, documentToModel } from './document.js';
 import { initBuilder, attachBuilder } from './builder.js';
+import { initPanels } from './panels.js';
 
 const EXAMPLE_BASE = 'examples/example/';
 
@@ -258,4 +259,5 @@ function wireDocument() {
 wireLanding();
 wireExports();
 wireDocument();
+initPanels();
 initBuilder();
