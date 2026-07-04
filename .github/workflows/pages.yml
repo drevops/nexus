@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url || steps.deployment_retry.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url || steps.deployment_retry.outputs.page_url || steps.deployment_retry2.outputs.page_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -44,18 +44,28 @@ jobs:
           path: _site
 
       # GitHub Pages intermittently rejects a deployment with "try again later"
-      # while the previous one is still finalising on the backend. Let the first
-      # attempt fail softly, pause, then retry once.
+      # while its backend is busy. Attempt up to three times with a growing pause
+      # so a transient blip self-heals; an extended outage still needs a re-run.
       - name: Deploy
         id: deployment
         continue-on-error: true
         uses: actions/deploy-pages@v4
 
-      - name: Pause before retry
+      - name: Pause before retry 1
         if: steps.deployment.outcome == 'failure'
         run: sleep 30
 
-      - name: Deploy (retry)
+      - name: Deploy (retry 1)
         id: deployment_retry
         if: steps.deployment.outcome == 'failure'
+        continue-on-error: true
+        uses: actions/deploy-pages@v4
+
+      - name: Pause before retry 2
+        if: steps.deployment.outcome == 'failure' && steps.deployment_retry.outcome == 'failure'
+        run: sleep 60
+
+      - name: Deploy (retry 2)
+        id: deployment_retry2
+        if: steps.deployment.outcome == 'failure' && steps.deployment_retry.outcome == 'failure'
         uses: actions/deploy-pages@v4
