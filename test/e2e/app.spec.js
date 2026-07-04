@@ -521,6 +521,21 @@ test('drags an entity type from the palette onto the canvas', async ({ page }) =
   expect(await page.evaluate(() => window.__nexus.cy.nodes('[group="entity"]').length)).toBe(1);
 });
 
+test('toggles a dark theme that persists across reloads', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+
+  expect(await page.evaluate(() => document.documentElement.classList.contains('sl-theme-dark'))).toBe(false);
+  await page.click('#theme-toggle');
+  expect(await page.evaluate(() => document.documentElement.classList.contains('sl-theme-dark'))).toBe(true);
+  expect(await page.evaluate(() => window.localStorage.getItem('nexusTheme'))).toBe('dark');
+
+  await page.reload();
+  await page.click('#example-btn');
+  await waitForGraph(page);
+  expect(await page.evaluate(() => document.documentElement.classList.contains('sl-theme-dark'))).toBe(true);
+});
+
 test('exports the diagram as PNG named after the title', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);

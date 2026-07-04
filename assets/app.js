@@ -13,7 +13,7 @@ import { exportPng, exportSvg } from './export.js';
 import { documentFromGraph, documentToModel } from './document.js';
 import { initBuilder, attachBuilder } from './builder.js';
 import { initUI } from './ui.js';
-import { initIcons } from './icons.js';
+import { initIcons, icon } from './icons.js';
 import { exportLayout, importLayout } from './store.js';
 
 const EXAMPLE_BASE = 'examples/example/';
@@ -296,9 +296,41 @@ function wireDocument() {
   });
 }
 
+function applyTheme(dark) {
+  document.documentElement.classList.toggle('sl-theme-dark', dark);
+  const btn = $('theme-toggle');
+  if (btn) {
+    btn.innerHTML = icon(dark ? 'sun' : 'moon');
+    btn.title = dark ? 'Switch to light theme' : 'Switch to dark theme';
+  }
+  if (window.__nexus && window.__nexus.applyTheme) {
+    window.__nexus.applyTheme();
+  }
+  try {
+    window.localStorage.setItem('nexusTheme', dark ? 'dark' : 'light');
+  }
+  catch (e) {
+    // Storage may be unavailable; the theme still applies for this session.
+  }
+}
+
+function initTheme() {
+  let dark = false;
+  try {
+    const saved = window.localStorage.getItem('nexusTheme');
+    dark = saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+  catch (e) {
+    dark = false;
+  }
+  applyTheme(dark);
+  $('theme-toggle').addEventListener('click', () => applyTheme(!document.documentElement.classList.contains('sl-theme-dark')));
+}
+
 wireLanding();
 wireExports();
 wireDocument();
 initUI();
 initBuilder();
 initIcons();
+initTheme();

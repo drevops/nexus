@@ -1,12 +1,19 @@
 /* Nexus content-model diagram. */
 
 :root {
-  --bg: #f4f5f7;
-  --panel-bg: #ffffff;
-  --border: #d7dbe0;
-  --text: #1f2933;
-  --muted: #6b7280;
-  --accent: #2f6db3;
+  --bg: var(--sl-color-neutral-100);
+  --panel-bg: var(--sl-color-neutral-0);
+  --border: var(--sl-color-neutral-200);
+  --text: var(--sl-color-neutral-900);
+  --muted: var(--sl-color-neutral-500);
+  --accent: var(--sl-color-primary-600);
+  --surface: var(--sl-color-neutral-50);
+  --surface-2: var(--sl-color-neutral-100);
+  --grid: rgba(0, 0, 0, 0.035);
+}
+
+html.sl-theme-dark {
+  --grid: rgba(255, 255, 255, 0.05);
 }
 
 * {
@@ -109,7 +116,7 @@ body {
 .toolbar__title:focus {
   outline: none;
   border-color: var(--accent);
-  background: #fff;
+  background: var(--panel-bg);
 }
 
 .loader {
@@ -121,7 +128,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  background: rgba(244, 245, 247, 0.92);
+  background: var(--sl-color-neutral-50);
 }
 
 .loader[hidden] {
@@ -162,7 +169,7 @@ body {
   align-items: center;
   gap: 2px;
   padding: 2px;
-  background: #eaeef3;
+  background: var(--surface-2);
   border-radius: 9px;
 }
 
@@ -183,7 +190,7 @@ body {
 .toolbar__search {
   padding: 0.4rem 0.65rem 0.4rem 2rem;
   font-size: 0.85rem;
-  background: #fff;
+  background: var(--panel-bg);
   border: 1px solid var(--border);
   border-radius: 8px;
   min-width: 160px;
@@ -223,7 +230,7 @@ body {
 }
 
 .toolbar__button:hover {
-  background: #fff;
+  background: var(--panel-bg);
   color: var(--accent);
 }
 
@@ -234,7 +241,7 @@ body {
 
 /* Standalone buttons (outside a segmented group) keep an outline. */
 .toolbar__actions > .toolbar__button {
-  background: #fff;
+  background: var(--panel-bg);
   border-color: var(--border);
 }
 
@@ -264,7 +271,7 @@ body {
 .dock {
   position: relative;
   flex: 0 0 auto;
-  background: #eef1f5;
+  background: var(--surface-2);
 }
 
 #dock-left {
@@ -333,8 +340,8 @@ body {
   cursor: grab;
   background-color: var(--bg);
   background-image:
-    linear-gradient(rgba(0, 0, 0, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 0, 0, 0.035) 1px, transparent 1px);
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
   background-size: 26px 26px;
 }
 
@@ -355,8 +362,8 @@ body {
   transform: translate(-50%, 0);
   padding: 0 3px;
   font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
-  color: #55606d;
-  background: rgba(244, 245, 247, 0.82);
+  color: var(--muted);
+  background: var(--surface-2);
   border-radius: 3px;
   white-space: nowrap;
   line-height: 1.2;
@@ -591,7 +598,7 @@ body {
 }
 
 .entity-row:hover {
-  background: #eef2f7;
+  background: var(--surface-2);
 }
 
 .entity-row__name {
@@ -623,7 +630,7 @@ body {
 
 .entity-row__fields {
   border: 1px solid var(--border);
-  background: #fff;
+  background: var(--panel-bg);
   border-radius: 6px;
   font-size: 0.72rem;
   padding: 0.15rem 0.4rem;
@@ -657,7 +664,7 @@ body {
 .field-table th {
   position: sticky;
   top: 0;
-  background: #f7f9fb;
+  background: var(--surface);
   font-weight: 600;
   color: var(--muted);
   white-space: nowrap;
@@ -669,11 +676,11 @@ body {
 }
 
 .field-table tr:hover td {
-  background: #f6f9fc;
+  background: var(--surface);
 }
 
 .field-table .is-group td {
-  background: #eef2f7;
+  background: var(--surface-2);
   font-weight: 600;
   color: var(--text);
 }
@@ -758,7 +765,7 @@ body {
   padding: 0.45rem 0.85rem;
   font-size: 0.82rem;
   color: var(--text);
-  background: #fff;
+  background: var(--panel-bg);
   border: 1px solid var(--border);
   border-radius: 7px;
   cursor: pointer;
@@ -828,7 +835,7 @@ body {
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
-  background: linear-gradient(160deg, #eef2f7, #e0e7f1);
+  background: var(--bg);
 }
 
 .landing[hidden] {
@@ -840,7 +847,7 @@ body {
   max-width: 100%;
   padding: 2rem;
   text-align: center;
-  background: #fff;
+  background: var(--panel-bg);
   border-radius: 16px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
 }
@@ -865,7 +872,7 @@ body {
 
 .dropzone.is-drag {
   border-color: var(--accent);
-  background: #f0f6fd;
+  background: var(--sl-color-primary-100);
 }
 
 .dropzone__hint {
@@ -889,7 +896,7 @@ body {
   padding: 0.55rem 1.1rem;
   font-size: 0.9rem;
   color: var(--text);
-  background: #fff;
+  background: var(--panel-bg);
   border: 1px solid var(--border);
   border-radius: 8px;
   cursor: pointer;
@@ -967,7 +974,7 @@ body {
   min-width: 0;
   padding: 0.35rem 0.5rem;
   font-size: 0.85rem;
-  background: #fff;
+  background: var(--panel-bg);
   border: 1px solid var(--border);
   border-radius: 6px;
 }
@@ -998,7 +1005,7 @@ body {
   padding: 0.2rem 0.5rem;
   font-size: 0.75rem;
   color: var(--accent);
-  background: #fff;
+  background: var(--panel-bg);
   border: 1px solid var(--border);
   border-radius: 6px;
   cursor: pointer;
@@ -1017,7 +1024,7 @@ body {
   padding: 0.35rem 0.5rem;
   margin-bottom: 0.25rem;
   font-size: 0.82rem;
-  background: #fff;
+  background: var(--panel-bg);
   border: 1px solid var(--border);
   border-radius: 6px;
   cursor: pointer;
@@ -1063,7 +1070,7 @@ body {
   padding: 0.15rem 0.3rem;
   line-height: 1;
   color: var(--muted);
-  background: #fff;
+  background: var(--panel-bg);
   border: 1px solid var(--border);
   border-radius: 6px;
   cursor: pointer;
@@ -1095,7 +1102,7 @@ body {
   padding: 0.45rem;
   font-size: 0.82rem;
   color: #b3261e;
-  background: #fff;
+  background: var(--panel-bg);
   border: 1px solid #f0c6c2;
   border-radius: 6px;
   cursor: pointer;

@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Nexus - Drupal content-model diagrams</title>
+<link rel="stylesheet" href="assets/vendor/shoelace/themes/light.css">
+<link rel="stylesheet" href="assets/vendor/shoelace/themes/dark.css">
 <link rel="stylesheet" href="assets/styles.css">
 <script type="importmap">
 {
@@ -14,6 +16,7 @@
   }
 }
 </script>
+<script type="module" src="assets/vendor/shoelace/shoelace-autoloader.js"></script>
 </head>
 <body>
 <header class="toolbar">
@@ -60,6 +63,9 @@
     <div class="toolbar__group">
       <button id="export-png" class="toolbar__button" type="button" data-icon="image" title="Export the diagram as a PNG image">PNG</button>
       <button id="export-svg" class="toolbar__button" type="button" data-icon="file-down" title="Export the diagram as a scalable SVG">SVG</button>
+    </div>
+    <div class="toolbar__group">
+      <button id="theme-toggle" class="toolbar__button toolbar__button--icon" type="button" data-icon="moon" title="Toggle light / dark theme" aria-label="Toggle theme"></button>
     </div>
   </div>
   </div>

@@ -143,14 +143,23 @@ function buildElements(model) {
   return { nodes: nodes.concat(proxyNodes), edges: edges.concat(collapsed).concat(proxyEdges) };
 }
 
+function themeColors() {
+  const dark = document.documentElement.classList.contains('sl-theme-dark');
+  if (dark) {
+    return { text: '#e4e7ec', muted: '#9aa4b2', nodeBorder: '#8a94a3', fieldBg: '#2b3039', fieldBorder: '#7b8494', edge: '#5a636f', refEdge: '#8a94a3', labelBg: '#22262d' };
+  }
+  return { text: '#1f2933', muted: '#6b7280', nodeBorder: '#5b6470', fieldBg: '#ffffff', fieldBorder: '#555c66', edge: '#aeb4bd', refEdge: '#8a94a3', labelBg: '#f4f5f7' };
+}
+
 function style() {
+  const tc = themeColors();
   return [
     {
       selector: 'node[group="entity"]',
       style: {
         shape: 'round-rectangle',
         'background-color': (ele) => entityColor(ele.data('entityType')),
-        'border-color': '#5b6470',
+        'border-color': tc.nodeBorder,
         'border-width': 1.5,
         label: (ele) => ele.data('label') + '\n' + typeLabel(ele.data('entityType')),
         'text-wrap': 'wrap',
@@ -170,27 +179,28 @@ function style() {
       selector: 'node[group="field"]',
       style: {
         shape: 'ellipse',
-        'background-color': '#ffffff',
-        'border-color': '#555c66',
+        'background-color': tc.fieldBg,
+        'border-color': tc.fieldBorder,
         'border-width': 1,
         label: (ele) => (ele.data('required') ? ele.data('label') + ' *' : ele.data('label')),
         'text-valign': 'center',
         'text-halign': 'center',
         'font-size': 10,
-        color: '#2b333d',
+        color: tc.text,
         width: 'label',
         height: 'label',
         padding: '7px',
       },
     },
-    { selector: 'node[group="field"][kind="multi"]', style: { 'border-width': 3, 'border-style': 'double', 'border-color': '#3d444d' } },
-    { selector: 'node[group="field"][kind="system"]', style: { 'border-style': 'dashed', 'border-color': '#98a2b3', color: '#6b7280' } },
-    { selector: 'node[group="field"][kind="calculated"]', style: { 'background-color': '#ffd966', 'border-color': '#c9a227' } },
+    { selector: 'node[group="field"][kind="multi"]', style: { 'border-width': 3, 'border-style': 'double', 'border-color': tc.fieldBorder } },
+    { selector: 'node[group="field"][kind="system"]', style: { 'border-style': 'dashed', 'border-color': '#98a2b3', color: tc.muted } },
+    { selector: 'node[group="field"][kind="calculated"]', style: { 'background-color': '#ffd966', 'border-color': '#c9a227', color: '#3a2f0a' } },
     {
       selector: 'node[group="annotation"]',
       style: {
-        'background-color': '#ffffff',
-        'border-color': '#333b45',
+        'background-color': tc.fieldBg,
+        'border-color': tc.nodeBorder,
+        color: tc.text,
         'border-width': 1.5,
         label: (ele) => (ele.data('method') ? ele.data('label') + '\n' + ele.data('method') : ele.data('label')),
         'text-wrap': 'wrap',
@@ -216,7 +226,7 @@ function style() {
         'text-halign': 'center',
         'font-size': 10,
         'font-style': 'italic',
-        color: '#5b6470',
+        color: tc.muted,
         width: 'label',
         height: 'label',
         padding: '7px',
@@ -237,21 +247,21 @@ function style() {
         'taxi-turn': '50%',
         'taxi-turn-min-distance': '8px',
         width: 1.2,
-        'line-color': '#aeb4bd',
+        'line-color': tc.edge,
         'target-arrow-shape': 'none',
       },
     },
     {
       selector: 'edge[group="ref"], edge[group="collapsed"]',
-      style: { 'line-color': '#8a94a3', 'target-arrow-shape': 'triangle', 'target-arrow-color': '#8a94a3', 'arrow-scale': 0.9 },
+      style: { 'line-color': tc.refEdge, 'target-arrow-shape': 'triangle', 'target-arrow-color': tc.refEdge, 'arrow-scale': 0.9 },
     },
     {
       selector: 'edge[group="ref"]',
       style: {
         label: 'data(cardinality)',
         'font-size': 9,
-        color: '#6b7280',
-        'text-background-color': '#f4f5f7',
+        color: tc.muted,
+        'text-background-color': tc.labelBg,
         'text-background-opacity': 1,
         'text-background-padding': 2,
       },
@@ -587,6 +597,7 @@ function buildController(model, options = {}) {
   const controller = {
     cy,
     refresh, runLayout, applyLayout, clearFocus, focusEntity, focusField, rebuildCaptions, searchHighlight, applyColor, resetColors,
+    applyTheme: () => { cy.style(style()); positionCaptions(); },
     typeLabel,
     colorFor: entityColor,
     allTypes: () => TYPE_ORDER.slice(),
@@ -676,6 +687,6 @@ export function render(model, options = {}) {
     ctx.refresh(true);
   }
   ctx.rebuildCaptions();
-  window.__nexus = { cy: ctx.cy, model, colors: { ...activeColors } };
+  window.__nexus = { cy: ctx.cy, model, colors: { ...activeColors }, applyTheme: ctx.applyTheme };
   return ctx;
 }
