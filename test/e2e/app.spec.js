@@ -622,3 +622,12 @@ test('sets the zoom level from the toolbar dropdown', async ({ page }) => {
   await page.waitForFunction(() => Math.abs(window.__nexus.cy.zoom() - 2) < 0.01);
   await expect(page.locator('#zoom-level')).toHaveText(/200%/);
 });
+
+test('labels each entity with its type in the caption layer', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+
+  const types = await page.locator('#captions .caption--type').allTextContents();
+  expect(types.length).toBeGreaterThan(0);
+  expect(types).toContain('Content type');
+});

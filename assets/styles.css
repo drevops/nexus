@@ -386,6 +386,15 @@ sl-button#zoom-level::part(base) {
   line-height: 1.2;
 }
 
+/* The entity type reads as a quiet sub-label, not a machine-name chip. */
+.caption--type {
+  font-family: inherit;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--muted);
+  background: none;
+}
+
 /* Build-mode "+" field handles around a selected entity. */
 .handles {
   position: absolute;

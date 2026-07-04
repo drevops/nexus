@@ -161,7 +161,7 @@ function style() {
         'background-color': (ele) => entityColor(ele.data('entityType')),
         'border-color': tc.nodeBorder,
         'border-width': 1.5,
-        label: (ele) => ele.data('label') + '\n' + typeLabel(ele.data('entityType')),
+        label: (ele) => ele.data('label'),
         'text-wrap': 'wrap',
         'text-max-width': 160,
         'text-valign': 'center',
@@ -473,45 +473,62 @@ function buildController(model, options = {}) {
     return '';
   }
 
+  // Under each node: the entity type (always, de-emphasised) then, when the
+  // toggle is on, the machine name. Cytoscape labels take a single style, so the
+  // differently-styled type line lives here in the HTML caption layer.
+  function captionLinesFor(node) {
+    const lines = [];
+    if (node.data('group') === 'entity') {
+      lines.push({ text: typeLabel(node.data('entityType')), cls: 'caption caption--type' });
+    }
+    if (showMachineNames) {
+      const name = machineNameOf(node);
+      if (name) {
+        lines.push({ text: name, cls: 'caption' });
+      }
+    }
+    return lines;
+  }
+
   function rebuildCaptions() {
     captionsEl.innerHTML = '';
     captionMap = {};
-    if (!showMachineNames) {
-      return;
-    }
     cy.nodes().forEach((node) => {
-      const name = machineNameOf(node);
-      if (!name) {
+      const lines = captionLinesFor(node);
+      if (!lines.length) {
         return;
       }
-      const div = document.createElement('div');
-      div.className = 'caption';
-      div.textContent = name;
-      captionsEl.appendChild(div);
-      captionMap[node.id()] = div;
+      captionMap[node.id()] = lines.map((line) => {
+        const div = document.createElement('div');
+        div.className = line.cls;
+        div.textContent = line.text;
+        captionsEl.appendChild(div);
+        return div;
+      });
     });
     positionCaptions();
   }
 
   function positionCaptions() {
-    if (!showMachineNames) {
-      return;
-    }
     const zoom = cy.zoom();
     const tooSmall = zoom < 0.35;
     const size = Math.max(7, Math.min(13, 10 * zoom));
     Object.keys(captionMap).forEach((id) => {
       const node = cy.getElementById(id);
-      const div = captionMap[id];
+      const divs = captionMap[id];
       if (node.empty() || node.hasClass('hidden') || node.hasClass('faded') || tooSmall) {
-        div.style.display = 'none';
+        divs.forEach((div) => { div.style.display = 'none'; });
         return;
       }
       const pos = node.renderedPosition();
-      div.style.display = 'block';
-      div.style.left = pos.x + 'px';
-      div.style.top = (pos.y + node.renderedOuterHeight() / 2 + 3) + 'px';
-      div.style.fontSize = size + 'px';
+      let top = pos.y + node.renderedOuterHeight() / 2 + 3;
+      divs.forEach((div) => {
+        div.style.display = 'block';
+        div.style.left = pos.x + 'px';
+        div.style.top = top + 'px';
+        div.style.fontSize = size + 'px';
+        top += size + 2;
+      });
     });
   }
 
@@ -599,7 +616,7 @@ function buildController(model, options = {}) {
     focusEntity(evt.target.data('target'));
   });
   cy.on('render', () => {
-    if (!showMachineNames || captionRaf) {
+    if (captionRaf) {
       return;
     }
     captionRaf = true;
