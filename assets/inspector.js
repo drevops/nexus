@@ -76,7 +76,7 @@ export function EntityForm({ id }) {
         <input class="insp__input" value=${label} onInput=${(e) => { setLabel(e.target.value); node.data('label', e.target.value); bump(); }} />
       <//>
       <${Row} label="Type"><span class="insp__ro">${TYPE_LABELS[node.data('entityType')] || node.data('entityType')}</span><//>
-      <${Row} label="Machine name"><code>${node.data('bundle')}</code><//>
+      <${Row} label="Machine name"><input class="insp__input" value=${node.data('bundle')} title="Rename the machine name (updates its fields and references)" onChange=${(e) => getBuilder().renameEntity(id, e.target.value)} /><//>
       <div class="insp__section">
         <div class="insp__sectionhead"><span>Fields</span><button class="insp__btn" data-add-field title="Add a field to this entity" onClick=${() => openInspector({ kind: 'new-field', entityId: id })}>${rawIcon('plus')}Field</button></div>
         ${fields.length ? fields : html`<p class="insp__empty">No fields yet.</p>`}
@@ -106,7 +106,7 @@ export function FieldForm({ id }) {
     <div class="insp">
       <p class="insp__title">Field</p>
       <${Row} label="Label"><input class="insp__input" value=${s.label} onInput=${(e) => set('label', e.target.value)} /><//>
-      <${Row} label="Machine name"><code>${node.data('name')}</code><//>
+      <${Row} label="Machine name"><input class="insp__input" value=${node.data('name')} title="Rename the machine name (updates its references)" onChange=${(e) => getBuilder().renameField(id, e.target.value)} /><//>
       <${Row} label="Type"><select class="insp__input" value=${s.fieldType} onChange=${(e) => set('fieldType', e.target.value)}>${optionList(FIELD_TYPES)}</select><//>
       <${Row} label="Cardinality">
         <select class="insp__input" value=${s.kind} onChange=${(e) => set('kind', e.target.value)}>

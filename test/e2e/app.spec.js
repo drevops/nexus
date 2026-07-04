@@ -383,7 +383,7 @@ test('connects a reference by dragging on the canvas', async ({ page }) => {
   expect(await page.evaluate(() => window.__nexus.cy.getElementById('ref:field:node.a:field_ref>node.b').length)).toBe(1);
 });
 
-test('adds a field from an entity + handle', async ({ page }) => {
+test('adds a field from an entity + handle, then renames it', async ({ page }) => {
   await page.click('#new-btn');
   await page.click('#mode-build');
 
@@ -395,27 +395,25 @@ test('adds a field from an entity + handle', async ({ page }) => {
   await expect(page.locator('.handle--right')).toBeVisible();
   await page.click('.handle--right');
 
-  await expect(page.locator('[data-new="field"][data-side="right"]')).toBeVisible();
-  await page.fill('[data-new-name]', 'field_summary');
-  await page.click('[data-create-field]');
+  // The field appears immediately (auto name), no creation dialog.
+  await page.waitForFunction(() => window.__nexus.cy.nodes('[group="field"][entity="node.story"]').length === 1);
+  await expect(page.locator('#inspector [data-new]')).toHaveCount(0);
+
+  // Renaming the machine name in the inspector re-ids the field.
+  const nameInput = page.locator('#inspector input[title^="Rename the machine name"]');
+  await nameInput.fill('field_summary');
+  await nameInput.blur();
 
   expect(await page.evaluate(() => window.__nexus.cy.getElementById('field:node.story:field_summary').length)).toBe(1);
 });
 
-test('reuses an existing field via autocomplete', async ({ page }) => {
+test('reuses an existing field via autocomplete from the field tool', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);
   await page.click('#mode-build');
 
-  await page.evaluate(() => {
-    const cy = window.__nexus.cy;
-    const node = cy.getElementById('node.program');
-    cy.zoom(1.2);
-    cy.center(node);
-    node.emit('tap');
-  });
-
-  await page.click('.handle--bottom');
+  await page.click('#add-field');
+  await page.selectOption('[data-new-entity]', 'node.program');
   expect(await page.evaluate(() => document.getElementById('existing-field-list').options.length)).toBeGreaterThan(0);
 
   await page.fill('[data-new-name]', 'body');
@@ -425,6 +423,44 @@ test('reuses an existing field via autocomplete', async ({ page }) => {
   });
   expect(prefill.label).toBe('Body');
   expect(prefill.type).toBe('text_with_summary');
+});
+
+test('renames an entity machine name and migrates its fields', async ({ page }) => {
+  await page.click('#new-btn');
+  await page.click('#mode-build');
+
+  await page.dragAndDrop('[data-add-entity="node"]', '#cy', { targetPosition: { x: 250, y: 200 } });
+  await page.waitForFunction(() => window.__nexus.cy.nodes('[group="entity"]').length === 1);
+  const oldId = await page.evaluate(() => window.__nexus.cy.nodes('[group="entity"]').first().id());
+
+  await page.click('.handle--right');
+  await page.waitForFunction(() => window.__nexus.cy.nodes('[group="field"]').length === 1);
+
+  const nameInput = page.locator('#inspector input[title^="Rename the machine name"]');
+  await page.evaluate(() => {
+    const cy = window.__nexus.cy;
+    cy.getElementById(cy.nodes('[group="entity"]').first().id()).emit('tap');
+  });
+  const entityName = page.locator('#inspector input[title^="Rename the machine name"]');
+  await entityName.fill('article');
+  await entityName.blur();
+
+  expect(await page.evaluate(() => window.__nexus.cy.getElementById('node.article').length)).toBe(1);
+  expect(await page.evaluate((id) => window.__nexus.cy.getElementById(id).length, oldId)).toBe(0);
+  expect(await page.evaluate(() => window.__nexus.cy.nodes('[group="field"][entity="node.article"]').length)).toBe(1);
+});
+
+test('shows the edit palette as a second toolbar row only in edit mode', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+
+  const palette = page.locator('#build-tools');
+  await expect(palette).toBeHidden();
+  expect(await palette.evaluate((el) => el.classList.contains('toolbar__palette'))).toBe(true);
+  expect(await palette.evaluate((el) => el.parentElement.classList.contains('toolbar'))).toBe(true);
+
+  await page.click('#mode-build');
+  await expect(palette).toBeVisible();
 });
 
 test('adds an entity from a palette type button', async ({ page }) => {
@@ -480,11 +516,9 @@ test('drags an entity type from the palette onto the canvas', async ({ page }) =
   await page.click('#mode-build');
 
   await page.dragAndDrop('[data-add-entity="paragraph"]', '#cy', { targetPosition: { x: 280, y: 220 } });
-  await expect(page.locator('[data-new="entity"]')).toBeVisible();
-  await page.fill('[data-new-bundle]', 'hero');
-  await page.click('[data-create-entity]');
 
-  expect(await page.evaluate(() => window.__nexus.cy.getElementById('paragraph.hero').length)).toBe(1);
+  await page.waitForFunction(() => window.__nexus.cy.nodes('[group="entity"][entityType="paragraph"]').length === 1);
+  expect(await page.evaluate(() => window.__nexus.cy.nodes('[group="entity"]').length)).toBe(1);
 });
 
 test('exports the diagram as PNG named after the title', async ({ page }) => {

@@ -17,6 +17,7 @@
 </head>
 <body>
 <header class="toolbar">
+  <div class="toolbar__main">
   <div class="toolbar__actions">
     <span class="toolbar__brand">Nexus</span>
     <input id="diagram-title" class="toolbar__title" type="text" placeholder="Untitled content model" title="Rename this content model - used for the saved file names" aria-label="Content model name">
@@ -25,18 +26,6 @@
     <div class="toolbar__group">
       <button id="mode-view" class="toolbar__button is-active" type="button" data-icon="eye" title="View mode: explore the diagram">View</button>
       <button id="mode-build" class="toolbar__button" type="button" data-icon="pencil" title="Edit mode: add and change entities and fields">Edit</button>
-    </div>
-    <div id="build-tools" class="toolbar__group" hidden>
-      <button class="toolbar__button palette__btn" type="button" data-add-entity="node" title="Add a content type"><span class="palette__swatch" style="background:#d9e2f3"></span>Content</button>
-      <button class="toolbar__button palette__btn" type="button" data-add-entity="taxonomy_term" title="Add a vocabulary"><span class="palette__swatch" style="background:#9fc5e8"></span>Vocab</button>
-      <button class="toolbar__button palette__btn" type="button" data-add-entity="media" title="Add a media type"><span class="palette__swatch" style="background:#f6b26b"></span>Media</button>
-      <button class="toolbar__button palette__btn" type="button" data-add-entity="paragraph" title="Add a paragraph type"><span class="palette__swatch" style="background:#cdbdec"></span>Para</button>
-      <button class="toolbar__button palette__btn" type="button" data-add-entity="block_content" title="Add a block type"><span class="palette__swatch" style="background:#b6d7a8"></span>Block</button>
-      <button id="add-field" class="toolbar__button" type="button" data-icon="single" title="Add a field to an entity">Field</button>
-      <button class="toolbar__button" type="button" data-add-note="event" data-icon="diamond" title="Place an event note on the canvas">Event</button>
-      <button class="toolbar__button" type="button" data-add-note="api" title="Place an API note on the canvas">API</button>
-      <button class="toolbar__button" type="button" data-add-note="callback" title="Place a callback note on the canvas">Callback</button>
-      <button id="connect-toggle" class="toolbar__button" type="button" data-icon="link" title="Drag from a field to a target entity to create a reference">Connect</button>
     </div>
     <div class="toolbar__search-wrap">
       <span class="toolbar__search-icon" data-icon="search"></span>
@@ -72,6 +61,23 @@
       <button id="export-png" class="toolbar__button" type="button" data-icon="image" title="Export the diagram as a PNG image">PNG</button>
       <button id="export-svg" class="toolbar__button" type="button" data-icon="file-down" title="Export the diagram as a scalable SVG">SVG</button>
     </div>
+  </div>
+  </div>
+  <div id="build-tools" class="toolbar__palette" hidden>
+    <span class="toolbar__palette-label">Add:</span>
+    <button class="toolbar__button palette__btn" type="button" data-add-entity="node" title="Add a content type"><span class="palette__swatch" style="background:#d9e2f3"></span>Content</button>
+    <button class="toolbar__button palette__btn" type="button" data-add-entity="taxonomy_term" title="Add a vocabulary"><span class="palette__swatch" style="background:#9fc5e8"></span>Vocab</button>
+    <button class="toolbar__button palette__btn" type="button" data-add-entity="media" title="Add a media type"><span class="palette__swatch" style="background:#f6b26b"></span>Media</button>
+    <button class="toolbar__button palette__btn" type="button" data-add-entity="paragraph" title="Add a paragraph type"><span class="palette__swatch" style="background:#cdbdec"></span>Para</button>
+    <button class="toolbar__button palette__btn" type="button" data-add-entity="block_content" title="Add a block type"><span class="palette__swatch" style="background:#b6d7a8"></span>Block</button>
+    <button class="toolbar__button palette__btn" type="button" data-add-entity="user" title="Add a user reference"><span class="palette__swatch" style="background:#ea9999"></span>User</button>
+    <span class="toolbar__palette-sep"></span>
+    <button id="add-field" class="toolbar__button" type="button" data-icon="single" title="Add a field to an entity">Field</button>
+    <button class="toolbar__button" type="button" data-add-note="event" data-icon="diamond" title="Place an event note on the canvas">Event</button>
+    <button class="toolbar__button" type="button" data-add-note="api" title="Place an API note on the canvas">API</button>
+    <button class="toolbar__button" type="button" data-add-note="callback" title="Place a callback note on the canvas">Callback</button>
+    <span class="toolbar__palette-sep"></span>
+    <button id="connect-toggle" class="toolbar__button" type="button" data-icon="link" title="Drag from a field to a target entity to create a reference">Connect</button>
   </div>
 </header>
 

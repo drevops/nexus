@@ -84,13 +84,27 @@ function onCanvasDrop(evt) {
   evt.preventDefault();
   const position = positionFromEvent(evt);
 
+  // Dropped items appear on the canvas straight away; the inspector opens on the
+  // real node so its name and everything else can be adjusted in place.
   if (data.indexOf('entity:') === 0) {
-    pendingPosition = position;
-    openInspector({ kind: 'new-entity', entityType: data.slice(7) });
+    const entityType = data.slice(7);
+    const bundle = uniqueBundle(entityType);
+    const id = addEntity(entityType, bundle, prettify(bundle), position);
+    if (id) {
+      selectNode(id);
+      bump();
+    }
   }
   else if (data === 'field') {
-    pendingPosition = position;
-    openInspector({ kind: 'new-field', entityId: entityAt(position) || undefined });
+    const entityId = entityAt(position) || nearestEntity(position);
+    if (entityId) {
+      const name = uniqueFieldName(entityId);
+      const id = addField(entityId, name, prettify(name), 'string', 'single', null, position);
+      if (id) {
+        selectNode(id);
+        bump();
+      }
+    }
   }
   else if (data.indexOf('note:') === 0) {
     const kind = data.slice(5);
@@ -142,7 +156,12 @@ export function initBuilder() {
   $('handles').addEventListener('click', (evt) => {
     const btn = evt.target.closest('.handle');
     if (btn && handleEntityId) {
-      openInspector({ kind: 'new-field', entityId: handleEntityId, side: btn.getAttribute('data-side') });
+      const name = uniqueFieldName(handleEntityId);
+      const id = addField(handleEntityId, name, prettify(name), 'string', 'single', btn.getAttribute('data-side'));
+      if (id) {
+        selectNode(id);
+        bump();
+      }
     }
   });
 }
@@ -177,7 +196,7 @@ export function attachBuilder(instance) {
       positionHandles();
     });
   });
-  setBuilder({ createEntity, createField, createAnnotation, addReference, removeReference, deleteNode });
+  setBuilder({ createEntity, createField, createAnnotation, addReference, removeReference, deleteNode, renameEntity, renameField });
   applyMode();
 }
 
@@ -341,6 +360,116 @@ function selectNode(id) {
   else {
     hideHandles();
   }
+}
+
+/* Auto-naming for items created directly on the canvas ------------------- */
+
+const BUNDLE_BASE = { node: 'content_type', taxonomy_term: 'vocabulary', media: 'media_type', paragraph: 'paragraph', block_content: 'block', user: 'user' };
+
+function prettify(value) {
+  return String(value || '').replace(/[_.]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function uniqueBundle(entityType) {
+  const base = BUNDLE_BASE[entityType] || 'entity';
+  let n = 1;
+  while (cy.getElementById(entityType + '.' + base + '_' + n).nonempty()) {
+    n += 1;
+  }
+  return base + '_' + n;
+}
+
+function uniqueFieldName(entityId) {
+  let n = 1;
+  while (cy.getElementById('field:' + entityId + ':field_' + n).nonempty()) {
+    n += 1;
+  }
+  return 'field_' + n;
+}
+
+function nearestEntity(position) {
+  let best = null;
+  let bestDistance = Infinity;
+  cy.nodes('[group="entity"]').forEach((node) => {
+    const p = node.position();
+    const distance = (p.x - position.x) * (p.x - position.x) + (p.y - position.y) * (p.y - position.y);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      best = node.id();
+    }
+  });
+  return best;
+}
+
+/* Renaming machine names re-ids the node and its dependent edges (the
+   cascade the immutable-id rule otherwise avoids). Ephemeral render-only
+   elements are dropped by Cytoscape when the old node goes and are rebuilt on
+   the next render, so only the persisted has/ref edges are migrated here. */
+
+function migrateField(field, newEntityId) {
+  const name = field.data('name');
+  const newFieldId = 'field:' + newEntityId + ':' + name;
+  cy.add({ group: 'nodes', data: { ...field.data(), id: newFieldId, entity: newEntityId }, position: { ...field.position() } });
+  cy.add({ group: 'edges', data: { id: 'has:' + newFieldId, source: newEntityId, target: newFieldId, group: 'has' } });
+  field.connectedEdges('[group="ref"]').forEach((edge) => {
+    if (edge.source().id() === field.id()) {
+      const target = edge.target().id();
+      cy.add({ group: 'edges', data: { ...edge.data(), id: 'ref:' + newFieldId + '>' + target, source: newFieldId, target: target } });
+    }
+  });
+  field.remove();
+}
+
+function renameEntity(oldId, newBundleRaw) {
+  const node = cy.getElementById(oldId);
+  if (node.empty() || node.data('group') !== 'entity') {
+    return;
+  }
+  const entityType = node.data('entityType');
+  const newBundle = slug(newBundleRaw);
+  const newId = entityType + '.' + newBundle;
+  if (!newBundle || newId === oldId || cy.getElementById(newId).nonempty()) {
+    selectNode(oldId);
+    return;
+  }
+
+  cy.add({ group: 'nodes', data: { ...node.data(), id: newId, bundle: newBundle }, position: { ...node.position() } });
+  cy.edges('[group="ref"]').forEach((edge) => {
+    if (edge.target().id() === oldId) {
+      const source = edge.source().id();
+      cy.add({ group: 'edges', data: { ...edge.data(), id: 'ref:' + source + '>' + newId, source: source, target: newId } });
+    }
+  });
+  cy.nodes('[group="field"][entity="' + oldId + '"]').forEach((field) => migrateField(field, newId));
+  node.remove();
+  selectNode(newId);
+  bump();
+}
+
+function renameField(oldId, newNameRaw) {
+  const field = cy.getElementById(oldId);
+  if (field.empty() || field.data('group') !== 'field') {
+    return;
+  }
+  const entityId = field.data('entity');
+  const newName = slug(newNameRaw);
+  const newId = 'field:' + entityId + ':' + newName;
+  if (!newName || newId === oldId || cy.getElementById(newId).nonempty()) {
+    selectNode(oldId);
+    return;
+  }
+
+  cy.add({ group: 'nodes', data: { ...field.data(), id: newId, name: newName }, position: { ...field.position() } });
+  cy.add({ group: 'edges', data: { id: 'has:' + newId, source: entityId, target: newId, group: 'has' } });
+  field.connectedEdges('[group="ref"]').forEach((edge) => {
+    if (edge.source().id() === oldId) {
+      const target = edge.target().id();
+      cy.add({ group: 'edges', data: { ...edge.data(), id: 'ref:' + newId + '>' + target, source: newId, target: target } });
+    }
+  });
+  field.remove();
+  selectNode(newId);
+  bump();
 }
 
 /* Mutations ------------------------------------------------------------- */
