@@ -161,14 +161,17 @@ function style() {
         'background-color': (ele) => entityColor(ele.data('entityType')),
         'border-color': tc.nodeBorder,
         'border-width': 1.5,
-        label: (ele) => ele.data('label'),
+        // A blank second line reserves in-box space for the type caption, which
+        // is drawn over it by positionCaptions (Cytoscape labels take a single
+        // style, so the differently-styled type cannot live in the label).
+        label: (ele) => ele.data('label') + '\n ',
         'text-wrap': 'wrap',
         'text-max-width': 160,
         'text-valign': 'center',
         'text-halign': 'center',
         'font-size': 12,
         'font-weight': 600,
-        'line-height': 1.25,
+        'line-height': 1.3,
         color: '#1f2933',
         width: 'label',
         height: 'label',
@@ -521,13 +524,20 @@ function buildController(model, options = {}) {
         return;
       }
       const pos = node.renderedPosition();
-      let top = pos.y + node.renderedOuterHeight() / 2 + 3;
+      // Machine-name lines stack just below the node; the entity type sits over
+      // the reserved blank line inside the box, so it reads as a sub-label.
+      let below = pos.y + node.renderedOuterHeight() / 2 + 3;
       divs.forEach((div) => {
         div.style.display = 'block';
         div.style.left = pos.x + 'px';
-        div.style.top = top + 'px';
         div.style.fontSize = size + 'px';
-        top += size + 2;
+        if (div.classList.contains('caption--type')) {
+          div.style.top = (pos.y + node.renderedOuterHeight() / 2 - size - 5 * zoom) + 'px';
+        }
+        else {
+          div.style.top = below + 'px';
+          below += size + 2;
+        }
       });
     });
   }

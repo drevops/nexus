@@ -386,12 +386,13 @@ sl-button#zoom-level::part(base) {
   line-height: 1.2;
 }
 
-/* The entity type reads as a quiet sub-label, not a machine-name chip. */
+/* A quiet sub-label inside the entity box. The box keeps its light pastel fill
+   in both themes, so the colour is pinned (not themed) to stay legible on it. */
 .caption--type {
   font-family: inherit;
   font-style: italic;
   font-weight: 400;
-  color: var(--muted);
+  color: rgba(31, 41, 51, 0.6);
   background: none;
 }
 
