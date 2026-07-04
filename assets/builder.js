@@ -27,7 +27,6 @@ let placeKind = null;
 let pendingPosition = null;
 let isolatedIds = new Set();
 let dragLast = null;
-let lastEntityTap = { id: null, t: 0 };
 
 function startPlaceNote(kind) {
   connectMode = false;
@@ -188,19 +187,11 @@ export function attachBuilder(instance) {
     }
   });
 
-  // Double-tap an entity to isolate it (and its fields) for moving as a unit; a
-  // tap on the empty canvas releases the isolation.
-  cy.on('tap', 'node[group="entity"]', (evt) => {
-    const id = evt.target.id();
-    const now = Date.now();
-    if (lastEntityTap.id === id && now - lastEntityTap.t < 400) {
-      isolateEntity(id);
-      lastEntityTap = { id: null, t: 0 };
-    }
-    else {
-      lastEntityTap = { id: id, t: now };
-    }
-  });
+  // Right-click an entity to isolate it (and its fields) for moving as a unit; a
+  // tap on the empty canvas releases the isolation. The native context menu is
+  // suppressed so the gesture is the isolation, not the browser menu.
+  cy.on('cxttap', 'node[group="entity"]', (evt) => isolateEntity(evt.target.id()));
+  cy.container().addEventListener('contextmenu', (evt) => evt.preventDefault());
   cy.on('tap', (evt) => {
     if (evt.target === cy) {
       clearIsolation();

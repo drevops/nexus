@@ -759,7 +759,7 @@ test('opens and tidies the diagram at 100% zoom', async ({ page }) => {
   expect(await page.evaluate(() => window.__nexus.cy.zoom())).toBeCloseTo(1, 2);
 });
 
-test('isolates an entity on double-click and moves it with its fields', async ({ page }) => {
+test('isolates an entity on right-click and moves it with its fields', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);
   await page.click('#mode-build');
@@ -767,8 +767,7 @@ test('isolates an entity on double-click and moves it with its fields', async ({
   const isolated = await page.evaluate(() => {
     const cy = window.__nexus.cy;
     const ep = cy.getElementById('node.episode');
-    ep.emit('tap');
-    ep.emit('tap');
+    ep.emit('cxttap');
     return {
       othersFaded: cy.getElementById('node.program').hasClass('faded'),
       groupVisible: !ep.hasClass('faded'),
