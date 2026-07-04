@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nexus - Shoelace / Web Awesome mockup</title>
+
+<!-- Shoelace: no build step. Both themes load; toggling the .sl-theme-dark
+     class on <html> switches everything. For production these would be
+     vendored locally like our other libs. Web Awesome is the same idea with
+     wa-* tags. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/themes/light.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/themes/dark.css" />
+<script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/shoelace-autoloader.js"></script>
+
+<style>
+  :root {
+    --grid: rgba(0, 0, 0, 0.04);
+  }
+  html.sl-theme-dark {
+    --grid: rgba(255, 255, 255, 0.05);
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    font: 14px var(--sl-font-sans);
+    color: var(--sl-color-neutral-900);
+    background: var(--sl-color-neutral-0);
+  }
+
+  /* Toolbar: two rows, like the real app. */
+  .toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.5rem 0.9rem;
+    background: var(--sl-color-neutral-50);
+    border-bottom: 1px solid var(--sl-color-neutral-200);
+  }
+  .toolbar__main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .toolbar__cluster { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+  .toolbar__palette {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--sl-color-neutral-200);
+    overflow-x: auto;
+  }
+  .brand { font-weight: 700; font-size: 1rem; margin-right: 0.3rem; }
+  .palette-label { font-size: 0.78rem; font-weight: 600; color: var(--sl-color-neutral-500); }
+  .swatch { width: 12px; height: 12px; border-radius: 3px; border: 1px solid rgba(0,0,0,.2); display: inline-block; }
+
+  /* Stage: docks + canvas. */
+  .stage { flex: 1; display: flex; min-height: 0; }
+  .dock { width: 300px; background: var(--sl-color-neutral-50); border-right: 1px solid var(--sl-color-neutral-200); padding: 0.7rem; overflow: auto; display: flex; flex-direction: column; gap: 0.7rem; }
+  .canvas-wrap { flex: 1; position: relative; min-width: 0; }
+  .canvas {
+    position: absolute; inset: 0;
+    background-color: var(--sl-color-neutral-100);
+    background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 26px 26px;
+    overflow: hidden;
+  }
+
+  /* Faux diagram nodes to give the theme something to sit against. */
+  .node { position: absolute; padding: 8px 14px; border-radius: 8px; border: 1.5px solid var(--sl-color-neutral-400); background: var(--sl-color-primary-100); color: var(--sl-color-neutral-900); font-weight: 600; box-shadow: var(--sl-shadow-small); }
+  .node--media { background: #f6b26b; color: #3a2a12; }
+  .field { position: absolute; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--sl-color-neutral-400); background: var(--sl-color-neutral-0); font-size: 12px; }
+
+  /* Floating inspector, like a pinned panel. */
+  .inspector { position: absolute; top: 16px; right: 16px; width: 300px; z-index: 5; }
+  .row { display: grid; grid-template-columns: 92px 1fr; align-items: center; gap: 0.5rem; margin-bottom: 0.55rem; }
+  .row > label { font-size: 0.82rem; color: var(--sl-color-neutral-600); }
+  .legend-item { display: flex; align-items: center; gap: 0.55rem; padding: 0.2rem 0; font-size: 0.85rem; }
+  .card-title { font-size: 0.72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--sl-color-neutral-500); margin: 0 0 0.6rem; }
+</style>
+</head>
+<body>
+
+<header class="toolbar">
+  <div class="toolbar__main">
+    <div class="toolbar__cluster">
+      <span class="brand">Nexus</span>
+      <sl-input size="small" value="Example content model" style="width: 210px" title="Rename this content model"></sl-input>
+    </div>
+    <div class="toolbar__cluster">
+      <sl-radio-group size="small" value="edit">
+        <sl-radio-button value="view"><sl-icon slot="prefix" name="eye"></sl-icon>View</sl-radio-button>
+        <sl-radio-button value="edit"><sl-icon slot="prefix" name="pencil"></sl-icon>Edit</sl-radio-button>
+      </sl-radio-group>
+
+      <sl-input size="small" placeholder="Find entity…" clearable style="width: 170px">
+        <sl-icon slot="prefix" name="search"></sl-icon>
+      </sl-input>
+
+      <sl-button-group label="Zoom">
+        <sl-tooltip content="Zoom out"><sl-icon-button name="zoom-out" label="Zoom out"></sl-icon-button></sl-tooltip>
+        <sl-tooltip content="Zoom in"><sl-icon-button name="zoom-in" label="Zoom in"></sl-icon-button></sl-tooltip>
+        <sl-tooltip content="Fit the diagram"><sl-icon-button name="arrows-fullscreen" label="Fit"></sl-icon-button></sl-tooltip>
+        <sl-tooltip content="Tidy up the layout"><sl-icon-button name="magic" label="Tidy"></sl-icon-button></sl-tooltip>
+      </sl-button-group>
+
+      <sl-button-group label="Panels">
+        <sl-tooltip content="Entities"><sl-icon-button name="box" label="Entities"></sl-icon-button></sl-tooltip>
+        <sl-tooltip content="Fields table"><sl-icon-button name="table" label="Table"></sl-icon-button></sl-tooltip>
+        <sl-tooltip content="Legend"><sl-icon-button name="info-circle" label="Legend"></sl-icon-button></sl-tooltip>
+        <sl-tooltip content="Settings"><sl-icon-button name="sliders" label="Settings"></sl-icon-button></sl-tooltip>
+      </sl-button-group>
+
+      <sl-dropdown>
+        <sl-button size="small" slot="trigger" caret><sl-icon slot="prefix" name="folder2-open"></sl-icon>File</sl-button>
+        <sl-menu>
+          <sl-menu-item><sl-icon slot="prefix" name="file-earmark-plus"></sl-icon>New</sl-menu-item>
+          <sl-menu-item><sl-icon slot="prefix" name="folder"></sl-icon>Import config…</sl-menu-item>
+          <sl-menu-item><sl-icon slot="prefix" name="folder2-open"></sl-icon>Open…</sl-menu-item>
+          <sl-menu-item><sl-icon slot="prefix" name="save"></sl-icon>Save</sl-menu-item>
+          <sl-divider></sl-divider>
+          <sl-menu-item><sl-icon slot="prefix" name="image"></sl-icon>Export PNG</sl-menu-item>
+          <sl-menu-item><sl-icon slot="prefix" name="filetype-svg"></sl-icon>Export SVG</sl-menu-item>
+        </sl-menu>
+      </sl-dropdown>
+
+      <sl-tooltip content="Toggle light / dark">
+        <sl-icon-button id="theme-toggle" name="moon" label="Toggle theme"></sl-icon-button>
+      </sl-tooltip>
+    </div>
+  </div>
+
+  <div class="toolbar__palette">
+    <span class="palette-label">Add:</span>
+    <sl-button size="small" pill><span class="swatch" style="background:#d9e2f3"></span>&nbsp;Content</sl-button>
+    <sl-button size="small" pill><span class="swatch" style="background:#9fc5e8"></span>&nbsp;Vocab</sl-button>
+    <sl-button size="small" pill><span class="swatch" style="background:#f6b26b"></span>&nbsp;Media</sl-button>
+    <sl-button size="small" pill><span class="swatch" style="background:#cdbdec"></span>&nbsp;Para</sl-button>
+    <sl-button size="small" pill><span class="swatch" style="background:#b6d7a8"></span>&nbsp;Block</sl-button>
+    <sl-divider vertical></sl-divider>
+    <sl-button size="small"><sl-icon slot="prefix" name="circle"></sl-icon>Field</sl-button>
+    <sl-button size="small"><sl-icon slot="prefix" name="diamond"></sl-icon>Event</sl-button>
+    <sl-button size="small">API</sl-button>
+    <sl-button size="small">Callback</sl-button>
+    <sl-divider vertical></sl-divider>
+    <sl-button size="small"><sl-icon slot="prefix" name="link-45deg"></sl-icon>Connect</sl-button>
+  </div>
+</header>
+
+<main class="stage">
+  <!-- Left dock: stacked panels (Entities + Settings), like pinned panels. -->
+  <aside class="dock">
+    <sl-card>
+      <p class="card-title" slot="header">Entities</p>
+      <sl-tree>
+        <sl-tree-item expanded><sl-icon name="box"></sl-icon>&nbsp;Program <sl-badge pill variant="neutral">6</sl-badge>
+          <sl-tree-item>title</sl-tree-item>
+          <sl-tree-item>field_media</sl-tree-item>
+        </sl-tree-item>
+        <sl-tree-item><sl-icon name="box"></sl-icon>&nbsp;Episode <sl-badge pill variant="neutral">9</sl-badge></sl-tree-item>
+        <sl-tree-item><sl-icon name="collection"></sl-icon>&nbsp;Tags <sl-badge pill variant="neutral">2</sl-badge></sl-tree-item>
+      </sl-tree>
+    </sl-card>
+
+    <sl-card>
+      <p class="card-title" slot="header">Entity colours</p>
+      <div class="legend-item"><sl-color-picker size="small" value="#d9e2f3" label="Content type"></sl-color-picker> Content type</div>
+      <div class="legend-item"><sl-color-picker size="small" value="#f6b26b" label="Media"></sl-color-picker> Media</div>
+      <div class="legend-item"><sl-color-picker size="small" value="#cdbdec" label="Paragraph"></sl-color-picker> Paragraph</div>
+      <sl-button size="small" variant="default" style="margin-top:.5rem"><sl-icon slot="prefix" name="arrow-counterclockwise"></sl-icon>Reset to defaults</sl-button>
+    </sl-card>
+  </aside>
+
+  <div class="canvas-wrap">
+    <div class="canvas">
+      <div class="node" style="left:80px; top:150px">Program<br><small style="font-weight:400">Content type</small></div>
+      <div class="field" style="left:300px; top:90px">Title</div>
+      <div class="field" style="left:300px; top:150px">Media</div>
+      <div class="field" style="left:300px; top:210px">Tags</div>
+      <div class="node node--media" style="left:470px; top:150px">Image<br><small style="font-weight:400">Media</small></div>
+    </div>
+
+    <!-- Inspector as a pinned/floating panel. -->
+    <sl-card class="inspector">
+      <div slot="header" style="display:flex; align-items:center; justify-content:space-between">
+        <strong>Field</strong>
+        <div>
+          <sl-icon-button name="pin-angle" label="Pin"></sl-icon-button>
+          <sl-icon-button name="x-lg" label="Close"></sl-icon-button>
+        </div>
+      </div>
+
+      <div class="row"><label>Label</label><sl-input size="small" value="Media"></sl-input></div>
+      <div class="row"><label>Machine name</label><sl-input size="small" value="field_media"></sl-input></div>
+      <div class="row"><label>Type</label>
+        <sl-select size="small" value="entity_reference">
+          <sl-option value="string">string</sl-option>
+          <sl-option value="text_long">text_long</sl-option>
+          <sl-option value="entity_reference">entity_reference</sl-option>
+        </sl-select>
+      </div>
+      <div class="row"><label>Cardinality</label>
+        <sl-select size="small" value="multi">
+          <sl-option value="single">Single</sl-option>
+          <sl-option value="multi">Multiple</sl-option>
+        </sl-select>
+      </div>
+      <div class="row"><label>Required</label><sl-switch></sl-switch></div>
+
+      <sl-divider></sl-divider>
+      <p class="card-title">References</p>
+      <sl-tag removable>Image</sl-tag>
+      <sl-select size="small" placeholder="Add target…" style="margin-top:.5rem">
+        <sl-option value="media.image">Image</sl-option>
+        <sl-option value="taxonomy.tags">Tags</sl-option>
+      </sl-select>
+
+      <sl-button slot="footer" variant="danger" outline size="small" style="width:100%"><sl-icon slot="prefix" name="trash"></sl-icon>Delete field</sl-button>
+    </sl-card>
+  </div>
+
+  <!-- Right dock: legend. -->
+  <aside class="dock" style="border-right:none; border-left:1px solid var(--sl-color-neutral-200); width:240px">
+    <sl-card>
+      <p class="card-title" slot="header">Legend</p>
+      <div class="legend-item"><span class="swatch" style="width:26px;height:16px;background:#9fc5e8"></span> Entity</div>
+      <div class="legend-item"><span class="swatch" style="width:22px;height:14px;border-radius:999px;background:#fff"></span> Single-value field</div>
+      <div class="legend-item"><span class="swatch" style="width:22px;height:14px;border-radius:999px;border-width:3px;background:#fff"></span> Multi-value field</div>
+      <div class="legend-item"><span class="swatch" style="width:16px;height:16px;transform:rotate(45deg);background:#fff"></span> Event</div>
+    </sl-card>
+
+    <sl-alert variant="primary" open>
+      <sl-icon slot="icon" name="info-circle"></sl-icon>
+      This whole page is Shoelace components. Toggle the moon icon (top-right) to see dark mode.
+    </sl-alert>
+  </aside>
+</main>
+
+<script type="module">
+  const toggle = document.getElementById('theme-toggle');
+  toggle.addEventListener('click', () => {
+    const dark = document.documentElement.classList.toggle('sl-theme-dark');
+    toggle.name = dark ? 'sun' : 'moon';
+  });
+</script>
+</body>
+</html>
