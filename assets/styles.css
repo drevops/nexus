@@ -286,11 +286,16 @@ body {
 .cy {
   position: absolute;
   inset: 0;
+  cursor: grab;
   background-color: var(--bg);
   background-image:
     linear-gradient(rgba(0, 0, 0, 0.035) 1px, transparent 1px),
     linear-gradient(90deg, rgba(0, 0, 0, 0.035) 1px, transparent 1px);
   background-size: 26px 26px;
+}
+
+.cy:active {
+  cursor: grabbing;
 }
 
 .captions {
@@ -392,18 +397,33 @@ body {
   border-radius: 8px;
 }
 
+.panel.is-docked .panel__body {
+  padding-bottom: 10px;
+}
+
 .panel__vresize {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  height: 7px;
+  height: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: row-resize;
   z-index: 3;
 }
 
-.panel__vresize:hover {
-  background: rgba(47, 109, 179, 0.25);
+.panel__vresize::after {
+  content: '';
+  width: 34px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--border);
+}
+
+.panel__vresize:hover::after {
+  background: var(--accent);
 }
 
 .panel__body {

@@ -465,6 +465,28 @@ test('places a note anywhere on the canvas', async ({ page }) => {
   expect(await page.evaluate(() => window.__nexus.cy.nodes('[group="annotation"]').first().data('kind'))).toBe('event');
 });
 
+test('drags a note from the palette onto the canvas', async ({ page }) => {
+  await page.click('#new-btn');
+  await page.click('#mode-build');
+
+  await page.dragAndDrop('[data-add-note="api"]', '#cy', { targetPosition: { x: 220, y: 160 } });
+
+  await page.waitForFunction(() => window.__nexus.cy.nodes('[group="annotation"]').length === 1);
+  expect(await page.evaluate(() => window.__nexus.cy.nodes('[group="annotation"]').first().data('kind'))).toBe('api');
+});
+
+test('drags an entity type from the palette onto the canvas', async ({ page }) => {
+  await page.click('#new-btn');
+  await page.click('#mode-build');
+
+  await page.dragAndDrop('[data-add-entity="paragraph"]', '#cy', { targetPosition: { x: 280, y: 220 } });
+  await expect(page.locator('[data-new="entity"]')).toBeVisible();
+  await page.fill('[data-new-bundle]', 'hero');
+  await page.click('[data-create-entity]');
+
+  expect(await page.evaluate(() => window.__nexus.cy.getElementById('paragraph.hero').length)).toBe(1);
+});
+
 test('exports the diagram as PNG named after the title', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);

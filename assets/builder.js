@@ -23,6 +23,7 @@ let counter = 0;
 let handleEntityId = null;
 let handleRaf = false;
 let placeKind = null;
+let pendingPosition = null;
 
 function startPlaceNote(kind) {
   connectMode = false;
@@ -37,6 +38,64 @@ function cancelPlace() {
   placeKind = null;
   if (cy) {
     cy.container().style.cursor = '';
+  }
+}
+
+/* Drag palette items onto the canvas ------------------------------------- */
+
+function makeDraggable(btn, payload) {
+  btn.draggable = true;
+  btn.addEventListener('dragstart', (evt) => {
+    evt.dataTransfer.setData('text/nexus', payload);
+    evt.dataTransfer.effectAllowed = 'copy';
+  });
+}
+
+function positionFromEvent(evt) {
+  const rect = cy.container().getBoundingClientRect();
+  const pan = cy.pan();
+  const zoom = cy.zoom();
+  return { x: (evt.clientX - rect.left - pan.x) / zoom, y: (evt.clientY - rect.top - pan.y) / zoom };
+}
+
+function entityAt(position) {
+  let found = null;
+  cy.nodes('[group="entity"]').forEach((node) => {
+    const box = node.boundingBox();
+    if (position.x >= box.x1 && position.x <= box.x2 && position.y >= box.y1 && position.y <= box.y2) {
+      found = node.id();
+    }
+  });
+  return found;
+}
+
+function onCanvasDragOver(evt) {
+  if (Array.prototype.indexOf.call(evt.dataTransfer.types, 'text/nexus') !== -1) {
+    evt.preventDefault();
+    evt.dataTransfer.dropEffect = 'copy';
+  }
+}
+
+function onCanvasDrop(evt) {
+  const data = evt.dataTransfer.getData('text/nexus');
+  if (!data || !cy || !buildMode) {
+    return;
+  }
+  evt.preventDefault();
+  const position = positionFromEvent(evt);
+
+  if (data.indexOf('entity:') === 0) {
+    pendingPosition = position;
+    openInspector({ kind: 'new-entity', entityType: data.slice(7) });
+  }
+  else if (data === 'field') {
+    pendingPosition = position;
+    openInspector({ kind: 'new-field', entityId: entityAt(position) || undefined });
+  }
+  else if (data.indexOf('note:') === 0) {
+    const kind = data.slice(5);
+    selectNode(addAnnotation(kind, NOTE_LABELS[kind] || 'Note', '', position));
+    bump();
   }
 }
 
@@ -58,12 +117,23 @@ export function initBuilder() {
   $('mode-build').addEventListener('click', () => setMode(true));
 
   Array.prototype.forEach.call(document.querySelectorAll('[data-add-entity]'), (btn) => {
-    btn.addEventListener('click', () => openInspector({ kind: 'new-entity', entityType: btn.getAttribute('data-add-entity') }));
+    const type = btn.getAttribute('data-add-entity');
+    btn.addEventListener('click', () => { pendingPosition = null; openInspector({ kind: 'new-entity', entityType: type }); });
+    makeDraggable(btn, 'entity:' + type);
   });
-  $('add-field').addEventListener('click', () => openInspector({ kind: 'new-field' }));
+  $('add-field').addEventListener('click', () => { pendingPosition = null; openInspector({ kind: 'new-field' }); });
+  makeDraggable($('add-field'), 'field');
   Array.prototype.forEach.call(document.querySelectorAll('[data-add-note]'), (btn) => {
-    btn.addEventListener('click', () => startPlaceNote(btn.getAttribute('data-add-note')));
+    const kind = btn.getAttribute('data-add-note');
+    btn.addEventListener('click', () => startPlaceNote(kind));
+    makeDraggable(btn, 'note:' + kind);
   });
+
+  const canvas = document.querySelector('.stage__canvas');
+  if (canvas) {
+    canvas.addEventListener('dragover', onCanvasDragOver);
+    canvas.addEventListener('drop', onCanvasDrop);
+  }
 
   $('connect-toggle').addEventListener('click', () => {
     connectMode = !connectMode;
@@ -275,12 +345,12 @@ function selectNode(id) {
 
 /* Mutations ------------------------------------------------------------- */
 
-function addEntity(entityType, bundle, label) {
+function addEntity(entityType, bundle, label, position) {
   const id = entityType + '.' + bundle;
   if (cy.getElementById(id).nonempty()) {
     return null;
   }
-  cy.add({ group: 'nodes', data: { id: id, group: 'entity', entityType: entityType, bundle: bundle, label: label }, position: viewportCenter() });
+  cy.add({ group: 'nodes', data: { id: id, group: 'entity', entityType: entityType, bundle: bundle, label: label }, position: position || viewportCenter() });
   return id;
 }
 
@@ -299,13 +369,13 @@ function fieldPlacement(anchor, side) {
   return { x: anchor.x + distance, y: anchor.y + spread };
 }
 
-function addField(entityId, name, label, fieldType, kind, side) {
+function addField(entityId, name, label, fieldType, kind, side, position) {
   const fieldId = 'field:' + entityId + ':' + name;
   if (cy.getElementById(fieldId).nonempty()) {
     return null;
   }
   const anchor = cy.getElementById(entityId).position();
-  cy.add({ group: 'nodes', data: { id: fieldId, group: 'field', name: name, label: label, fieldType: fieldType, kind: kind, required: false, entity: entityId }, position: fieldPlacement(anchor, side) });
+  cy.add({ group: 'nodes', data: { id: fieldId, group: 'field', name: name, label: label, fieldType: fieldType, kind: kind, required: false, entity: entityId }, position: position || fieldPlacement(anchor, side) });
   cy.add({ group: 'edges', data: { id: 'has:' + fieldId, source: entityId, target: fieldId, group: 'has' } });
   return fieldId;
 }
@@ -352,7 +422,8 @@ function createEntity(form) {
     return;
   }
   const label = (form.label || '').trim() || bundle;
-  const id = addEntity(form.entityType, bundle, label);
+  const id = addEntity(form.entityType, bundle, label, pendingPosition);
+  pendingPosition = null;
   if (id) {
     selectNode(id);
     bump();
@@ -362,10 +433,12 @@ function createEntity(form) {
 function createField(entityId, form, side) {
   const name = slug(form.name);
   if (!entityId || !name) {
+    pendingPosition = null;
     return;
   }
   const label = (form.label || '').trim() || name;
-  const id = addField(entityId, name, label, form.fieldType, form.kind, side);
+  const id = addField(entityId, name, label, form.fieldType, form.kind, side, pendingPosition);
+  pendingPosition = null;
   if (id) {
     if (form.target) {
       addReference(id, form.target);
