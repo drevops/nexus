@@ -207,6 +207,26 @@ test('saves and reloads a Nexus diagram document', async ({ page }) => {
   expect(await page.evaluate(() => window.__nexus.cy.getElementById('node.program').length)).toBe(1);
 });
 
+test('reopens the import screen and cancels back to the diagram', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+
+  await page.click('#doc-import');
+  await expect(page.locator('#landing')).toBeVisible();
+  await expect(page.locator('#landing-cancel')).toBeVisible();
+
+  await page.click('#landing-cancel');
+  await expect(page.locator('#landing')).toBeHidden();
+  expect(await entityCount(page)).toBeGreaterThan(0);
+});
+
+test('renders toolbar icons from the icon set', async ({ page }) => {
+  await expect(page.locator('#doc-import svg.icon')).toBeVisible();
+  await expect(page.locator('#doc-save svg.icon')).toBeVisible();
+  await expect(page.locator('#layout-toggle svg.icon')).toBeVisible();
+  await expect(page.locator('#layout-toggle .layout-label')).toHaveText('Layout: LR');
+});
+
 test('builds a new entity and field and saves them', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);

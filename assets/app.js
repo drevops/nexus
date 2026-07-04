@@ -13,6 +13,7 @@ import { exportPng, exportPdf } from './export.js';
 import { documentFromGraph, documentToModel } from './document.js';
 import { initBuilder, attachBuilder } from './builder.js';
 import { initPanels } from './panels.js';
+import { initIcons } from './icons.js';
 
 const EXAMPLE_BASE = 'examples/example/';
 
@@ -188,7 +189,16 @@ function wireLanding() {
   $('folder-input').addEventListener('change', (evt) => loadFromFiles(evt.target.files));
   $('example-btn').addEventListener('click', loadExample);
   $('new-btn').addEventListener('click', newDocument);
-  $('open-toggle').addEventListener('click', () => { $('landing').hidden = false; });
+  $('doc-import').addEventListener('click', showLanding);
+  $('landing-cancel').addEventListener('click', () => { $('landing').hidden = true; });
+}
+
+// Reopening the import screen over a loaded diagram offers a way back; on first
+// load there is nothing to preserve, so the cancel affordance stays hidden.
+function showLanding() {
+  showError('');
+  $('landing-cancel').hidden = !window.__nexus;
+  $('landing').hidden = false;
 }
 
 function wireExports() {
@@ -261,3 +271,4 @@ wireExports();
 wireDocument();
 initPanels();
 initBuilder();
+initIcons();

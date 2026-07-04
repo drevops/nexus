@@ -694,7 +694,7 @@ function buildController(model, options = {}) {
   // Reset toolbar/panels to their default state for this render.
   $('fields-toggle').classList.add('is-active');
   $('proxy-toggle').classList.remove('is-active');
-  $('layout-toggle').textContent = 'Layout: LR';
+  $('layout-toggle').querySelector('.layout-label').textContent = 'Layout: LR';
   $('machine-names').classList.add('is-active');
   $('search').value = '';
   openPanel('legend');
@@ -732,9 +732,9 @@ function wire() {
     ctx.refresh(true);
   });
 
-  $('layout-toggle').addEventListener('click', (evt) => {
+  $('layout-toggle').addEventListener('click', () => {
     rankDir = rankDir === 'LR' ? 'TB' : 'LR';
-    evt.target.textContent = 'Layout: ' + rankDir;
+    $('layout-toggle').querySelector('.layout-label').textContent = 'Layout: ' + rankDir;
     ctx.runLayout();
   });
 

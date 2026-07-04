@@ -14,43 +14,46 @@
   </div>
   <div class="toolbar__actions">
     <div class="toolbar__group">
-      <button id="mode-view" class="toolbar__button is-active" type="button">View</button>
-      <button id="mode-build" class="toolbar__button" type="button">Build</button>
+      <button id="mode-view" class="toolbar__button is-active" type="button" data-icon="eye">View</button>
+      <button id="mode-build" class="toolbar__button" type="button" data-icon="pencil">Build</button>
     </div>
     <div id="build-tools" class="toolbar__group" hidden>
-      <button id="add-entity" class="toolbar__button" type="button">+ Entity</button>
-      <button id="add-annotation" class="toolbar__button" type="button">+ Note</button>
-      <button id="connect-toggle" class="toolbar__button" type="button" title="Drag from a field to a target entity">Connect</button>
+      <button id="add-entity" class="toolbar__button" type="button" data-icon="plus-square">Entity</button>
+      <button id="add-annotation" class="toolbar__button" type="button" data-icon="message-square">Note</button>
+      <button id="connect-toggle" class="toolbar__button" type="button" data-icon="link" title="Drag from a field to a target entity">Connect</button>
     </div>
-    <input id="search" class="toolbar__search" type="search" placeholder="Find entity…" autocomplete="off">
-    <div class="toolbar__group">
-      <button id="zoom-out" class="toolbar__button" type="button" title="Zoom out">&minus;</button>
-      <button id="zoom-in" class="toolbar__button" type="button" title="Zoom in">&plus;</button>
-      <button id="fit" class="toolbar__button" type="button">Fit</button>
-      <button id="reset" class="toolbar__button" type="button">Reset</button>
+    <div class="toolbar__search-wrap">
+      <span class="toolbar__search-icon" data-icon="search"></span>
+      <input id="search" class="toolbar__search" type="search" placeholder="Find entity…" autocomplete="off">
     </div>
     <div class="toolbar__group">
-      <button id="fields-toggle" class="toolbar__button" type="button">Fields</button>
-      <button id="proxy-toggle" class="toolbar__button" type="button" title="Show references as semi-opaque proxies instead of long edges">Proxies</button>
-      <button id="machine-names" class="toolbar__button" type="button">Machine names</button>
-      <button id="layout-toggle" class="toolbar__button" type="button">Layout: LR</button>
+      <button id="zoom-out" class="toolbar__button toolbar__button--icon" type="button" data-icon="minus" title="Zoom out"></button>
+      <button id="zoom-in" class="toolbar__button toolbar__button--icon" type="button" data-icon="plus" title="Zoom in"></button>
+      <button id="fit" class="toolbar__button" type="button" data-icon="maximize">Fit</button>
+      <button id="reset" class="toolbar__button" type="button" data-icon="rotate-ccw">Reset</button>
     </div>
     <div class="toolbar__group">
-      <button id="entities-toggle" class="toolbar__button" type="button">Entities</button>
-      <button id="table-toggle" class="toolbar__button" type="button">Table</button>
-      <button id="legend-toggle" class="toolbar__button" type="button">Legend</button>
-      <button id="settings-toggle" class="toolbar__button" type="button">Settings</button>
+      <button id="fields-toggle" class="toolbar__button" type="button" data-icon="list">Fields</button>
+      <button id="proxy-toggle" class="toolbar__button" type="button" data-icon="layers" title="Show references as semi-opaque proxies instead of long edges">Proxies</button>
+      <button id="machine-names" class="toolbar__button" type="button" data-icon="code">Machine names</button>
+      <button id="layout-toggle" class="toolbar__button" type="button" data-icon="layout"><span class="layout-label">Layout: LR</span></button>
     </div>
     <div class="toolbar__group">
-      <button id="doc-new" class="toolbar__button" type="button">New</button>
-      <label class="toolbar__button" for="doc-open">Open</label>
+      <button id="entities-toggle" class="toolbar__button" type="button" data-icon="box">Entities</button>
+      <button id="table-toggle" class="toolbar__button" type="button" data-icon="table">Table</button>
+      <button id="legend-toggle" class="toolbar__button" type="button" data-icon="info">Legend</button>
+      <button id="settings-toggle" class="toolbar__button" type="button" data-icon="sliders">Settings</button>
+    </div>
+    <div class="toolbar__group">
+      <button id="doc-new" class="toolbar__button" type="button" data-icon="file-plus">New</button>
+      <button id="doc-import" class="toolbar__button" type="button" data-icon="folder-input">Import</button>
+      <label class="toolbar__button" for="doc-open" data-icon="folder-open">Open</label>
       <input id="doc-open" class="visually-hidden" type="file" accept=".json,application/json">
-      <button id="doc-save" class="toolbar__button" type="button">Save</button>
+      <button id="doc-save" class="toolbar__button" type="button" data-icon="save">Save</button>
     </div>
     <div class="toolbar__group">
-      <button id="export-png" class="toolbar__button" type="button">PNG</button>
-      <button id="export-pdf" class="toolbar__button" type="button">PDF</button>
-      <button id="open-toggle" class="toolbar__button" type="button">Config…</button>
+      <button id="export-png" class="toolbar__button" type="button" data-icon="image">PNG</button>
+      <button id="export-pdf" class="toolbar__button" type="button" data-icon="file-down">PDF</button>
     </div>
   </div>
 </header>
@@ -66,8 +69,8 @@
       <div class="panel__head">
         <span class="panel__title">Entities</span>
         <span class="panel__spacer"></span>
-        <button class="panel__pin" type="button" title="Pin to side" aria-label="Pin">⇱</button>
-        <button class="panel__close" type="button" aria-label="Close">&times;</button>
+        <button class="panel__pin" type="button" data-icon="pin" title="Pin to side" aria-label="Pin"></button>
+        <button class="panel__close" type="button" data-icon="x" aria-label="Close"></button>
       </div>
       <div class="panel__body">
         <div id="type-filters" class="filters"></div>
@@ -80,8 +83,8 @@
         <span class="panel__title">Fields</span>
         <select id="table-entity" class="panel__select"></select>
         <input id="table-search" class="panel__search" type="search" placeholder="Filter fields…" autocomplete="off">
-        <button class="panel__pin" type="button" title="Pin to side" aria-label="Pin">⇱</button>
-        <button class="panel__close" type="button" aria-label="Close">&times;</button>
+        <button class="panel__pin" type="button" data-icon="pin" title="Pin to side" aria-label="Pin"></button>
+        <button class="panel__close" type="button" data-icon="x" aria-label="Close"></button>
       </div>
       <div class="panel__body table-wrap"><table id="field-table" class="field-table"></table></div>
     </section>
@@ -90,8 +93,8 @@
       <div class="panel__head">
         <span class="panel__title">Inspector</span>
         <span class="panel__spacer"></span>
-        <button class="panel__pin" type="button" title="Pin to side" aria-label="Pin">⇱</button>
-        <button class="panel__close" type="button" aria-label="Close">&times;</button>
+        <button class="panel__pin" type="button" data-icon="pin" title="Pin to side" aria-label="Pin"></button>
+        <button class="panel__close" type="button" data-icon="x" aria-label="Close"></button>
       </div>
       <div id="inspector-body" class="panel__body inspector-body"></div>
     </aside>
@@ -100,8 +103,8 @@
       <div class="panel__head">
         <span class="panel__title">Settings</span>
         <span class="panel__spacer"></span>
-        <button class="panel__pin" type="button" title="Pin to side" aria-label="Pin">⇱</button>
-        <button class="panel__close" type="button" aria-label="Close">&times;</button>
+        <button class="panel__pin" type="button" data-icon="pin" title="Pin to side" aria-label="Pin"></button>
+        <button class="panel__close" type="button" data-icon="x" aria-label="Close"></button>
       </div>
       <div class="panel__body">
         <h3 class="settings-section__title">Entity colours</h3>
@@ -115,8 +118,8 @@
       <div class="panel__head">
         <span class="panel__title">Legend</span>
         <span class="panel__spacer"></span>
-        <button class="panel__pin" type="button" title="Pin to side" aria-label="Pin">⇱</button>
-        <button class="panel__close" type="button" aria-label="Close">&times;</button>
+        <button class="panel__pin" type="button" data-icon="pin" title="Pin to side" aria-label="Pin"></button>
+        <button class="panel__close" type="button" data-icon="x" aria-label="Close"></button>
       </div>
       <div id="legend-body" class="panel__body legend-body"></div>
     </aside>
@@ -133,11 +136,12 @@
     <div id="dropzone" class="dropzone">
       <p class="dropzone__hint">Drop a Drupal <strong>config</strong> folder here, or choose one. Your files never leave this page.</p>
       <div class="landing__actions">
-        <label class="btn btn--primary" for="folder-input">Choose a config folder</label>
+        <label class="btn btn--primary" for="folder-input" data-icon="folder-input">Choose a config folder</label>
         <input id="folder-input" class="visually-hidden" type="file" webkitdirectory directory multiple>
-        <button id="example-btn" class="btn" type="button">Try the example</button>
-        <label class="btn" for="doc-open">Open a saved diagram</label>
-        <button id="new-btn" class="btn" type="button">Start from scratch</button>
+        <button id="example-btn" class="btn" type="button" data-icon="sparkles">Try the example</button>
+        <label class="btn" for="doc-open" data-icon="folder-open">Open a saved diagram</label>
+        <button id="new-btn" class="btn" type="button" data-icon="file-plus">Start from scratch</button>
+        <button id="landing-cancel" class="btn" type="button" data-icon="x" hidden>Cancel</button>
       </div>
     </div>
     <p id="landing-error" class="landing__error" role="alert"></p>

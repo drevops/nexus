@@ -66,8 +66,22 @@ body {
   border-radius: 9px;
 }
 
+.toolbar__search-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.toolbar__search-icon {
+  position: absolute;
+  left: 0.6rem;
+  display: inline-flex;
+  color: var(--muted);
+  pointer-events: none;
+}
+
 .toolbar__search {
-  padding: 0.4rem 0.65rem;
+  padding: 0.4rem 0.65rem 0.4rem 2rem;
   font-size: 0.85rem;
   background: #fff;
   border: 1px solid var(--border);
@@ -76,6 +90,9 @@ body {
 }
 
 .toolbar__button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   padding: 0.35rem 0.7rem;
   font-size: 0.85rem;
   color: var(--text);
@@ -85,6 +102,16 @@ body {
   cursor: pointer;
   white-space: nowrap;
   line-height: 1.2;
+}
+
+.toolbar__button--icon {
+  padding: 0.35rem 0.45rem;
+}
+
+.icon {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
 }
 
 .toolbar__button:hover {
@@ -297,20 +324,15 @@ body {
 
 .panel__pin,
 .panel__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
   border: none;
   background: none;
   line-height: 1;
   color: var(--muted);
   cursor: pointer;
-}
-
-.panel__pin {
-  font-size: 1.05rem;
-  padding: 0;
-}
-
-.panel__close {
-  font-size: 1.3rem;
 }
 
 .panel__pin:hover,
@@ -645,6 +667,9 @@ body {
 }
 
 .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   padding: 0.55rem 1.1rem;
   font-size: 0.9rem;
   color: var(--text);
@@ -751,6 +776,9 @@ body {
 }
 
 .insp__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   padding: 0.2rem 0.5rem;
   font-size: 0.75rem;
   color: var(--accent);
@@ -758,6 +786,12 @@ body {
   border: 1px solid var(--border);
   border-radius: 6px;
   cursor: pointer;
+}
+
+.insp__btn .icon,
+.insp__x .icon {
+  width: 14px;
+  height: 14px;
 }
 
 .insp__field {
@@ -807,8 +841,10 @@ body {
 }
 
 .insp__x {
-  padding: 0 0.4rem;
-  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.15rem 0.3rem;
   line-height: 1;
   color: var(--muted);
   background: #fff;
@@ -818,6 +854,10 @@ body {
 }
 
 .insp__create {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
   width: 100%;
   margin-top: 0.5rem;
   padding: 0.5rem;
@@ -830,6 +870,10 @@ body {
 }
 
 .insp__delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
   width: 100%;
   margin-top: 0.9rem;
   padding: 0.45rem;

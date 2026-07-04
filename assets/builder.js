@@ -9,6 +9,7 @@
  */
 
 import { openPanel, closePanel } from './panels.js';
+import { icon } from './icons.js';
 
 const ENTITY_TYPES = [
   ['node', 'Content type'],
@@ -297,8 +298,8 @@ function entityForm(node) {
     row('Label', '<input class="insp__input" data-edit="label" value="' + esc(node.data('label')) + '">') +
     row('Type', '<span class="insp__ro">' + esc(TYPE_LABELS[node.data('entityType')] || node.data('entityType')) + '</span>') +
     row('Machine name', '<code>' + esc(node.data('bundle')) + '</code>') +
-    '<div class="insp__section"><div class="insp__sectionhead"><span>Fields</span><button class="insp__btn" data-add-field>+ Field</button></div>' + fields + '</div>' +
-    '<button class="insp__delete" data-delete>Delete entity</button></div>';
+    '<div class="insp__section"><div class="insp__sectionhead"><span>Fields</span><button class="insp__btn" data-add-field>' + icon('plus') + 'Field</button></div>' + fields + '</div>' +
+    '<button class="insp__delete" data-delete>' + icon('trash') + 'Delete entity</button></div>';
 }
 
 function fieldForm(node) {
@@ -312,7 +313,7 @@ function fieldForm(node) {
     const list = targets.map((t) => {
       const target = cy.getElementById(t);
       const label = target.nonempty() ? target.data('label') : t;
-      return '<div class="insp__ref">' + esc(label) + '<button class="insp__x" data-unref="' + esc(t) + '">&times;</button></div>';
+      return '<div class="insp__ref">' + esc(label) + '<button class="insp__x" data-unref="' + esc(t) + '" aria-label="Remove">' + icon('x', 14) + '</button></div>';
     }).join('') || '<p class="insp__empty">No references.</p>';
     refs = '<div class="insp__section"><div class="insp__sectionhead"><span>References</span></div>' + list +
       '<div class="insp__row"><select class="insp__input" data-ref-target><option value="">Add target…</option>' + entityOptions + '</select></div></div>';
@@ -326,7 +327,7 @@ function fieldForm(node) {
     row('Cardinality', '<select class="insp__input" data-edit="kind"><option value="single"' + (node.data('kind') === 'single' ? ' selected' : '') + '>Single</option><option value="multi"' + (node.data('kind') === 'multi' ? ' selected' : '') + '>Multiple</option></select>') +
     row('Required', '<input type="checkbox" data-edit="required"' + (node.data('required') ? ' checked' : '') + '>') +
     refs +
-    '<button class="insp__delete" data-delete>Delete field</button></div>';
+    '<button class="insp__delete" data-delete>' + icon('trash') + 'Delete field</button></div>';
 }
 
 function annotationForm(node) {
@@ -335,7 +336,7 @@ function annotationForm(node) {
     row('Label', '<input class="insp__input" data-edit="label" value="' + esc(node.data('label')) + '">') +
     row('Kind', '<select class="insp__input" data-edit="kind">' + options(ANNOTATION_KINDS, node.data('kind')) + '</select>') +
     row('Method', '<input class="insp__input" data-edit="method" value="' + esc(node.data('method') || '') + '" placeholder="POST, GET…">') +
-    '<button class="insp__delete" data-delete>Delete</button></div>';
+    '<button class="insp__delete" data-delete>' + icon('trash') + 'Delete</button></div>';
 }
 
 function header(title) {
@@ -353,7 +354,7 @@ function openEntityForm() {
     row('Type', '<select class="insp__input" data-new-type>' + options(ENTITY_TYPES) + '</select>') +
     row('Machine name', '<input class="insp__input" data-new-bundle placeholder="e.g. article">') +
     row('Label', '<input class="insp__input" data-new-label placeholder="e.g. Article">') +
-    '<button class="insp__create" data-create-entity>Create entity</button></div>');
+    '<button class="insp__create" data-create-entity>' + icon('check') + 'Create entity</button></div>');
 }
 
 function openAnnotationForm() {
@@ -361,7 +362,7 @@ function openAnnotationForm() {
     row('Kind', '<select class="insp__input" data-new-kind>' + options(ANNOTATION_KINDS) + '</select>') +
     row('Label', '<input class="insp__input" data-new-label placeholder="e.g. Sync API">') +
     row('Method', '<input class="insp__input" data-new-method placeholder="POST, GET…">') +
-    '<button class="insp__create" data-create-annotation>Create annotation</button></div>');
+    '<button class="insp__create" data-create-annotation>' + icon('check') + 'Create annotation</button></div>');
 }
 
 function existingFields() {
@@ -387,7 +388,7 @@ function openFieldForm(entityId, side) {
     row('Cardinality', '<select class="insp__input" data-new-kind><option value="single">Single</option><option value="multi">Multiple</option></select>') +
     datalist +
     '<p class="insp__hint">Type a new name, or pick an existing field to reuse its definition.</p>' +
-    '<button class="insp__create" data-create-field>Create field</button></div>');
+    '<button class="insp__create" data-create-field>' + icon('check') + 'Create field</button></div>');
 }
 
 /* Mutations ------------------------------------------------------------- */
