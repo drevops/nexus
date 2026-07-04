@@ -38,6 +38,7 @@ let settings = loadSettings();
 const activeColors = {};
 
 let fieldsMode = false;
+let proxyMode = false;
 let rankDir = 'LR';
 let showMachineNames = false;
 let typeVisible = {};
@@ -108,10 +109,22 @@ function buildElements(model) {
 
   const seen = {};
   const collapsed = [];
+  const proxyNodes = [];
+  const proxyEdges = [];
   edges.forEach((e) => {
-    if (e.data.group === 'ref') {
-      (refsByField[e.data.source] = refsByField[e.data.source] || []).push(e.data.target);
+    if (e.data.group !== 'ref') {
+      return;
     }
+    (refsByField[e.data.source] = refsByField[e.data.source] || []).push(e.data.target);
+
+    // A proxy is a semi-opaque stand-in for the target entity placed beside the
+    // referencing field, so a distant reference reads as a short local hop
+    // instead of a long edge across the graph.
+    const field = fieldById[e.data.source];
+    const target = entityById[e.data.target];
+    const proxyId = 'proxy:' + e.data.source + '>' + e.data.target;
+    proxyNodes.push({ data: { id: proxyId, group: 'proxy', target: e.data.target, entity: field ? field.entity : '', entityType: target ? target.entityType : '', label: target ? target.label : e.data.target } });
+    proxyEdges.push({ data: { id: 'pe:' + e.data.source + '>' + e.data.target, source: e.data.source, target: proxyId, group: 'proxyedge' } });
   });
   Object.keys(refsByField).forEach((fieldId) => {
     const field = fieldById[fieldId];
@@ -127,7 +140,7 @@ function buildElements(model) {
     });
   });
 
-  return { nodes: nodes, edges: edges.concat(collapsed) };
+  return { nodes: nodes.concat(proxyNodes), edges: edges.concat(collapsed).concat(proxyEdges) };
 }
 
 function style() {
@@ -188,6 +201,30 @@ function style() {
         height: 'label',
         padding: '12px',
       },
+    },
+    {
+      selector: 'node[group="proxy"]',
+      style: {
+        shape: 'round-rectangle',
+        'background-color': (ele) => entityColor(ele.data('entityType')),
+        'background-opacity': 0.4,
+        'border-color': '#8a94a3',
+        'border-width': 1,
+        'border-style': 'dashed',
+        label: (ele) => ele.data('label'),
+        'text-valign': 'center',
+        'text-halign': 'center',
+        'font-size': 10,
+        'font-style': 'italic',
+        color: '#5b6470',
+        width: 'label',
+        height: 'label',
+        padding: '7px',
+      },
+    },
+    {
+      selector: 'edge[group="proxyedge"]',
+      style: { 'line-color': '#c2c8d0', 'line-style': 'dashed', width: 1, 'target-arrow-shape': 'triangle', 'target-arrow-color': '#c2c8d0', 'arrow-scale': 0.8 },
     },
     { selector: 'node[group="annotation"][kind="event"]', style: { shape: 'diamond' } },
     { selector: 'node[group="annotation"][kind="api"]', style: { shape: 'hexagon' } },
@@ -307,6 +344,7 @@ function buildController(model, options = {}) {
   refsByField = {};
   typeVisible = {};
   fieldsMode = false;
+  proxyMode = false;
   rankDir = 'LR';
   showMachineNames = false;
   initColors();
@@ -345,6 +383,9 @@ function buildController(model, options = {}) {
     if (group === 'field') {
       return fieldsMode && typeVisible[entityTypeOf(node.data('entity'))] !== false;
     }
+    if (group === 'proxy') {
+      return proxyMode && fieldsMode && typeVisible[entityTypeOf(node.data('entity'))] !== false && typeVisible[node.data('entityType')] !== false;
+    }
     return true;
   }
 
@@ -361,8 +402,14 @@ function buildController(model, options = {}) {
       const group = e.data('group');
       const ends = visible[e.data('source')] && visible[e.data('target')];
       let vis;
-      if (group === 'has' || group === 'ref') {
+      if (group === 'has') {
         vis = fieldsMode && ends;
+      }
+      else if (group === 'ref') {
+        vis = fieldsMode && !proxyMode && ends;
+      }
+      else if (group === 'proxyedge') {
+        vis = fieldsMode && proxyMode && ends;
       }
       else if (group === 'collapsed') {
         vis = !fieldsMode && ends;
@@ -626,6 +673,12 @@ function buildController(model, options = {}) {
     }
     focusField(evt.target.id());
   });
+  cy.on('tap', 'node[group="proxy"]', (evt) => {
+    if (window.__nexusBuild) {
+      return;
+    }
+    focusEntity(evt.target.data('target'));
+  });
   cy.on('render', () => {
     if (!showMachineNames || captionRaf) {
       return;
@@ -640,6 +693,7 @@ function buildController(model, options = {}) {
 
   // Reset toolbar/panels to their default state for this render.
   $('fields-toggle').classList.remove('is-active');
+  $('proxy-toggle').classList.remove('is-active');
   $('layout-toggle').textContent = 'Layout: LR';
   $('machine-names').classList.remove('is-active');
   $('search').value = '';
@@ -663,6 +717,17 @@ function wire() {
   $('fields-toggle').addEventListener('click', (evt) => {
     fieldsMode = !fieldsMode;
     evt.target.classList.toggle('is-active', fieldsMode);
+    ctx.clearFocus();
+    ctx.refresh(true);
+  });
+
+  $('proxy-toggle').addEventListener('click', (evt) => {
+    proxyMode = !proxyMode;
+    evt.target.classList.toggle('is-active', proxyMode);
+    if (proxyMode && !fieldsMode) {
+      fieldsMode = true;
+      $('fields-toggle').classList.add('is-active');
+    }
     ctx.clearFocus();
     ctx.refresh(true);
   });

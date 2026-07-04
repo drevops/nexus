@@ -27,6 +27,9 @@ function splitId(id) {
 export function documentFromGraph(cy, meta = {}) {
   const layout = {};
   cy.nodes().forEach((node) => {
+    if (node.data('group') === 'proxy') {
+      return;
+    }
     const position = node.position();
     layout[node.id()] = { x: Math.round(position.x), y: Math.round(position.y) };
   });

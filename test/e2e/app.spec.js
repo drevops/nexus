@@ -127,6 +127,45 @@ test('traces a field\'s inbound and outbound connections', async ({ page }) => {
   expect(result.unrelatedFaded).toBe(true);
 });
 
+test('declutters references into faded proxies', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+
+  await page.click('#proxy-toggle');
+  await expect(page.locator('#proxy-toggle')).toHaveClass(/is-active/);
+  await expect(page.locator('#fields-toggle')).toHaveClass(/is-active/);
+
+  const counts = await page.evaluate(() => {
+    const cy = window.__nexus.cy;
+    return {
+      proxies: cy.nodes('[group="proxy"]:visible').length,
+      refEdges: cy.edges('[group="ref"]:visible').length,
+      proxyEdges: cy.edges('[group="proxyedge"]:visible').length,
+    };
+  });
+  expect(counts.proxies).toBeGreaterThan(0);
+  expect(counts.refEdges).toBe(0);
+  expect(counts.proxyEdges).toBe(counts.proxies);
+
+  const focus = await page.evaluate(() => {
+    const cy = window.__nexus.cy;
+    const proxy = cy.nodes('[group="proxy"]').first();
+    const target = proxy.data('target');
+    proxy.emit('tap');
+    return { targetFaded: cy.getElementById(target).hasClass('faded'), someFaded: cy.nodes().some((n) => n.hasClass('faded')) };
+  });
+  expect(focus.targetFaded).toBe(false);
+  expect(focus.someFaded).toBe(true);
+
+  await page.click('#proxy-toggle');
+  const after = await page.evaluate(() => ({
+    proxies: window.__nexus.cy.nodes('[group="proxy"]:visible').length,
+    refEdges: window.__nexus.cy.edges('[group="ref"]:visible').length,
+  }));
+  expect(after.proxies).toBe(0);
+  expect(after.refEdges).toBeGreaterThan(0);
+});
+
 test('persists a custom entity colour across reloads', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);
