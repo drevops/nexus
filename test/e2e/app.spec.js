@@ -13,6 +13,25 @@ async function waitForGraph(page) {
   await page.waitForFunction(() => window.__nexus && window.__nexus.cy.nodes('[group="entity"]').length > 0);
 }
 
+// Shoelace form controls render into shadow DOM, so set the value on the host
+// and dispatch the events the component would fire.
+async function slFill(page, selector, value) {
+  await page.locator(selector).waitFor({ state: 'attached' });
+  await page.locator(selector).evaluate((el, v) => {
+    el.value = v;
+    el.dispatchEvent(new Event('sl-input', { bubbles: true }));
+    el.dispatchEvent(new Event('sl-change', { bubbles: true }));
+  }, value);
+}
+
+async function slSelect(page, selector, value) {
+  await page.locator(selector).waitFor({ state: 'attached' });
+  await page.locator(selector).evaluate((el, v) => {
+    el.value = v;
+    el.dispatchEvent(new Event('sl-change', { bubbles: true }));
+  }, value);
+}
+
 test.beforeEach(async ({ page }) => {
   await page.goto('/index.html');
 });
@@ -262,7 +281,7 @@ test('persists a custom entity colour across reloads', async ({ page }) => {
   await waitForGraph(page);
 
   await page.click('#settings-toggle');
-  await page.locator('input[data-color="paragraph"]').fill('#112233');
+  await slFill(page, 'sl-color-picker[data-color="paragraph"]', '#112233');
 
   const stored = await page.evaluate(() => JSON.parse(window.localStorage.getItem('nexusSettings')));
   expect(stored.colors.paragraph).toBe('#112233');
@@ -321,14 +340,14 @@ test('builds a new entity and field and saves them', async ({ page }) => {
 
   await page.click('#mode-build');
   await page.click('[data-add-entity="node"]');
-  await page.fill('[data-new-bundle]', 'campaign');
-  await page.fill('[data-new-label]', 'Campaign');
+  await slFill(page, '[data-new-bundle]', 'campaign');
+  await slFill(page, '[data-new-label]', 'Campaign');
   await page.click('[data-create-entity]');
   expect(await page.evaluate(() => window.__nexus.cy.getElementById('node.campaign').length)).toBe(1);
 
   await page.click('[data-add-field]');
   await page.fill('[data-new-name]', 'field_body');
-  await page.fill('[data-new-label]', 'Body');
+  await slFill(page, '[data-new-label]', 'Body');
   await page.click('[data-create-field]');
   expect(await page.evaluate(() => window.__nexus.cy.getElementById('field:node.campaign:field_body').length)).toBe(1);
 
@@ -347,16 +366,16 @@ test('connects a reference by dragging on the canvas', async ({ page }) => {
   await page.click('#mode-build');
 
   await page.click('[data-add-entity="node"]');
-  await page.fill('[data-new-bundle]', 'a');
-  await page.fill('[data-new-label]', 'A');
+  await slFill(page, '[data-new-bundle]', 'a');
+  await slFill(page, '[data-new-label]', 'A');
   await page.click('[data-create-entity]');
   await page.click('[data-add-field]');
   await page.fill('[data-new-name]', 'field_ref');
-  await page.fill('[data-new-label]', 'Ref');
+  await slFill(page, '[data-new-label]', 'Ref');
   await page.click('[data-create-field]');
   await page.click('[data-add-entity="node"]');
-  await page.fill('[data-new-bundle]', 'b');
-  await page.fill('[data-new-label]', 'B');
+  await slFill(page, '[data-new-bundle]', 'b');
+  await slFill(page, '[data-new-label]', 'B');
   await page.click('[data-create-entity]');
 
   const coords = await page.evaluate(() => {
@@ -388,8 +407,8 @@ test('adds a field from an entity + handle, then renames it', async ({ page }) =
   await page.click('#mode-build');
 
   await page.click('[data-add-entity="node"]');
-  await page.fill('[data-new-bundle]', 'story');
-  await page.fill('[data-new-label]', 'Story');
+  await slFill(page, '[data-new-bundle]', 'story');
+  await slFill(page, '[data-new-label]', 'Story');
   await page.click('[data-create-entity]');
 
   await expect(page.locator('.handle--right')).toBeVisible();
@@ -400,9 +419,7 @@ test('adds a field from an entity + handle, then renames it', async ({ page }) =
   await expect(page.locator('#inspector [data-new]')).toHaveCount(0);
 
   // Renaming the machine name in the inspector re-ids the field.
-  const nameInput = page.locator('#inspector input[title^="Rename the machine name"]');
-  await nameInput.fill('field_summary');
-  await nameInput.blur();
+  await slFill(page, '#inspector sl-input[title^="Rename the machine name"]', 'field_summary');
 
   expect(await page.evaluate(() => window.__nexus.cy.getElementById('field:node.story:field_summary').length)).toBe(1);
 });
@@ -412,17 +429,21 @@ test('reuses an existing field via autocomplete from the field tool', async ({ p
   await waitForGraph(page);
   await page.click('#mode-build');
 
+  // A fresh entity with no "body" field yet.
+  await page.click('[data-add-entity="node"]');
+  await slFill(page, '[data-new-bundle]', 'promo');
+  await page.click('[data-create-entity]');
+
   await page.click('#add-field');
-  await page.selectOption('[data-new-entity]', 'node.program');
+  await slSelect(page, '[data-new-entity]', 'node.promo');
   expect(await page.evaluate(() => document.getElementById('existing-field-list').options.length)).toBeGreaterThan(0);
 
+  // Typing an existing field name reuses its definition (type text_with_summary).
   await page.fill('[data-new-name]', 'body');
-  const prefill = await page.evaluate(() => {
-    const insp = document.querySelector('[data-new="field"]');
-    return { label: insp.querySelector('[data-new-label]').value, type: insp.querySelector('[data-new-fieldtype]').value };
-  });
-  expect(prefill.label).toBe('Body');
-  expect(prefill.type).toBe('text_with_summary');
+  await page.click('[data-create-field]');
+
+  await page.waitForFunction(() => window.__nexus.cy.getElementById('field:node.promo:body').length === 1);
+  expect(await page.evaluate(() => window.__nexus.cy.getElementById('field:node.promo:body').data('fieldType'))).toBe('text_with_summary');
 });
 
 test('renames an entity machine name and migrates its fields', async ({ page }) => {
@@ -436,14 +457,11 @@ test('renames an entity machine name and migrates its fields', async ({ page }) 
   await page.click('.handle--right');
   await page.waitForFunction(() => window.__nexus.cy.nodes('[group="field"]').length === 1);
 
-  const nameInput = page.locator('#inspector input[title^="Rename the machine name"]');
   await page.evaluate(() => {
     const cy = window.__nexus.cy;
     cy.getElementById(cy.nodes('[group="entity"]').first().id()).emit('tap');
   });
-  const entityName = page.locator('#inspector input[title^="Rename the machine name"]');
-  await entityName.fill('article');
-  await entityName.blur();
+  await slFill(page, '#inspector sl-input[title^="Rename the machine name"]', 'article');
 
   expect(await page.evaluate(() => window.__nexus.cy.getElementById('node.article').length)).toBe(1);
   expect(await page.evaluate((id) => window.__nexus.cy.getElementById(id).length, oldId)).toBe(0);
@@ -469,7 +487,7 @@ test('adds an entity from a palette type button', async ({ page }) => {
 
   await page.click('[data-add-entity="media"]');
   await expect(page.locator('[data-new="entity"]')).toBeVisible();
-  await page.fill('[data-new-bundle]', 'photo');
+  await slFill(page, '[data-new-bundle]', 'photo');
   await page.click('[data-create-entity]');
 
   expect(await page.evaluate(() => window.__nexus.cy.getElementById('media.photo').length)).toBe(1);
@@ -482,7 +500,7 @@ test('adds a field from the toolbar field tool', async ({ page }) => {
 
   await page.click('#add-field');
   await expect(page.locator('[data-new="field"]')).toBeVisible();
-  await page.selectOption('[data-new-entity]', 'node.program');
+  await slSelect(page, '[data-new-entity]', 'node.program');
   await page.fill('[data-new-name]', 'field_tagline');
   await page.click('[data-create-field]');
 

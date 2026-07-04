@@ -1,12 +1,13 @@
 /**
- * Build-mode inspector, as Preact controlled components.
+ * Build-mode inspector, as Preact components over Shoelace controls.
  *
- * Each form binds inputs to state and writes straight through to the live
- * Cytoscape node; structural changes (create/delete/reference) go through the
- * builder controller published on the store. There is no innerHTML and no
- * delegated data-* protocol - selecting, editing and creating are ordinary
- * component interactions. A few data-* hooks remain purely so tests (and
- * scripts) can target inputs by intent.
+ * Inputs are sl-input, selects are sl-select, the required flag is an sl-switch
+ * and references are sl-tags - all theming with light/dark automatically. Edits
+ * write straight through to the live Cytoscape node; structural changes go
+ * through the builder controller on the store. The new-field "machine name"
+ * stays a native input because it needs a datalist for the reuse autocomplete,
+ * which Shoelace 2.x has no equivalent for. A few data-* hooks remain so tests
+ * and scripts can target controls by intent.
  */
 
 import { h } from 'preact';
@@ -28,18 +29,18 @@ function cy() {
 }
 
 function rawIcon(name, size) {
-  return html`<span dangerouslySetInnerHTML=${{ __html: icon(name, size) }}></span>`;
+  return html`<span slot="prefix" dangerouslySetInnerHTML=${{ __html: icon(name, size) }}></span>`;
 }
 
 function Row({ label, children }) {
   return html`<div class="insp__row"><label>${label}</label>${children}</div>`;
 }
 
-function optionList(list) {
+function slOptions(list) {
   return list.map((item) => {
     const value = Array.isArray(item) ? item[0] : item;
     const label = Array.isArray(item) ? item[1] : item;
-    return html`<option value=${value}>${label}</option>`;
+    return html`<sl-option value=${value}>${label}</sl-option>`;
   });
 }
 
@@ -73,15 +74,15 @@ export function EntityForm({ id }) {
     <div class="insp">
       <p class="insp__title">Entity</p>
       <${Row} label="Label">
-        <input class="insp__input" value=${label} onInput=${(e) => { setLabel(e.target.value); node.data('label', e.target.value); bump(); }} />
+        <sl-input size="small" value=${label} onsl-input=${(e) => { setLabel(e.target.value); node.data('label', e.target.value); bump(); }}></sl-input>
       <//>
       <${Row} label="Type"><span class="insp__ro">${TYPE_LABELS[node.data('entityType')] || node.data('entityType')}</span><//>
-      <${Row} label="Machine name"><input class="insp__input" value=${node.data('bundle')} title="Rename the machine name (updates its fields and references)" onChange=${(e) => getBuilder().renameEntity(id, e.target.value)} /><//>
+      <${Row} label="Machine name"><sl-input size="small" value=${node.data('bundle')} title="Rename the machine name (updates its fields and references)" onsl-change=${(e) => getBuilder().renameEntity(id, e.target.value)}></sl-input><//>
       <div class="insp__section">
-        <div class="insp__sectionhead"><span>Fields</span><button class="insp__btn" data-add-field title="Add a field to this entity" onClick=${() => openInspector({ kind: 'new-field', entityId: id })}>${rawIcon('plus')}Field</button></div>
+        <div class="insp__sectionhead"><span>Fields</span><sl-button size="small" data-add-field title="Add a field to this entity" onClick=${() => openInspector({ kind: 'new-field', entityId: id })}>${rawIcon('plus')}Field</sl-button></div>
         ${fields.length ? fields : html`<p class="insp__empty">No fields yet.</p>`}
       </div>
-      <button class="insp__delete" title="Delete this entity and its fields" onClick=${() => getBuilder().deleteNode(id)}>${rawIcon('trash')}Delete entity</button>
+      <sl-button size="small" variant="danger" outline class="insp__delete" title="Delete this entity and its fields" onClick=${() => getBuilder().deleteNode(id)}>${rawIcon('trash')}Delete entity</sl-button>
     </div>`;
 }
 
@@ -100,34 +101,28 @@ export function FieldForm({ id }) {
 
   const isRef = REFERENCE_TYPES.includes(s.fieldType);
   const targets = refTargets(id);
-  const entityOptions = cy().nodes('[group="entity"]').map((e) => html`<option value=${e.id()}>${e.data('label')}</option>`);
+  const entityOptions = cy().nodes('[group="entity"]').map((e) => html`<sl-option value=${e.id()}>${e.data('label')}</sl-option>`);
 
   return html`
     <div class="insp">
       <p class="insp__title">Field</p>
-      <${Row} label="Label"><input class="insp__input" value=${s.label} onInput=${(e) => set('label', e.target.value)} /><//>
-      <${Row} label="Machine name"><input class="insp__input" value=${node.data('name')} title="Rename the machine name (updates its references)" onChange=${(e) => getBuilder().renameField(id, e.target.value)} /><//>
-      <${Row} label="Type"><select class="insp__input" value=${s.fieldType} onChange=${(e) => set('fieldType', e.target.value)}>${optionList(FIELD_TYPES)}</select><//>
+      <${Row} label="Label"><sl-input size="small" value=${s.label} onsl-input=${(e) => set('label', e.target.value)}></sl-input><//>
+      <${Row} label="Machine name"><sl-input size="small" value=${node.data('name')} title="Rename the machine name (updates its references)" onsl-change=${(e) => getBuilder().renameField(id, e.target.value)}></sl-input><//>
+      <${Row} label="Type"><sl-select size="small" value=${s.fieldType} onsl-change=${(e) => set('fieldType', e.target.value)}>${slOptions(FIELD_TYPES)}</sl-select><//>
       <${Row} label="Cardinality">
-        <select class="insp__input" value=${s.kind} onChange=${(e) => set('kind', e.target.value)}>
-          <option value="single">Single</option><option value="multi">Multiple</option>
-        </select>
+        <sl-select size="small" value=${s.kind} onsl-change=${(e) => set('kind', e.target.value)}>
+          <sl-option value="single">Single</sl-option><sl-option value="multi">Multiple</sl-option>
+        </sl-select>
       <//>
-      <${Row} label="Required"><input type="checkbox" checked=${s.required} onChange=${(e) => set('required', e.target.checked)} /><//>
+      <${Row} label="Required"><sl-switch size="small" checked=${s.required} onsl-change=${(e) => set('required', e.target.checked)}></sl-switch><//>
       ${isRef && html`
         <div class="insp__section">
           <div class="insp__sectionhead"><span>References</span></div>
           ${targets.length ? targets.map((t) => html`
-            <div class="insp__ref">${cy().getElementById(t).data('label') || t}
-              <button class="insp__x" aria-label="Remove" title="Remove this reference" onClick=${() => { getBuilder().removeReference(id, t); bump(); }}>${rawIcon('x', 14)}</button>
-            </div>`) : html`<p class="insp__empty">No references.</p>`}
-          <div class="insp__row">
-            <select class="insp__input" value="" onChange=${(e) => { if (e.target.value) { getBuilder().addReference(id, e.target.value); e.target.value = ''; bump(); } }}>
-              <option value="">Add target…</option>${entityOptions}
-            </select>
-          </div>
+            <sl-tag class="insp__reftag" size="small" removable onsl-remove=${() => { getBuilder().removeReference(id, t); bump(); }}>${cy().getElementById(t).data('label') || t}</sl-tag>`) : html`<p class="insp__empty">No references.</p>`}
+          <sl-select size="small" placeholder="Add target…" value="" onsl-change=${(e) => { if (e.target.value) { getBuilder().addReference(id, e.target.value); e.target.value = ''; bump(); } }}>${entityOptions}</sl-select>
         </div>`}
-      <button class="insp__delete" title="Delete this field" onClick=${() => getBuilder().deleteNode(id)}>${rawIcon('trash')}Delete field</button>
+      <sl-button size="small" variant="danger" outline class="insp__delete" title="Delete this field" onClick=${() => getBuilder().deleteNode(id)}>${rawIcon('trash')}Delete field</sl-button>
     </div>`;
 }
 
@@ -144,10 +139,10 @@ export function AnnotationForm({ id }) {
   return html`
     <div class="insp">
       <p class="insp__title">Annotation</p>
-      <${Row} label="Label"><input class="insp__input" value=${s.label} onInput=${(e) => set('label', e.target.value)} /><//>
-      <${Row} label="Kind"><select class="insp__input" value=${s.kind} onChange=${(e) => set('kind', e.target.value)}>${optionList(ANNOTATION_KINDS)}</select><//>
-      <${Row} label="Method"><input class="insp__input" value=${s.method} placeholder="POST, GET…" onInput=${(e) => set('method', e.target.value)} /><//>
-      <button class="insp__delete" title="Delete this annotation" onClick=${() => getBuilder().deleteNode(id)}>${rawIcon('trash')}Delete</button>
+      <${Row} label="Label"><sl-input size="small" value=${s.label} onsl-input=${(e) => set('label', e.target.value)}></sl-input><//>
+      <${Row} label="Kind"><sl-select size="small" value=${s.kind} onsl-change=${(e) => set('kind', e.target.value)}>${slOptions(ANNOTATION_KINDS)}</sl-select><//>
+      <${Row} label="Method"><sl-input size="small" value=${s.method} placeholder="POST, GET…" onsl-input=${(e) => set('method', e.target.value)}></sl-input><//>
+      <sl-button size="small" variant="danger" outline class="insp__delete" title="Delete this annotation" onClick=${() => getBuilder().deleteNode(id)}>${rawIcon('trash')}Delete</sl-button>
     </div>`;
 }
 
@@ -157,10 +152,10 @@ export function NewEntityForm({ entityType }) {
   return html`
     <div class="insp" data-new="entity">
       <p class="insp__title">New ${TYPE_LABELS[form.entityType] || 'entity'}</p>
-      <${Row} label="Type"><select class="insp__input" value=${form.entityType} onChange=${(e) => setForm((p) => ({ ...p, entityType: e.target.value }))}>${optionList(ENTITY_TYPES)}</select><//>
-      <${Row} label="Machine name"><input class="insp__input" data-new-bundle value=${form.bundle} placeholder="e.g. article" onInput=${(e) => setForm((p) => ({ ...p, bundle: e.target.value }))} /><//>
-      <${Row} label="Label"><input class="insp__input" data-new-label value=${form.label} placeholder="e.g. Article" onInput=${(e) => setForm((p) => ({ ...p, label: e.target.value }))} /><//>
-      <button class="insp__create" data-create-entity title="Create the entity" onClick=${() => getBuilder().createEntity(form)}>${rawIcon('check')}Create entity</button>
+      <${Row} label="Type"><sl-select size="small" value=${form.entityType} onsl-change=${(e) => setForm((p) => ({ ...p, entityType: e.target.value }))}>${slOptions(ENTITY_TYPES)}</sl-select><//>
+      <${Row} label="Machine name"><sl-input size="small" data-new-bundle value=${form.bundle} placeholder="e.g. article" onsl-input=${(e) => setForm((p) => ({ ...p, bundle: e.target.value }))}></sl-input><//>
+      <${Row} label="Label"><sl-input size="small" data-new-label value=${form.label} placeholder="e.g. Article" onsl-input=${(e) => setForm((p) => ({ ...p, label: e.target.value }))}></sl-input><//>
+      <sl-button size="small" variant="primary" class="insp__create" data-create-entity title="Create the entity" onClick=${() => getBuilder().createEntity(form)}>${rawIcon('check')}Create entity</sl-button>
     </div>`;
 }
 
@@ -176,26 +171,26 @@ export function NewFieldForm({ entityId, side }) {
 
   const resolvedEntity = entityId || form.entity;
   const isRef = REFERENCE_TYPES.includes(form.fieldType);
-  const entityOptions = entities.map((e) => html`<option value=${e.id()}>${e.data('label')}</option>`);
+  const entityOptions = entities.map((e) => html`<sl-option value=${e.id()}>${e.data('label')}</sl-option>`);
 
   return html`
     <div class="insp" data-new="field" data-side=${side || ''}>
       <p class="insp__title">New field</p>
-      ${!entityId ? html`<${Row} label="On entity"><select class="insp__input" data-new-entity value=${form.entity} onChange=${(e) => setForm((p) => ({ ...p, entity: e.target.value }))}>${entityOptions}</select><//>` : null}
+      ${!entityId ? html`<${Row} label="On entity"><sl-select size="small" data-new-entity value=${form.entity} onsl-change=${(e) => setForm((p) => ({ ...p, entity: e.target.value }))}>${entityOptions}</sl-select><//>` : null}
       <${Row} label="Machine name">
         <input class="insp__input" data-new-name list="existing-field-list" value=${form.name} placeholder="e.g. field_body" autocomplete="off" onInput=${(e) => onName(e.target.value)} />
       <//>
       <datalist id="existing-field-list">${existing.map((f) => html`<option value=${f.name}>${f.label} (${f.fieldType})</option>`)}</datalist>
-      <${Row} label="Label"><input class="insp__input" data-new-label value=${form.label} placeholder="e.g. Body" onInput=${(e) => setForm((p) => ({ ...p, label: e.target.value }))} /><//>
-      <${Row} label="Type"><select class="insp__input" data-new-fieldtype value=${form.fieldType} onChange=${(e) => setForm((p) => ({ ...p, fieldType: e.target.value }))}>${optionList(FIELD_TYPES)}</select><//>
+      <${Row} label="Label"><sl-input size="small" data-new-label value=${form.label} placeholder="e.g. Body" onsl-input=${(e) => setForm((p) => ({ ...p, label: e.target.value }))}></sl-input><//>
+      <${Row} label="Type"><sl-select size="small" data-new-fieldtype value=${form.fieldType} onsl-change=${(e) => setForm((p) => ({ ...p, fieldType: e.target.value }))}>${slOptions(FIELD_TYPES)}</sl-select><//>
       <${Row} label="Cardinality">
-        <select class="insp__input" value=${form.kind} onChange=${(e) => setForm((p) => ({ ...p, kind: e.target.value }))}>
-          <option value="single">Single</option><option value="multi">Multiple</option>
-        </select>
+        <sl-select size="small" value=${form.kind} onsl-change=${(e) => setForm((p) => ({ ...p, kind: e.target.value }))}>
+          <sl-option value="single">Single</sl-option><sl-option value="multi">Multiple</sl-option>
+        </sl-select>
       <//>
-      ${isRef ? html`<${Row} label="Link to"><select class="insp__input" data-new-target value=${form.target} onChange=${(e) => setForm((p) => ({ ...p, target: e.target.value }))}><option value="">(no reference)</option>${entityOptions}</select><//>` : null}
+      ${isRef ? html`<${Row} label="Link to"><sl-select size="small" data-new-target value=${form.target} placeholder="(no reference)" clearable onsl-change=${(e) => setForm((p) => ({ ...p, target: e.target.value }))}>${entityOptions}</sl-select><//>` : null}
       <p class="insp__hint">Type a new name, or pick an existing field to reuse its definition.</p>
-      <button class="insp__create" data-create-field title="Create the field" onClick=${() => getBuilder().createField(resolvedEntity, form, side)}>${rawIcon('check')}Create field</button>
+      <sl-button size="small" variant="primary" class="insp__create" data-create-field title="Create the field" onClick=${() => getBuilder().createField(resolvedEntity, form, side)}>${rawIcon('check')}Create field</sl-button>
     </div>`;
 }
 
@@ -205,10 +200,10 @@ export function NewAnnotationForm() {
   return html`
     <div class="insp" data-new="annotation">
       <p class="insp__title">New annotation</p>
-      <${Row} label="Kind"><select class="insp__input" value=${form.kind} onChange=${(e) => setForm((p) => ({ ...p, kind: e.target.value }))}>${optionList(ANNOTATION_KINDS)}</select><//>
-      <${Row} label="Label"><input class="insp__input" data-new-label value=${form.label} placeholder="e.g. Sync API" onInput=${(e) => setForm((p) => ({ ...p, label: e.target.value }))} /><//>
-      <${Row} label="Method"><input class="insp__input" value=${form.method} placeholder="POST, GET…" onInput=${(e) => setForm((p) => ({ ...p, method: e.target.value }))} /><//>
-      <button class="insp__create" data-create-annotation title="Create the annotation" onClick=${() => getBuilder().createAnnotation(form)}>${rawIcon('check')}Create annotation</button>
+      <${Row} label="Kind"><sl-select size="small" value=${form.kind} onsl-change=${(e) => setForm((p) => ({ ...p, kind: e.target.value }))}>${slOptions(ANNOTATION_KINDS)}</sl-select><//>
+      <${Row} label="Label"><sl-input size="small" data-new-label value=${form.label} placeholder="e.g. Sync API" onsl-input=${(e) => setForm((p) => ({ ...p, label: e.target.value }))}></sl-input><//>
+      <${Row} label="Method"><sl-input size="small" value=${form.method} placeholder="POST, GET…" onsl-input=${(e) => setForm((p) => ({ ...p, method: e.target.value }))}></sl-input><//>
+      <sl-button size="small" variant="primary" class="insp__create" data-create-annotation title="Create the annotation" onClick=${() => getBuilder().createAnnotation(form)}>${rawIcon('check')}Create annotation</sl-button>
     </div>`;
 }
 

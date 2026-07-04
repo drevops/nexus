@@ -329,9 +329,8 @@ function SettingsBody({ ctx }) {
       <div id="color-settings" class="color-settings">
         ${ctx.allTypes().map((t) => html`
           <div class="color-row">
-            <span class="filters__swatch" style=${{ background: ctx.colorFor(t) }}></span>
             <span class="color-row__label">${ctx.typeLabel(t)}</span>
-            <input type="color" data-color=${t} value=${ctx.colorFor(t)} onInput=${(e) => ctx.applyColor(t, e.target.value)} />
+            <sl-color-picker data-color=${t} value=${ctx.colorFor(t)} format="hex" size="small" no-format-toggle hoist onsl-input=${(e) => ctx.applyColor(t, e.target.value)}></sl-color-picker>
           </div>`)}
       </div>
       <button id="settings-reset" class="settings-reset" type="button" title="Restore the default entity colours" onClick=${() => ctx.resetColors()}>${rawIcon('rotate-ccw')}Reset to defaults</button>

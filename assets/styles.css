@@ -1000,6 +1000,32 @@ sl-button-group.toolbar__group {
   color: var(--muted);
 }
 
+/* Shoelace inspector controls: full width in the form grid, and neutralise the
+   old native-button host boxes (styling now lives on ::part). */
+.insp sl-input,
+.insp sl-select {
+  width: 100%;
+}
+
+.insp sl-button.insp__create,
+.insp sl-button.insp__delete {
+  display: block;
+  width: 100%;
+  margin-top: 0.7rem;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.insp sl-button.insp__create::part(base),
+.insp sl-button.insp__delete::part(base) {
+  width: 100%;
+}
+
+.insp__reftag {
+  margin: 0 0.3rem 0.35rem 0;
+}
+
 .insp__input {
   flex: 1 1 auto;
   min-width: 0;
