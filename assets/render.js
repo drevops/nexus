@@ -9,6 +9,7 @@
  */
 
 import { setController, bump, closeInspector } from './store.js';
+import { icon } from './icons.js';
 
 const DEFAULT_COLORS = {
   node: '#d9e2f3',
@@ -352,6 +353,8 @@ function buildController(model, options = {}) {
 
   const captionsEl = $('captions');
   let captionMap = {};
+  const notesEl = $('notes');
+  let noteMap = {};
 
   function entityTypeOf(entityId) {
     return entityById[entityId] ? entityById[entityId].entityType : null;
@@ -422,6 +425,7 @@ function buildController(model, options = {}) {
     }).run();
     cy.fit(undefined, 45);
     positionCaptions();
+    positionNotes();
   }
 
   function applyLayout(layout) {
@@ -435,6 +439,7 @@ function buildController(model, options = {}) {
     });
     cy.fit(undefined, 50);
     positionCaptions();
+    positionNotes();
   }
 
   function focusEntity(id) {
@@ -549,6 +554,70 @@ function buildController(model, options = {}) {
     });
   }
 
+  // A note badge sits at an entity's top-right corner; hovering or clicking it
+  // reveals the note text in the shared tooltip.
+  function rebuildNotes() {
+    notesEl.innerHTML = '';
+    noteMap = {};
+    cy.nodes('[group="entity"]').forEach((node) => {
+      if (!(node.data('note') || '').trim()) {
+        return;
+      }
+      const badge = document.createElement('button');
+      badge.type = 'button';
+      badge.className = 'note-badge';
+      badge.setAttribute('aria-label', 'Show note');
+      badge.innerHTML = icon('sticky-note');
+      badge.addEventListener('mouseenter', () => showNote(node.id()));
+      badge.addEventListener('mouseleave', hideNote);
+      badge.addEventListener('click', (evt) => { evt.stopPropagation(); showNote(node.id()); });
+      notesEl.appendChild(badge);
+      noteMap[node.id()] = badge;
+    });
+    positionNotes();
+  }
+
+  function positionNotes() {
+    const zoom = cy.zoom();
+    const tooSmall = zoom < 0.35;
+    const size = Math.max(15, 17 * zoom);
+    Object.keys(noteMap).forEach((id) => {
+      const node = cy.getElementById(id);
+      const badge = noteMap[id];
+      if (node.empty() || node.hasClass('hidden') || node.hasClass('faded') || tooSmall) {
+        badge.style.display = 'none';
+        return;
+      }
+      const bb = node.renderedBoundingBox();
+      badge.style.display = 'flex';
+      badge.style.width = size + 'px';
+      badge.style.height = size + 'px';
+      badge.style.left = (bb.x2 - size * 0.55) + 'px';
+      badge.style.top = (bb.y1 - size * 0.45) + 'px';
+    });
+  }
+
+  function showNote(id) {
+    const badge = noteMap[id];
+    const node = cy.getElementById(id);
+    if (!badge || node.empty()) {
+      return;
+    }
+    const tooltip = $('tooltip');
+    const wrap = document.createElement('div');
+    wrap.className = 'tooltip__note';
+    wrap.textContent = node.data('note') || '';
+    tooltip.innerHTML = '';
+    tooltip.appendChild(wrap);
+    tooltip.hidden = false;
+    tooltip.style.left = (parseFloat(badge.style.left) + parseFloat(badge.style.width) + 6) + 'px';
+    tooltip.style.top = (parseFloat(badge.style.top) + parseFloat(badge.style.height)) + 'px';
+  }
+
+  function hideNote() {
+    $('tooltip').hidden = true;
+  }
+
   function applyColor(type, color) {
     activeColors[type] = color;
     cy.nodes('[group="entity"][entityType="' + type + '"]').style('background-color', color);
@@ -640,13 +709,14 @@ function buildController(model, options = {}) {
     requestAnimationFrame(() => {
       captionRaf = false;
       positionCaptions();
+      positionNotes();
     });
   });
   let captionRaf = false;
 
   const controller = {
     cy,
-    refresh, runLayout, applyLayout, clearFocus, focusEntity, focusField, rebuildCaptions, searchHighlight, applyColor, resetColors,
+    refresh, runLayout, applyLayout, clearFocus, focusEntity, focusField, rebuildCaptions, rebuildNotes, searchHighlight, applyColor, resetColors,
     applyTheme: () => { cy.style(style()); positionCaptions(); },
     typeLabel,
     colorFor: entityColor,
@@ -746,6 +816,7 @@ export function render(model, options = {}) {
     ctx.refresh(true);
   }
   ctx.rebuildCaptions();
+  ctx.rebuildNotes();
   window.__nexus = { cy: ctx.cy, model, colors: { ...activeColors }, applyTheme: ctx.applyTheme };
   return ctx;
 }

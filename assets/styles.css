@@ -409,6 +409,36 @@ sl-button#zoom-level::part(base) {
   display: none;
 }
 
+/* Note badges: the layer ignores the pointer so the canvas stays draggable, but
+   each badge opts back in so it can be hovered and clicked. */
+.notes {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.note-badge {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: #fff;
+  background: var(--accent);
+  border: 1.5px solid var(--panel-bg);
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.note-badge svg.icon {
+  width: 62%;
+  height: 62%;
+}
+
 .handle {
   position: absolute;
   transform: translate(-50%, -50%);
@@ -814,6 +844,11 @@ sl-button#zoom-level::part(base) {
   display: none;
 }
 
+.tooltip__note {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 /* Settings panel body. */
 #settings .panel__body {
   padding: 0.9rem 1rem;
@@ -1013,8 +1048,20 @@ sl-button[hidden] {
 /* Shoelace inspector controls: full width in the form grid, and neutralise the
    old native-button host boxes (styling now lives on ::part). */
 .insp sl-input,
-.insp sl-select {
+.insp sl-select,
+.insp__note sl-textarea {
   width: 100%;
+}
+
+.insp__note {
+  margin-bottom: 0.6rem;
+}
+
+.insp__note > label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-size: 0.8rem;
+  color: var(--muted);
 }
 
 .insp sl-button.insp__create,

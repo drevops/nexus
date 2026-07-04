@@ -687,3 +687,36 @@ test('scales node captions with the canvas zoom', async ({ page }) => {
   expect(small).toBeGreaterThan(0);
   expect(large).toBeGreaterThan(small * 2);
 });
+
+test('adds an entity note that badges the canvas and reveals on hover', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+  await page.click('#mode-build');
+
+  await page.evaluate(() => window.__nexus.cy.getElementById('node.episode').emit('tap'));
+  await expect(page.locator('#inspector sl-textarea[data-note]')).toBeVisible();
+
+  await page.locator('#inspector sl-textarea[data-note]').evaluate((el) => {
+    el.value = 'Core content type.';
+    el.dispatchEvent(new Event('sl-input', { bubbles: true }));
+  });
+
+  await expect(page.locator('#notes .note-badge')).toHaveCount(1);
+
+  const reveal = await page.evaluate(() => {
+    document.querySelector('#notes .note-badge').dispatchEvent(new Event('mouseenter'));
+    const tt = document.getElementById('tooltip');
+    return { hidden: tt.hidden, text: tt.textContent };
+  });
+  expect(reveal.hidden).toBe(false);
+  expect(reveal.text).toContain('Core content type.');
+
+  // The note round-trips through a saved document.
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.click('#doc-save'),
+  ]);
+  const doc = JSON.parse(readFileSync(await download.path(), 'utf8'));
+  const episode = doc.entities.find((e) => e.entityType === 'node' && e.bundle === 'episode');
+  expect(episode.note).toBe('Core content type.');
+});

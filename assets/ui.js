@@ -218,6 +218,7 @@ class CanvasHost extends Component {
     return html`
       <div id="cy" class="cy"></div>
       <div id="captions" class="captions" aria-hidden="true"></div>
+      <div id="notes" class="notes"></div>
       <div id="handles" class="handles" hidden></div>
       <div id="tooltip" class="tooltip" role="tooltip" hidden></div>`;
   }

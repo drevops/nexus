@@ -68,6 +68,7 @@ function refTargets(fieldId) {
 export function EntityForm({ id }) {
   const node = cy().getElementById(id);
   const [label, setLabel] = useState(node.data('label'));
+  const [note, setNote] = useState(node.data('note') || '');
 
   const fields = fieldsOf(id).map((f) => html`
     <button class="insp__field" title="Inspect this field" onClick=${() => openInspector({ kind: 'field', id: f.id() })}>${f.data('label')} <code>${f.data('name')}</code></button>`);
@@ -80,6 +81,10 @@ export function EntityForm({ id }) {
       <//>
       <${Row} label="Type"><span class="insp__ro">${TYPE_LABELS[node.data('entityType')] || node.data('entityType')}</span><//>
       <${Row} label="Machine name"><sl-input size="small" data-machine-name value=${node.data('bundle')} title="Rename the machine name (updates its fields and references)" onsl-change=${(e) => getBuilder().renameEntity(id, e.target.value)}></sl-input><//>
+      <div class="insp__note">
+        <label>Note</label>
+        <sl-textarea size="small" data-note rows="3" resize="auto" placeholder="Add a note - shows as a badge on the canvas…" value=${note} onsl-input=${(e) => { setNote(e.target.value); node.data('note', e.target.value); getController().rebuildNotes(); bump(); }}></sl-textarea>
+      </div>
       <div class="insp__section">
         <div class="insp__sectionhead"><span>Fields</span><sl-button size="small" data-add-field title="Add a field to this entity" onClick=${() => openInspector({ kind: 'new-field', entityId: id })}>${rawIcon('plus')}Field</sl-button></div>
         ${fields.length ? fields : html`<p class="insp__empty">No fields yet.</p>`}

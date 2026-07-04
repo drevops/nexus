@@ -54,6 +54,7 @@ export class Entity {
     this.entityType = entityType;
     this.bundle = bundle;
     this.label = label;
+    this.note = '';
     this.fields = [];
   }
 
@@ -134,6 +135,7 @@ export class ContentModel {
           entityType: entity.entityType,
           bundle: entity.bundle,
           label: entity.label,
+          note: entity.note || '',
         },
       });
 

@@ -68,7 +68,7 @@ export function documentFromGraph(cy, meta = {}) {
       };
     });
 
-    return { entityType: node.data('entityType'), bundle: node.data('bundle'), label: node.data('label'), fields: fields };
+    return { entityType: node.data('entityType'), bundle: node.data('bundle'), label: node.data('label'), note: node.data('note') || '', fields: fields };
   });
 
   const nodes = cy.nodes('[group="annotation"]').map((node) => {
@@ -105,6 +105,7 @@ export function documentToModel(doc) {
 
   doc.entities.forEach((entity) => {
     const built = new Entity(entity.entityType, entity.bundle, entity.label != null ? entity.label : entity.bundle);
+    built.note = entity.note || '';
     (entity.fields || []).forEach((field) => {
       built.addField(new Field(
         field.name,
