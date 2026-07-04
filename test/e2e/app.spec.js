@@ -233,6 +233,50 @@ test('connects a reference by dragging on the canvas', async ({ page }) => {
   expect(await page.evaluate(() => window.__nexus.cy.getElementById('ref:field:node.a:field_ref>node.b').length)).toBe(1);
 });
 
+test('adds a field from an entity + handle', async ({ page }) => {
+  await page.click('#new-btn');
+  await page.click('#mode-build');
+
+  await page.click('#add-entity');
+  await page.fill('[data-new-bundle]', 'story');
+  await page.fill('[data-new-label]', 'Story');
+  await page.click('[data-create-entity]');
+
+  await expect(page.locator('.handle--right')).toBeVisible();
+  await page.click('.handle--right');
+
+  await expect(page.locator('[data-new="field"][data-side="right"]')).toBeVisible();
+  await page.fill('[data-new-name]', 'field_summary');
+  await page.click('[data-create-field]');
+
+  expect(await page.evaluate(() => window.__nexus.cy.getElementById('field:node.story:field_summary').length)).toBe(1);
+});
+
+test('reuses an existing field via autocomplete', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+  await page.click('#mode-build');
+
+  await page.evaluate(() => {
+    const cy = window.__nexus.cy;
+    const node = cy.getElementById('node.program');
+    cy.zoom(1.2);
+    cy.center(node);
+    node.emit('tap');
+  });
+
+  await page.click('.handle--bottom');
+  expect(await page.evaluate(() => document.getElementById('existing-field-list').options.length)).toBeGreaterThan(0);
+
+  await page.fill('[data-new-name]', 'body');
+  const prefill = await page.evaluate(() => {
+    const insp = document.querySelector('[data-new="field"]');
+    return { label: insp.querySelector('[data-new-label]').value, type: insp.querySelector('[data-new-fieldtype]').value };
+  });
+  expect(prefill.label).toBe('Body');
+  expect(prefill.type).toBe('text_with_summary');
+});
+
 test('exports the diagram as PNG', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);

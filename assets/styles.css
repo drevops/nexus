@@ -176,6 +176,44 @@ body {
   line-height: 1.2;
 }
 
+/* Build-mode "+" field handles around a selected entity. */
+.handles {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.handles[hidden] {
+  display: none;
+}
+
+.handle {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+  color: #fff;
+  background: var(--accent);
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.handle:hover {
+  background: #1b6cc9;
+}
+
 /* Floating panels: entities, table, inspector, settings, legend. */
 .panel {
   position: absolute;
@@ -748,6 +786,12 @@ body {
 .insp__empty {
   margin: 0.2rem 0;
   font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.insp__hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.72rem;
   color: var(--muted);
 }
 

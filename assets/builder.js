@@ -35,6 +35,8 @@ let buildMode = false;
 let connectMode = false;
 let connectSource = null;
 let counter = 0;
+let handleEntityId = null;
+let handleRaf = false;
 
 function $(id) {
   return document.getElementById(id);
@@ -75,6 +77,12 @@ export function initBuilder() {
   $('inspector-body').addEventListener('input', onInspectorInput);
   $('inspector-body').addEventListener('change', onInspectorInput);
   $('inspector-body').addEventListener('click', onInspectorClick);
+  $('handles').addEventListener('click', (evt) => {
+    const btn = evt.target.closest('.handle');
+    if (btn && handleEntityId) {
+      openFieldForm(handleEntityId, btn.getAttribute('data-side'));
+    }
+  });
 }
 
 export function attachBuilder(instance) {
@@ -88,6 +96,16 @@ export function attachBuilder(instance) {
   cy.on('tapstart', 'node[group="field"]', (evt) => startConnect(evt.target, evt.position));
   cy.on('tapdrag', (evt) => moveGhost(evt.position));
   cy.on('tapend', (evt) => endConnect(evt.target));
+  cy.on('render', () => {
+    if (handleRaf) {
+      return;
+    }
+    handleRaf = true;
+    requestAnimationFrame(() => {
+      handleRaf = false;
+      positionHandles();
+    });
+  });
   applyMode();
 }
 
@@ -185,11 +203,63 @@ function cleanupGhost() {
 
 function closeInspector() {
   closePanel('inspector');
+  hideHandles();
 }
 
 function openInspector(html) {
   $('inspector-body').innerHTML = html;
   openPanel('inspector');
+}
+
+/* Field handles: four "+" buttons around a selected entity. --------------- */
+
+const HANDLE_SIDES = ['top', 'right', 'bottom', 'left'];
+
+function showHandles(entityId) {
+  handleEntityId = entityId;
+  const overlay = $('handles');
+  overlay.innerHTML = HANDLE_SIDES.map((side) => {
+    return '<button class="handle handle--' + side + '" type="button" data-side="' + side + '" title="Add a field">+</button>';
+  }).join('');
+  positionHandles();
+}
+
+function hideHandles() {
+  handleEntityId = null;
+  const overlay = $('handles');
+  if (overlay) {
+    overlay.innerHTML = '';
+    overlay.hidden = true;
+  }
+}
+
+function positionHandles() {
+  const overlay = $('handles');
+  if (!overlay || !handleEntityId || !cy) {
+    return;
+  }
+  const node = cy.getElementById(handleEntityId);
+  if (node.empty() || node.hasClass('hidden') || !buildMode) {
+    overlay.hidden = true;
+    return;
+  }
+
+  overlay.hidden = false;
+  const pos = node.renderedPosition();
+  const halfW = node.renderedOuterWidth() / 2;
+  const halfH = node.renderedOuterHeight() / 2;
+  const gap = 15;
+  const place = {
+    top: [pos.x, pos.y - halfH - gap],
+    right: [pos.x + halfW + gap, pos.y],
+    bottom: [pos.x, pos.y + halfH + gap],
+    left: [pos.x - halfW - gap, pos.y],
+  };
+  Array.prototype.forEach.call(overlay.children, (btn) => {
+    const point = place[btn.getAttribute('data-side')];
+    btn.style.left = point[0] + 'px';
+    btn.style.top = point[1] + 'px';
+  });
 }
 
 /* Selection ------------------------------------------------------------- */
@@ -202,12 +272,15 @@ function selectNode(id) {
   const group = node.data('group');
   if (group === 'entity') {
     openInspector(entityForm(node));
+    showHandles(id);
   }
   else if (group === 'field') {
     openInspector(fieldForm(node));
+    hideHandles();
   }
   else if (group === 'annotation') {
     openInspector(annotationForm(node));
+    hideHandles();
   }
 }
 
@@ -291,12 +364,29 @@ function openAnnotationForm() {
     '<button class="insp__create" data-create-annotation>Create annotation</button></div>');
 }
 
-function openFieldForm(entityId) {
-  openInspector('<div class="insp" data-new="field" data-entity="' + esc(entityId) + '">' + header('New field') +
-    row('Machine name', '<input class="insp__input" data-new-name placeholder="e.g. field_body">') +
+function existingFields() {
+  const byName = {};
+  cy.nodes('[group="field"]').forEach((f) => {
+    const name = f.data('name');
+    if (name && !byName[name]) {
+      byName[name] = { name: name, label: f.data('label'), fieldType: f.data('fieldType'), kind: f.data('kind') };
+    }
+  });
+  return Object.keys(byName).sort().map((name) => byName[name]);
+}
+
+function openFieldForm(entityId, side) {
+  const datalist = '<datalist id="existing-field-list">' + existingFields().map((f) => {
+    return '<option value="' + esc(f.name) + '">' + esc(f.label) + ' (' + esc(f.fieldType) + ')</option>';
+  }).join('') + '</datalist>';
+
+  openInspector('<div class="insp" data-new="field" data-entity="' + esc(entityId) + '"' + (side ? ' data-side="' + esc(side) + '"' : '') + '>' + header('New field') +
+    row('Machine name', '<input class="insp__input" data-new-name list="existing-field-list" placeholder="e.g. field_body" autocomplete="off">') +
     row('Label', '<input class="insp__input" data-new-label placeholder="e.g. Body">') +
     row('Type', '<select class="insp__input" data-new-fieldtype>' + options(FIELD_TYPES) + '</select>') +
     row('Cardinality', '<select class="insp__input" data-new-kind><option value="single">Single</option><option value="multi">Multiple</option></select>') +
+    datalist +
+    '<p class="insp__hint">Type a new name, or pick an existing field to reuse its definition.</p>' +
     '<button class="insp__create" data-create-field>Create field</button></div>');
 }
 
@@ -311,13 +401,28 @@ function addEntity(entityType, bundle, label) {
   return id;
 }
 
-function addField(entityId, name, label, fieldType, kind) {
+function fieldPlacement(anchor, side) {
+  const distance = 200;
+  const spread = (counter++ % 6) * 44 - 110;
+  if (side === 'left') {
+    return { x: anchor.x - distance, y: anchor.y + spread };
+  }
+  if (side === 'top') {
+    return { x: anchor.x + spread, y: anchor.y - distance };
+  }
+  if (side === 'bottom') {
+    return { x: anchor.x + spread, y: anchor.y + distance };
+  }
+  return { x: anchor.x + distance, y: anchor.y + spread };
+}
+
+function addField(entityId, name, label, fieldType, kind, side) {
   const fieldId = 'field:' + entityId + ':' + name;
   if (cy.getElementById(fieldId).nonempty()) {
     return null;
   }
   const anchor = cy.getElementById(entityId).position();
-  cy.add({ group: 'nodes', data: { id: fieldId, group: 'field', name: name, label: label, fieldType: fieldType, kind: kind, required: false, entity: entityId }, position: { x: anchor.x + 200, y: anchor.y + (counter++ % 6) * 44 - 110 } });
+  cy.add({ group: 'nodes', data: { id: fieldId, group: 'field', name: name, label: label, fieldType: fieldType, kind: kind, required: false, entity: entityId }, position: fieldPlacement(anchor, side) });
   cy.add({ group: 'edges', data: { id: 'has:' + fieldId, source: entityId, target: fieldId, group: 'has' } });
   return fieldId;
 }
@@ -369,6 +474,16 @@ function onInspectorInput(evt) {
     }
     if (edit === 'fieldType') {
       selectNode(id);
+    }
+    return;
+  }
+
+  if (evt.target.hasAttribute('data-new-name')) {
+    const match = existingFields().find((f) => f.name === evt.target.value);
+    if (match) {
+      insp.querySelector('[data-new-label]').value = match.label;
+      insp.querySelector('[data-new-fieldtype]').value = match.fieldType;
+      insp.querySelector('[data-new-kind]').value = match.kind;
     }
     return;
   }
@@ -426,6 +541,7 @@ function createEntity(insp) {
 
 function createField(insp) {
   const entityId = insp.getAttribute('data-entity');
+  const side = insp.getAttribute('data-side');
   const name = slug(insp.querySelector('[data-new-name]').value);
   const label = insp.querySelector('[data-new-label]').value.trim() || name;
   const fieldType = insp.querySelector('[data-new-fieldtype]').value;
@@ -433,7 +549,7 @@ function createField(insp) {
   if (!name) {
     return;
   }
-  const id = addField(entityId, name, label, fieldType, kind);
+  const id = addField(entityId, name, label, fieldType, kind, side);
   if (id) {
     selectNode(id);
   }
