@@ -119,6 +119,37 @@ body {
   background: var(--panel-bg);
 }
 
+/* Shoelace toolbar buttons: neutralise the generic host box (that box lives on
+   ::part(base) instead) and drive the active toggle state through the part. */
+sl-button.toolbar__button {
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+sl-button.toolbar__button::part(base) {
+  font-size: 0.82rem;
+}
+
+sl-button.toolbar__button.is-active::part(base) {
+  background: var(--sl-color-primary-600);
+  border-color: var(--sl-color-primary-600);
+  color: #fff;
+}
+
+sl-button.toolbar__button svg.icon {
+  margin-inline-end: 0.35rem;
+}
+
+sl-button.toolbar__button--icon svg.icon {
+  margin: 0;
+}
+
+sl-button-group.toolbar__group {
+  background: none;
+  padding: 0;
+}
+
 .loader {
   position: fixed;
   inset: 0;

@@ -26,47 +26,45 @@
     <input id="diagram-title" class="toolbar__title" type="text" placeholder="Untitled content model" title="Rename this content model - used for the saved file names" aria-label="Content model name">
   </div>
   <div class="toolbar__actions">
-    <div class="toolbar__group">
-      <button id="mode-view" class="toolbar__button is-active" type="button" data-icon="eye" title="View mode: explore the diagram">View</button>
-      <button id="mode-build" class="toolbar__button" type="button" data-icon="pencil" title="Edit mode: add and change entities and fields">Edit</button>
-    </div>
+    <sl-button-group class="toolbar__group" label="Mode">
+      <sl-button id="mode-view" class="toolbar__button is-active" size="small" data-icon="eye" title="View mode: explore the diagram">View</sl-button>
+      <sl-button id="mode-build" class="toolbar__button" size="small" data-icon="pencil" title="Edit mode: add and change entities and fields">Edit</sl-button>
+    </sl-button-group>
     <div class="toolbar__search-wrap">
       <span class="toolbar__search-icon" data-icon="search"></span>
       <input id="search" class="toolbar__search" type="search" placeholder="Find entity…" autocomplete="off" title="Find and highlight an entity by name">
     </div>
-    <div class="toolbar__group">
-      <button id="zoom-out" class="toolbar__button toolbar__button--icon" type="button" data-icon="zoom-out" title="Zoom out"></button>
-      <button id="zoom-in" class="toolbar__button toolbar__button--icon" type="button" data-icon="zoom-in" title="Zoom in"></button>
-      <button id="fit" class="toolbar__button" type="button" data-icon="fit" title="Fit the whole diagram in view">Fit</button>
-      <button id="reset" class="toolbar__button" type="button" data-icon="rotate-ccw" title="Clear focus and fit the diagram">Reset</button>
-      <button id="tidy" class="toolbar__button" type="button" data-icon="tidy" title="Tidy up: re-run the layout to arrange everything neatly">Tidy</button>
-    </div>
-    <div class="toolbar__group">
-      <button id="fields-toggle" class="toolbar__button" type="button" data-icon="list" title="Show or hide entity fields">Fields</button>
-      <button id="proxy-toggle" class="toolbar__button" type="button" data-icon="layers" title="Show references as semi-opaque proxies instead of long edges">Proxies</button>
-      <button id="machine-names" class="toolbar__button" type="button" data-icon="code" title="Show or hide machine names under each symbol">Machine names</button>
-      <button id="layout-toggle" class="toolbar__button" type="button" data-icon="layout" title="Switch layout direction (left-right / top-bottom)"><span class="layout-label">Layout: LR</span></button>
-    </div>
-    <div class="toolbar__group">
-      <button id="entities-toggle" class="toolbar__button" type="button" data-icon="box" title="Toggle the entities panel">Entities</button>
-      <button id="table-toggle" class="toolbar__button" type="button" data-icon="table" title="Toggle the fields table panel">Table</button>
-      <button id="legend-toggle" class="toolbar__button" type="button" data-icon="info" title="Toggle the legend panel">Legend</button>
-      <button id="settings-toggle" class="toolbar__button" type="button" data-icon="sliders" title="Toggle the settings panel">Settings</button>
-    </div>
-    <div class="toolbar__group">
-      <button id="doc-new" class="toolbar__button" type="button" data-icon="file-plus" title="Start a new empty content model">New</button>
-      <button id="doc-import" class="toolbar__button" type="button" data-icon="folder-input" title="Import a Drupal config folder">Import</button>
-      <label class="toolbar__button" for="doc-open" data-icon="folder-open" title="Open a saved Nexus diagram (.nexus.json)">Open</label>
+    <sl-button-group class="toolbar__group" label="View controls">
+      <sl-button id="zoom-out" class="toolbar__button toolbar__button--icon" size="small" data-icon="zoom-out" title="Zoom out"></sl-button>
+      <sl-button id="zoom-in" class="toolbar__button toolbar__button--icon" size="small" data-icon="zoom-in" title="Zoom in"></sl-button>
+      <sl-button id="fit" class="toolbar__button" size="small" data-icon="fit" title="Fit the whole diagram in view">Fit</sl-button>
+      <sl-button id="reset" class="toolbar__button" size="small" data-icon="rotate-ccw" title="Clear focus and fit the diagram">Reset</sl-button>
+      <sl-button id="tidy" class="toolbar__button" size="small" data-icon="tidy" title="Tidy up: re-run the layout to arrange everything neatly">Tidy</sl-button>
+    </sl-button-group>
+    <sl-button-group class="toolbar__group" label="Display">
+      <sl-button id="fields-toggle" class="toolbar__button" size="small" data-icon="list" title="Show or hide entity fields">Fields</sl-button>
+      <sl-button id="proxy-toggle" class="toolbar__button" size="small" data-icon="layers" title="Show references as semi-opaque proxies instead of long edges">Proxies</sl-button>
+      <sl-button id="machine-names" class="toolbar__button" size="small" data-icon="code" title="Show or hide machine names under each symbol">Machine names</sl-button>
+      <sl-button id="layout-toggle" class="toolbar__button" size="small" data-icon="layout" title="Switch layout direction (left-right / top-bottom)"><span class="layout-label">Layout: LR</span></sl-button>
+    </sl-button-group>
+    <sl-button-group class="toolbar__group" label="Panels">
+      <sl-button id="entities-toggle" class="toolbar__button" size="small" data-icon="box" title="Toggle the entities panel">Entities</sl-button>
+      <sl-button id="table-toggle" class="toolbar__button" size="small" data-icon="table" title="Toggle the fields table panel">Table</sl-button>
+      <sl-button id="legend-toggle" class="toolbar__button" size="small" data-icon="info" title="Toggle the legend panel">Legend</sl-button>
+      <sl-button id="settings-toggle" class="toolbar__button" size="small" data-icon="sliders" title="Toggle the settings panel">Settings</sl-button>
+    </sl-button-group>
+    <sl-button-group class="toolbar__group" label="Document">
+      <sl-button id="doc-new" class="toolbar__button" size="small" data-icon="file-plus" title="Start a new empty content model">New</sl-button>
+      <sl-button id="doc-import" class="toolbar__button" size="small" data-icon="folder-input" title="Import a Drupal config folder">Import</sl-button>
+      <sl-button id="doc-open-btn" class="toolbar__button" size="small" data-icon="folder-open" title="Open a saved Nexus diagram (.nexus.json)">Open</sl-button>
       <input id="doc-open" class="visually-hidden" type="file" accept=".json,application/json">
-      <button id="doc-save" class="toolbar__button" type="button" data-icon="save" title="Save this diagram as a Nexus document (.nexus.json)">Save</button>
-    </div>
-    <div class="toolbar__group">
-      <button id="export-png" class="toolbar__button" type="button" data-icon="image" title="Export the diagram as a PNG image">PNG</button>
-      <button id="export-svg" class="toolbar__button" type="button" data-icon="file-down" title="Export the diagram as a scalable SVG">SVG</button>
-    </div>
-    <div class="toolbar__group">
-      <button id="theme-toggle" class="toolbar__button toolbar__button--icon" type="button" data-icon="moon" title="Toggle light / dark theme" aria-label="Toggle theme"></button>
-    </div>
+      <sl-button id="doc-save" class="toolbar__button" size="small" data-icon="save" title="Save this diagram as a Nexus document (.nexus.json)">Save</sl-button>
+    </sl-button-group>
+    <sl-button-group class="toolbar__group" label="Export">
+      <sl-button id="export-png" class="toolbar__button" size="small" data-icon="image" title="Export the diagram as a PNG image">PNG</sl-button>
+      <sl-button id="export-svg" class="toolbar__button" size="small" data-icon="file-down" title="Export the diagram as a scalable SVG">SVG</sl-button>
+    </sl-button-group>
+    <sl-button id="theme-toggle" class="toolbar__button toolbar__button--icon" size="small" data-icon="moon" title="Toggle light / dark theme" aria-label="Toggle theme"></sl-button>
   </div>
   </div>
   <div id="build-tools" class="toolbar__palette" hidden>

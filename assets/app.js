@@ -285,6 +285,7 @@ function newDocument() {
 function wireDocument() {
   $('doc-save').addEventListener('click', saveDocument);
   $('doc-new').addEventListener('click', newDocument);
+  $('doc-open-btn').addEventListener('click', () => $('doc-open').click());
   $('doc-open').addEventListener('change', (evt) => {
     if (evt.target.files[0]) {
       openDocument(evt.target.files[0]);
