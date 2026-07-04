@@ -632,6 +632,44 @@ test('labels each entity with its type in the caption layer', async ({ page }) =
   expect(types).toContain('Content type');
 });
 
+test('does not grow a docked panel past its content height', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+
+  await page.click('#legend .panel__pin');
+  await expect(page.locator('#legend.is-docked')).toBeVisible();
+
+  const grip = page.locator('#legend .panel__vresize');
+  const box = await grip.boundingBox();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2, box.y + 800, { steps: 8 });
+  await page.mouse.up();
+
+  // Growth is capped at the content height, so the body shows everything with
+  // little empty space - not 800px of blank panel.
+  const emptySpace = await page.evaluate(() => {
+    const body = document.querySelector('#legend .panel__body');
+    return body.clientHeight - body.scrollHeight;
+  });
+  expect(emptySpace).toBeLessThan(40);
+});
+
+test('labels reference edges with cardinality in the default proxy view', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+
+  // Proxies are on by default, so the visible reference lines are proxy edges;
+  // they must still carry the cardinality label.
+  const result = await page.evaluate(() => {
+    const pe = window.__nexus.cy.edges('[group="proxyedge"]');
+    return { total: pe.length, withCardinality: pe.filter((e) => !!e.data('cardinality')).length, hasMulti: pe.some((e) => e.data('cardinality') === '1..n') };
+  });
+  expect(result.total).toBeGreaterThan(0);
+  expect(result.withCardinality).toBe(result.total);
+  expect(result.hasMulti).toBe(true);
+});
+
 test('scales node captions with the canvas zoom', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);

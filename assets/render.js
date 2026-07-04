@@ -124,7 +124,7 @@ function buildElements(model) {
     const target = entityById[e.data.target];
     const proxyId = 'proxy:' + e.data.source + '>' + e.data.target;
     proxyNodes.push({ data: { id: proxyId, group: 'proxy', target: e.data.target, entity: field ? field.entity : '', entityType: target ? target.entityType : '', label: target ? target.label : e.data.target } });
-    proxyEdges.push({ data: { id: 'pe:' + e.data.source + '>' + e.data.target, source: e.data.source, target: proxyId, group: 'proxyedge' } });
+    proxyEdges.push({ data: { id: 'pe:' + e.data.source + '>' + e.data.target, source: e.data.source, target: proxyId, group: 'proxyedge', cardinality: e.data.cardinality } });
   });
   Object.keys(refsByField).forEach((fieldId) => {
     const field = fieldById[fieldId];
@@ -259,7 +259,7 @@ function style() {
       style: { 'line-color': tc.refEdge, 'target-arrow-shape': 'triangle', 'target-arrow-color': tc.refEdge, 'arrow-scale': 0.9 },
     },
     {
-      selector: 'edge[group="ref"]',
+      selector: 'edge[group="ref"], edge[group="proxyedge"]',
       style: {
         label: 'data(cardinality)',
         'font-size': 9,
@@ -407,11 +407,14 @@ function buildController(model, options = {}) {
   }
 
   function runLayout() {
+    // Machine-name captions hang ~16px below each node (outside its Cytoscape
+    // box), so widen the in-rank gap to fit them when they are shown.
+    const captionRoom = showMachineNames ? 18 : 0;
     cy.elements(':visible').layout({
       name: 'dagre',
       rankDir: rankDir,
       ranker: 'network-simplex',
-      nodeSep: fieldsMode ? 10 : 34,
+      nodeSep: (fieldsMode ? 10 : 34) + captionRoom,
       edgeSep: 6,
       rankSep: fieldsMode ? 62 : 120,
       nodeDimensionsIncludeLabels: true,

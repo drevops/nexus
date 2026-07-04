@@ -146,9 +146,13 @@ function startResize(side, evt) {
 function startVResize(id, evt, el) {
   const startY = evt.clientY;
   const startH = el.getBoundingClientRect().height;
+  const body = el.querySelector('.panel__body');
+  // Growing past the point where all content fits (no scrollbar) only adds empty
+  // space, so cap there. chrome is the panel minus the body's visible area.
+  const contentMax = body ? (startH - body.clientHeight) + body.scrollHeight : Infinity;
 
   function move(e) {
-    setPanelHeight(id, startH + (e.clientY - startY));
+    setPanelHeight(id, Math.min(startH + (e.clientY - startY), contentMax));
   }
 
   function up() {
