@@ -32,7 +32,14 @@ function isYaml(name) {
 }
 
 function showError(message) {
-  $('landing-error').textContent = message || '';
+  const alert = $('landing-error');
+  if (message) {
+    $('landing-error-text').textContent = message;
+    alert.open = true;
+  }
+  else {
+    alert.open = false;
+  }
 }
 
 function showLoader(message) {
@@ -206,7 +213,9 @@ function wireLanding() {
     }
   });
 
+  $('folder-btn').addEventListener('click', () => $('folder-input').click());
   $('folder-input').addEventListener('change', (evt) => loadFromFiles(evt.target.files));
+  $('landing-open').addEventListener('click', () => $('doc-open').click());
   $('example-btn').addEventListener('click', loadExample);
   $('new-btn').addEventListener('click', newDocument);
   $('doc-import').addEventListener('click', showLanding);

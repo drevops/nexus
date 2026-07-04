@@ -16,6 +16,15 @@
   }
 }
 </script>
+<script type="module">
+  // Pin Shoelace's base path to an absolute URL before the autoloader runs.
+  // Left unset, it derives a document-relative path from this folder's own
+  // script src and builds a bare import specifier that never resolves, so no
+  // component upgrades. Deriving from document.baseURI keeps it correct whether
+  // the app is served from the domain root or a project subpath (GitHub Pages).
+  import { setBasePath } from './assets/vendor/shoelace/utilities/base-path.js';
+  setBasePath(new URL('assets/vendor/shoelace', document.baseURI).href);
+</script>
 <script type="module" src="assets/vendor/shoelace/shoelace-autoloader.js"></script>
 </head>
 <body>
@@ -88,27 +97,27 @@
 <main class="stage" id="stage-root"></main>
 
 <div id="landing" class="landing">
-  <div class="landing__card">
+  <sl-card class="landing__card">
     <p class="landing__logo">Nexus</p>
     <p class="landing__tag">Draw a Drupal site's content model from its exported configuration - entirely in your browser.</p>
     <div id="dropzone" class="dropzone">
       <p class="dropzone__hint">Drop a Drupal <strong>config</strong> folder here, or choose one. Your files never leave this page.</p>
       <div class="landing__actions">
-        <label class="btn btn--primary" for="folder-input" data-icon="folder-input" title="Import a Drupal config folder">Choose a config folder</label>
+        <sl-button id="folder-btn" variant="primary" data-icon="folder-input" title="Import a Drupal config folder">Choose a config folder</sl-button>
         <input id="folder-input" class="visually-hidden" type="file" webkitdirectory directory multiple>
-        <button id="example-btn" class="btn" type="button" data-icon="sparkles" title="Load the bundled example content model">Try the example</button>
-        <label class="btn" for="doc-open" data-icon="folder-open" title="Open a saved Nexus diagram (.nexus.json)">Open a saved diagram</label>
-        <button id="new-btn" class="btn" type="button" data-icon="file-plus" title="Start a new empty content model">Start from scratch</button>
-        <button id="landing-cancel" class="btn" type="button" data-icon="x" title="Close this screen and keep the current diagram" hidden>Cancel</button>
+        <sl-button id="example-btn" data-icon="sparkles" title="Load the bundled example content model">Try the example</sl-button>
+        <sl-button id="landing-open" data-icon="folder-open" title="Open a saved Nexus diagram (.nexus.json)">Open a saved diagram</sl-button>
+        <sl-button id="new-btn" data-icon="file-plus" title="Start a new empty content model">Start from scratch</sl-button>
+        <sl-button id="landing-cancel" data-icon="x" title="Close this screen and keep the current diagram" hidden>Cancel</sl-button>
       </div>
     </div>
-    <p id="landing-error" class="landing__error" role="alert"></p>
+    <sl-alert id="landing-error" class="landing__error" variant="danger" closable><span id="landing-error-text"></span></sl-alert>
     <p class="landing__note">Point at an exported config sync directory (the folder of <code>*.yml</code> files) or a module's <code>config/install</code>. Add an <code>annotations.yml</code> to overlay events, APIs and callbacks.</p>
-  </div>
+  </sl-card>
 </div>
 
 <div id="loader" class="loader" hidden>
-  <div class="loader__spinner"></div>
+  <sl-spinner class="loader__spinner"></sl-spinner>
   <p id="loader-text" class="loader__text">Loading…</p>
 </div>
 

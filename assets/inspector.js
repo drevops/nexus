@@ -77,7 +77,7 @@ export function EntityForm({ id }) {
         <sl-input size="small" value=${label} onsl-input=${(e) => { setLabel(e.target.value); node.data('label', e.target.value); bump(); }}></sl-input>
       <//>
       <${Row} label="Type"><span class="insp__ro">${TYPE_LABELS[node.data('entityType')] || node.data('entityType')}</span><//>
-      <${Row} label="Machine name"><sl-input size="small" value=${node.data('bundle')} title="Rename the machine name (updates its fields and references)" onsl-change=${(e) => getBuilder().renameEntity(id, e.target.value)}></sl-input><//>
+      <${Row} label="Machine name"><sl-input size="small" data-machine-name value=${node.data('bundle')} title="Rename the machine name (updates its fields and references)" onsl-change=${(e) => getBuilder().renameEntity(id, e.target.value)}></sl-input><//>
       <div class="insp__section">
         <div class="insp__sectionhead"><span>Fields</span><sl-button size="small" data-add-field title="Add a field to this entity" onClick=${() => openInspector({ kind: 'new-field', entityId: id })}>${rawIcon('plus')}Field</sl-button></div>
         ${fields.length ? fields : html`<p class="insp__empty">No fields yet.</p>`}
@@ -107,7 +107,7 @@ export function FieldForm({ id }) {
     <div class="insp">
       <p class="insp__title">Field</p>
       <${Row} label="Label"><sl-input size="small" value=${s.label} onsl-input=${(e) => set('label', e.target.value)}></sl-input><//>
-      <${Row} label="Machine name"><sl-input size="small" value=${node.data('name')} title="Rename the machine name (updates its references)" onsl-change=${(e) => getBuilder().renameField(id, e.target.value)}></sl-input><//>
+      <${Row} label="Machine name"><sl-input size="small" data-machine-name value=${node.data('name')} title="Rename the machine name (updates its references)" onsl-change=${(e) => getBuilder().renameField(id, e.target.value)}></sl-input><//>
       <${Row} label="Type"><sl-select size="small" value=${s.fieldType} onsl-change=${(e) => set('fieldType', e.target.value)}>${slOptions(FIELD_TYPES)}</sl-select><//>
       <${Row} label="Cardinality">
         <sl-select size="small" value=${s.kind} onsl-change=${(e) => set('kind', e.target.value)}>

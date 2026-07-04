@@ -332,6 +332,13 @@ test('renders toolbar icons from the icon set', async ({ page }) => {
   await expect(page.locator('#doc-save svg.icon')).toBeVisible();
   await expect(page.locator('#layout-toggle svg.icon')).toBeVisible();
   await expect(page.locator('#layout-toggle .layout-label')).toHaveText('Layout: LR');
+  await expect(page.locator('#folder-btn svg.icon')).toBeVisible();
+});
+
+test('surfaces an alert when a diagram fails to open', async ({ page }) => {
+  await page.setInputFiles('#doc-open', { name: 'broken.nexus.json', mimeType: 'application/json', buffer: Buffer.from('{ not valid json') });
+  await expect(page.locator('#landing-error')).toHaveAttribute('open', '');
+  await expect(page.locator('#landing-error-text')).toContainText('Could not open');
 });
 
 test('builds a new entity and field and saves them', async ({ page }) => {
@@ -419,7 +426,7 @@ test('adds a field from an entity + handle, then renames it', async ({ page }) =
   await expect(page.locator('#inspector [data-new]')).toHaveCount(0);
 
   // Renaming the machine name in the inspector re-ids the field.
-  await slFill(page, '#inspector sl-input[title^="Rename the machine name"]', 'field_summary');
+  await slFill(page, '#inspector sl-input[data-machine-name]', 'field_summary');
 
   expect(await page.evaluate(() => window.__nexus.cy.getElementById('field:node.story:field_summary').length)).toBe(1);
 });
@@ -461,7 +468,7 @@ test('renames an entity machine name and migrates its fields', async ({ page }) 
     const cy = window.__nexus.cy;
     cy.getElementById(cy.nodes('[group="entity"]').first().id()).emit('tap');
   });
-  await slFill(page, '#inspector sl-input[title^="Rename the machine name"]', 'article');
+  await slFill(page, '#inspector sl-input[data-machine-name]', 'article');
 
   expect(await page.evaluate(() => window.__nexus.cy.getElementById('node.article').length)).toBe(1);
   expect(await page.evaluate((id) => window.__nexus.cy.getElementById(id).length, oldId)).toBe(0);

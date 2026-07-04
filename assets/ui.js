@@ -333,7 +333,7 @@ function SettingsBody({ ctx }) {
             <sl-color-picker data-color=${t} value=${ctx.colorFor(t)} format="hex" size="small" no-format-toggle hoist onsl-input=${(e) => ctx.applyColor(t, e.target.value)}></sl-color-picker>
           </div>`)}
       </div>
-      <button id="settings-reset" class="settings-reset" type="button" title="Restore the default entity colours" onClick=${() => ctx.resetColors()}>${rawIcon('rotate-ccw')}Reset to defaults</button>
+      <sl-button id="settings-reset" class="settings-reset" size="small" title="Restore the default entity colours" onClick=${() => ctx.resetColors()}>${rawIcon('rotate-ccw')}Reset to defaults</sl-button>
       <p class="panel__note">Saved to this browser and reused across diagrams.</p>
     </div>`;
 }
