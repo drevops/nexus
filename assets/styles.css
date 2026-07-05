@@ -190,6 +190,15 @@ sl-button-group.toolbar__group {
   font-size: 0.9rem;
 }
 
+.about p {
+  margin: 0 0 0.85rem;
+  line-height: 1.55;
+}
+
+.about p:last-child {
+  margin-bottom: 0;
+}
+
 .toolbar__actions {
   display: flex;
   align-items: center;

@@ -381,6 +381,12 @@ function initStatusbar() {
   });
 }
 
+function initAbout() {
+  const dialog = $('about-dialog');
+  $('about-toggle').addEventListener('click', () => dialog.show());
+  $('about-close').addEventListener('click', () => dialog.hide());
+}
+
 wireLanding();
 wireExports();
 wireDocument();
@@ -389,3 +395,4 @@ initBuilder();
 initIcons();
 initTheme();
 initStatusbar();
+initAbout();

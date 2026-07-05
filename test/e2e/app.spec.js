@@ -845,11 +845,32 @@ test('renders a non-empty glyph for every toolbar and status bar icon', async ({
   expect(empty).toEqual([]);
 });
 
-test('keeps settings, theme and github on the brand line', async ({ page }) => {
+test('keeps about, settings, theme and github on the brand line', async ({ page }) => {
+  await expect(page.locator('.toolbar__brandline #about-toggle')).toHaveCount(1);
   await expect(page.locator('.toolbar__brandline #settings-toggle')).toHaveCount(1);
   await expect(page.locator('.toolbar__brandline #github-link')).toHaveCount(1);
   await expect(page.locator('.toolbar__tools #settings-toggle')).toHaveCount(0);
   await expect(page.locator('#settings-toggle')).toHaveText('');
+
+  // About sits before the GitHub link in the brand line.
+  const order = await page.evaluate(() => [...document.querySelectorAll('.toolbar__brandline [id]')].map((el) => el.id));
+  expect(order.indexOf('about-toggle')).toBeLessThan(order.indexOf('github-link'));
+});
+
+test('opens an about dialog explaining browser-only storage and the licence', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+  await expect(page.locator('#about-dialog')).not.toBeVisible();
+
+  await page.click('#about-toggle');
+  await expect(page.locator('#about-dialog')).toBeVisible();
+  await expect(page.locator('#about-dialog')).toContainText('content-model visual builder');
+  await expect(page.locator('#about-dialog')).toContainText('there is no backend');
+  await expect(page.locator('#about-dialog')).toContainText('without warranty');
+  await expect(page.locator('#about-license')).toHaveAttribute('href', 'https://github.com/drevops/nexus/blob/main/LICENSE');
+
+  await page.click('#about-close');
+  await expect(page.locator('#about-dialog')).not.toBeVisible();
 });
 
 test('draws entity types with their symbols and a dynamic legend', async ({ page }) => {

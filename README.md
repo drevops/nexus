@@ -27,13 +27,13 @@ Nexus is a static web app. Drop a Drupal **exported configuration folder** onto 
 - **Faithful visual language.** Bundles as coloured boxes; single / multi / system / calculated fields and Event / API / Callback annotations, each with their own shape (see the [legend](#the-visual-language)).
 - **Browsable.** Starts as an entity-only overview, with tools to reveal fields, filter by entity type, focus an entity, read a searchable field table and toggle machine names.
 - **Customisable & remembered.** Recolour entity types from a picker; choices persist in your browser and apply to every diagram you open.
-- **Export.** Save the whole canvas as **PNG** or **PDF**, client-side.
+- **Export.** Save the whole canvas as **PNG** or **SVG**, or the field table as **CSV** - all client-side.
 
 ## Usage
 
 1. Open the app (or run it locally - see [Development](#development)).
 2. **Choose a config folder** or drag one onto the drop zone - the folder of `*.yml` files exported from a Drupal site (its config sync directory), or a module's `config/install`. Or click **Try the example**.
-3. Explore with the toolbar; export as PNG or PDF.
+3. Explore with the toolbar; export as PNG, SVG or CSV.
 
 Add an `annotations.yml` file to the folder to overlay [events, APIs and callbacks](#annotation-overlay).
 
@@ -63,7 +63,7 @@ The diagram opens as an entity-only overview. The toolbar offers:
 - **Entities** - an index with per-type filters and field counts; click a bundle to focus it or open its fields.
 - **Table** - a searchable table of all fields (or one entity's) with type, cardinality, requiredness and references.
 - **Legend** and **Settings** (entity colours).
-- **PNG / PDF** - export the whole canvas.
+- **PNG / SVG / CSV** - export the whole canvas or the field table.
 
 ## Annotation overlay
 
@@ -100,11 +100,19 @@ npm test          # both
 
 - `assets/{parser,model,base-fields,annotations}.js` - the offline model builder (pure, dependency-free).
 - `assets/render.js` - the Cytoscape renderer.
-- `assets/{app,export}.js` - folder loading and PNG/PDF export.
+- `assets/{app,export}.js` - folder loading and PNG/SVG/CSV export.
 
 ## Deployment
 
 Pushing to `main` builds and deploys the static site to GitHub Pages via `.github/workflows/pages.yml` (assembles `index.html`, `assets/` and `examples/`). Enable Pages once with the "GitHub Actions" source.
 
+## Privacy
+
+Nexus has no backend. The configuration you import and the diagrams you build stay in your browser (in memory and `localStorage`) and are never uploaded to or processed by any server. Nexus is provided as is, without warranty of any kind, and the authors accept no responsibility or liability for any data you load into it or create with it.
+
+## License
+
+Nexus is free software, released under the [GNU General Public License, version 2](LICENSE) (GPL-2.0-or-later), matching the Drupal ecosystem it serves.
+
 ---
-_Rendered with [Cytoscape.js](https://js.cytoscape.org/) and [Dagre](https://github.com/dagrejs/dagre); YAML via [js-yaml](https://github.com/nodeca/js-yaml); PDF via [jsPDF](https://github.com/parallax/jsPDF)._
+_Rendered with [Cytoscape.js](https://js.cytoscape.org/) and [Dagre](https://github.com/dagrejs/dagre); YAML via [js-yaml](https://github.com/nodeca/js-yaml)._

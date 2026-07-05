@@ -35,6 +35,7 @@
       <sl-input id="diagram-title" class="toolbar__title" size="small" placeholder="Untitled content model" title="Rename this content model - used for the saved file names" aria-label="Content model name"></sl-input>
     </div>
     <div class="toolbar__actions">
+      <sl-button id="about-toggle" class="toolbar__button toolbar__button--icon" size="small" data-icon="help-circle" title="About Nexus" aria-label="About Nexus"></sl-button>
       <sl-button id="github-link" class="toolbar__button toolbar__button--icon" size="small" href="https://github.com/drevops/nexus" target="_blank" rel="noopener" data-icon="github" title="View Nexus on GitHub" aria-label="View Nexus on GitHub"></sl-button>
       <sl-button id="theme-toggle" class="toolbar__button toolbar__button--icon" size="small" data-icon="moon" title="Toggle light / dark theme" aria-label="Toggle theme"></sl-button>
       <sl-button id="settings-toggle" class="toolbar__button toolbar__button--icon" size="small" data-icon="sliders" title="Toggle the settings panel" aria-label="Settings"></sl-button>
@@ -142,6 +143,16 @@
   <sl-spinner class="loader__spinner"></sl-spinner>
   <p id="loader-text" class="loader__text">Loading…</p>
 </div>
+
+<sl-dialog id="about-dialog" class="about-dialog" label="About Nexus">
+  <div class="about">
+    <p>Nexus is a content-model visual builder. It reconstructs a Drupal site's content model - its entities, fields and relationships - from exported configuration, and lets you explore and edit it as an interactive diagram.</p>
+    <p>Everything runs in your browser. Any configuration you import and every diagram you build are kept in this browser only - there is no backend, and nothing you provide is uploaded to or processed by any server.</p>
+    <p>Nexus is provided as is, without warranty of any kind. The authors accept no responsibility or liability for any data you load into it or create with it - even though that data never leaves your browser.</p>
+    <p>Nexus is free software, released under the <a id="about-license" href="https://github.com/drevops/nexus/blob/main/LICENSE" target="_blank" rel="noopener">GNU General Public License (GPL-2.0)</a>.</p>
+  </div>
+  <sl-button id="about-close" slot="footer" variant="primary">Close</sl-button>
+</sl-dialog>
 
 <script src="assets/vendor/cytoscape.min.js"></script>
 <script src="assets/vendor/dagre.min.js"></script>
