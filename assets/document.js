@@ -93,6 +93,8 @@ export function documentFromGraph(cy, meta = {}) {
     nexus: 1,
     title: meta.title || 'Content model',
     colors: meta.colors || {},
+    symbols: meta.symbols || {},
+    customTypes: meta.customTypes || [],
     entities: entities,
     annotations: { nodes: nodes, edges: edges },
     layout: layout,
@@ -134,6 +136,8 @@ export function documentToModel(doc) {
     modelData: model.toArray(),
     layout: (doc.layout && typeof doc.layout === 'object') ? doc.layout : {},
     colors: (doc.colors && typeof doc.colors === 'object') ? doc.colors : {},
+    symbols: (doc.symbols && typeof doc.symbols === 'object') ? doc.symbols : {},
+    customTypes: Array.isArray(doc.customTypes) ? doc.customTypes : [],
     ui: (doc.ui && typeof doc.ui === 'object') ? doc.ui : null,
   };
 }

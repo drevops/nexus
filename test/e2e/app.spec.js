@@ -856,3 +856,21 @@ test('changes a type symbol and adds a custom entity type in settings', async ({
   await page.click('#settings [data-add-type]');
   await expect(page.locator('#settings [data-type-row="widget"]')).toHaveCount(1);
 });
+
+test('round-trips custom types and symbols through a saved document', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+  await page.click('#settings-toggle');
+
+  await slSelect(page, '#settings sl-select[data-symbol="node"]', 'diamond');
+  await page.fill('#settings [data-new-type]', 'gadget');
+  await page.click('#settings [data-add-type]');
+
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.click('#doc-save'),
+  ]);
+  const doc = JSON.parse(readFileSync(await download.path(), 'utf8'));
+  expect(doc.symbols.node).toBe('diamond');
+  expect(doc.customTypes.some((t) => t.type === 'gadget')).toBe(true);
+});

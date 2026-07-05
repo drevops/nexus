@@ -294,7 +294,8 @@ function saveDocument() {
     return;
   }
   const title = $('diagram-title').value || 'Content model';
-  const doc = documentFromGraph(window.__nexus.cy, { title: title, colors: window.__nexus.colors || {}, ui: exportLayout() });
+  const types = getController() ? getController().typeSettings() : { colors: window.__nexus.colors || {} };
+  const doc = documentFromGraph(window.__nexus.cy, { title: title, colors: types.colors, symbols: types.symbols, customTypes: types.customTypes, ui: exportLayout() });
   downloadJson(doc, slug(title) + '.nexus.json');
 }
 
@@ -303,7 +304,7 @@ async function openDocument(file) {
   showLoader('Opening diagram…');
   try {
     const doc = documentToModel(JSON.parse(await file.text()));
-    showDiagram(doc.modelData, { layout: doc.layout, colors: doc.colors });
+    showDiagram(doc.modelData, { layout: doc.layout, colors: doc.colors, symbols: doc.symbols, customTypes: doc.customTypes });
     if (doc.ui) {
       importLayout(doc.ui);
     }

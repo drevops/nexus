@@ -397,8 +397,15 @@ function buildController(model, options = {}) {
   rankDir = 'LR';
   showMachineNames = true;
   initColors();
+  if (Array.isArray(options.customTypes) && options.customTypes.length) {
+    const known = new Set(customTypes().map((t) => t.type));
+    settings.customTypes = customTypes().concat(options.customTypes.filter((t) => t && t.type && !known.has(t.type)));
+  }
   if (options.colors) {
     Object.assign(activeColors, options.colors);
+  }
+  if (options.symbols) {
+    Object.assign(activeSymbols, options.symbols);
   }
 
   const elements = buildElements(model);
@@ -825,6 +832,7 @@ function buildController(model, options = {}) {
     typeLabel,
     colorFor: entityColor,
     symbolFor: (type) => activeSymbols[type] || 'rounded',
+    typeSettings: () => ({ colors: { ...activeColors }, symbols: { ...activeSymbols }, customTypes: customTypes().map((t) => ({ ...t })) }),
     symbolSvg: (key, color, size) => symbolSvg(key, color, size),
     symbolOptions: () => Object.keys(SYMBOLS).map((key) => ({ key: key, label: SYMBOLS[key].label })),
     isCustomType: (type) => customTypes().some((t) => t.type === type),
