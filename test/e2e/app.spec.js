@@ -612,7 +612,7 @@ test('changes a field cardinality from the inspector', async ({ page }) => {
   expect(data.kind).toBe('multi');
 });
 
-test('sets the zoom level from the toolbar dropdown', async ({ page }) => {
+test('sets the zoom level from the status bar dropdown', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);
 
@@ -800,4 +800,28 @@ test('links to the project on GitHub from the toolbar', async ({ page }) => {
   await expect(page.locator('#github-link')).toHaveAttribute('href', 'https://github.com/drevops/nexus');
   await expect(page.locator('#github-link')).toHaveAttribute('target', '_blank');
   await expect(page.locator('#github-link svg.icon')).toHaveCount(1);
+});
+
+test('exports the fields table as CSV', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.click('#export-csv'),
+  ]);
+  expect(download.suggestedFilename()).toBe('example-content-model-fields.csv');
+
+  const csv = readFileSync(await download.path(), 'utf8');
+  const lines = csv.split('\r\n');
+  expect(lines[0]).toBe('Entity,Entity type,Field,Machine name,Field type,Cardinality,Required,References');
+  expect(lines.some((l) => l.startsWith('Episode,Content type,'))).toBe(true);
+});
+
+test('echoes a hovered control description into the status bar', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+
+  await page.locator('#tidy').hover();
+  await expect(page.locator('#statusbar-hint')).toHaveText('Tidy up: re-run the layout to arrange everything neatly');
 });

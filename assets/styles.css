@@ -155,7 +155,7 @@ sl-button-group.toolbar__group {
 .loader {
   position: fixed;
   inset: 0;
-  z-index: 30;
+  z-index: 60;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -275,6 +275,43 @@ sl-button#zoom-level::part(base) {
   display: flex;
   flex: 1 1 auto;
   min-height: 0;
+}
+
+/* A short status bar: a live hover hint on the left, zoom controls on the right.
+   It sits above the floating panels so its upward-opening zoom menu is not
+   covered; the landing and loader overlays sit above it in turn. */
+.statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  height: 30px;
+  padding: 0 0.7rem;
+  background: var(--panel-bg);
+  border-top: 1px solid var(--border);
+  z-index: 40;
+}
+
+.statusbar__hint {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.statusbar__zoom {
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
+  flex: 0 0 auto;
+}
+
+.statusbar sl-button::part(base) {
+  min-height: 24px;
+  height: 24px;
 }
 
 .stage__canvas {
@@ -916,7 +953,7 @@ sl-button#zoom-level::part(base) {
 .landing {
   position: fixed;
   inset: 0;
-  z-index: 20;
+  z-index: 50;
   display: flex;
   align-items: center;
   justify-content: center;

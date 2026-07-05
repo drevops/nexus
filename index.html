@@ -35,45 +35,6 @@
     <sl-input id="diagram-title" class="toolbar__title" size="small" placeholder="Untitled content model" title="Rename this content model - used for the saved file names" aria-label="Content model name"></sl-input>
   </div>
   <div class="toolbar__actions">
-    <sl-button-group class="toolbar__group" label="Mode">
-      <sl-button id="mode-view" class="toolbar__button is-active" size="small" data-icon="eye" title="View mode: explore the diagram">View</sl-button>
-      <sl-button id="mode-build" class="toolbar__button" size="small" data-icon="pencil" title="Edit mode: add and change entities and fields">Edit</sl-button>
-    </sl-button-group>
-    <sl-input id="search" class="toolbar__search" size="small" type="search" placeholder="Find entity…" autocomplete="off" clearable title="Find and highlight an entity by name">
-      <span slot="prefix" class="toolbar__search-icon" data-icon="search"></span>
-    </sl-input>
-    <sl-button-group class="toolbar__group" label="View controls">
-      <sl-button id="zoom-out" class="toolbar__button toolbar__button--icon" size="small" data-icon="zoom-out" title="Zoom out"></sl-button>
-      <sl-button id="zoom-in" class="toolbar__button toolbar__button--icon" size="small" data-icon="zoom-in" title="Zoom in"></sl-button>
-      <sl-button id="fit" class="toolbar__button" size="small" data-icon="fit" title="Fit the whole diagram in view">Fit</sl-button>
-      <sl-button id="reset" class="toolbar__button" size="small" data-icon="rotate-ccw" title="Clear focus and reset the zoom to 100%">Reset</sl-button>
-      <sl-button id="tidy" class="toolbar__button" size="small" data-icon="tidy" title="Tidy up: re-run the layout to arrange everything neatly">Tidy</sl-button>
-    </sl-button-group>
-    <sl-dropdown class="toolbar__zoom" hoist>
-      <sl-button id="zoom-level" slot="trigger" class="toolbar__button" size="small" caret title="Set the zoom level">100%</sl-button>
-      <sl-menu id="zoom-menu">
-        <sl-menu-item value="fit">Fit</sl-menu-item>
-        <sl-menu-item value="0.25">25%</sl-menu-item>
-        <sl-menu-item value="0.5">50%</sl-menu-item>
-        <sl-menu-item value="0.75">75%</sl-menu-item>
-        <sl-menu-item value="1">100%</sl-menu-item>
-        <sl-menu-item value="1.5">150%</sl-menu-item>
-        <sl-menu-item value="2">200%</sl-menu-item>
-        <sl-menu-item value="3">300%</sl-menu-item>
-      </sl-menu>
-    </sl-dropdown>
-    <sl-button-group class="toolbar__group" label="Display">
-      <sl-button id="fields-toggle" class="toolbar__button" size="small" data-icon="list" title="Show or hide entity fields">Fields</sl-button>
-      <sl-button id="proxy-toggle" class="toolbar__button" size="small" data-icon="layers" title="Show references as semi-opaque proxies instead of long edges">Proxies</sl-button>
-      <sl-button id="machine-names" class="toolbar__button" size="small" data-icon="code" title="Show or hide machine names under each symbol">Machine names</sl-button>
-      <sl-button id="layout-toggle" class="toolbar__button" size="small" data-icon="layout" title="Switch layout direction (left-right / top-bottom)"><span class="layout-label">Layout: LR</span></sl-button>
-    </sl-button-group>
-    <sl-button-group class="toolbar__group" label="Panels">
-      <sl-button id="entities-toggle" class="toolbar__button" size="small" data-icon="box" title="Toggle the entities panel">Entities</sl-button>
-      <sl-button id="table-toggle" class="toolbar__button" size="small" data-icon="table" title="Toggle the fields table panel">Table</sl-button>
-      <sl-button id="legend-toggle" class="toolbar__button" size="small" data-icon="info" title="Toggle the legend panel">Legend</sl-button>
-      <sl-button id="settings-toggle" class="toolbar__button" size="small" data-icon="sliders" title="Toggle the settings panel">Settings</sl-button>
-    </sl-button-group>
     <sl-button-group class="toolbar__group" label="Document">
       <sl-button id="doc-new" class="toolbar__button" size="small" data-icon="file-plus" title="Start a new empty content model">New</sl-button>
       <sl-button id="doc-import" class="toolbar__button" size="small" data-icon="folder-input" title="Import a Drupal config folder">Import</sl-button>
@@ -84,9 +45,32 @@
     <sl-button-group class="toolbar__group" label="Export">
       <sl-button id="export-png" class="toolbar__button" size="small" data-icon="image" title="Export the diagram as a PNG image">PNG</sl-button>
       <sl-button id="export-svg" class="toolbar__button" size="small" data-icon="file-down" title="Export the diagram as a scalable SVG">SVG</sl-button>
+      <sl-button id="export-csv" class="toolbar__button" size="small" data-icon="table" title="Export the fields table as CSV">CSV</sl-button>
     </sl-button-group>
-    <sl-button id="theme-toggle" class="toolbar__button toolbar__button--icon" size="small" data-icon="moon" title="Toggle light / dark theme" aria-label="Toggle theme"></sl-button>
+    <sl-button-group class="toolbar__group" label="Mode">
+      <sl-button id="mode-view" class="toolbar__button is-active" size="small" data-icon="eye" title="View mode: explore the diagram">View</sl-button>
+      <sl-button id="mode-build" class="toolbar__button" size="small" data-icon="pencil" title="Edit mode: add and change entities and fields">Edit</sl-button>
+    </sl-button-group>
+    <sl-input id="search" class="toolbar__search" size="small" type="search" placeholder="Find entity…" autocomplete="off" clearable title="Find and highlight an entity by name">
+      <span slot="prefix" class="toolbar__search-icon" data-icon="search"></span>
+    </sl-input>
+    <sl-button-group class="toolbar__group" label="Display">
+      <sl-button id="fields-toggle" class="toolbar__button" size="small" data-icon="list" title="Show or hide entity fields">Fields</sl-button>
+      <sl-button id="proxy-toggle" class="toolbar__button" size="small" data-icon="layers" title="Show references as semi-opaque proxies instead of long edges">Proxies</sl-button>
+      <sl-button id="machine-names" class="toolbar__button" size="small" data-icon="code" title="Show or hide machine names under each symbol">Machine names</sl-button>
+    </sl-button-group>
+    <sl-button-group class="toolbar__group" label="Layout">
+      <sl-button id="layout-toggle" class="toolbar__button" size="small" data-icon="layout" title="Switch layout direction (left-right / top-bottom)"><span class="layout-label">Layout: LR</span></sl-button>
+      <sl-button id="tidy" class="toolbar__button" size="small" data-icon="tidy" title="Tidy up: re-run the layout to arrange everything neatly">Tidy</sl-button>
+    </sl-button-group>
+    <sl-button-group class="toolbar__group" label="Panels">
+      <sl-button id="entities-toggle" class="toolbar__button" size="small" data-icon="box" title="Toggle the entities panel">Entities</sl-button>
+      <sl-button id="table-toggle" class="toolbar__button" size="small" data-icon="table" title="Toggle the fields table panel">Table</sl-button>
+      <sl-button id="legend-toggle" class="toolbar__button" size="small" data-icon="info" title="Toggle the legend panel">Legend</sl-button>
+      <sl-button id="settings-toggle" class="toolbar__button" size="small" data-icon="sliders" title="Toggle the settings panel">Settings</sl-button>
+    </sl-button-group>
     <sl-button id="github-link" class="toolbar__button toolbar__button--icon" size="small" href="https://github.com/drevops/nexus" target="_blank" rel="noopener" data-icon="github" title="View Nexus on GitHub" aria-label="View Nexus on GitHub"></sl-button>
+    <sl-button id="theme-toggle" class="toolbar__button toolbar__button--icon" size="small" data-icon="moon" title="Toggle light / dark theme" aria-label="Toggle theme"></sl-button>
   </div>
   </div>
   <div id="build-tools" class="toolbar__palette" hidden>
@@ -108,6 +92,29 @@
 </header>
 
 <main class="stage" id="stage-root"></main>
+
+<footer id="statusbar" class="statusbar">
+  <span id="statusbar-hint" class="statusbar__hint"></span>
+  <div class="statusbar__zoom">
+    <sl-button id="reset" class="toolbar__button toolbar__button--icon" size="small" data-icon="rotate-ccw" title="Clear focus and reset the zoom to 100%" aria-label="Reset view"></sl-button>
+    <sl-button id="fit" class="toolbar__button toolbar__button--icon" size="small" data-icon="fit" title="Fit the whole diagram in view" aria-label="Fit to view"></sl-button>
+    <sl-button id="zoom-out" class="toolbar__button toolbar__button--icon" size="small" data-icon="zoom-out" title="Zoom out"></sl-button>
+    <sl-button id="zoom-in" class="toolbar__button toolbar__button--icon" size="small" data-icon="zoom-in" title="Zoom in"></sl-button>
+    <sl-dropdown class="statusbar__zoomlevel" placement="top-end" hoist>
+      <sl-button id="zoom-level" slot="trigger" class="toolbar__button" size="small" caret title="Set the zoom level">100%</sl-button>
+      <sl-menu id="zoom-menu">
+        <sl-menu-item value="fit">Fit</sl-menu-item>
+        <sl-menu-item value="0.25">25%</sl-menu-item>
+        <sl-menu-item value="0.5">50%</sl-menu-item>
+        <sl-menu-item value="0.75">75%</sl-menu-item>
+        <sl-menu-item value="1">100%</sl-menu-item>
+        <sl-menu-item value="1.5">150%</sl-menu-item>
+        <sl-menu-item value="2">200%</sl-menu-item>
+        <sl-menu-item value="3">300%</sl-menu-item>
+      </sl-menu>
+    </sl-dropdown>
+  </div>
+</footer>
 
 <div id="landing" class="landing">
   <sl-card class="landing__card">

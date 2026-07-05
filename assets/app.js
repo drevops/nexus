@@ -14,7 +14,8 @@ import { documentFromGraph, documentToModel } from './document.js';
 import { initBuilder, attachBuilder } from './builder.js';
 import { initUI } from './ui.js';
 import { initIcons, icon } from './icons.js';
-import { exportLayout, importLayout } from './store.js';
+import { cardinalityLabel } from './model.js';
+import { exportLayout, importLayout, getController } from './store.js';
 
 const EXAMPLE_BASE = 'examples/example/';
 
@@ -241,6 +242,35 @@ function wireExports() {
       exportSvg(window.__nexus.cy, $('diagram-title').value);
     }
   });
+  $('export-csv').addEventListener('click', () => {
+    const ctrl = getController();
+    if (ctrl) {
+      downloadText(recordsToCsv(ctrl.records(), ctrl.typeLabel), slug($('diagram-title').value) + '-fields.csv', 'text/csv');
+    }
+  });
+}
+
+function downloadText(text, filename, type) {
+  const blob = new Blob([text], { type: type });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+// The Fields table, one row per field, as CSV.
+function recordsToCsv(records, typeLabel) {
+  const esc = (value) => {
+    const s = String(value == null ? '' : value);
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  };
+  const headers = ['Entity', 'Entity type', 'Field', 'Machine name', 'Field type', 'Cardinality', 'Required', 'References'];
+  const rows = records.map((r) => [r.entity, typeLabel(r.entityType), r.field, r.name, r.type, cardinalityLabel(r.cardinality), r.required ? 'yes' : 'no', r.refs.map((x) => x.label).join('; ')].map(esc).join(','));
+  return [headers.join(','), ...rows].join('\r\n');
 }
 
 function downloadJson(data, filename) {
@@ -337,6 +367,19 @@ function initTheme() {
   $('theme-toggle').addEventListener('click', () => applyTheme(!document.documentElement.classList.contains('sl-theme-dark')));
 }
 
+// Echo a hovered control's title into the status bar immediately, so the
+// description appears without waiting for the native tooltip.
+function initStatusbar() {
+  const hint = $('statusbar-hint');
+  document.querySelectorAll('.toolbar, .statusbar').forEach((zone) => {
+    zone.addEventListener('mouseover', (evt) => {
+      const el = evt.target.closest('[title]');
+      hint.textContent = el && zone.contains(el) ? el.getAttribute('title') : '';
+    });
+    zone.addEventListener('mouseleave', () => { hint.textContent = ''; });
+  });
+}
+
 wireLanding();
 wireExports();
 wireDocument();
@@ -344,3 +387,4 @@ initUI();
 initBuilder();
 initIcons();
 initTheme();
+initStatusbar();
