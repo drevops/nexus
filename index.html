@@ -46,7 +46,7 @@
       <sl-button id="doc-import" class="toolbar__button" size="small" data-icon="folder-input" title="Import a Drupal config folder">Import</sl-button>
       <sl-button id="doc-open-btn" class="toolbar__button" size="small" data-icon="folder-open" title="Open a saved Nexus diagram (.nexus.json)">Open</sl-button>
       <input id="doc-open" class="visually-hidden" type="file" accept=".json,application/json">
-      <sl-button id="doc-save" class="toolbar__button" size="small" data-icon="save" title="Save this diagram as a Nexus document (.nexus.json)">Save</sl-button>
+      <sl-button id="doc-save" class="toolbar__button" size="small" data-icon="download" title="Save this diagram as a Nexus document (.nexus.json)">Save</sl-button>
     </sl-button-group>
     <sl-button-group class="toolbar__group" label="Export">
       <sl-button id="export-png" class="toolbar__button" size="small" data-icon="image" title="Export the diagram as a PNG image">PNG</sl-button>
@@ -57,9 +57,8 @@
       <sl-button id="mode-view" class="toolbar__button is-active" size="small" data-icon="eye" title="View mode: explore the diagram">View</sl-button>
       <sl-button id="mode-build" class="toolbar__button" size="small" data-icon="pencil" title="Edit mode: add and change entities and fields">Edit</sl-button>
     </sl-button-group>
-    <sl-input id="search" class="toolbar__search" size="small" type="search" placeholder="Find entity…" autocomplete="off" clearable title="Find and highlight an entity by name">
-      <span slot="prefix" class="toolbar__search-icon" data-icon="search"></span>
-    </sl-input>
+    <sl-input id="search" class="toolbar__search" size="small" type="search" placeholder="Find entity…" autocomplete="off" clearable title="Type an entity name and press Enter or the search button"></sl-input>
+    <sl-button id="search-btn" class="toolbar__button toolbar__button--icon" size="small" data-icon="search" title="Find the entity and zoom to it" aria-label="Search"></sl-button>
     <sl-button-group class="toolbar__group" label="Display">
       <sl-button id="fields-toggle" class="toolbar__button" size="small" data-icon="list" title="Show or hide entity fields">Fields</sl-button>
       <sl-button id="proxy-toggle" class="toolbar__button" size="small" data-icon="layers" title="Show references as semi-opaque proxies instead of long edges">Proxies</sl-button>

@@ -148,13 +148,11 @@ function startResize(side, evt) {
 function startVResize(id, evt, el) {
   const startY = evt.clientY;
   const startH = el.getBoundingClientRect().height;
-  const body = el.querySelector('.panel__body');
-  // Growing past the point where all content fits (no scrollbar) only adds empty
-  // space, so cap there. chrome is the panel minus the body's visible area.
-  const contentMax = body ? (startH - body.clientHeight) + body.scrollHeight : Infinity;
 
+  // Fixing a height makes this panel stop filling; the other docked panels then
+  // share the remaining sidebar space.
   function move(e) {
-    setPanelHeight(id, Math.min(startH + (e.clientY - startY), contentMax));
+    setPanelHeight(id, startH + (e.clientY - startY));
   }
 
   function up() {
@@ -174,7 +172,9 @@ function Panel({ id, panel, header, children }) {
   const ref = useRef(null);
   const docked = !!panel.dock;
   const cls = 'panel' + (WIDE[id] ? ' panel--wide' : '') + (id === 'legend' ? ' panel--legend' : '') + (docked ? ' is-docked' : '');
-  const style = docked ? { zIndex: panel.z, height: (panel.height || 260) + 'px' } : floatStyle(panel);
+  const style = docked
+    ? (panel.height ? { zIndex: panel.z, flex: '0 0 auto', height: panel.height + 'px' } : { zIndex: panel.z, flex: '1 1 0', minHeight: '90px' })
+    : floatStyle(panel);
 
   return html`
     <section id=${id} ref=${ref} class=${cls} style=${style} onMouseDown=${() => focusPanel(id)}>

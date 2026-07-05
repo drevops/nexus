@@ -632,27 +632,35 @@ test('labels each entity with its type in the caption layer', async ({ page }) =
   expect(types).toContain('Content type');
 });
 
-test('does not grow a docked panel past its content height', async ({ page }) => {
+test('searches on the button and zooms to the match at 100%', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+  await page.evaluate(() => window.__nexus.cy.zoom(0.2));
+
+  // Typing does not search.
+  await slFill(page, '#search', 'episode');
+  expect(await page.evaluate(() => window.__nexus.cy.elements('.faded').length)).toBe(0);
+
+  // The button runs the search: it fades the rest and zooms to 100%.
+  await page.click('#search-btn');
+  await page.waitForFunction(() => Math.abs(window.__nexus.cy.zoom() - 1) < 0.01);
+  expect(await page.evaluate(() => window.__nexus.cy.elements('.faded').length)).toBeGreaterThan(0);
+});
+
+test('a single docked panel fills the sidebar height', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);
 
   await page.click('#legend .panel__pin');
   await expect(page.locator('#legend.is-docked')).toBeVisible();
 
-  const grip = page.locator('#legend .panel__vresize');
-  const box = await grip.boundingBox();
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(box.x + box.width / 2, box.y + 800, { steps: 8 });
-  await page.mouse.up();
-
-  // Growth is capped at the content height, so the body shows everything with
-  // little empty space - not 800px of blank panel.
-  const emptySpace = await page.evaluate(() => {
-    const body = document.querySelector('#legend .panel__body');
-    return body.clientHeight - body.scrollHeight;
+  const sizes = await page.evaluate(() => {
+    const panel = document.getElementById('legend');
+    const scroll = panel.closest('.dock__scroll');
+    return { panelH: panel.getBoundingClientRect().height, scrollH: scroll.clientHeight };
   });
-  expect(emptySpace).toBeLessThan(40);
+  // The lone docked panel fills the dock's content box (minus its padding).
+  expect(sizes.panelH).toBeGreaterThan(sizes.scrollH - 40);
 });
 
 test('labels reference edges with cardinality in the default proxy view', async ({ page }) => {
@@ -873,6 +881,20 @@ test('changes a type symbol and adds a custom entity type in settings', async ({
   await page.fill('#settings [data-new-type]', 'widget');
   await page.click('#settings [data-add-type]');
   await expect(page.locator('#settings [data-type-row="widget"]')).toHaveCount(1);
+});
+
+test('resets colours and symbols to defaults from settings', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+  await page.click('#settings-toggle');
+
+  await slSelect(page, '#settings sl-select[data-symbol="node"]', 'diamond');
+  await expect.poll(() => page.evaluate(() => window.__nexus.cy.nodes('[group="entity"][entityType="node"]').first().style('shape'))).toBe('diamond');
+
+  await page.click('#settings-reset');
+
+  await expect.poll(() => page.evaluate(() => window.__nexus.cy.nodes('[group="entity"][entityType="node"]').first().style('shape'))).toBe('round-rectangle');
+  await expect.poll(() => page.evaluate(() => document.querySelector('#settings sl-select[data-symbol="node"]').value)).toBe('rounded');
 });
 
 test('round-trips custom types and symbols through a saved document', async ({ page }) => {

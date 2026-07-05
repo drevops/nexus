@@ -173,7 +173,9 @@ export function movePanel(id, left, top) {
 }
 
 export function pinPanel(id, side) {
-  patchPanel(id, { open: true, dock: side });
+  // Clear any prior height so a freshly docked panel fills the sidebar; a manual
+  // resize sets a fixed height again, and other panels then share the space.
+  patchPanel(id, { open: true, dock: side, height: null });
 }
 
 export function unpinPanel(id) {

@@ -724,6 +724,9 @@ function buildController(model, options = {}) {
     delete settings.symbols;
     saveSettings();
     initColors();
+    // applyColor/applySymbol set inline overrides on the nodes; clear them so the
+    // stylesheet's default-reading functions take effect again.
+    cy.nodes().removeStyle('background-color shape');
     cy.style(style());
     positionCaptions();
     positionNotes();
@@ -762,14 +765,8 @@ function buildController(model, options = {}) {
     }
     matches.union(matches.closedNeighborhood().closedNeighborhood()).removeClass('faded');
 
-    // Bring the match into view: a lone hit gets centred and zoomed in, several
-    // hits are framed together so they all land in the viewport.
-    if (matches.length === 1) {
-      cy.animate({ center: { eles: matches }, zoom: Math.min(1.2, cy.maxZoom()) }, { duration: 350 });
-    }
-    else {
-      cy.animate({ fit: { eles: matches, padding: 100 } }, { duration: 350 });
-    }
+    // Move to the match at 100% zoom.
+    cy.animate({ center: { eles: matches }, zoom: 1 }, { duration: 350 });
   }
 
   cy.on('zoom', () => {
@@ -909,14 +906,17 @@ function wire() {
     ctx.rebuildCaptions();
   });
 
-  $('search').addEventListener('sl-input', (evt) => {
-    const term = evt.target.value.trim().toLowerCase();
+  function runSearch() {
+    const term = $('search').value.trim().toLowerCase();
     if (!term) {
       ctx.clearFocus();
       return;
     }
     ctx.searchHighlight(term);
-  });
+  }
+  $('search-btn').addEventListener('click', runSearch);
+  $('search').addEventListener('keydown', (evt) => { if (evt.key === 'Enter') { runSearch(); } });
+  $('search').addEventListener('sl-clear', () => ctx.clearFocus());
 }
 
 export function render(model, options = {}) {
