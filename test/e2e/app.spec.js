@@ -795,3 +795,9 @@ test('isolates an entity on right-click and moves it with its fields', async ({ 
   await page.evaluate(() => window.__nexus.cy.emit('tap', [{ target: window.__nexus.cy }]));
   expect(await page.evaluate(() => window.__nexus.cy.elements('.faded').length)).toBe(0);
 });
+
+test('links to the project on GitHub from the toolbar', async ({ page }) => {
+  await expect(page.locator('#github-link')).toHaveAttribute('href', 'https://github.com/drevops/nexus');
+  await expect(page.locator('#github-link')).toHaveAttribute('target', '_blank');
+  await expect(page.locator('#github-link svg.icon')).toHaveCount(1);
+});
