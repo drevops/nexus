@@ -14,6 +14,7 @@ import { documentFromGraph, documentToModel } from './document.js';
 import { initBuilder, attachBuilder } from './builder.js';
 import { initUI } from './ui.js';
 import { initIcons, icon } from './icons.js';
+import { VERSION } from './version.js';
 import { cardinalityLabel } from './model.js';
 import { exportLayout, importLayout, getController } from './store.js';
 
@@ -387,6 +388,10 @@ function initAbout() {
   $('about-close').addEventListener('click', () => dialog.hide());
 }
 
+function initVersion() {
+  document.querySelectorAll('[data-version]').forEach((el) => { el.textContent = VERSION; });
+}
+
 wireLanding();
 wireExports();
 wireDocument();
@@ -396,3 +401,4 @@ initIcons();
 initTheme();
 initStatusbar();
 initAbout();
+initVersion();

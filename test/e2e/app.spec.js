@@ -873,6 +873,15 @@ test('opens an about dialog explaining browser-only storage and the licence', as
   await expect(page.locator('#about-dialog')).not.toBeVisible();
 });
 
+test('shows the app version on the landing screen and in the about dialog', async ({ page }) => {
+  await expect(page.locator('#landing-version')).toHaveText('dev');
+
+  await page.click('#example-btn');
+  await waitForGraph(page);
+  await page.click('#about-toggle');
+  await expect(page.locator('#about-version')).toHaveText('dev');
+});
+
 test('draws entity types with their symbols and a dynamic legend', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);

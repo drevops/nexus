@@ -8,8 +8,8 @@
 
 Draw a Drupal site's content model as an interactive diagram - entirely in your browser.
 
-[![Test](https://github.com/drevops/nexus/actions/workflows/ci.yml/badge.svg)](https://github.com/drevops/nexus/actions/workflows/ci.yml)
-[![Pages](https://github.com/drevops/nexus/actions/workflows/pages.yml/badge.svg)](https://github.com/drevops/nexus/actions/workflows/pages.yml)
+[![Test](https://github.com/drevops/nexus/actions/workflows/test.yml/badge.svg)](https://github.com/drevops/nexus/actions/workflows/test.yml)
+[![Release](https://github.com/drevops/nexus/actions/workflows/release.yml/badge.svg)](https://github.com/drevops/nexus/actions/workflows/release.yml)
 ![LICENSE](https://img.shields.io/github/license/drevops/nexus)
 
 </div>
@@ -104,7 +104,7 @@ npm test          # both
 
 ## Deployment
 
-Pushing to `main` builds and deploys the static site to GitHub Pages via `.github/workflows/pages.yml` (assembles `index.html`, `assets/` and `examples/`). Enable Pages once with the "GitHub Actions" source.
+Publishing a GitHub **release** builds and deploys the static site to GitHub Pages via `.github/workflows/release.yml` (assembles `index.html`, `assets/` and `examples/`, and stamps the release tag as the app version). Pushes to `main` only run the tests - they never deploy. Enable Pages once with the "GitHub Actions" source.
 
 ## Privacy
 

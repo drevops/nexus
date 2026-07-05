@@ -199,6 +199,11 @@ sl-button-group.toolbar__group {
   margin-bottom: 0;
 }
 
+.about__version {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
 .toolbar__actions {
   display: flex;
   align-items: center;
@@ -1076,6 +1081,13 @@ sl-button#zoom-level::part(base) {
   margin: 0 0 0.25rem;
   font-size: 1.6rem;
   font-weight: 700;
+}
+
+.landing__version {
+  margin: 0 0 1rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
 }
 
 .landing__tag {

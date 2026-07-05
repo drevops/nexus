@@ -1,9 +1,9 @@
-name: Deploy to GitHub Pages
+name: Release
 
 on:
-  push:
-    branches:
-      - main
+  release:
+    types:
+      - published
   workflow_dispatch:
 
 permissions:
@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  release:
     name: Build and deploy
     runs-on: ubuntu-latest
     environment:
@@ -32,6 +32,11 @@ jobs:
           cp index.html _site/
           cp -r assets _site/
           cp -r examples _site/
+
+      # The source ships version.js as `dev`; stamp the published release tag so
+      # the deployed build reports its version. Manual runs stay on `dev`.
+      - name: Stamp the release version
+        run: echo "export const VERSION = '${{ github.event.release.tag_name || 'dev' }}';" > _site/assets/version.js
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
