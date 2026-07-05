@@ -46,13 +46,22 @@ body {
   z-index: 3;
 }
 
-/* Row 1: the main controls, which wrap onto more lines if they don't fit. */
-.toolbar__main {
+/* Row 1: brand and title on the left; GitHub, theme and settings on the right. */
+.toolbar__brandline {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+}
+
+/* Row 2: the tool groups, always shown, wrapping if they do not fit. */
+.toolbar__tools {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
   flex-wrap: wrap;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
 }
 
 /* Row 2: the edit palette - a single, non-wrapping row shown only in edit
@@ -283,35 +292,38 @@ sl-button#zoom-level::part(base) {
 .statusbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  height: 30px;
-  padding: 0 0.7rem;
+  gap: 0.75rem;
+  padding: 2px 0.7rem;
   background: var(--panel-bg);
   border-top: 1px solid var(--border);
   z-index: 40;
 }
 
-.statusbar__hint {
-  flex: 1 1 auto;
+.statusbar__hint,
+.statusbar__tips {
   min-width: 0;
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.77rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+.statusbar__hint {
+  flex: 1 1 0;
+}
+
+.statusbar__tips {
+  flex: 0 1 auto;
+  text-align: center;
+}
+
 .statusbar__zoom {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.1rem;
-  flex: 0 0 auto;
-}
-
-.statusbar sl-button::part(base) {
-  min-height: 24px;
-  height: 24px;
+  flex: 1 1 0;
 }
 
 .stage__canvas {

@@ -826,6 +826,24 @@ test('echoes a hovered control description into the status bar', async ({ page }
   await expect(page.locator('#statusbar-hint')).toHaveText('Tidy up: re-run the layout to arrange everything neatly');
 });
 
+test('shows interaction tips in the middle of the status bar', async ({ page }) => {
+  await expect(page.locator('#statusbar .statusbar__tips')).toContainText('Right-click');
+});
+
+test('renders a non-empty glyph for every toolbar and status bar icon', async ({ page }) => {
+  const empty = await page.evaluate(() => [...document.querySelectorAll('.toolbar [data-icon], .statusbar [data-icon]')]
+    .filter((el) => { const svg = el.querySelector('svg.icon'); return !svg || svg.children.length === 0; })
+    .map((el) => el.id || el.getAttribute('data-icon')));
+  expect(empty).toEqual([]);
+});
+
+test('keeps settings, theme and github on the brand line', async ({ page }) => {
+  await expect(page.locator('.toolbar__brandline #settings-toggle')).toHaveCount(1);
+  await expect(page.locator('.toolbar__brandline #github-link')).toHaveCount(1);
+  await expect(page.locator('.toolbar__tools #settings-toggle')).toHaveCount(0);
+  await expect(page.locator('#settings-toggle')).toHaveText('');
+});
+
 test('draws entity types with their symbols and a dynamic legend', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);

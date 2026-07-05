@@ -29,12 +29,18 @@
 </head>
 <body>
 <header class="toolbar">
-  <div class="toolbar__main">
-  <div class="toolbar__actions">
-    <span class="toolbar__brand">Nexus</span>
-    <sl-input id="diagram-title" class="toolbar__title" size="small" placeholder="Untitled content model" title="Rename this content model - used for the saved file names" aria-label="Content model name"></sl-input>
+  <div class="toolbar__brandline">
+    <div class="toolbar__actions">
+      <span class="toolbar__brand">Nexus</span>
+      <sl-input id="diagram-title" class="toolbar__title" size="small" placeholder="Untitled content model" title="Rename this content model - used for the saved file names" aria-label="Content model name"></sl-input>
+    </div>
+    <div class="toolbar__actions">
+      <sl-button id="github-link" class="toolbar__button toolbar__button--icon" size="small" href="https://github.com/drevops/nexus" target="_blank" rel="noopener" data-icon="github" title="View Nexus on GitHub" aria-label="View Nexus on GitHub"></sl-button>
+      <sl-button id="theme-toggle" class="toolbar__button toolbar__button--icon" size="small" data-icon="moon" title="Toggle light / dark theme" aria-label="Toggle theme"></sl-button>
+      <sl-button id="settings-toggle" class="toolbar__button toolbar__button--icon" size="small" data-icon="sliders" title="Toggle the settings panel" aria-label="Settings"></sl-button>
+    </div>
   </div>
-  <div class="toolbar__actions">
+  <div class="toolbar__tools">
     <sl-button-group class="toolbar__group" label="Document">
       <sl-button id="doc-new" class="toolbar__button" size="small" data-icon="file-plus" title="Start a new empty content model">New</sl-button>
       <sl-button id="doc-import" class="toolbar__button" size="small" data-icon="folder-input" title="Import a Drupal config folder">Import</sl-button>
@@ -67,11 +73,7 @@
       <sl-button id="entities-toggle" class="toolbar__button" size="small" data-icon="box" title="Toggle the entities panel">Entities</sl-button>
       <sl-button id="table-toggle" class="toolbar__button" size="small" data-icon="table" title="Toggle the fields table panel">Table</sl-button>
       <sl-button id="legend-toggle" class="toolbar__button" size="small" data-icon="info" title="Toggle the legend panel">Legend</sl-button>
-      <sl-button id="settings-toggle" class="toolbar__button" size="small" data-icon="sliders" title="Toggle the settings panel">Settings</sl-button>
     </sl-button-group>
-    <sl-button id="github-link" class="toolbar__button toolbar__button--icon" size="small" href="https://github.com/drevops/nexus" target="_blank" rel="noopener" data-icon="github" title="View Nexus on GitHub" aria-label="View Nexus on GitHub"></sl-button>
-    <sl-button id="theme-toggle" class="toolbar__button toolbar__button--icon" size="small" data-icon="moon" title="Toggle light / dark theme" aria-label="Toggle theme"></sl-button>
-  </div>
   </div>
   <div id="build-tools" class="toolbar__palette" hidden>
     <span class="toolbar__palette-label">Add:</span>
@@ -95,6 +97,7 @@
 
 <footer id="statusbar" class="statusbar">
   <span id="statusbar-hint" class="statusbar__hint"></span>
+  <span class="statusbar__tips">Click a node to focus · Right-click an entity to isolate &amp; move · Drag the canvas to pan</span>
   <div class="statusbar__zoom">
     <sl-button id="reset" class="toolbar__button toolbar__button--icon" size="small" data-icon="rotate-ccw" title="Clear focus and reset the zoom to 100%" aria-label="Reset view"></sl-button>
     <sl-button id="fit" class="toolbar__button toolbar__button--icon" size="small" data-icon="fit" title="Fit the whole diagram in view" aria-label="Fit to view"></sl-button>
