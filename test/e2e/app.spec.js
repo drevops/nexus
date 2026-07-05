@@ -867,6 +867,7 @@ test('opens an about dialog explaining browser-only storage and the licence', as
   await expect(page.locator('#about-dialog')).toContainText('content-model visual builder');
   await expect(page.locator('#about-dialog')).toContainText('there is no backend');
   await expect(page.locator('#about-dialog')).toContainText('without warranty');
+  await expect(page.locator('#about-repo')).toHaveAttribute('href', 'https://github.com/drevops/nexus');
   await expect(page.locator('#about-license')).toHaveAttribute('href', 'https://github.com/drevops/nexus/blob/main/LICENSE');
 
   await page.click('#about-close');
