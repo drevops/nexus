@@ -33,10 +33,37 @@ const ENTITY_TYPE_LABELS = {
 
 const TYPE_ORDER = ['node', 'taxonomy_term', 'media', 'paragraph', 'block_content', 'user', 'external'];
 
+// A small library of UML-ish node shapes, keyed for settings/persistence; the
+// value is the Cytoscape shape that draws it.
+const SYMBOLS = {
+  rounded: { shape: 'round-rectangle', label: 'Rounded rectangle' },
+  rectangle: { shape: 'rectangle', label: 'Rectangle' },
+  ellipse: { shape: 'ellipse', label: 'Ellipse' },
+  diamond: { shape: 'diamond', label: 'Diamond' },
+  hexagon: { shape: 'hexagon', label: 'Hexagon' },
+  tag: { shape: 'tag', label: 'Tag' },
+  barrel: { shape: 'barrel', label: 'Barrel' },
+  cut: { shape: 'cut-rectangle', label: 'Cut rectangle' },
+  rhomboid: { shape: 'rhomboid', label: 'Parallelogram' },
+  pentagon: { shape: 'pentagon', label: 'Pentagon' },
+  octagon: { shape: 'octagon', label: 'Octagon' },
+};
+
+const DEFAULT_SYMBOLS = {
+  node: 'rounded',
+  taxonomy_term: 'tag',
+  media: 'barrel',
+  paragraph: 'cut',
+  block_content: 'rectangle',
+  user: 'ellipse',
+  external: 'hexagon',
+};
+
 const SETTINGS_KEY = 'nexusSettings';
 
 let settings = loadSettings();
 const activeColors = {};
+const activeSymbols = {};
 
 let fieldsMode = false;
 let proxyMode = false;
@@ -70,9 +97,44 @@ function saveSettings() {
 }
 
 function initColors() {
-  TYPE_ORDER.forEach((type) => {
-    activeColors[type] = (settings.colors && settings.colors[type]) || DEFAULT_COLORS[type];
+  allTypeKeys().forEach((type) => {
+    activeColors[type] = (settings.colors && settings.colors[type]) || DEFAULT_COLORS[type] || '#eceff3';
+    activeSymbols[type] = (settings.symbols && settings.symbols[type]) || DEFAULT_SYMBOLS[type] || 'rounded';
   });
+}
+
+// Fixed Drupal types plus any custom types the user has defined in settings.
+function customTypes() {
+  return Array.isArray(settings.customTypes) ? settings.customTypes : [];
+}
+
+function allTypeKeys() {
+  return TYPE_ORDER.concat(customTypes().map((t) => t.type));
+}
+
+function entityShape(entityType) {
+  return (SYMBOLS[activeSymbols[entityType]] || SYMBOLS.rounded).shape;
+}
+
+// An inline SVG preview of a symbol filled with a colour, for the legend/settings.
+function symbolSvg(key, color, size) {
+  const w = size || 26;
+  const h = Math.round(w * 0.72);
+  const s = '#5b6470';
+  const shapes = {
+    rounded: '<rect x="2" y="3" width="' + (w - 4) + '" height="' + (h - 6) + '" rx="4" fill="' + color + '" stroke="' + s + '"/>',
+    rectangle: '<rect x="2" y="3" width="' + (w - 4) + '" height="' + (h - 6) + '" fill="' + color + '" stroke="' + s + '"/>',
+    ellipse: '<ellipse cx="' + (w / 2) + '" cy="' + (h / 2) + '" rx="' + (w / 2 - 2) + '" ry="' + (h / 2 - 3) + '" fill="' + color + '" stroke="' + s + '"/>',
+    diamond: '<polygon points="' + (w / 2) + ',2 ' + (w - 2) + ',' + (h / 2) + ' ' + (w / 2) + ',' + (h - 2) + ' 2,' + (h / 2) + '" fill="' + color + '" stroke="' + s + '"/>',
+    hexagon: '<polygon points="' + (w * 0.26) + ',3 ' + (w * 0.74) + ',3 ' + (w - 2) + ',' + (h / 2) + ' ' + (w * 0.74) + ',' + (h - 3) + ' ' + (w * 0.26) + ',' + (h - 3) + ' 2,' + (h / 2) + '" fill="' + color + '" stroke="' + s + '"/>',
+    tag: '<polygon points="2,3 ' + (w * 0.72) + ',3 ' + (w - 2) + ',' + (h / 2) + ' ' + (w * 0.72) + ',' + (h - 3) + ' 2,' + (h - 3) + '" fill="' + color + '" stroke="' + s + '"/>',
+    barrel: '<path d="M4,6 Q' + (w / 2) + ',1 ' + (w - 4) + ',6 L' + (w - 4) + ',' + (h - 6) + ' Q' + (w / 2) + ',' + (h - 1) + ' 4,' + (h - 6) + ' Z" fill="' + color + '" stroke="' + s + '"/>',
+    cut: '<polygon points="7,3 ' + (w - 7) + ',3 ' + (w - 2) + ',8 ' + (w - 2) + ',' + (h - 8) + ' ' + (w - 7) + ',' + (h - 3) + ' 7,' + (h - 3) + ' 2,' + (h - 8) + ' 2,8" fill="' + color + '" stroke="' + s + '"/>',
+    rhomboid: '<polygon points="' + (w * 0.2) + ',3 ' + (w - 2) + ',3 ' + (w * 0.8) + ',' + (h - 3) + ' 2,' + (h - 3) + '" fill="' + color + '" stroke="' + s + '"/>',
+    pentagon: '<polygon points="' + (w / 2) + ',2 ' + (w - 2) + ',' + (h * 0.42) + ' ' + (w * 0.8) + ',' + (h - 3) + ' ' + (w * 0.2) + ',' + (h - 3) + ' 2,' + (h * 0.42) + '" fill="' + color + '" stroke="' + s + '"/>',
+    octagon: '<polygon points="' + (w * 0.3) + ',3 ' + (w * 0.7) + ',3 ' + (w - 2) + ',' + (h * 0.35) + ' ' + (w - 2) + ',' + (h * 0.65) + ' ' + (w * 0.7) + ',' + (h - 3) + ' ' + (w * 0.3) + ',' + (h - 3) + ' 2,' + (h * 0.65) + ' 2,' + (h * 0.35) + '" fill="' + color + '" stroke="' + s + '"/>',
+  };
+  return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">' + (shapes[key] || shapes.rounded) + '</svg>';
 }
 
 function prettify(value) {
@@ -80,6 +142,10 @@ function prettify(value) {
 }
 
 function typeLabel(entityType) {
+  const custom = customTypes().find((t) => t.type === entityType);
+  if (custom) {
+    return custom.label || prettify(entityType);
+  }
   return ENTITY_TYPE_LABELS[entityType] || prettify(entityType);
 }
 
@@ -158,7 +224,7 @@ function style() {
     {
       selector: 'node[group="entity"]',
       style: {
-        shape: 'round-rectangle',
+        shape: (ele) => entityShape(ele.data('entityType')),
         'background-color': (ele) => entityColor(ele.data('entityType')),
         'border-color': tc.nodeBorder,
         'border-width': 1.5,
@@ -219,7 +285,7 @@ function style() {
     {
       selector: 'node[group="proxy"]',
       style: {
-        shape: 'round-rectangle',
+        shape: (ele) => entityShape(ele.data('entityType')),
         'background-color': (ele) => entityColor(ele.data('entityType')),
         'background-opacity': 0.4,
         'border-color': '#8a94a3',
@@ -637,16 +703,47 @@ function buildController(model, options = {}) {
     bump();
   }
 
+  function applySymbol(type, key) {
+    activeSymbols[type] = key;
+    cy.nodes('[entityType="' + type + '"]').style('shape', (SYMBOLS[key] || SYMBOLS.rounded).shape);
+    settings.symbols = settings.symbols || {};
+    settings.symbols[type] = key;
+    saveSettings();
+    bump();
+  }
+
   function resetColors() {
     delete settings.colors;
+    delete settings.symbols;
     saveSettings();
-    TYPE_ORDER.forEach((type) => {
-      activeColors[type] = DEFAULT_COLORS[type];
-      cy.nodes('[group="entity"][entityType="' + type + '"]').style('background-color', DEFAULT_COLORS[type]);
-    });
+    initColors();
+    cy.style(style());
+    positionCaptions();
+    positionNotes();
     if (window.__nexus) {
       window.__nexus.colors = { ...activeColors };
     }
+    bump();
+  }
+
+  function addCustomType(type, label, color, symbol) {
+    const key = String(type || '').toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '');
+    if (!key || allTypeKeys().includes(key)) {
+      return null;
+    }
+    settings.customTypes = customTypes().concat([{ type: key, label: (label || '').trim() || prettify(key) }]);
+    settings.colors = { ...(settings.colors || {}), [key]: color || '#eceff3' };
+    settings.symbols = { ...(settings.symbols || {}), [key]: symbol || 'rounded' };
+    activeColors[key] = settings.colors[key];
+    activeSymbols[key] = settings.symbols[key];
+    saveSettings();
+    bump();
+    return key;
+  }
+
+  function removeCustomType(type) {
+    settings.customTypes = customTypes().filter((t) => t.type !== type);
+    saveSettings();
     bump();
   }
 
@@ -723,11 +820,15 @@ function buildController(model, options = {}) {
 
   const controller = {
     cy,
-    refresh, runLayout, applyLayout, resetView, clearFocus, focusEntity, focusField, rebuildCaptions, rebuildNotes, searchHighlight, applyColor, resetColors,
+    refresh, runLayout, applyLayout, resetView, clearFocus, focusEntity, focusField, rebuildCaptions, rebuildNotes, searchHighlight, applyColor, applySymbol, resetColors, addCustomType, removeCustomType,
     applyTheme: () => { cy.style(style()); positionCaptions(); },
     typeLabel,
     colorFor: entityColor,
-    allTypes: () => TYPE_ORDER.slice(),
+    symbolFor: (type) => activeSymbols[type] || 'rounded',
+    symbolSvg: (key, color, size) => symbolSvg(key, color, size),
+    symbolOptions: () => Object.keys(SYMBOLS).map((key) => ({ key: key, label: SYMBOLS[key].label })),
+    isCustomType: (type) => customTypes().some((t) => t.type === type),
+    allTypes: () => allTypeKeys(),
     entities: () => cy.nodes('[group="entity"]').map((e) => ({ id: e.id(), label: e.data('label'), entityType: e.data('entityType'), fieldCount: cy.nodes('[group="field"][entity="' + e.id() + '"]').length })),
     records: () => cy.nodes('[group="field"]').map((f) => {
       const owner = cy.getElementById(f.data('entity'));
@@ -737,7 +838,7 @@ function buildController(model, options = {}) {
       });
       return { entityId: f.data('entity'), entity: owner.nonempty() ? owner.data('label') : f.data('entity'), entityType: owner.nonempty() ? owner.data('entityType') : '', field: f.data('label'), name: f.data('name') || '', type: f.data('fieldType'), kind: f.data('kind'), cardinality: f.data('cardinality') != null ? f.data('cardinality') : 1, required: !!f.data('required'), refs: refs };
     }),
-    presentTypes: () => TYPE_ORDER.filter((t) => cy.nodes('[group="entity"][entityType="' + t + '"]').nonempty()).map((t) => ({ type: t, label: typeLabel(t), color: entityColor(t), visible: typeVisible[t] !== false })),
+    presentTypes: () => allTypeKeys().filter((t) => cy.nodes('[group="entity"][entityType="' + t + '"]').nonempty()).map((t) => ({ type: t, label: typeLabel(t), color: entityColor(t), symbol: activeSymbols[t] || 'rounded', visible: typeVisible[t] !== false })),
     setTypeVisible: (type, vis) => { typeVisible[type] = vis; refresh(true); bump(); },
   };
   setController(controller);

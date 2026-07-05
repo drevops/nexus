@@ -166,11 +166,13 @@ export function AnnotationForm({ id }) {
 
 export function NewEntityForm({ entityType }) {
   const [form, setForm] = useState({ entityType: entityType || 'node', bundle: '', label: '' });
+  const ctrl = getController();
+  const typeOptions = ENTITY_TYPES.concat(ctrl.allTypes().filter((t) => ctrl.isCustomType(t)).map((t) => [t, ctrl.typeLabel(t)]));
 
   return html`
     <div class="insp" data-new="entity">
-      <p class="insp__title">New ${TYPE_LABELS[form.entityType] || 'entity'}</p>
-      <${Row} label="Type"><sl-select size="small" value=${form.entityType} onsl-change=${(e) => setForm((p) => ({ ...p, entityType: e.target.value }))}>${slOptions(ENTITY_TYPES)}</sl-select><//>
+      <p class="insp__title">New ${TYPE_LABELS[form.entityType] || ctrl.typeLabel(form.entityType) || 'entity'}</p>
+      <${Row} label="Type"><sl-select size="small" value=${form.entityType} onsl-change=${(e) => setForm((p) => ({ ...p, entityType: e.target.value }))}>${slOptions(typeOptions)}</sl-select><//>
       <${Row} label="Machine name"><sl-input size="small" data-new-bundle value=${form.bundle} placeholder="e.g. article" onsl-input=${(e) => setForm((p) => ({ ...p, bundle: e.target.value }))}></sl-input><//>
       <${Row} label="Label"><sl-input size="small" data-new-label value=${form.label} placeholder="e.g. Article" onsl-input=${(e) => setForm((p) => ({ ...p, label: e.target.value }))}></sl-input><//>
       <sl-button size="small" variant="primary" class="insp__create" data-create-entity title="Create the entity" onClick=${() => getBuilder().createEntity(form)}>${rawIcon('check')}Create entity</sl-button>

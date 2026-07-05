@@ -941,6 +941,77 @@ sl-button#zoom-level::part(base) {
   cursor: pointer;
 }
 
+.type-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.type-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.type-row__label {
+  font-size: 0.82rem;
+}
+
+.type-row__controls,
+.type-add__controls,
+.type-add__names {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.type-row__symbol {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.type-row__preview {
+  display: inline-flex;
+  align-items: center;
+}
+
+.type-row__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px;
+  color: var(--muted);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.type-row__remove:hover {
+  color: #b3261e;
+  border-color: #b3261e;
+}
+
+.type-add {
+  margin-top: 0.7rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.type-add__input {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0.3rem 0.45rem;
+  font-size: 0.82rem;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+}
+
 .tooltip__name {
   font-weight: 600;
 }

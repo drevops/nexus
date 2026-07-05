@@ -37,8 +37,10 @@ const SWATCHES = {
   callback: '<svg width="34" height="24"><rect x="2" y="4" width="30" height="16" rx="2" fill="#fff" stroke="#333b45"/><line x1="2" y1="13" x2="32" y2="13" stroke="#333b45"/></svg>',
 };
 
+// Entity types are drawn dynamically from the settings; these are the fixed
+// field and annotation symbols that follow them in the legend.
 const LEGEND_ITEMS = [
-  ['entity', 'Entity (name / type)'], ['single', 'Single-value field'], ['multi', 'Multi-value field'],
+  ['single', 'Single-value field'], ['multi', 'Multi-value field'],
   ['system', 'System field'], ['calculated', 'Calculated field'], ['event', 'Event'], ['api', 'API'], ['callback', 'Callback / method'],
 ];
 
@@ -254,7 +256,10 @@ function body(id, s) {
     return null;
   }
   if (id === 'legend') {
-    return html`<div class="legend-body">${LEGEND_ITEMS.map((item) => html`
+    return html`<div class="legend-body">
+      ${ctx.presentTypes().map((t) => html`
+      <div class="legend__item"><span class="legend__swatch" dangerouslySetInnerHTML=${{ __html: ctx.symbolSvg(t.symbol, t.color) }}></span><span class="legend__label">${t.label}</span></div>`)}
+      ${LEGEND_ITEMS.map((item) => html`
       <div class="legend__item"><span class="legend__swatch" dangerouslySetInnerHTML=${{ __html: SWATCHES[item[0]] }}></span><span class="legend__label">${item[1]}</span></div>`)}</div>`;
   }
   if (id === 'entities') {
@@ -340,18 +345,47 @@ function TableBody({ ctx, filter }) {
     </div>`;
 }
 
+function symbolSelect(ctx, type, value, onChange) {
+  return html`<sl-select class="type-row__symbol" size="small" hoist data-symbol=${type || ''} value=${value} onsl-change=${onChange}>
+    ${ctx.symbolOptions().map((o) => html`<sl-option value=${o.key}><span slot="prefix" class="type-row__preview" dangerouslySetInnerHTML=${{ __html: ctx.symbolSvg(o.key, '#c7d2df', 20) }}></span>${o.label}</sl-option>`)}
+  </sl-select>`;
+}
+
 function SettingsBody({ ctx }) {
+  const [nt, setNt] = useState({ name: '', label: '', color: '#cfe3f7', symbol: 'rounded' });
+
+  function add() {
+    if (ctx.addCustomType(nt.name, nt.label, nt.color, nt.symbol)) {
+      setNt({ name: '', label: '', color: '#cfe3f7', symbol: 'rounded' });
+    }
+  }
+
   return html`
     <div class="settings-body">
-      <h3 class="settings-section__title">Entity colours</h3>
-      <div id="color-settings" class="color-settings">
+      <h3 class="settings-section__title">Entity types</h3>
+      <div id="type-settings" class="type-settings">
         ${ctx.allTypes().map((t) => html`
-          <div class="color-row">
-            <span class="color-row__label">${ctx.typeLabel(t)}</span>
-            <sl-color-picker data-color=${t} value=${ctx.colorFor(t)} format="hex" size="small" no-format-toggle hoist onsl-input=${(e) => ctx.applyColor(t, e.target.value)}></sl-color-picker>
+          <div class="type-row" data-type-row=${t}>
+            <span class="type-row__label">${ctx.typeLabel(t)}</span>
+            <div class="type-row__controls">
+              <sl-color-picker data-color=${t} value=${ctx.colorFor(t)} format="hex" size="small" no-format-toggle hoist onsl-input=${(e) => ctx.applyColor(t, e.target.value)}></sl-color-picker>
+              ${symbolSelect(ctx, t, ctx.symbolFor(t), (e) => ctx.applySymbol(t, e.target.value))}
+              ${ctx.isCustomType(t) ? html`<button class="type-row__remove" type="button" title="Remove this custom type" onClick=${() => ctx.removeCustomType(t)}>${rawIcon('x', 14)}</button>` : null}
+            </div>
           </div>`)}
       </div>
-      <sl-button id="settings-reset" class="settings-reset" size="small" title="Restore the default entity colours" onClick=${() => ctx.resetColors()}>${rawIcon('rotate-ccw')}Reset to defaults</sl-button>
+      <div class="type-add">
+        <div class="type-add__names">
+          <input class="type-add__input" data-new-type placeholder="machine_name" value=${nt.name} onInput=${(e) => setNt((p) => ({ ...p, name: e.target.value }))} />
+          <input class="type-add__input" placeholder="Label" value=${nt.label} onInput=${(e) => setNt((p) => ({ ...p, label: e.target.value }))} />
+        </div>
+        <div class="type-add__controls">
+          <sl-color-picker value=${nt.color} format="hex" size="small" no-format-toggle hoist onsl-input=${(e) => setNt((p) => ({ ...p, color: e.target.value }))}></sl-color-picker>
+          ${symbolSelect(ctx, null, nt.symbol, (e) => setNt((p) => ({ ...p, symbol: e.target.value })))}
+          <sl-button size="small" variant="primary" data-add-type title="Add a custom entity type" onClick=${add}>${rawIcon('plus')}Add</sl-button>
+        </div>
+      </div>
+      <sl-button id="settings-reset" class="settings-reset" size="small" title="Restore the default colours and symbols" onClick=${() => ctx.resetColors()}>${rawIcon('rotate-ccw')}Reset to defaults</sl-button>
       <p class="panel__note">Saved to this browser and reused across diagrams.</p>
     </div>`;
 }

@@ -825,3 +825,34 @@ test('echoes a hovered control description into the status bar', async ({ page }
   await page.locator('#tidy').hover();
   await expect(page.locator('#statusbar-hint')).toHaveText('Tidy up: re-run the layout to arrange everything neatly');
 });
+
+test('draws entity types with their symbols and a dynamic legend', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+
+  const shapes = await page.evaluate(() => ({
+    node: window.__nexus.cy.nodes('[group="entity"][entityType="node"]').first().style('shape'),
+    vocab: window.__nexus.cy.nodes('[group="entity"][entityType="taxonomy_term"]').first().style('shape'),
+  }));
+  expect(shapes.node).toBe('round-rectangle');
+  expect(shapes.vocab).toBe('tag');
+
+  const legend = await page.locator('#legend .legend__label').allTextContents();
+  expect(legend).toContain('Content type');
+  expect(legend).toContain('Vocabulary');
+});
+
+test('changes a type symbol and adds a custom entity type in settings', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+  await page.click('#settings-toggle');
+
+  // Change the content-type symbol to a diamond and see the node reshape.
+  await slSelect(page, '#settings sl-select[data-symbol="node"]', 'diamond');
+  await expect.poll(() => page.evaluate(() => window.__nexus.cy.nodes('[group="entity"][entityType="node"]').first().style('shape'))).toBe('diamond');
+
+  // Add a custom type; it becomes a settings row.
+  await page.fill('#settings [data-new-type]', 'widget');
+  await page.click('#settings [data-add-type]');
+  await expect(page.locator('#settings [data-type-row="widget"]')).toHaveCount(1);
+});
