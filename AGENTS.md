@@ -24,6 +24,9 @@ The project was created from the Scaffold template, which supplies the CI workfl
 # Serve the app at http://127.0.0.1:8000 (ES modules don't load over file://)
 npm start
 
+# Copy the files that ship (index.html, assets/, examples/) into _site/
+npm run assemble
+
 # Run all linters (ESLint, Prettier)
 npm run lint
 
@@ -46,6 +49,7 @@ npm run test-coverage
 ## Testing Patterns
 
 - `tests/unit/*.test.js` use `node:test` and `node:assert` against the pure model modules, with shared fixtures in `tests/fixtures/`.
+- `tests/unit/assemble.test.js` runs `npm run assemble` and checks that `_site/` holds every file `index.html` and the bundled example load, so a file the app needs can't be left out of a deploy.
 - `tests/e2e/app.spec.js` drives the app with Playwright against `tests/server.mjs`, a dependency-free static server on port 8000, with config fixtures in `tests/e2e/fixtures/`. Code inside `page.evaluate()` runs in the browser, not in Node.
 - Coverage counts only the modules the unit tests load (`"all": false` in `.c8rc.json`), so browser-only modules don't count against the CI threshold.
 
@@ -57,8 +61,8 @@ npm run test-coverage
 
 ## CI/CD
 
-- `.github/workflows/test-nodejs.yml` - lint, unit tests with coverage on Node 22 and 24, and a Playwright end-to-end job
-- `.github/workflows/release.yml` - on a published release, assembles `index.html`, `assets/` and `examples/` into `_site`, stamps the version and deploys to GitHub Pages
+- `.github/workflows/test-nodejs.yml` - lint, unit tests with coverage on Node 22 and 24, a Playwright end-to-end job, and a Netlify deploy that runs once both pass: each pull request to its own preview, `main` to the project's main URL. The deploy reads the `NETLIFY_PROJECT_NAME` variable and the `NETLIFY_AUTH_TOKEN` secret and is skipped without them
+- `.github/workflows/release.yml` - on a published release, assembles `index.html`, `assets/` and `examples/` into `_site` with `npm run assemble`, stamps the version and deploys to GitHub Pages
 - `.github/workflows/draft-release-notes.yml` - keeps a draft release up to date as pull requests merge
 - `.github/workflows/assign-author.yml` - assigns each pull request to its author
 - `renovate.json` - Renovate keeps npm packages and the SHA-pinned actions up to date
