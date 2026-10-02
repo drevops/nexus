@@ -38,7 +38,7 @@ createServer(async (req, res) => {
     res.writeHead(200, { 'content-type': TYPES[extname(file)] || 'application/octet-stream' });
     res.end(body);
   }
-  catch (e) {
+  catch {
     res.writeHead(404, { 'content-type': 'text/plain' });
     res.end('Not found');
   }

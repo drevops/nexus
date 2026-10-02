@@ -100,7 +100,7 @@ async function loadFromFiles(fileList) {
       try {
         data = window.jsyaml.load(await file.text());
       }
-      catch (e) {
+      catch {
         continue;
       }
 
@@ -131,7 +131,7 @@ async function loadExample() {
       try {
         map[name] = window.jsyaml.load(text);
       }
-      catch (e) {
+      catch {
         // Skip files that fail to parse.
       }
     }));
@@ -140,7 +140,7 @@ async function loadExample() {
     try {
       annotations = window.jsyaml.load(await fetch(EXAMPLE_BASE + 'annotations.yml').then((r) => r.text()));
     }
-    catch (e) {
+    catch {
       // Example annotations are optional.
     }
 
@@ -351,7 +351,7 @@ function applyTheme(dark) {
   try {
     window.localStorage.setItem('nexusTheme', dark ? 'dark' : 'light');
   }
-  catch (e) {
+  catch {
     // Storage may be unavailable; the theme still applies for this session.
   }
 }
@@ -362,7 +362,7 @@ function initTheme() {
     const saved = window.localStorage.getItem('nexusTheme');
     dark = saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
   }
-  catch (e) {
+  catch {
     dark = false;
   }
   applyTheme(dark);

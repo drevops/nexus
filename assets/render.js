@@ -82,7 +82,7 @@ function loadSettings() {
   try {
     return JSON.parse(window.localStorage.getItem(SETTINGS_KEY)) || {};
   }
-  catch (e) {
+  catch {
     return {};
   }
 }
@@ -91,7 +91,7 @@ function saveSettings() {
   try {
     window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
   }
-  catch (e) {
+  catch {
     // Storage may be unavailable (e.g. private mode); fall back to in-memory.
   }
 }

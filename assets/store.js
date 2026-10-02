@@ -54,7 +54,7 @@ function loadLayout() {
   try {
     return JSON.parse(window.localStorage.getItem(LAYOUT_KEY));
   }
-  catch (e) {
+  catch {
     return null;
   }
 }
@@ -63,7 +63,7 @@ function saveLayout() {
   try {
     window.localStorage.setItem(LAYOUT_KEY, JSON.stringify(layoutSnapshot()));
   }
-  catch (e) {
+  catch {
     // Storage may be unavailable (private mode); keep the in-memory layout.
   }
 }
