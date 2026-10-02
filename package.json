@@ -18,6 +18,7 @@
     },
     "scripts": {
         "start": "node tests/server.mjs",
+        "assemble": "rm -rf _site && mkdir _site && cp -R index.html assets examples _site/",
         "lint": "eslint assets tests eslint.config.js playwright.config.js && prettier --check \"assets/*.js\" \"tests/**/*.{js,mjs}\" eslint.config.js playwright.config.js",
         "lint-fix": "eslint --fix assets tests eslint.config.js playwright.config.js && prettier --write \"assets/*.js\" \"tests/**/*.{js,mjs}\" eslint.config.js playwright.config.js",
         "test": "npm run test-unit && npm run test-e2e",
