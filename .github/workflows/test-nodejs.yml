@@ -18,11 +18,11 @@ on:
         required: false
         default: false
 
-# Pull request runs share a group per pull request, so a new push cancels the
-# superseded run and its deploy. Other events get a unique group from run_id.
+# Runs queue per event and pull request or ref, so pushes to main deploy in
+# order. A new push to a pull request cancels its superseded run instead.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   test-nodejs:
