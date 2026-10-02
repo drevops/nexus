@@ -71,7 +71,7 @@ function renderedLines(locator) {
 // first non-transparent background among its ancestors.
 function textContrast(locator) {
   return locator.evaluate((element) => {
-    const channels = (color) => color.match(/[\d.]+/g).slice(0, 3).map(Number);
+    const channels = (color) => color.match(/[\d.]+/g).map(Number);
     const luminance = (color) => {
       const [r, g, b] = channels(color).map((value) => {
         const c = value / 255;
