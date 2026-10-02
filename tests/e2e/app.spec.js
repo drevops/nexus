@@ -37,6 +37,36 @@ async function openDocument(page, doc) {
   await waitForGraph(page);
 }
 
+// Returns the text of each rendered line in every matched element. A character
+// whose box sits lower than the current line starts a new one.
+function renderedLines(locator) {
+  return locator.evaluateAll((elements) =>
+    elements.map((element) => {
+      const lines = [];
+      const range = document.createRange();
+      const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+      let top = null;
+
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        for (let i = 0; i < node.length; i++) {
+          range.setStart(node, i);
+          range.setEnd(node, i + 1);
+          const charTop = range.getBoundingClientRect().top;
+
+          if (top === null || charTop > top + 1) {
+            lines.push('');
+            top = charTop;
+          }
+
+          lines[lines.length - 1] += node.data[i];
+        }
+      }
+
+      return lines;
+    }),
+  );
+}
+
 test.beforeEach(async ({ page }) => {
   await page.goto('/index.html');
 });
@@ -984,6 +1014,25 @@ test('exports the fields table as CSV', async ({ page }) => {
   const lines = csv.split('\r\n');
   expect(lines[0]).toBe('Entity,Entity type,Field,Machine name,Field type,Cardinality,Required,References');
   expect(lines.some((l) => l.startsWith('Episode,Content type,'))).toBe(true);
+});
+
+test('wraps field types and machine names in the fields table only after an underscore', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+  await page.click('#table-toggle');
+  await expect(page.locator('#field-table')).toContainText('entity_reference_revisions');
+
+  const types = await renderedLines(page.locator('#field-table tbody td:nth-child(2)'));
+  const names = await renderedLines(page.locator('#field-table tbody td:nth-child(1) code'));
+  const midWord = [...types, ...names].filter((lines) => lines.slice(0, -1).some((line) => !line.endsWith('_')));
+  expect(midWord).toEqual([]);
+
+  // entity_reference_revisions is far wider than its column, so its cell must
+  // wrap.
+  const revisions = page.locator('#field-table tbody td:nth-child(2)', { hasText: 'entity_reference_revisions' }).first();
+  await expect(revisions).toHaveText('entity_reference_revisions');
+  const [revisionLines] = await renderedLines(revisions);
+  expect(revisionLines.length).toBeGreaterThan(1);
 });
 
 test('echoes a hovered control description into the status bar', async ({ page }) => {

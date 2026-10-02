@@ -27,6 +27,20 @@ export function cardinalityLabel(cardinality) {
 }
 
 /**
+ * Splits a machine name or field type after each underscore run between 2
+ * words: 'entity_reference_revisions' gives 'entity_', 'reference_' and
+ * 'revisions'. The segments join back to the original text, and a missing or
+ * empty value gives none.
+ */
+export function identifierSegments(value) {
+  if (value == null || value === '') {
+    return [];
+  }
+
+  return String(value).split(/(?<=[^_]_+)(?=[^_])/);
+}
+
+/**
  * A single field on an entity bundle.
  */
 export class Field {

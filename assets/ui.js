@@ -13,7 +13,7 @@ import { h, render, Component } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
 import htmBase from 'htm';
 import { icon } from './icons.js';
-import { cardinalityLabel } from './model.js';
+import { cardinalityLabel, identifierSegments } from './model.js';
 import { InspectorBody } from './inspector.js';
 import {
   getState,
@@ -349,6 +349,12 @@ function cardBadge(r) {
   return html`<span class=${'badge badge--' + (r.cardinality === 1 ? 'single' : 'multi')} title=${'Cardinality: ' + label}>${label}</span>`;
 }
 
+// An underscore is not a line-break opportunity, so a <wbr> after each
+// underscore run lets an identifier wrap between its words.
+function wrappable(value) {
+  return identifierSegments(value).map((segment, i) => (i ? html`<wbr />${segment}` : segment));
+}
+
 function TableBody({ ctx, filter }) {
   const [term, setTerm] = useState('');
   const records = ctx.records().filter((r) => {
@@ -375,8 +381,8 @@ function TableBody({ ctx, filter }) {
     }
     rows.push(
       html`<tr>
-        <td>${r.field}<br /><code>${r.name}</code></td>
-        <td>${r.type}</td>
+        <td>${r.field}<br /><code>${wrappable(r.name)}</code></td>
+        <td>${wrappable(r.type)}</td>
         <td>${cardBadge(r)}</td>
         <td>${r.required ? '✓' : ''}</td>
         <td>
