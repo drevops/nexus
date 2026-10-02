@@ -1034,14 +1034,12 @@ function buildController(model, options = {}) {
     isCustomType: (type) => customTypes().some((t) => t.type === type),
     allTypes: () => allTypeKeys(),
     entities: () =>
-      cy
-        .nodes('[group="entity"]')
-        .map((e) => ({
-          id: e.id(),
-          label: e.data('label'),
-          entityType: e.data('entityType'),
-          fieldCount: cy.nodes('[group="field"][entity="' + e.id() + '"]').length,
-        })),
+      cy.nodes('[group="entity"]').map((e) => ({
+        id: e.id(),
+        label: e.data('label'),
+        entityType: e.data('entityType'),
+        fieldCount: cy.nodes('[group="field"][entity="' + e.id() + '"]').length,
+      })),
     records: () =>
       cy.nodes('[group="field"]').map((f) => {
         const owner = cy.getElementById(f.data('entity'));
