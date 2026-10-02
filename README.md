@@ -8,9 +8,13 @@
 
 Draw a Drupal site's content model as an interactive diagram - entirely in your browser.
 
-[![Test](https://github.com/drevops/nexus/actions/workflows/test.yml/badge.svg)](https://github.com/drevops/nexus/actions/workflows/test.yml)
+[![GitHub Issues](https://img.shields.io/github/issues/drevops/nexus.svg)](https://github.com/drevops/nexus/issues)
+[![GitHub Pull Requests](https://img.shields.io/github/issues-pr/drevops/nexus.svg)](https://github.com/drevops/nexus/pulls)
+[![Test Node.js](https://github.com/drevops/nexus/actions/workflows/test-nodejs.yml/badge.svg)](https://github.com/drevops/nexus/actions/workflows/test-nodejs.yml)
 [![Release](https://github.com/drevops/nexus/actions/workflows/release.yml/badge.svg)](https://github.com/drevops/nexus/actions/workflows/release.yml)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/drevops/nexus)
 ![LICENSE](https://img.shields.io/github/license/drevops/nexus)
+![Renovate](https://img.shields.io/badge/renovate-enabled-green?logo=renovatebot)
 
 </div>
 
@@ -31,7 +35,7 @@ Nexus is a static web app. Drop a Drupal **exported configuration folder** onto 
 
 ## Usage
 
-1. Open the app (or run it locally - see [Development](#development)).
+1. Open the app (or run it locally - see [`CONTRIBUTING.md`](CONTRIBUTING.md)).
 2. **Choose a config folder** or drag one onto the drop zone - the folder of `*.yml` files exported from a Drupal site (its config sync directory), or a module's `config/install`. Or click **Try the example**.
 3. Explore with the toolbar; export as PNG, SVG or CSV.
 
@@ -86,25 +90,13 @@ computed_fields:
 - `edges` draw explicit links between any two nodes.
 - `computed_fields` add calculated fields to an entity, keyed by its `entity_type.bundle` id.
 
-## Development
+## Contributing
 
-No build step - it is static ES modules plus vendored libraries under `assets/vendor/`. ES modules require HTTP (not `file://`), so use the dev server:
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for local development setup, the linting and testing commands, and how a release deploys to GitHub Pages.
 
-```bash
-npm install       # dev dependencies (Playwright) for the tests
-npm start         # serve at http://127.0.0.1:8000
-npm run test:unit # Node's built-in test runner - the parser/model/annotations
-npm run test:e2e  # Playwright - the app end to end (upload, render, export)
-npm test          # both
-```
+## Updating
 
-- `assets/{parser,model,base-fields,annotations}.js` - the offline model builder (pure, dependency-free).
-- `assets/render.js` - the Cytoscape renderer.
-- `assets/{app,export}.js` - folder loading and PNG/SVG/CSV export.
-
-## Deployment
-
-Publishing a GitHub **release** builds and deploys the static site to GitHub Pages via `.github/workflows/release.yml` (assembles `index.html`, `assets/` and `examples/`, and stamps the release tag as the app version). Pushes to `main` only run the tests - they never deploy. Enable Pages once with the "GitHub Actions" source.
+To pull the latest infrastructure from the template into this project, ask Claude Code to "update scaffold" - see [`AGENTS.md`](AGENTS.md) for details.
 
 ## Privacy
 
@@ -116,3 +108,5 @@ Nexus is free software, released under the [GNU General Public License, version 
 
 ---
 _Rendered with [Cytoscape.js](https://js.cytoscape.org/) and [Dagre](https://github.com/dagrejs/dagre); YAML via [js-yaml](https://github.com/nodeca/js-yaml)._
+
+_This repository was created using the [Scaffold](https://getscaffold.dev/) project template_
