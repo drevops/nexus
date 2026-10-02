@@ -31,11 +31,7 @@ jobs:
           persist-credentials: false
 
       - name: Assemble static site
-        run: |
-          mkdir -p _site
-          cp index.html _site/
-          cp -r assets _site/
-          cp -r examples _site/
+        run: npm run assemble
 
       # The source ships version.js as `dev`; stamp the published release tag so
       # the deployed build reports its version. Manual runs stay on `dev`.
