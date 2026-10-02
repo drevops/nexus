@@ -740,8 +740,8 @@ function buildController(model, options = {}) {
   }
 
   // A field's placed proxies fix its column. Otherwise the column clears the
-  // widest field on that side of the entity, so no proxy is drawn beside
-  // another field.
+  // widest of the entity's fields stacked with this one, so no proxy is drawn
+  // beside another field.
   function proxyColumn(field, proxy, missing) {
     const placed = field.outgoers('node[group="proxy"]').difference(missing);
     if (placed.nonempty()) {
@@ -751,8 +751,12 @@ function buildController(model, options = {}) {
     const entity = cy.getElementById(field.data('entity'));
     const sideOf = (node) => (node.position('x') < entity.position('x') ? -1 : 1);
     const side = sideOf(field);
-    const peers = cy.nodes('[group="field"][entity="' + entity.id() + '"]').filter((peer) => sideOf(peer) === side);
-    const box = peers.boundingBox();
+    const own = field.boundingBox();
+    const stack = cy.nodes('[group="field"][entity="' + entity.id() + '"]').filter((peer) => {
+      const box = peer.boundingBox();
+      return sideOf(peer) === side && box.x1 < own.x2 && own.x1 < box.x2;
+    });
+    const box = stack.boundingBox();
     const edge = side > 0 ? box.x2 : box.x1;
 
     return edge + side * (LAYOUT_SPACING.fields.rankSep + proxy.outerWidth() / 2);

@@ -27,6 +27,12 @@ function splitId(id) {
 export function documentFromGraph(cy, meta = {}) {
   const layout = {};
   cy.nodes().forEach((node) => {
+    // Layout runs skip hidden proxies, so their positions are stale. Unlike
+    // other nodes, a proxy without a saved position is placed beside its field
+    // on open.
+    if (node.data('group') === 'proxy' && !node.visible()) {
+      return;
+    }
     const position = node.position();
     layout[node.id()] = { x: Math.round(position.x), y: Math.round(position.y) };
   });

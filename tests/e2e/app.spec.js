@@ -338,6 +338,24 @@ test('reopens a saved diagram with every node where it was saved', async ({ page
   expect(positions).toEqual(doc.layout);
 });
 
+function proxyPlacement(page) {
+  return page.evaluate(() => {
+    const cy = window.__nexus.cy;
+    const overlap = (a, b) => a.x1 < b.x2 && b.x1 < a.x2 && a.y1 < b.y2 && b.y1 < a.y2;
+    return cy.nodes('[group="proxy"]').map((proxy) => {
+      const field = proxy.incomers('node');
+      const box = proxy.boundingBox();
+      return {
+        gap: box.x1 - field.boundingBox().x2,
+        clearance: box.x1 - cy.nodes('[group="field"][entity="' + field.data('entity') + '"]').boundingBox().x2,
+        dx: Math.abs(proxy.position('x') - field.position('x')),
+        dy: Math.abs(proxy.position('y') - field.position('y')),
+        overlaps: cy.nodes().filter((node) => !node.same(proxy) && overlap(node.boundingBox(), box)).length,
+      };
+    });
+  });
+}
+
 test('places proxies missing from a saved layout beside their field', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);
@@ -349,24 +367,34 @@ test('places proxies missing from a saved layout beside their field', async ({ p
   await page.goto('/index.html');
   await openDocument(page, doc);
 
-  const placement = await page.evaluate(() => {
-    const cy = window.__nexus.cy;
-    const overlap = (a, b) => a.x1 < b.x2 && b.x1 < a.x2 && a.y1 < b.y2 && b.y1 < a.y2;
-    return cy.nodes('[group="proxy"]').map((proxy) => {
-      const field = proxy.incomers('node');
-      const box = proxy.boundingBox();
-      return {
-        clearance: box.x1 - cy.nodes('[group="field"][entity="' + field.data('entity') + '"]').boundingBox().x2,
-        dy: Math.abs(proxy.position('y') - field.position('y')),
-        overlaps: cy.nodes().filter((node) => !node.same(proxy) && overlap(node.boundingBox(), box)).length,
-      };
-    });
-  });
+  const placement = await proxyPlacement(page);
   expect(placement.length).toBeGreaterThan(0);
   placement.forEach((proxy) => {
     expect(proxy.clearance).toBeGreaterThan(0);
     expect(proxy.clearance).toBeLessThan(100);
     expect(proxy.dy).toBeLessThan(100);
+    expect(proxy.overlaps).toBe(0);
+  });
+});
+
+test('leaves hidden proxies out of a saved layout and places them beside their field on open', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+  await page.click('#proxy-toggle');
+
+  const [download] = await Promise.all([page.waitForEvent('download'), page.click('#doc-save')]);
+  const doc = JSON.parse(readFileSync(await download.path(), 'utf8'));
+  expect(Object.keys(doc.layout).filter((id) => id.startsWith('proxy:'))).toEqual([]);
+
+  await page.goto('/index.html');
+  await openDocument(page, doc);
+
+  const placement = await proxyPlacement(page);
+  expect(placement.length).toBeGreaterThan(0);
+  placement.forEach((proxy) => {
+    expect(proxy.gap).toBeGreaterThan(0);
+    expect(proxy.dx).toBeLessThan(300);
+    expect(proxy.dy).toBeLessThan(200);
     expect(proxy.overlaps).toBe(0);
   });
 });
