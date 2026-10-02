@@ -364,7 +364,8 @@ function applyTheme(dark) {
   const btn = $('theme-toggle');
   if (btn) {
     btn.innerHTML = icon(dark ? 'sun' : 'moon');
-    btn.title = dark ? 'Switch to light theme' : 'Switch to dark theme';
+    // SlButton does not reflect its title property, so set the attribute.
+    btn.setAttribute('title', dark ? 'Switch to light theme' : 'Switch to dark theme');
   }
   if (window.__nexus && window.__nexus.applyTheme) {
     window.__nexus.applyTheme();
@@ -392,14 +393,24 @@ function initTheme() {
 // description appears without waiting for the native tooltip.
 function initStatusbar() {
   const hint = $('statusbar-hint');
+  let hovered = null;
+
+  const echo = (el) => {
+    hovered = el;
+    hint.textContent = el ? el.getAttribute('title') || '' : '';
+  };
+
+  // A title change under a still pointer fires no mouseover, so watch the
+  // attribute too.
+  const observer = new MutationObserver(() => echo(hovered));
+
   document.querySelectorAll('.toolbar, .statusbar').forEach((zone) => {
     zone.addEventListener('mouseover', (evt) => {
       const el = evt.target.closest('[title]');
-      hint.textContent = el && zone.contains(el) ? el.getAttribute('title') : '';
+      echo(el && zone.contains(el) ? el : null);
     });
-    zone.addEventListener('mouseleave', () => {
-      hint.textContent = '';
-    });
+    zone.addEventListener('mouseleave', () => echo(null));
+    observer.observe(zone, { attributes: true, attributeFilter: ['title'], subtree: true });
   });
 }
 

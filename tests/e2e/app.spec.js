@@ -545,14 +545,17 @@ test('toggles a dark theme that persists across reloads', async ({ page }) => {
   await waitForGraph(page);
 
   expect(await page.evaluate(() => document.documentElement.classList.contains('sl-theme-dark'))).toBe(false);
+  await expect(page.locator('#theme-toggle')).toHaveAttribute('title', 'Switch to dark theme');
   await page.click('#theme-toggle');
   expect(await page.evaluate(() => document.documentElement.classList.contains('sl-theme-dark'))).toBe(true);
+  await expect(page.locator('#theme-toggle')).toHaveAttribute('title', 'Switch to light theme');
   expect(await page.evaluate(() => window.localStorage.getItem('nexusTheme'))).toBe('dark');
 
   await page.reload();
   await page.click('#example-btn');
   await waitForGraph(page);
   expect(await page.evaluate(() => document.documentElement.classList.contains('sl-theme-dark'))).toBe(true);
+  await expect(page.locator('#theme-toggle')).toHaveAttribute('title', 'Switch to light theme');
 });
 
 test('exports the diagram as PNG named after the title', async ({ page }) => {
@@ -826,6 +829,53 @@ test('echoes a hovered control description into the status bar', async ({ page }
 
   await page.locator('#tidy').hover();
   await expect(page.locator('#statusbar-hint')).toHaveText('Tidy up: re-run the layout to arrange everything neatly');
+});
+
+test('describes the switched theme when the theme toggle is hovered again', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+
+  await page.click('#theme-toggle');
+  await page.locator('#tidy').hover();
+  await expect(page.locator('#statusbar-hint')).toHaveText('Tidy up: re-run the layout to arrange everything neatly');
+
+  await page.locator('#theme-toggle').hover();
+  await expect(page.locator('#statusbar-hint')).toHaveText('Switch to light theme');
+});
+
+test('refreshes the status bar hint when the hovered theme toggle is clicked', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+
+  // Rest the pointer beside the icon and click in place, so neither a replaced
+  // icon nor pointer movement fires a fresh mouseover.
+  await page.locator('#theme-toggle').hover({ position: { x: 3, y: 12 } });
+  await expect(page.locator('#statusbar-hint')).toHaveText('Switch to dark theme');
+
+  await page.mouse.down();
+  await page.mouse.up();
+  await expect(page.locator('#theme-toggle')).toHaveAttribute('title', 'Switch to light theme');
+  await expect(page.locator('#statusbar-hint')).toHaveText('Switch to light theme');
+
+  await page.mouse.down();
+  await page.mouse.up();
+  await expect(page.locator('#theme-toggle')).toHaveAttribute('title', 'Switch to dark theme');
+  await expect(page.locator('#statusbar-hint')).toHaveText('Switch to dark theme');
+});
+
+test('keeps the status bar hint on the hovered control when another control is retitled', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+
+  await page.locator('#tidy').hover();
+  await page.locator('#theme-toggle').evaluate((el) => el.click());
+  await expect(page.locator('#theme-toggle')).toHaveAttribute('title', 'Switch to light theme');
+  await expect(page.locator('#statusbar-hint')).toHaveText('Tidy up: re-run the layout to arrange everything neatly');
+
+  await page.locator('#cy').hover();
+  await page.locator('#theme-toggle').evaluate((el) => el.click());
+  await expect(page.locator('#theme-toggle')).toHaveAttribute('title', 'Switch to dark theme');
+  await expect(page.locator('#statusbar-hint')).toHaveText('');
 });
 
 test('shows interaction tips in the middle of the status bar', async ({ page }) => {
