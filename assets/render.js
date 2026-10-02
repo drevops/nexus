@@ -717,7 +717,8 @@ function buildController(model, options = {}) {
       return;
     }
 
-    const taken = cy.nodes().difference(missing).map((node) => node.boundingBox());
+    const settled = cy.nodes().difference(missing);
+    const taken = settled.map((node) => node.boundingBox());
     missing.forEach((proxy) => {
       const field = proxy.incomers('node');
       const x = proxyColumn(field, proxy, missing);
