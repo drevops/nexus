@@ -32,6 +32,11 @@ async function slSelect(page, selector, value) {
   }, value);
 }
 
+async function openDocument(page, doc) {
+  await page.setInputFiles('#doc-open', { name: 'diagram.nexus.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(doc)) });
+  await waitForGraph(page);
+}
+
 test.beforeEach(async ({ page }) => {
   await page.goto('/index.html');
 });
@@ -342,28 +347,32 @@ test('places proxies missing from a saved layout beside their field', async ({ p
   doc.layout = Object.fromEntries(Object.entries(doc.layout).filter(([id]) => !id.startsWith('proxy:')));
 
   await page.goto('/index.html');
-  await page.setInputFiles('#doc-open', { name: 'example.nexus.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(doc)) });
-  await waitForGraph(page);
+  await openDocument(page, doc);
 
-  const offsets = await page.evaluate(() =>
-    window.__nexus.cy.nodes('[group="proxy"]').map((proxy) => {
+  const placement = await page.evaluate(() => {
+    const cy = window.__nexus.cy;
+    const overlap = (a, b) => a.x1 < b.x2 && b.x1 < a.x2 && a.y1 < b.y2 && b.y1 < a.y2;
+    return cy.nodes('[group="proxy"]').map((proxy) => {
       const field = proxy.incomers('node');
+      const box = proxy.boundingBox();
       return {
-        gap: proxy.position('x') - proxy.outerWidth() / 2 - (field.position('x') + field.outerWidth() / 2),
+        clearance: box.x1 - cy.nodes('[group="field"][entity="' + field.data('entity') + '"]').boundingBox().x2,
         dy: Math.abs(proxy.position('y') - field.position('y')),
+        overlaps: cy.nodes().filter((node) => !node.same(proxy) && overlap(node.boundingBox(), box)).length,
       };
-    }),
-  );
-  expect(offsets.length).toBeGreaterThan(0);
-  offsets.forEach((offset) => {
-    expect(offset.gap).toBeGreaterThan(0);
-    expect(offset.gap).toBeLessThan(100);
-    expect(offset.dy).toBeLessThan(100);
+    });
+  });
+  expect(placement.length).toBeGreaterThan(0);
+  placement.forEach((proxy) => {
+    expect(proxy.clearance).toBeGreaterThan(0);
+    expect(proxy.clearance).toBeLessThan(100);
+    expect(proxy.dy).toBeLessThan(100);
+    expect(proxy.overlaps).toBe(0);
   });
 });
 
-test('stacks missing proxies beside their field, on the side away from the entity', async ({ page }) => {
-  const doc = {
+function proxyDocument(extraLayout) {
+  return {
     nexus: 1,
     title: 'Proxy placement',
     entities: [
@@ -387,17 +396,19 @@ test('stacks missing proxies beside their field, on the side away from the entit
       'taxonomy_term.tags': { x: 0, y: 300 },
       'taxonomy_term.topics': { x: 200, y: 300 },
       'user.user': { x: 0, y: -300 },
+      ...extraLayout,
     },
   };
-  await page.setInputFiles('#doc-open', { name: 'proxies.nexus.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(doc)) });
-  await waitForGraph(page);
+}
 
-  const box = await page.evaluate(() => {
+function proxyBoxes(page) {
+  return page.evaluate(() => {
     const cy = window.__nexus.cy;
     const read = (id) => {
       const node = cy.getElementById(id);
+      const position = node.position();
       const half = node.outerWidth() / 2;
-      return { left: node.position('x') - half, right: node.position('x') + half, y: node.position('y'), height: node.outerHeight() };
+      return { left: position.x - half, right: position.x + half, x: position.x, y: position.y, height: node.outerHeight() };
     };
     return {
       tags: read('field:node.article:field_tags'),
@@ -407,16 +418,32 @@ test('stacks missing proxies beside their field, on the side away from the entit
       userProxy: read('proxy:field:node.article:field_author>user.user'),
     };
   });
+}
+
+test('stacks missing proxies beside their field, on the side away from the entity', async ({ page }) => {
+  await openDocument(page, proxyDocument({}));
+  const box = await proxyBoxes(page);
 
   expect(box.tagsProxy.left).toBeGreaterThan(box.tags.right);
   expect(box.tagsProxy.left - box.tags.right).toBeLessThan(100);
   expect(box.topicsProxy.left).toBeCloseTo(box.tagsProxy.left);
-  expect(box.tagsProxy.y + box.topicsProxy.y).toBeCloseTo(2 * box.tags.y);
-  expect(Math.abs(box.tagsProxy.y - box.topicsProxy.y)).toBeGreaterThanOrEqual(box.tagsProxy.height);
+  expect(box.tagsProxy.y).toBeCloseTo(box.tags.y);
+  expect(box.topicsProxy.y - box.tagsProxy.y).toBeGreaterThanOrEqual(box.tagsProxy.height);
 
   expect(box.userProxy.right).toBeLessThan(box.author.left);
   expect(box.author.left - box.userProxy.right).toBeLessThan(100);
   expect(box.userProxy.y).toBeCloseTo(box.author.y);
+});
+
+test("adds a missing proxy to the column of its field's saved proxies", async ({ page }) => {
+  await openDocument(page, proxyDocument({ 'proxy:field:node.article:field_tags>taxonomy_term.tags': { x: 400, y: 0 } }));
+  const box = await proxyBoxes(page);
+
+  expect(box.tagsProxy.x).toBe(400);
+  expect(box.tagsProxy.y).toBe(0);
+  expect(box.topicsProxy.x).toBeCloseTo(400);
+  expect(Math.abs(box.topicsProxy.y - box.tagsProxy.y)).toBeGreaterThanOrEqual(box.tagsProxy.height);
+  expect(Math.abs(box.topicsProxy.y - box.tagsProxy.y)).toBeLessThan(2 * box.tagsProxy.height);
 });
 
 test('reopens the import screen and cancels back to the diagram', async ({ page }) => {

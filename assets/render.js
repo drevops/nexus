@@ -296,6 +296,10 @@ function esc(value) {
   });
 }
 
+function overlaps(a, b) {
+  return a.x1 < b.x2 && b.x1 < a.x2 && a.y1 < b.y2 && b.y1 < a.y2;
+}
+
 function buildElements(model) {
   const nodes = model.nodes || [];
   const ids = {};
@@ -705,26 +709,53 @@ function buildController(model, options = {}) {
   }
 
   // Proxies are built at render time, so a saved layout can lack positions for
-  // some (see addReference() in builder.js). A missing proxy is placed on the
-  // side of its field away from the entity, so it does not overlap the entity.
+  // some (see addReference() in builder.js). A missing proxy is placed in the
+  // free slot of its field's proxy column nearest the field.
   function placeMissingProxies(layout) {
-    const spacing = LAYOUT_SPACING.fields;
-    cy.nodes('[group="field"]').forEach((field) => {
-      const proxies = field.outgoers('node[group="proxy"]').filter((proxy) => !layout[proxy.id()]);
-      if (proxies.empty()) {
-        return;
+    const missing = cy.nodes('[group="proxy"]').filter((proxy) => !layout[proxy.id()]);
+    if (missing.empty()) {
+      return;
+    }
+
+    const taken = cy.nodes().difference(missing).map((node) => node.boundingBox());
+    missing.forEach((proxy) => {
+      const field = proxy.incomers('node');
+      const x = proxyColumn(field, proxy, missing);
+      const y = field.position('y');
+      const width = proxy.outerWidth();
+      const height = proxy.outerHeight();
+      const step = height + LAYOUT_SPACING.fields.nodeSep;
+      const slotBox = (dy) => ({ x1: x - width / 2, x2: x + width / 2, y1: y + dy - height / 2, y2: y + dy + height / 2 });
+      let offset = 0;
+
+      // Offsets alternate below and above the field (0, +1, -1, +2, -2...
+      // steps), so its proxies centre on it.
+      while (taken.some((other) => overlaps(other, slotBox(offset)))) {
+        offset = offset > 0 ? -offset : step - offset;
       }
 
-      const anchor = field.position();
-      const side = anchor.x < cy.getElementById(field.data('entity')).position('x') ? -1 : 1;
-      const step = proxies.first().outerHeight() + spacing.nodeSep;
-      proxies.forEach((proxy, index) => {
-        proxy.position({
-          x: anchor.x + side * (field.outerWidth() / 2 + spacing.rankSep + proxy.outerWidth() / 2),
-          y: anchor.y + (index - (proxies.length - 1) / 2) * step,
-        });
-      });
+      proxy.position({ x: x, y: y + offset });
+      taken.push(slotBox(offset));
     });
+  }
+
+  // A field's placed proxies fix its column. Otherwise the column clears the
+  // widest field on that side of the entity, so no proxy is drawn beside
+  // another field.
+  function proxyColumn(field, proxy, missing) {
+    const placed = field.outgoers('node[group="proxy"]').difference(missing);
+    if (placed.nonempty()) {
+      return placed.first().position('x');
+    }
+
+    const entity = cy.getElementById(field.data('entity'));
+    const sideOf = (node) => (node.position('x') < entity.position('x') ? -1 : 1);
+    const side = sideOf(field);
+    const peers = cy.nodes('[group="field"][entity="' + entity.id() + '"]').filter((peer) => sideOf(peer) === side);
+    const box = peers.boundingBox();
+    const edge = side > 0 ? box.x2 : box.x1;
+
+    return edge + side * (LAYOUT_SPACING.fields.rankSep + proxy.outerWidth() / 2);
   }
 
   function focusEntity(id) {
