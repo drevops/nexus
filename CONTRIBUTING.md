@@ -28,7 +28,7 @@ Nexus has no build step: it's static ES modules plus vendored libraries under `a
 
 ## Previews on Netlify
 
-Every pull request gets a live preview, so you can click through a change before it merges. The `Deploy to Netlify` job in `.github/workflows/test-nodejs.yml` waits for every other job in that workflow, so it runs only once linting, the unit tests on each Node version and the end-to-end suite have all passed. It builds `_site/` with `npm run assemble`, the same step a release uses, then uploads it to the Netlify project:
+Once the repository settings below are in place, every pull request from a branch of this repository gets a live preview, so you can click through a change before it merges. The `Deploy to Netlify` job in `.github/workflows/test-nodejs.yml` waits for every other job in that workflow, so it runs only once linting, the unit tests on each Node version and the end-to-end suite have all passed. It builds `_site/` with `npm run assemble`, the same step a release uses, then uploads it to the Netlify project:
 
 - A pull request deploys to its own address, `https://deploy-preview-<number>--<project>.netlify.app`, and the job posts that link as a comment on the pull request. Later pushes update the same address and the same comment.
 - A push to `main` deploys to the project's main address, `https://<project>.netlify.app`, so it always shows the latest merged code.

@@ -92,7 +92,7 @@ computed_fields:
 
 ## Contributing
 
-See [`CONTRIBUTING.md`](CONTRIBUTING.md) for local development setup, the linting and testing commands, the Netlify preview every pull request gets, and how a release deploys to GitHub Pages.
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for local development setup, the linting and testing commands, the Netlify previews for pull requests, and how a release deploys to GitHub Pages.
 
 ## Updating
 
