@@ -311,6 +311,114 @@ test('saves and reloads a Nexus diagram document', async ({ page }) => {
   expect(await page.evaluate(() => window.__nexus.cy.getElementById('node.program').length)).toBe(1);
 });
 
+test('reopens a saved diagram with every node where it was saved', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+
+  const [download] = await Promise.all([page.waitForEvent('download'), page.click('#doc-save')]);
+  const saved = await download.path();
+  const doc = JSON.parse(readFileSync(saved, 'utf8'));
+
+  await page.goto('/index.html');
+  await page.setInputFiles('#doc-open', saved);
+  await waitForGraph(page);
+
+  const positions = await page.evaluate(() => {
+    const result = {};
+    window.__nexus.cy.nodes().forEach((node) => {
+      result[node.id()] = node.position();
+    });
+    return result;
+  });
+  expect(positions).toEqual(doc.layout);
+});
+
+test('places proxies missing from a saved layout beside their field', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+
+  const [download] = await Promise.all([page.waitForEvent('download'), page.click('#doc-save')]);
+  const doc = JSON.parse(readFileSync(await download.path(), 'utf8'));
+  doc.layout = Object.fromEntries(Object.entries(doc.layout).filter(([id]) => !id.startsWith('proxy:')));
+
+  await page.goto('/index.html');
+  await page.setInputFiles('#doc-open', { name: 'example.nexus.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(doc)) });
+  await waitForGraph(page);
+
+  const offsets = await page.evaluate(() =>
+    window.__nexus.cy.nodes('[group="proxy"]').map((proxy) => {
+      const field = proxy.incomers('node');
+      return {
+        gap: proxy.position('x') - proxy.outerWidth() / 2 - (field.position('x') + field.outerWidth() / 2),
+        dy: Math.abs(proxy.position('y') - field.position('y')),
+      };
+    }),
+  );
+  expect(offsets.length).toBeGreaterThan(0);
+  offsets.forEach((offset) => {
+    expect(offset.gap).toBeGreaterThan(0);
+    expect(offset.gap).toBeLessThan(100);
+    expect(offset.dy).toBeLessThan(100);
+  });
+});
+
+test('stacks missing proxies beside their field, on the side away from the entity', async ({ page }) => {
+  const doc = {
+    nexus: 1,
+    title: 'Proxy placement',
+    entities: [
+      {
+        entityType: 'node',
+        bundle: 'article',
+        label: 'Article',
+        fields: [
+          { name: 'field_tags', label: 'Tags', fieldType: 'entity_reference', kind: 'multi', targetType: 'taxonomy_term', targetBundles: ['tags', 'topics'] },
+          { name: 'field_author', label: 'Author', fieldType: 'entity_reference', kind: 'single', targetType: 'user', targetBundles: ['user'] },
+        ],
+      },
+      { entityType: 'taxonomy_term', bundle: 'tags', label: 'Tags', fields: [] },
+      { entityType: 'taxonomy_term', bundle: 'topics', label: 'Topics', fields: [] },
+      { entityType: 'user', bundle: 'user', label: 'User', fields: [] },
+    ],
+    layout: {
+      'node.article': { x: 0, y: 0 },
+      'field:node.article:field_tags': { x: 200, y: 0 },
+      'field:node.article:field_author': { x: -200, y: 0 },
+      'taxonomy_term.tags': { x: 0, y: 300 },
+      'taxonomy_term.topics': { x: 200, y: 300 },
+      'user.user': { x: 0, y: -300 },
+    },
+  };
+  await page.setInputFiles('#doc-open', { name: 'proxies.nexus.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(doc)) });
+  await waitForGraph(page);
+
+  const box = await page.evaluate(() => {
+    const cy = window.__nexus.cy;
+    const read = (id) => {
+      const node = cy.getElementById(id);
+      const half = node.outerWidth() / 2;
+      return { left: node.position('x') - half, right: node.position('x') + half, y: node.position('y'), height: node.outerHeight() };
+    };
+    return {
+      tags: read('field:node.article:field_tags'),
+      author: read('field:node.article:field_author'),
+      tagsProxy: read('proxy:field:node.article:field_tags>taxonomy_term.tags'),
+      topicsProxy: read('proxy:field:node.article:field_tags>taxonomy_term.topics'),
+      userProxy: read('proxy:field:node.article:field_author>user.user'),
+    };
+  });
+
+  expect(box.tagsProxy.left).toBeGreaterThan(box.tags.right);
+  expect(box.tagsProxy.left - box.tags.right).toBeLessThan(100);
+  expect(box.topicsProxy.left).toBeCloseTo(box.tagsProxy.left);
+  expect(box.tagsProxy.y + box.topicsProxy.y).toBeCloseTo(2 * box.tags.y);
+  expect(Math.abs(box.tagsProxy.y - box.topicsProxy.y)).toBeGreaterThanOrEqual(box.tagsProxy.height);
+
+  expect(box.userProxy.right).toBeLessThan(box.author.left);
+  expect(box.author.left - box.userProxy.right).toBeLessThan(100);
+  expect(box.userProxy.y).toBeCloseTo(box.author.y);
+});
+
 test('reopens the import screen and cancels back to the diagram', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);

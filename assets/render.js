@@ -61,6 +61,11 @@ const DEFAULT_SYMBOLS = {
 
 const SETTINGS_KEY = 'nexusSettings';
 
+const LAYOUT_SPACING = {
+  fields: { nodeSep: 10, rankSep: 62 },
+  overview: { nodeSep: 34, rankSep: 120 },
+};
+
 let settings = loadSettings();
 const activeColors = {};
 const activeSymbols = {};
@@ -666,14 +671,15 @@ function buildController(model, options = {}) {
     // Machine-name captions hang ~16px below each node (outside its Cytoscape
     // box), so widen the in-rank gap to fit them when they are shown.
     const captionRoom = showMachineNames ? 18 : 0;
+    const spacing = fieldsMode ? LAYOUT_SPACING.fields : LAYOUT_SPACING.overview;
     cy.elements(':visible')
       .layout({
         name: 'dagre',
         rankDir: rankDir,
         ranker: 'network-simplex',
-        nodeSep: (fieldsMode ? 10 : 34) + captionRoom,
+        nodeSep: spacing.nodeSep + captionRoom,
         edgeSep: 6,
-        rankSep: fieldsMode ? 62 : 120,
+        rankSep: spacing.rankSep,
         nodeDimensionsIncludeLabels: true,
         animate: false,
       })
@@ -692,9 +698,33 @@ function buildController(model, options = {}) {
         node.position(layout[node.id()]);
       }
     });
+    placeMissingProxies(layout);
     resetView();
     positionCaptions();
     positionNotes();
+  }
+
+  // Proxies are built at render time, so a saved layout can lack positions for
+  // some (see addReference() in builder.js). A missing proxy is placed on the
+  // side of its field away from the entity, so it does not overlap the entity.
+  function placeMissingProxies(layout) {
+    const spacing = LAYOUT_SPACING.fields;
+    cy.nodes('[group="field"]').forEach((field) => {
+      const proxies = field.outgoers('node[group="proxy"]').filter((proxy) => !layout[proxy.id()]);
+      if (proxies.empty()) {
+        return;
+      }
+
+      const anchor = field.position();
+      const side = anchor.x < cy.getElementById(field.data('entity')).position('x') ? -1 : 1;
+      const step = proxies.first().outerHeight() + spacing.nodeSep;
+      proxies.forEach((proxy, index) => {
+        proxy.position({
+          x: anchor.x + side * (field.outerWidth() / 2 + spacing.rankSep + proxy.outerWidth() / 2),
+          y: anchor.y + (index - (proxies.length - 1) / 2) * step,
+        });
+      });
+    });
   }
 
   function focusEntity(id) {
