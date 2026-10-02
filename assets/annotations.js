@@ -21,7 +21,7 @@ export function applyAnnotations(model, data) {
 
   let edgeIndex = 0;
   const addEdge = (source, target, label) => {
-    model.addExtraEdge({ id: 'a' + (edgeIndex++), source, target, group: 'annotation', label });
+    model.addExtraEdge({ id: 'a' + edgeIndex++, source, target, group: 'annotation', label });
   };
 
   const nodes = Array.isArray(data.nodes) ? data.nodes : [];
@@ -57,7 +57,7 @@ export function applyAnnotations(model, data) {
     addEdge(String(edge.from), String(edge.to), edge.label != null ? String(edge.label) : '');
   }
 
-  const groups = (data.computed_fields && typeof data.computed_fields === 'object') ? data.computed_fields : {};
+  const groups = data.computed_fields && typeof data.computed_fields === 'object' ? data.computed_fields : {};
   for (const [entityId, fields] of Object.entries(groups)) {
     const entity = model.getEntity(String(entityId));
 

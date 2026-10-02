@@ -12,7 +12,15 @@ const DOC = {
       bundle: 'article',
       label: 'Article',
       fields: [
-        { name: 'field_tags', label: 'Tags', fieldType: 'entity_reference', kind: 'multi', required: false, targetType: 'taxonomy_term', targetBundles: ['tags'] },
+        {
+          name: 'field_tags',
+          label: 'Tags',
+          fieldType: 'entity_reference',
+          kind: 'multi',
+          required: false,
+          targetType: 'taxonomy_term',
+          targetBundles: ['tags'],
+        },
       ],
     },
     { entityType: 'taxonomy_term', bundle: 'tags', label: 'Tags', fields: [] },

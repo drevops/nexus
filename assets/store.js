@@ -53,8 +53,7 @@ function mergeLayout(panels, saved) {
 function loadLayout() {
   try {
     return JSON.parse(window.localStorage.getItem(LAYOUT_KEY));
-  }
-  catch {
+  } catch {
     return null;
   }
 }
@@ -62,8 +61,7 @@ function loadLayout() {
 function saveLayout() {
   try {
     window.localStorage.setItem(LAYOUT_KEY, JSON.stringify(layoutSnapshot()));
-  }
-  catch {
+  } catch {
     // Storage may be unavailable (private mode); keep the in-memory layout.
   }
 }
@@ -72,7 +70,10 @@ function scheduleSave() {
   if (saveTimer) {
     return;
   }
-  saveTimer = setTimeout(() => { saveTimer = null; saveLayout(); }, 400);
+  saveTimer = setTimeout(() => {
+    saveTimer = null;
+    saveLayout();
+  }, 400);
 }
 
 function initialState() {
@@ -84,8 +85,7 @@ function initialState() {
     if (saved.dockWidth) {
       dockWidth = saved.dockWidth;
     }
-  }
-  else {
+  } else {
     panels.legend.open = true;
   }
   return { panels: panels, dockWidth: dockWidth, selected: null, tableFilter: '__all__', version: 0 };
@@ -157,8 +157,7 @@ export function closePanel(id) {
 export function togglePanel(id) {
   if (state.panels[id].open) {
     closePanel(id);
-  }
-  else {
+  } else {
     openPanel(id);
   }
 }
@@ -185,8 +184,7 @@ export function unpinPanel(id) {
 export function togglePin(id, side) {
   if (state.panels[id].dock) {
     unpinPanel(id);
-  }
-  else {
+  } else {
     pinPanel(id, side);
   }
 }

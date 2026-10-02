@@ -121,7 +121,7 @@ export function documentToModel(doc) {
         !!field.required,
         field.targetType || null,
         Array.isArray(field.targetBundles) ? field.targetBundles : [],
-        field.cardinality != null ? field.cardinality : (field.kind === 'multi' ? -1 : 1),
+        field.cardinality != null ? field.cardinality : field.kind === 'multi' ? -1 : 1,
       );
       built_field.note = field.note || '';
       built.addField(built_field);
@@ -134,10 +134,10 @@ export function documentToModel(doc) {
 
   return {
     modelData: model.toArray(),
-    layout: (doc.layout && typeof doc.layout === 'object') ? doc.layout : {},
-    colors: (doc.colors && typeof doc.colors === 'object') ? doc.colors : {},
-    symbols: (doc.symbols && typeof doc.symbols === 'object') ? doc.symbols : {},
+    layout: doc.layout && typeof doc.layout === 'object' ? doc.layout : {},
+    colors: doc.colors && typeof doc.colors === 'object' ? doc.colors : {},
+    symbols: doc.symbols && typeof doc.symbols === 'object' ? doc.symbols : {},
     customTypes: Array.isArray(doc.customTypes) ? doc.customTypes : [],
-    ui: (doc.ui && typeof doc.ui === 'object') ? doc.ui : null,
+    ui: doc.ui && typeof doc.ui === 'object' ? doc.ui : null,
   };
 }

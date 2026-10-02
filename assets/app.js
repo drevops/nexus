@@ -38,8 +38,7 @@ function showError(message) {
   if (message) {
     $('landing-error-text').textContent = message;
     alert.open = true;
-  }
-  else {
+  } else {
     alert.open = false;
   }
 }
@@ -75,7 +74,7 @@ function buildAndShow(map, annotations) {
 
   const data = model.toArray();
   if (!data.meta.entityCount) {
-    showError('No content types, vocabularies, media, paragraphs or blocks were found. Point at a Drupal config directory (or a module\'s config/install).');
+    showError("No content types, vocabularies, media, paragraphs or blocks were found. Point at a Drupal config directory (or a module's config/install).");
     return;
   }
 
@@ -99,22 +98,19 @@ async function loadFromFiles(fileList) {
       let data;
       try {
         data = window.jsyaml.load(await file.text());
-      }
-      catch {
+      } catch {
         continue;
       }
 
       if (name === 'annotations.yml' || name === 'nexus.annotations.yml') {
         annotations = data;
-      }
-      else if (data && typeof data === 'object') {
+      } else if (data && typeof data === 'object') {
         map[name] = data;
       }
     }
 
     buildAndShow(map, annotations);
-  }
-  finally {
+  } finally {
     hideLoader();
   }
 }
@@ -126,30 +122,28 @@ async function loadExample() {
     const manifest = await fetch(EXAMPLE_BASE + 'manifest.json').then((r) => r.json());
     const map = {};
 
-    await Promise.all(manifest.map(async (name) => {
-      const text = await fetch(EXAMPLE_BASE + 'config/' + name).then((r) => r.text());
-      try {
-        map[name] = window.jsyaml.load(text);
-      }
-      catch {
-        // Skip files that fail to parse.
-      }
-    }));
+    await Promise.all(
+      manifest.map(async (name) => {
+        const text = await fetch(EXAMPLE_BASE + 'config/' + name).then((r) => r.text());
+        try {
+          map[name] = window.jsyaml.load(text);
+        } catch {
+          // Skip files that fail to parse.
+        }
+      }),
+    );
 
     let annotations = null;
     try {
       annotations = window.jsyaml.load(await fetch(EXAMPLE_BASE + 'annotations.yml').then((r) => r.text()));
-    }
-    catch {
+    } catch {
       // Example annotations are optional.
     }
 
     buildAndShow(map, annotations);
-  }
-  catch (e) {
+  } catch (e) {
     showError('Could not load the example: ' + e.message);
-  }
-  finally {
+  } finally {
     hideLoader();
   }
 }
@@ -170,25 +164,29 @@ function collectDroppedEntries(items) {
 function walkEntry(entry, files) {
   return new Promise((resolve) => {
     if (entry.isFile) {
-      entry.file((file) => {
-        files.push(file);
-        resolve();
-      }, () => resolve());
-    }
-    else if (entry.isDirectory) {
+      entry.file(
+        (file) => {
+          files.push(file);
+          resolve();
+        },
+        () => resolve(),
+      );
+    } else if (entry.isDirectory) {
       const reader = entry.createReader();
       const readBatch = () => {
-        reader.readEntries((entries) => {
-          if (!entries.length) {
-            resolve();
-            return;
-          }
-          Promise.all(entries.map((child) => walkEntry(child, files))).then(readBatch);
-        }, () => resolve());
+        reader.readEntries(
+          (entries) => {
+            if (!entries.length) {
+              resolve();
+              return;
+            }
+            Promise.all(entries.map((child) => walkEntry(child, files))).then(readBatch);
+          },
+          () => resolve(),
+        );
       };
       readBatch();
-    }
-    else {
+    } else {
       resolve();
     }
   });
@@ -209,8 +207,7 @@ function wireLanding() {
     const items = evt.dataTransfer.items;
     if (items && items.length && items[0].webkitGetAsEntry) {
       collectDroppedEntries(items).then((files) => loadFromFiles(files));
-    }
-    else {
+    } else {
       loadFromFiles(evt.dataTransfer.files);
     }
   });
@@ -221,7 +218,9 @@ function wireLanding() {
   $('example-btn').addEventListener('click', loadExample);
   $('new-btn').addEventListener('click', newDocument);
   $('doc-import').addEventListener('click', showLanding);
-  $('landing-cancel').addEventListener('click', () => { $('landing').hidden = true; });
+  $('landing-cancel').addEventListener('click', () => {
+    $('landing').hidden = true;
+  });
 }
 
 // Reopening the import screen over a loaded diagram offers a way back; on first
@@ -270,7 +269,20 @@ function recordsToCsv(records, typeLabel) {
     return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
   };
   const headers = ['Entity', 'Entity type', 'Field', 'Machine name', 'Field type', 'Cardinality', 'Required', 'References'];
-  const rows = records.map((r) => [r.entity, typeLabel(r.entityType), r.field, r.name, r.type, cardinalityLabel(r.cardinality), r.required ? 'yes' : 'no', r.refs.map((x) => x.label).join('; ')].map(esc).join(','));
+  const rows = records.map((r) =>
+    [
+      r.entity,
+      typeLabel(r.entityType),
+      r.field,
+      r.name,
+      r.type,
+      cardinalityLabel(r.cardinality),
+      r.required ? 'yes' : 'no',
+      r.refs.map((x) => x.label).join('; '),
+    ]
+      .map(esc)
+      .join(','),
+  );
   return [headers.join(','), ...rows].join('\r\n');
 }
 
@@ -287,7 +299,12 @@ function downloadJson(data, filename) {
 }
 
 function slug(text) {
-  return String(text).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'content-model';
+  return (
+    String(text)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'content-model'
+  );
 }
 
 function saveDocument() {
@@ -296,7 +313,13 @@ function saveDocument() {
   }
   const title = $('diagram-title').value || 'Content model';
   const types = getController() ? getController().typeSettings() : { colors: window.__nexus.colors || {} };
-  const doc = documentFromGraph(window.__nexus.cy, { title: title, colors: types.colors, symbols: types.symbols, customTypes: types.customTypes, ui: exportLayout() });
+  const doc = documentFromGraph(window.__nexus.cy, {
+    title: title,
+    colors: types.colors,
+    symbols: types.symbols,
+    customTypes: types.customTypes,
+    ui: exportLayout(),
+  });
   downloadJson(doc, slug(title) + '.nexus.json');
 }
 
@@ -309,12 +332,10 @@ async function openDocument(file) {
     if (doc.ui) {
       importLayout(doc.ui);
     }
-  }
-  catch (e) {
+  } catch (e) {
     $('landing').hidden = false;
     showError('Could not open that diagram: ' + e.message);
-  }
-  finally {
+  } finally {
     hideLoader();
   }
 }
@@ -350,8 +371,7 @@ function applyTheme(dark) {
   }
   try {
     window.localStorage.setItem('nexusTheme', dark ? 'dark' : 'light');
-  }
-  catch {
+  } catch {
     // Storage may be unavailable; the theme still applies for this session.
   }
 }
@@ -361,8 +381,7 @@ function initTheme() {
   try {
     const saved = window.localStorage.getItem('nexusTheme');
     dark = saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
-  }
-  catch {
+  } catch {
     dark = false;
   }
   applyTheme(dark);
@@ -378,7 +397,9 @@ function initStatusbar() {
       const el = evt.target.closest('[title]');
       hint.textContent = el && zone.contains(el) ? el.getAttribute('title') : '';
     });
-    zone.addEventListener('mouseleave', () => { hint.textContent = ''; });
+    zone.addEventListener('mouseleave', () => {
+      hint.textContent = '';
+    });
   });
 }
 
@@ -389,7 +410,9 @@ function initAbout() {
 }
 
 function initVersion() {
-  document.querySelectorAll('[data-version]').forEach((el) => { el.textContent = VERSION; });
+  document.querySelectorAll('[data-version]').forEach((el) => {
+    el.textContent = VERSION;
+  });
 }
 
 wireLanding();

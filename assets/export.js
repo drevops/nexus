@@ -9,7 +9,12 @@ if (window.cytoscape && window.cytoscapeSvg) {
 }
 
 function slug(text) {
-  return String(text || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'content-model';
+  return (
+    String(text || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'content-model'
+  );
 }
 
 function downloadUri(uri, filename) {

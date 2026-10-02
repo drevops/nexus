@@ -217,11 +217,13 @@ function typeRank(entityType) {
 }
 
 function compare(a, b) {
-  return a < b ? -1 : (a > b ? 1 : 0);
+  return a < b ? -1 : a > b ? 1 : 0;
 }
 
 function humanize(machineName) {
-  return String(machineName).replace(/[_.]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  return String(machineName)
+    .replace(/[_.]/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function isObject(value) {

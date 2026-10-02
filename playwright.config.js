@@ -16,7 +16,5 @@ export default defineConfig({
     reuseExistingServer: true,
     env: { PORT: '8000' },
   },
-  projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-  ],
+  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
 });

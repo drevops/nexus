@@ -97,8 +97,7 @@ function onCanvasDrop(evt) {
       selectNode(id);
       bump();
     }
-  }
-  else if (data === 'field') {
+  } else if (data === 'field') {
     const entityId = entityAt(position) || nearestEntity(position);
     if (entityId) {
       const name = uniqueFieldName(entityId);
@@ -108,8 +107,7 @@ function onCanvasDrop(evt) {
         bump();
       }
     }
-  }
-  else if (data.indexOf('note:') === 0) {
+  } else if (data.indexOf('note:') === 0) {
     const kind = data.slice(5);
     selectNode(addAnnotation(kind, NOTE_LABELS[kind] || 'Note', '', position));
     bump();
@@ -121,7 +119,10 @@ function $(id) {
 }
 
 function slug(text) {
-  return String(text).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+  return String(text)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
 }
 
 function viewportCenter() {
@@ -135,10 +136,16 @@ export function initBuilder() {
 
   Array.prototype.forEach.call(document.querySelectorAll('[data-add-entity]'), (btn) => {
     const type = btn.getAttribute('data-add-entity');
-    btn.addEventListener('click', () => { pendingPosition = null; openInspector({ kind: 'new-entity', entityType: type }); });
+    btn.addEventListener('click', () => {
+      pendingPosition = null;
+      openInspector({ kind: 'new-entity', entityType: type });
+    });
     makeDraggable(btn, 'entity:' + type);
   });
-  $('add-field').addEventListener('click', () => { pendingPosition = null; openInspector({ kind: 'new-field' }); });
+  $('add-field').addEventListener('click', () => {
+    pendingPosition = null;
+    openInspector({ kind: 'new-field' });
+  });
   makeDraggable($('add-field'), 'field');
   Array.prototype.forEach.call(document.querySelectorAll('[data-add-note]'), (btn) => {
     const kind = btn.getAttribute('data-add-note');
@@ -220,7 +227,9 @@ export function attachBuilder(instance) {
     });
     dragLast = { x: pos.x, y: pos.y };
   });
-  cy.on('free', 'node', () => { dragLast = null; });
+  cy.on('free', 'node', () => {
+    dragLast = null;
+  });
 
   cy.on('tapstart', 'node[group="field"]', (evt) => startConnect(evt.target, evt.position));
   cy.on('tapdrag', (evt) => moveGhost(evt.position));
@@ -271,8 +280,7 @@ function applyMode() {
     if (!fields.classList.contains('is-active')) {
       fields.click();
     }
-  }
-  else {
+  } else {
     closeInspector();
     hideHandles();
     cleanupGhost();
@@ -343,7 +351,15 @@ function startConnect(field, position) {
     { group: 'edges', data: { id: '__ghostedge__', source: connectSource, target: '__ghost__' } },
   ]);
   cy.getElementById('__ghost__').style({ width: 1, height: 1, opacity: 0, events: 'no' });
-  cy.getElementById('__ghostedge__').style({ 'line-color': '#2f6db3', 'line-style': 'dashed', width: 2, 'curve-style': 'straight', 'target-arrow-shape': 'triangle', 'target-arrow-color': '#2f6db3', events: 'no' });
+  cy.getElementById('__ghostedge__').style({
+    'line-color': '#2f6db3',
+    'line-style': 'dashed',
+    width: 2,
+    'curve-style': 'straight',
+    'target-arrow-shape': 'triangle',
+    'target-arrow-color': '#2f6db3',
+    events: 'no',
+  });
 }
 
 function moveGhost(position) {
@@ -436,8 +452,7 @@ function selectNode(id) {
   openInspector({ kind: group, id: id });
   if (group === 'entity') {
     showHandles(id);
-  }
-  else {
+  } else {
     hideHandles();
   }
 }
@@ -447,7 +462,9 @@ function selectNode(id) {
 const BUNDLE_BASE = { node: 'content_type', taxonomy_term: 'vocabulary', media: 'media_type', paragraph: 'paragraph', block_content: 'block', user: 'user' };
 
 function prettify(value) {
-  return String(value || '').replace(/[_.]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  return String(value || '')
+    .replace(/[_.]/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function uniqueBundle(entityType) {
@@ -585,13 +602,27 @@ function addField(entityId, name, label, fieldType, cardinality, side, position)
   }
   const kind = cardinality === 1 ? 'single' : 'multi';
   const anchor = cy.getElementById(entityId).position();
-  cy.add({ group: 'nodes', data: { id: fieldId, group: 'field', name: name, label: label, fieldType: fieldType, kind: kind, cardinality: cardinality, required: false, entity: entityId }, position: position || fieldPlacement(anchor, side) });
+  cy.add({
+    group: 'nodes',
+    data: {
+      id: fieldId,
+      group: 'field',
+      name: name,
+      label: label,
+      fieldType: fieldType,
+      kind: kind,
+      cardinality: cardinality,
+      required: false,
+      entity: entityId,
+    },
+    position: position || fieldPlacement(anchor, side),
+  });
   cy.add({ group: 'edges', data: { id: 'has:' + fieldId, source: entityId, target: fieldId, group: 'has' } });
   return fieldId;
 }
 
 function addAnnotation(kind, label, method, position) {
-  const id = 'note-' + (++counter);
+  const id = 'note-' + ++counter;
   const data = { id: id, group: 'annotation', kind: kind, label: label };
   if (method) {
     data.method = method;

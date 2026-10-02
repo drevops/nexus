@@ -81,8 +81,7 @@ let wired = false;
 function loadSettings() {
   try {
     return JSON.parse(window.localStorage.getItem(SETTINGS_KEY)) || {};
-  }
-  catch {
+  } catch {
     return {};
   }
 }
@@ -90,8 +89,7 @@ function loadSettings() {
 function saveSettings() {
   try {
     window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-  }
-  catch {
+  } catch {
     // Storage may be unavailable (e.g. private mode); fall back to in-memory.
   }
 }
@@ -124,21 +122,155 @@ function symbolSvg(key, color, size) {
   const shapes = {
     rounded: '<rect x="2" y="3" width="' + (w - 4) + '" height="' + (h - 6) + '" rx="4" fill="' + color + '" stroke="' + s + '"/>',
     rectangle: '<rect x="2" y="3" width="' + (w - 4) + '" height="' + (h - 6) + '" fill="' + color + '" stroke="' + s + '"/>',
-    ellipse: '<ellipse cx="' + (w / 2) + '" cy="' + (h / 2) + '" rx="' + (w / 2 - 2) + '" ry="' + (h / 2 - 3) + '" fill="' + color + '" stroke="' + s + '"/>',
-    diamond: '<polygon points="' + (w / 2) + ',2 ' + (w - 2) + ',' + (h / 2) + ' ' + (w / 2) + ',' + (h - 2) + ' 2,' + (h / 2) + '" fill="' + color + '" stroke="' + s + '"/>',
-    hexagon: '<polygon points="' + (w * 0.26) + ',3 ' + (w * 0.74) + ',3 ' + (w - 2) + ',' + (h / 2) + ' ' + (w * 0.74) + ',' + (h - 3) + ' ' + (w * 0.26) + ',' + (h - 3) + ' 2,' + (h / 2) + '" fill="' + color + '" stroke="' + s + '"/>',
-    tag: '<polygon points="2,3 ' + (w * 0.72) + ',3 ' + (w - 2) + ',' + (h / 2) + ' ' + (w * 0.72) + ',' + (h - 3) + ' 2,' + (h - 3) + '" fill="' + color + '" stroke="' + s + '"/>',
-    barrel: '<path d="M4,6 Q' + (w / 2) + ',1 ' + (w - 4) + ',6 L' + (w - 4) + ',' + (h - 6) + ' Q' + (w / 2) + ',' + (h - 1) + ' 4,' + (h - 6) + ' Z" fill="' + color + '" stroke="' + s + '"/>',
-    cut: '<polygon points="7,3 ' + (w - 7) + ',3 ' + (w - 2) + ',8 ' + (w - 2) + ',' + (h - 8) + ' ' + (w - 7) + ',' + (h - 3) + ' 7,' + (h - 3) + ' 2,' + (h - 8) + ' 2,8" fill="' + color + '" stroke="' + s + '"/>',
-    rhomboid: '<polygon points="' + (w * 0.2) + ',3 ' + (w - 2) + ',3 ' + (w * 0.8) + ',' + (h - 3) + ' 2,' + (h - 3) + '" fill="' + color + '" stroke="' + s + '"/>',
-    pentagon: '<polygon points="' + (w / 2) + ',2 ' + (w - 2) + ',' + (h * 0.42) + ' ' + (w * 0.8) + ',' + (h - 3) + ' ' + (w * 0.2) + ',' + (h - 3) + ' 2,' + (h * 0.42) + '" fill="' + color + '" stroke="' + s + '"/>',
-    octagon: '<polygon points="' + (w * 0.3) + ',3 ' + (w * 0.7) + ',3 ' + (w - 2) + ',' + (h * 0.35) + ' ' + (w - 2) + ',' + (h * 0.65) + ' ' + (w * 0.7) + ',' + (h - 3) + ' ' + (w * 0.3) + ',' + (h - 3) + ' 2,' + (h * 0.65) + ' 2,' + (h * 0.35) + '" fill="' + color + '" stroke="' + s + '"/>',
+    ellipse: '<ellipse cx="' + w / 2 + '" cy="' + h / 2 + '" rx="' + (w / 2 - 2) + '" ry="' + (h / 2 - 3) + '" fill="' + color + '" stroke="' + s + '"/>',
+    diamond:
+      '<polygon points="' + w / 2 + ',2 ' + (w - 2) + ',' + h / 2 + ' ' + w / 2 + ',' + (h - 2) + ' 2,' + h / 2 + '" fill="' + color + '" stroke="' + s + '"/>',
+    hexagon:
+      '<polygon points="' +
+      w * 0.26 +
+      ',3 ' +
+      w * 0.74 +
+      ',3 ' +
+      (w - 2) +
+      ',' +
+      h / 2 +
+      ' ' +
+      w * 0.74 +
+      ',' +
+      (h - 3) +
+      ' ' +
+      w * 0.26 +
+      ',' +
+      (h - 3) +
+      ' 2,' +
+      h / 2 +
+      '" fill="' +
+      color +
+      '" stroke="' +
+      s +
+      '"/>',
+    tag:
+      '<polygon points="2,3 ' +
+      w * 0.72 +
+      ',3 ' +
+      (w - 2) +
+      ',' +
+      h / 2 +
+      ' ' +
+      w * 0.72 +
+      ',' +
+      (h - 3) +
+      ' 2,' +
+      (h - 3) +
+      '" fill="' +
+      color +
+      '" stroke="' +
+      s +
+      '"/>',
+    barrel:
+      '<path d="M4,6 Q' +
+      w / 2 +
+      ',1 ' +
+      (w - 4) +
+      ',6 L' +
+      (w - 4) +
+      ',' +
+      (h - 6) +
+      ' Q' +
+      w / 2 +
+      ',' +
+      (h - 1) +
+      ' 4,' +
+      (h - 6) +
+      ' Z" fill="' +
+      color +
+      '" stroke="' +
+      s +
+      '"/>',
+    cut:
+      '<polygon points="7,3 ' +
+      (w - 7) +
+      ',3 ' +
+      (w - 2) +
+      ',8 ' +
+      (w - 2) +
+      ',' +
+      (h - 8) +
+      ' ' +
+      (w - 7) +
+      ',' +
+      (h - 3) +
+      ' 7,' +
+      (h - 3) +
+      ' 2,' +
+      (h - 8) +
+      ' 2,8" fill="' +
+      color +
+      '" stroke="' +
+      s +
+      '"/>',
+    rhomboid:
+      '<polygon points="' + w * 0.2 + ',3 ' + (w - 2) + ',3 ' + w * 0.8 + ',' + (h - 3) + ' 2,' + (h - 3) + '" fill="' + color + '" stroke="' + s + '"/>',
+    pentagon:
+      '<polygon points="' +
+      w / 2 +
+      ',2 ' +
+      (w - 2) +
+      ',' +
+      h * 0.42 +
+      ' ' +
+      w * 0.8 +
+      ',' +
+      (h - 3) +
+      ' ' +
+      w * 0.2 +
+      ',' +
+      (h - 3) +
+      ' 2,' +
+      h * 0.42 +
+      '" fill="' +
+      color +
+      '" stroke="' +
+      s +
+      '"/>',
+    octagon:
+      '<polygon points="' +
+      w * 0.3 +
+      ',3 ' +
+      w * 0.7 +
+      ',3 ' +
+      (w - 2) +
+      ',' +
+      h * 0.35 +
+      ' ' +
+      (w - 2) +
+      ',' +
+      h * 0.65 +
+      ' ' +
+      w * 0.7 +
+      ',' +
+      (h - 3) +
+      ' ' +
+      w * 0.3 +
+      ',' +
+      (h - 3) +
+      ' 2,' +
+      h * 0.65 +
+      ' 2,' +
+      h * 0.35 +
+      '" fill="' +
+      color +
+      '" stroke="' +
+      s +
+      '"/>',
   };
   return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">' + (shapes[key] || shapes.rounded) + '</svg>';
 }
 
 function prettify(value) {
-  return String(value || '').replace(/[_.]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  return String(value || '')
+    .replace(/[_.]/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function typeLabel(entityType) {
@@ -166,8 +298,7 @@ function buildElements(model) {
     ids[n.data.id] = true;
     if (n.data.group === 'entity') {
       entityById[n.data.id] = n.data;
-    }
-    else if (n.data.group === 'field') {
+    } else if (n.data.group === 'field') {
       fieldById[n.data.id] = n.data;
     }
   });
@@ -190,8 +321,19 @@ function buildElements(model) {
     const field = fieldById[e.data.source];
     const target = entityById[e.data.target];
     const proxyId = 'proxy:' + e.data.source + '>' + e.data.target;
-    proxyNodes.push({ data: { id: proxyId, group: 'proxy', target: e.data.target, entity: field ? field.entity : '', entityType: target ? target.entityType : '', label: target ? target.label : e.data.target } });
-    proxyEdges.push({ data: { id: 'pe:' + e.data.source + '>' + e.data.target, source: e.data.source, target: proxyId, group: 'proxyedge', cardinality: e.data.cardinality } });
+    proxyNodes.push({
+      data: {
+        id: proxyId,
+        group: 'proxy',
+        target: e.data.target,
+        entity: field ? field.entity : '',
+        entityType: target ? target.entityType : '',
+        label: target ? target.label : e.data.target,
+      },
+    });
+    proxyEdges.push({
+      data: { id: 'pe:' + e.data.source + '>' + e.data.target, source: e.data.source, target: proxyId, group: 'proxyedge', cardinality: e.data.cardinality },
+    });
   });
   Object.keys(refsByField).forEach((fieldId) => {
     const field = fieldById[fieldId];
@@ -213,9 +355,27 @@ function buildElements(model) {
 function themeColors() {
   const dark = document.documentElement.classList.contains('sl-theme-dark');
   if (dark) {
-    return { text: '#e4e7ec', muted: '#9aa4b2', nodeBorder: '#8a94a3', fieldBg: '#2b3039', fieldBorder: '#7b8494', edge: '#5a636f', refEdge: '#8a94a3', labelBg: '#22262d' };
+    return {
+      text: '#e4e7ec',
+      muted: '#9aa4b2',
+      nodeBorder: '#8a94a3',
+      fieldBg: '#2b3039',
+      fieldBorder: '#7b8494',
+      edge: '#5a636f',
+      refEdge: '#8a94a3',
+      labelBg: '#22262d',
+    };
   }
-  return { text: '#1f2933', muted: '#6b7280', nodeBorder: '#5b6470', fieldBg: '#ffffff', fieldBorder: '#555c66', edge: '#aeb4bd', refEdge: '#8a94a3', labelBg: '#f4f5f7' };
+  return {
+    text: '#1f2933',
+    muted: '#6b7280',
+    nodeBorder: '#5b6470',
+    fieldBg: '#ffffff',
+    fieldBorder: '#555c66',
+    edge: '#aeb4bd',
+    refEdge: '#8a94a3',
+    labelBg: '#f4f5f7',
+  };
 }
 
 function style() {
@@ -304,7 +464,14 @@ function style() {
     },
     {
       selector: 'edge[group="proxyedge"]',
-      style: { 'line-color': '#c2c8d0', 'line-style': 'dashed', width: 1, 'target-arrow-shape': 'triangle', 'target-arrow-color': '#c2c8d0', 'arrow-scale': 0.8 },
+      style: {
+        'line-color': '#c2c8d0',
+        'line-style': 'dashed',
+        width: 1,
+        'target-arrow-shape': 'triangle',
+        'target-arrow-color': '#c2c8d0',
+        'arrow-scale': 0.8,
+      },
     },
     { selector: 'node[group="annotation"][kind="event"]', style: { shape: 'diamond' } },
     { selector: 'node[group="annotation"][kind="api"]', style: { shape: 'hexagon' } },
@@ -366,8 +533,16 @@ function tooltipHtml(node) {
   const name = esc(node.data('label'));
 
   if (group === 'entity') {
-    return '<div class="tooltip__name">' + name + '</div>' +
-      '<div class="tooltip__meta">' + esc(typeLabel(node.data('entityType'))) + ' · ' + esc(node.data('bundle')) + '</div>';
+    return (
+      '<div class="tooltip__name">' +
+      name +
+      '</div>' +
+      '<div class="tooltip__meta">' +
+      esc(typeLabel(node.data('entityType'))) +
+      ' · ' +
+      esc(node.data('bundle')) +
+      '</div>'
+    );
   }
 
   if (group === 'field') {
@@ -409,7 +584,9 @@ function buildController(model, options = {}) {
   }
 
   const elements = buildElements(model);
-  TYPE_ORDER.forEach((t) => { typeVisible[t] = true; });
+  TYPE_ORDER.forEach((t) => {
+    typeVisible[t] = true;
+  });
 
   if (ctx && ctx.cy) {
     ctx.cy.destroy();
@@ -462,17 +639,13 @@ function buildController(model, options = {}) {
       let vis;
       if (group === 'has') {
         vis = fieldsMode && ends;
-      }
-      else if (group === 'ref') {
+      } else if (group === 'ref') {
         vis = fieldsMode && !proxyMode && ends;
-      }
-      else if (group === 'proxyedge') {
+      } else if (group === 'proxyedge') {
         vis = fieldsMode && proxyMode && ends;
-      }
-      else if (group === 'collapsed') {
+      } else if (group === 'collapsed') {
         vis = !fieldsMode && ends;
-      }
-      else {
+      } else {
         vis = ends;
       }
       e.toggleClass('hidden', !vis);
@@ -493,16 +666,18 @@ function buildController(model, options = {}) {
     // Machine-name captions hang ~16px below each node (outside its Cytoscape
     // box), so widen the in-rank gap to fit them when they are shown.
     const captionRoom = showMachineNames ? 18 : 0;
-    cy.elements(':visible').layout({
-      name: 'dagre',
-      rankDir: rankDir,
-      ranker: 'network-simplex',
-      nodeSep: (fieldsMode ? 10 : 34) + captionRoom,
-      edgeSep: 6,
-      rankSep: fieldsMode ? 62 : 120,
-      nodeDimensionsIncludeLabels: true,
-      animate: false,
-    }).run();
+    cy.elements(':visible')
+      .layout({
+        name: 'dagre',
+        rankDir: rankDir,
+        ranker: 'network-simplex',
+        nodeSep: (fieldsMode ? 10 : 34) + captionRoom,
+        edgeSep: 6,
+        rankSep: fieldsMode ? 62 : 120,
+        nodeDimensionsIncludeLabels: true,
+        animate: false,
+      })
+      .run();
     resetView();
     positionCaptions();
     positionNotes();
@@ -611,7 +786,9 @@ function buildController(model, options = {}) {
       const node = cy.getElementById(id);
       const divs = captionMap[id];
       if (node.empty() || node.hasClass('hidden') || node.hasClass('faded') || tooSmall) {
-        divs.forEach((div) => { div.style.display = 'none'; });
+        divs.forEach((div) => {
+          div.style.display = 'none';
+        });
         return;
       }
       const pos = node.renderedPosition();
@@ -624,9 +801,8 @@ function buildController(model, options = {}) {
         div.style.left = pos.x + 'px';
         div.style.fontSize = size + 'px';
         if (div.classList.contains('caption--type')) {
-          div.style.top = (pos.y + halfH - size - 5 * zoom) + 'px';
-        }
-        else {
+          div.style.top = pos.y + halfH - size - 5 * zoom + 'px';
+        } else {
           div.style.top = below + 'px';
           below += size + 2 * zoom;
         }
@@ -650,7 +826,10 @@ function buildController(model, options = {}) {
       badge.innerHTML = icon('sticky-note');
       badge.addEventListener('mouseenter', () => showNote(node.id()));
       badge.addEventListener('mouseleave', hideNote);
-      badge.addEventListener('click', (evt) => { evt.stopPropagation(); showNote(node.id()); });
+      badge.addEventListener('click', (evt) => {
+        evt.stopPropagation();
+        showNote(node.id());
+      });
       notesEl.appendChild(badge);
       noteMap[node.id()] = badge;
     });
@@ -672,8 +851,8 @@ function buildController(model, options = {}) {
       badge.style.display = 'flex';
       badge.style.width = size + 'px';
       badge.style.height = size + 'px';
-      badge.style.left = (bb.x2 - size * 0.55) + 'px';
-      badge.style.top = (bb.y1 - size * 0.45) + 'px';
+      badge.style.left = bb.x2 - size * 0.55 + 'px';
+      badge.style.top = bb.y1 - size * 0.45 + 'px';
     });
   }
 
@@ -690,8 +869,8 @@ function buildController(model, options = {}) {
     tooltip.innerHTML = '';
     tooltip.appendChild(wrap);
     tooltip.hidden = false;
-    tooltip.style.left = (parseFloat(badge.style.left) + parseFloat(badge.style.width) + 6) + 'px';
-    tooltip.style.top = (parseFloat(badge.style.top) + parseFloat(badge.style.height)) + 'px';
+    tooltip.style.left = parseFloat(badge.style.left) + parseFloat(badge.style.width) + 6 + 'px';
+    tooltip.style.top = parseFloat(badge.style.top) + parseFloat(badge.style.height) + 'px';
   }
 
   function hideNote() {
@@ -737,7 +916,10 @@ function buildController(model, options = {}) {
   }
 
   function addCustomType(type, label, color, symbol) {
-    const key = String(type || '').toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '');
+    const key = String(type || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9_]+/g, '_')
+      .replace(/^_+|_+$/g, '');
     if (!key || allTypeKeys().includes(key)) {
       return null;
     }
@@ -780,8 +962,8 @@ function buildController(model, options = {}) {
   });
   cy.on('mousemove', 'node', (evt) => {
     const tooltip = $('tooltip');
-    tooltip.style.left = (evt.renderedPosition.x + 14) + 'px';
-    tooltip.style.top = (evt.renderedPosition.y + 14) + 'px';
+    tooltip.style.left = evt.renderedPosition.x + 14 + 'px';
+    tooltip.style.top = evt.renderedPosition.y + 14 + 'px';
   });
   cy.on('mouseout', 'node', () => {
     $('tooltip').hidden = true;
@@ -824,8 +1006,25 @@ function buildController(model, options = {}) {
 
   const controller = {
     cy,
-    refresh, runLayout, applyLayout, resetView, clearFocus, focusEntity, focusField, rebuildCaptions, rebuildNotes, searchHighlight, applyColor, applySymbol, resetColors, addCustomType, removeCustomType,
-    applyTheme: () => { cy.style(style()); positionCaptions(); },
+    refresh,
+    runLayout,
+    applyLayout,
+    resetView,
+    clearFocus,
+    focusEntity,
+    focusField,
+    rebuildCaptions,
+    rebuildNotes,
+    searchHighlight,
+    applyColor,
+    applySymbol,
+    resetColors,
+    addCustomType,
+    removeCustomType,
+    applyTheme: () => {
+      cy.style(style());
+      positionCaptions();
+    },
     typeLabel,
     colorFor: entityColor,
     symbolFor: (type) => activeSymbols[type] || 'rounded',
@@ -834,17 +1033,47 @@ function buildController(model, options = {}) {
     symbolOptions: () => Object.keys(SYMBOLS).map((key) => ({ key: key, label: SYMBOLS[key].label })),
     isCustomType: (type) => customTypes().some((t) => t.type === type),
     allTypes: () => allTypeKeys(),
-    entities: () => cy.nodes('[group="entity"]').map((e) => ({ id: e.id(), label: e.data('label'), entityType: e.data('entityType'), fieldCount: cy.nodes('[group="field"][entity="' + e.id() + '"]').length })),
-    records: () => cy.nodes('[group="field"]').map((f) => {
-      const owner = cy.getElementById(f.data('entity'));
-      const refs = f.connectedEdges('[group="ref"]').filter((e) => e.source().id() === f.id()).map((e) => {
-        const target = cy.getElementById(e.target().id());
-        return { id: e.target().id(), label: target.nonempty() ? target.data('label') : e.target().id() };
-      });
-      return { entityId: f.data('entity'), entity: owner.nonempty() ? owner.data('label') : f.data('entity'), entityType: owner.nonempty() ? owner.data('entityType') : '', field: f.data('label'), name: f.data('name') || '', type: f.data('fieldType'), kind: f.data('kind'), cardinality: f.data('cardinality') != null ? f.data('cardinality') : 1, required: !!f.data('required'), refs: refs };
-    }),
-    presentTypes: () => allTypeKeys().filter((t) => cy.nodes('[group="entity"][entityType="' + t + '"]').nonempty()).map((t) => ({ type: t, label: typeLabel(t), color: entityColor(t), symbol: activeSymbols[t] || 'rounded', visible: typeVisible[t] !== false })),
-    setTypeVisible: (type, vis) => { typeVisible[type] = vis; refresh(true); bump(); },
+    entities: () =>
+      cy
+        .nodes('[group="entity"]')
+        .map((e) => ({
+          id: e.id(),
+          label: e.data('label'),
+          entityType: e.data('entityType'),
+          fieldCount: cy.nodes('[group="field"][entity="' + e.id() + '"]').length,
+        })),
+    records: () =>
+      cy.nodes('[group="field"]').map((f) => {
+        const owner = cy.getElementById(f.data('entity'));
+        const refs = f
+          .connectedEdges('[group="ref"]')
+          .filter((e) => e.source().id() === f.id())
+          .map((e) => {
+            const target = cy.getElementById(e.target().id());
+            return { id: e.target().id(), label: target.nonempty() ? target.data('label') : e.target().id() };
+          });
+        return {
+          entityId: f.data('entity'),
+          entity: owner.nonempty() ? owner.data('label') : f.data('entity'),
+          entityType: owner.nonempty() ? owner.data('entityType') : '',
+          field: f.data('label'),
+          name: f.data('name') || '',
+          type: f.data('fieldType'),
+          kind: f.data('kind'),
+          cardinality: f.data('cardinality') != null ? f.data('cardinality') : 1,
+          required: !!f.data('required'),
+          refs: refs,
+        };
+      }),
+    presentTypes: () =>
+      allTypeKeys()
+        .filter((t) => cy.nodes('[group="entity"][entityType="' + t + '"]').nonempty())
+        .map((t) => ({ type: t, label: typeLabel(t), color: entityColor(t), symbol: activeSymbols[t] || 'rounded', visible: typeVisible[t] !== false })),
+    setTypeVisible: (type, vis) => {
+      typeVisible[type] = vis;
+      refresh(true);
+      bump();
+    },
   };
   setController(controller);
 
@@ -861,10 +1090,17 @@ function buildController(model, options = {}) {
 }
 
 function wire() {
-  $('zoom-in').addEventListener('click', () => ctx.cy.zoom({ level: ctx.cy.zoom() * 1.25, renderedPosition: { x: ctx.cy.width() / 2, y: ctx.cy.height() / 2 } }));
-  $('zoom-out').addEventListener('click', () => ctx.cy.zoom({ level: ctx.cy.zoom() * 0.8, renderedPosition: { x: ctx.cy.width() / 2, y: ctx.cy.height() / 2 } }));
+  $('zoom-in').addEventListener('click', () =>
+    ctx.cy.zoom({ level: ctx.cy.zoom() * 1.25, renderedPosition: { x: ctx.cy.width() / 2, y: ctx.cy.height() / 2 } }),
+  );
+  $('zoom-out').addEventListener('click', () =>
+    ctx.cy.zoom({ level: ctx.cy.zoom() * 0.8, renderedPosition: { x: ctx.cy.width() / 2, y: ctx.cy.height() / 2 } }),
+  );
   $('fit').addEventListener('click', () => ctx.cy.fit(undefined, 45));
-  $('reset').addEventListener('click', () => { ctx.clearFocus(); ctx.resetView(); });
+  $('reset').addEventListener('click', () => {
+    ctx.clearFocus();
+    ctx.resetView();
+  });
   $('tidy').addEventListener('click', () => ctx.runLayout());
 
   $('zoom-menu').addEventListener('sl-select', (evt) => {
@@ -915,7 +1151,11 @@ function wire() {
     ctx.searchHighlight(term);
   }
   $('search-btn').addEventListener('click', runSearch);
-  $('search').addEventListener('keydown', (evt) => { if (evt.key === 'Enter') { runSearch(); } });
+  $('search').addEventListener('keydown', (evt) => {
+    if (evt.key === 'Enter') {
+      runSearch();
+    }
+  });
   $('search').addEventListener('sl-clear', () => ctx.clearFocus());
 }
 
@@ -927,8 +1167,7 @@ export function render(model, options = {}) {
   }
   if (options.layout && Object.keys(options.layout).length) {
     ctx.applyLayout(options.layout);
-  }
-  else {
+  } else {
     ctx.refresh(true);
   }
   ctx.rebuildCaptions();
