@@ -61,7 +61,11 @@ jobs:
           RATE=$(grep -o 'line-rate="[0-9.]*"' .logs/cobertura-coverage.xml | head -1 | tr -cd '0-9.')
           PERCENT=$(awk "BEGIN {printf \"%.2f\", $RATE*100}")
           echo "Coverage: $PERCENT% (threshold: $CI_CODE_COVERAGE_THRESHOLD%)"
-          if [[ ${PERCENT//./} -lt $((CI_CODE_COVERAGE_THRESHOLD*100)) ]]; then
+          if [[ ! $CI_CODE_COVERAGE_THRESHOLD =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+            echo "FAIL: CI_CODE_COVERAGE_THRESHOLD must be a non-negative number"
+            exit 1
+          fi
+          if awk -v p="$PERCENT" -v t="$CI_CODE_COVERAGE_THRESHOLD" 'BEGIN { exit !(p + 0 < t + 0) }'; then
             echo "FAIL: coverage too low"
             exit 1
           fi
