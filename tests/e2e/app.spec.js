@@ -67,6 +67,30 @@ function renderedLines(locator) {
   );
 }
 
+// Returns the WCAG contrast ratio between an element's text colour and the
+// first non-transparent background among its ancestors.
+function textContrast(locator) {
+  return locator.evaluate((element) => {
+    const channels = (color) => color.match(/[\d.]+/g).slice(0, 3).map(Number);
+    const luminance = (color) => {
+      const [r, g, b] = channels(color).map((value) => {
+        const c = value / 255;
+        return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    };
+
+    let background = 'rgba(0, 0, 0, 0)';
+    for (let node = element; node && background === 'rgba(0, 0, 0, 0)'; node = node.parentElement) {
+      background = getComputedStyle(node).backgroundColor;
+    }
+
+    const [lighter, darker] = [luminance(getComputedStyle(element).color), luminance(background)].sort((a, b) => b - a);
+
+    return (lighter + 0.05) / (darker + 0.05);
+  });
+}
+
 test.beforeEach(async ({ page }) => {
   await page.goto('/index.html');
 });
@@ -1033,6 +1057,19 @@ test('wraps field types and machine names in the fields table only after an unde
   await expect(revisions).toHaveText('entity_reference_revisions');
   const [revisionLines] = await renderedLines(revisions);
   expect(revisionLines.length).toBeGreaterThan(1);
+});
+
+test('keeps the multi-value cardinality badge legible in both themes', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+  await page.click('#table-toggle');
+
+  const badge = page.locator('#field-table .badge--multi').first();
+  expect(await textContrast(badge)).toBeGreaterThanOrEqual(4.5);
+
+  await page.click('#theme-toggle');
+  expect(await page.evaluate(() => document.documentElement.classList.contains('sl-theme-dark'))).toBe(true);
+  expect(await textContrast(badge)).toBeGreaterThanOrEqual(4.5);
 });
 
 test('echoes a hovered control description into the status bar', async ({ page }) => {
