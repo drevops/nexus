@@ -364,7 +364,8 @@ function applyTheme(dark) {
   const btn = $('theme-toggle');
   if (btn) {
     btn.innerHTML = icon(dark ? 'sun' : 'moon');
-    btn.title = dark ? 'Switch to light theme' : 'Switch to dark theme';
+    // SlButton does not reflect its title property, so set the attribute.
+    btn.setAttribute('title', dark ? 'Switch to light theme' : 'Switch to dark theme');
   }
   if (window.__nexus && window.__nexus.applyTheme) {
     window.__nexus.applyTheme();
