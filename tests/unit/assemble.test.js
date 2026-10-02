@@ -2,7 +2,7 @@ import { before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join, relative, sep } from 'node:path';
 
 const ROOT = join(import.meta.dirname, '..', '..');
 const SITE = join(ROOT, '_site');
@@ -19,6 +19,13 @@ function localReferences(html) {
     .map((ref) => ref.split(/[?#]/)[0]);
 }
 
+// Relative specifiers of static imports, re-exports and dynamic imports.
+function relativeImports(source) {
+  const matches = [...source.matchAll(/(?:\bfrom\s*|\bimport\s*\(?\s*)["'](\.\.?\/[^"']+)["']/g)];
+
+  return matches.map((match) => match[1].split(/[?#]/)[0]);
+}
+
 before(() => {
   execFileSync('npm', ['run', '--silent', 'assemble'], { cwd: ROOT });
 });
@@ -29,9 +36,25 @@ test('ships every file index.html loads', () => {
   assert.ok(refs.includes('assets/app.js'));
   assert.ok(refs.includes('./assets/vendor/preact.module.js'));
 
-  for (const ref of refs) {
-    assert.ok(existsSync(join(SITE, ref)), ref + ' is missing from _site');
+  const pending = refs.map((ref) => join(SITE, ref));
+  const shipped = new Set();
+
+  while (pending.length > 0) {
+    const file = pending.pop();
+
+    if (shipped.has(file)) {
+      continue;
+    }
+
+    assert.ok(file.startsWith(SITE + sep) && existsSync(file), relative(SITE, file) + ' is missing from _site');
+    shipped.add(file);
+
+    if (file.endsWith('.js')) {
+      pending.push(...relativeImports(readFileSync(file, 'utf8')).map((spec) => join(dirname(file), spec)));
+    }
   }
+
+  assert.ok(shipped.has(join(SITE, 'assets', 'parser.js')));
 });
 
 test('ships the bundled example', () => {
