@@ -60,17 +60,8 @@ npm run test-coverage
 - `.github/workflows/test-nodejs.yml` - lint, unit tests with coverage on Node 22 and 24, and a Playwright end-to-end job
 - `.github/workflows/release.yml` - on a published release, assembles `index.html`, `assets/` and `examples/` into `_site`, stamps the version and deploys to GitHub Pages
 - `.github/workflows/draft-release-notes.yml` - keeps a draft release up to date as pull requests merge
-- `.github/workflows/test-actions.yml` - lints the workflows with yamllint and actionlint and audits them with zizmor
 - `.github/workflows/assign-author.yml` - assigns each pull request to its author
 - `renovate.json` - Renovate keeps npm packages and the SHA-pinned actions up to date
-
-## Architecture Documentation
-
-Architecture documentation lives in `docs/architecture/`. It is generated and maintained by an AI agent via the `update-architecture-docs` skill in `.claude/skills/update-architecture-docs/SKILL.md`.
-
-After any structural change to the codebase, update it by invoking the skill (say "update architecture docs").
-
-The content is derived from the source code. If the documentation and the code disagree, the code wins.
 
 ## Updating from the template
 
