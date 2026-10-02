@@ -209,7 +209,7 @@ test('shows a loading screen while the example loads', async ({ page }) => {
   await expect(page.locator('#loader')).toBeHidden();
 });
 
-test('traces a field\'s inbound and outbound connections', async ({ page }) => {
+test("traces a field's inbound and outbound connections", async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);
 
@@ -299,10 +299,7 @@ test('saves and reloads a Nexus diagram document', async ({ page }) => {
   await waitForGraph(page);
   const before = await entityCount(page);
 
-  const [download] = await Promise.all([
-    page.waitForEvent('download'),
-    page.click('#doc-save'),
-  ]);
+  const [download] = await Promise.all([page.waitForEvent('download'), page.click('#doc-save')]);
   expect(download.suggestedFilename()).toMatch(/\.nexus\.json$/);
   const saved = await download.path();
 
@@ -358,10 +355,7 @@ test('builds a new entity and field and saves them', async ({ page }) => {
   await page.click('[data-create-field]');
   expect(await page.evaluate(() => window.__nexus.cy.getElementById('field:node.campaign:field_body').length)).toBe(1);
 
-  const [download] = await Promise.all([
-    page.waitForEvent('download'),
-    page.click('#doc-save'),
-  ]);
+  const [download] = await Promise.all([page.waitForEvent('download'), page.click('#doc-save')]);
   const doc = JSON.parse(readFileSync(await download.path(), 'utf8'));
   const campaign = doc.entities.find((e) => e.entityType === 'node' && e.bundle === 'campaign');
   expect(campaign).toBeTruthy();
@@ -565,10 +559,7 @@ test('exports the diagram as PNG named after the title', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);
 
-  const [download] = await Promise.all([
-    page.waitForEvent('download'),
-    page.click('#export-png'),
-  ]);
+  const [download] = await Promise.all([page.waitForEvent('download'), page.click('#export-png')]);
   expect(download.suggestedFilename()).toBe('example-content-model.png');
 });
 
@@ -578,10 +569,7 @@ test('exports the diagram as SVG and honours a renamed title', async ({ page }) 
 
   await slFill(page, '#diagram-title', 'My Model');
 
-  const [download] = await Promise.all([
-    page.waitForEvent('download'),
-    page.click('#export-svg'),
-  ]);
+  const [download] = await Promise.all([page.waitForEvent('download'), page.click('#export-svg')]);
   expect(download.suggestedFilename()).toBe('my-model.svg');
 });
 
@@ -682,13 +670,20 @@ test('scales node captions with the canvas zoom', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);
 
-  const sizeAtZoom = (zoom) => page.evaluate((z) => new Promise((resolve) => {
-    window.__nexus.cy.zoom(z);
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      const cap = [...document.querySelectorAll('#captions .caption--type')].find((c) => c.style.display === 'block');
-      resolve(cap ? parseFloat(cap.style.fontSize) : 0);
-    }));
-  }), zoom);
+  const sizeAtZoom = (zoom) =>
+    page.evaluate(
+      (z) =>
+        new Promise((resolve) => {
+          window.__nexus.cy.zoom(z);
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() => {
+              const cap = [...document.querySelectorAll('#captions .caption--type')].find((c) => c.style.display === 'block');
+              resolve(cap ? parseFloat(cap.style.fontSize) : 0);
+            }),
+          );
+        }),
+      zoom,
+    );
 
   const small = await sizeAtZoom(1);
   const large = await sizeAtZoom(2.5);
@@ -720,10 +715,7 @@ test('adds an entity note that badges the canvas and reveals on hover', async ({
   expect(reveal.text).toContain('Core content type.');
 
   // The note round-trips through a saved document.
-  const [download] = await Promise.all([
-    page.waitForEvent('download'),
-    page.click('#doc-save'),
-  ]);
+  const [download] = await Promise.all([page.waitForEvent('download'), page.click('#doc-save')]);
   const doc = JSON.parse(readFileSync(await download.path(), 'utf8'));
   const episode = doc.entities.find((e) => e.entityType === 'node' && e.bundle === 'episode');
   expect(episode.note).toBe('Core content type.');
@@ -734,7 +726,12 @@ test('adds a note to a field too, not just entities', async ({ page }) => {
   await waitForGraph(page);
   await page.click('#mode-build');
 
-  await page.evaluate(() => window.__nexus.cy.nodes('[group="field"]').filter((n) => (n.data('name') || '').startsWith('field_'))[0].emit('tap'));
+  await page.evaluate(() =>
+    window.__nexus.cy
+      .nodes('[group="field"]')
+      .filter((n) => (n.data('name') || '').startsWith('field_'))[0]
+      .emit('tap'),
+  );
   await expect(page.locator('#inspector sl-textarea[data-note]')).toBeVisible();
 
   await page.locator('#inspector sl-textarea[data-note]').evaluate((el) => {
@@ -814,10 +811,7 @@ test('exports the fields table as CSV', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);
 
-  const [download] = await Promise.all([
-    page.waitForEvent('download'),
-    page.click('#export-csv'),
-  ]);
+  const [download] = await Promise.all([page.waitForEvent('download'), page.click('#export-csv')]);
   expect(download.suggestedFilename()).toBe('example-content-model-fields.csv');
 
   const csv = readFileSync(await download.path(), 'utf8');
@@ -839,9 +833,14 @@ test('shows interaction tips in the middle of the status bar', async ({ page }) 
 });
 
 test('renders a non-empty glyph for every toolbar and status bar icon', async ({ page }) => {
-  const empty = await page.evaluate(() => [...document.querySelectorAll('.toolbar [data-icon], .statusbar [data-icon]')]
-    .filter((el) => { const svg = el.querySelector('svg.icon'); return !svg || svg.children.length === 0; })
-    .map((el) => el.id || el.getAttribute('data-icon')));
+  const empty = await page.evaluate(() =>
+    [...document.querySelectorAll('.toolbar [data-icon], .statusbar [data-icon]')]
+      .filter((el) => {
+        const svg = el.querySelector('svg.icon');
+        return !svg || svg.children.length === 0;
+      })
+      .map((el) => el.id || el.getAttribute('data-icon')),
+  );
   expect(empty).toEqual([]);
 });
 
@@ -937,10 +936,7 @@ test('round-trips custom types and symbols through a saved document', async ({ p
   await page.fill('#settings [data-new-type]', 'gadget');
   await page.click('#settings [data-add-type]');
 
-  const [download] = await Promise.all([
-    page.waitForEvent('download'),
-    page.click('#doc-save'),
-  ]);
+  const [download] = await Promise.all([page.waitForEvent('download'), page.click('#doc-save')]);
   const doc = JSON.parse(readFileSync(await download.path(), 'utf8'));
   expect(doc.symbols.node).toBe('diamond');
   expect(doc.customTypes.some((t) => t.type === 'gadget')).toBe(true);

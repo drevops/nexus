@@ -22,9 +22,7 @@ const DEFINITIONS = {
     { name: 'name', label: 'Name', fieldType: 'string', required: true },
     { name: 'status', label: 'Published', fieldType: 'boolean' },
   ],
-  block_content: [
-    { name: 'info', label: 'Block description', fieldType: 'string', required: true },
-  ],
+  block_content: [{ name: 'info', label: 'Block description', fieldType: 'string', required: true }],
   user: [
     { name: 'name', label: 'Username', fieldType: 'string', required: true },
     { name: 'mail', label: 'Email', fieldType: 'email' },
@@ -36,11 +34,5 @@ const DEFINITIONS = {
 export function baseFieldsForEntityType(entityType) {
   const definitions = DEFINITIONS[entityType] || [];
 
-  return definitions.map((definition) => new Field(
-    definition.name,
-    definition.label,
-    definition.fieldType,
-    KIND_SYSTEM,
-    definition.required || false,
-  ));
+  return definitions.map((definition) => new Field(definition.name, definition.label, definition.fieldType, KIND_SYSTEM, definition.required || false));
 }

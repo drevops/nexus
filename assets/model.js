@@ -158,7 +158,7 @@ export class ContentModel {
           },
         });
 
-        edges.push({ data: { id: 'e' + (edgeIndex++), source: entity.id(), target: fieldId, group: 'has' } });
+        edges.push({ data: { id: 'e' + edgeIndex++, source: entity.id(), target: fieldId, group: 'has' } });
 
         if (!fieldItem.isReference()) {
           continue;
@@ -171,7 +171,7 @@ export class ContentModel {
         for (const targetId of targetIds) {
           edges.push({
             data: {
-              id: 'e' + (edgeIndex++),
+              id: 'e' + edgeIndex++,
               source: fieldId,
               target: targetId,
               group: 'ref',

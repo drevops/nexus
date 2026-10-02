@@ -16,8 +16,19 @@ import { icon } from './icons.js';
 import { cardinalityLabel } from './model.js';
 import { InspectorBody } from './inspector.js';
 import {
-  getState, subscribe, getController, togglePanel, closePanel, focusPanel,
-  movePanel, pinPanel, unpinPanel, setDockWidth, setPanelHeight, setTableFilter, openTableFor,
+  getState,
+  subscribe,
+  getController,
+  togglePanel,
+  closePanel,
+  focusPanel,
+  movePanel,
+  pinPanel,
+  unpinPanel,
+  setDockWidth,
+  setPanelHeight,
+  setTableFilter,
+  openTableFor,
 } from './store.js';
 
 const html = htmBase.bind(h);
@@ -29,19 +40,26 @@ const WIDE = { table: true };
 const SWATCHES = {
   entity: '<svg width="34" height="24"><rect x="2" y="4" width="30" height="16" rx="3" fill="#9fc5e8" stroke="#5b6470"/></svg>',
   single: '<svg width="34" height="24"><ellipse cx="17" cy="12" rx="14" ry="9" fill="#fff" stroke="#555c66"/></svg>',
-  multi: '<svg width="34" height="24"><ellipse cx="17" cy="12" rx="14" ry="9" fill="#fff" stroke="#3d444d"/><ellipse cx="17" cy="12" rx="11" ry="6.5" fill="none" stroke="#3d444d"/></svg>',
+  multi:
+    '<svg width="34" height="24"><ellipse cx="17" cy="12" rx="14" ry="9" fill="#fff" stroke="#3d444d"/><ellipse cx="17" cy="12" rx="11" ry="6.5" fill="none" stroke="#3d444d"/></svg>',
   system: '<svg width="34" height="24"><ellipse cx="17" cy="12" rx="14" ry="9" fill="#fff" stroke="#98a2b3" stroke-dasharray="3 2"/></svg>',
   calculated: '<svg width="34" height="24"><ellipse cx="17" cy="12" rx="14" ry="9" fill="#ffd966" stroke="#c9a227"/></svg>',
   event: '<svg width="34" height="24"><polygon points="17,3 31,12 17,21 3,12" fill="#fff" stroke="#333b45"/></svg>',
   api: '<svg width="34" height="24"><polygon points="10,3 24,3 32,12 24,21 10,21 2,12" fill="#fff" stroke="#333b45"/></svg>',
-  callback: '<svg width="34" height="24"><rect x="2" y="4" width="30" height="16" rx="2" fill="#fff" stroke="#333b45"/><line x1="2" y1="13" x2="32" y2="13" stroke="#333b45"/></svg>',
+  callback:
+    '<svg width="34" height="24"><rect x="2" y="4" width="30" height="16" rx="2" fill="#fff" stroke="#333b45"/><line x1="2" y1="13" x2="32" y2="13" stroke="#333b45"/></svg>',
 };
 
 // Entity types are drawn dynamically from the settings; these are the fixed
 // field and annotation symbols that follow them in the legend.
 const LEGEND_ITEMS = [
-  ['single', 'Single-value field'], ['multi', 'Multi-value field'],
-  ['system', 'System field'], ['calculated', 'Calculated field'], ['event', 'Event'], ['api', 'API'], ['callback', 'Callback / method'],
+  ['single', 'Single-value field'],
+  ['multi', 'Multi-value field'],
+  ['system', 'System field'],
+  ['calculated', 'Calculated field'],
+  ['event', 'Event'],
+  ['api', 'API'],
+  ['callback', 'Callback / method'],
 ];
 
 function useStore() {
@@ -123,7 +141,7 @@ function pinFromButton(id, el) {
   }
   const rect = el.getBoundingClientRect();
   const area = el.closest('.stage__canvas').getBoundingClientRect();
-  pinPanel(id, (rect.left + rect.width / 2) < (area.left + area.width / 2) ? 'left' : 'right');
+  pinPanel(id, rect.left + rect.width / 2 < area.left + area.width / 2 ? 'left' : 'right');
 }
 
 function startResize(side, evt) {
@@ -173,21 +191,36 @@ function Panel({ id, panel, header, children }) {
   const docked = !!panel.dock;
   const cls = 'panel' + (WIDE[id] ? ' panel--wide' : '') + (id === 'legend' ? ' panel--legend' : '') + (docked ? ' is-docked' : '');
   const style = docked
-    ? (panel.height ? { zIndex: panel.z, flex: '0 0 auto', height: panel.height + 'px' } : { zIndex: panel.z, flex: '1 1 0', minHeight: '90px' })
+    ? panel.height
+      ? { zIndex: panel.z, flex: '0 0 auto', height: panel.height + 'px' }
+      : { zIndex: panel.z, flex: '1 1 0', minHeight: '90px' }
     : floatStyle(panel);
 
-  return html`
-    <section id=${id} ref=${ref} class=${cls} style=${style} onMouseDown=${() => focusPanel(id)}>
-      <div class="panel__head" onMouseDown=${(e) => startDrag(id, e, ref.current)} title="Drag to move, drop at an edge to dock">
-        <span class="panel__title">${TITLES[id]}</span>
-        ${header}
-        <span class="panel__spacer"></span>
-        <button class="panel__pin" type="button" title=${docked ? 'Unpin from side' : 'Pin to a side'} aria-label="Pin" onClick=${() => pinFromButton(id, ref.current)} dangerouslySetInnerHTML=${{ __html: icon('pin') }}></button>
-        <button class="panel__close" type="button" title="Close panel" aria-label="Close" onClick=${() => closePanel(id)} dangerouslySetInnerHTML=${{ __html: icon('x') }}></button>
-      </div>
-      <div class="panel__body">${children}</div>
-      ${docked ? html`<div class="panel__vresize" title="Drag to resize height" onMouseDown=${(e) => startVResize(id, e, ref.current)}></div>` : null}
-    </section>`;
+  return html` <section id=${id} ref=${ref} class=${cls} style=${style} onMouseDown=${() => focusPanel(id)}>
+    <div class="panel__head" onMouseDown=${(e) => startDrag(id, e, ref.current)} title="Drag to move, drop at an edge to dock">
+      <span class="panel__title">${TITLES[id]}</span>
+      ${header}
+      <span class="panel__spacer"></span>
+      <button
+        class="panel__pin"
+        type="button"
+        title=${docked ? 'Unpin from side' : 'Pin to a side'}
+        aria-label="Pin"
+        onClick=${() => pinFromButton(id, ref.current)}
+        dangerouslySetInnerHTML=${{ __html: icon('pin') }}
+      ></button>
+      <button
+        class="panel__close"
+        type="button"
+        title="Close panel"
+        aria-label="Close"
+        onClick=${() => closePanel(id)}
+        dangerouslySetInnerHTML=${{ __html: icon('x') }}
+      ></button>
+    </div>
+    <div class="panel__body">${children}</div>
+    ${docked ? html`<div class="panel__vresize" title="Drag to resize height" onMouseDown=${(e) => startVResize(id, e, ref.current)}></div>` : null}
+  </section>`;
 }
 
 function panelFor(id, s) {
@@ -199,11 +232,10 @@ function DockRail({ side, s }) {
   if (!ids.length) {
     return null;
   }
-  return html`
-    <div class="dock" id=${'dock-' + side} data-side=${side} style=${{ width: s.dockWidth[side] + 'px' }}>
-      <div class="dock__scroll">${ids.map((id) => panelFor(id, s))}</div>
-      <div class=${'dock__resize dock__resize--' + side} onMouseDown=${(e) => startResize(side, e)}></div>
-    </div>`;
+  return html` <div class="dock" id=${'dock-' + side} data-side=${side} style=${{ width: s.dockWidth[side] + 'px' }}>
+    <div class="dock__scroll">${ids.map((id) => panelFor(id, s))}</div>
+    <div class=${'dock__resize dock__resize--' + side} onMouseDown=${(e) => startResize(side, e)}></div>
+  </div>`;
 }
 
 function FloatLayer({ s }) {
@@ -217,8 +249,7 @@ class CanvasHost extends Component {
   }
 
   render() {
-    return html`
-      <div id="cy" class="cy"></div>
+    return html` <div id="cy" class="cy"></div>
       <div id="captions" class="captions" aria-hidden="true"></div>
       <div id="notes" class="notes"></div>
       <div id="handles" class="handles" hidden></div>
@@ -236,8 +267,7 @@ function StageApp() {
     }
   }, [sig]);
 
-  return html`
-    <${DockRail} side="left" s=${s} />
+  return html` <${DockRail} side="left" s=${s} />
     <div class="stage__canvas">
       <${CanvasHost} />
       <${FloatLayer} s=${s} />
@@ -257,10 +287,22 @@ function body(id, s) {
   }
   if (id === 'legend') {
     return html`<div class="legend-body">
-      ${ctx.presentTypes().map((t) => html`
-      <div class="legend__item"><span class="legend__swatch" dangerouslySetInnerHTML=${{ __html: ctx.symbolSvg(t.symbol, t.color) }}></span><span class="legend__label">${t.label}</span></div>`)}
-      ${LEGEND_ITEMS.map((item) => html`
-      <div class="legend__item"><span class="legend__swatch" dangerouslySetInnerHTML=${{ __html: SWATCHES[item[0]] }}></span><span class="legend__label">${item[1]}</span></div>`)}</div>`;
+      ${ctx
+        .presentTypes()
+        .map(
+          (t) =>
+            html` <div class="legend__item">
+              <span class="legend__swatch" dangerouslySetInnerHTML=${{ __html: ctx.symbolSvg(t.symbol, t.color) }}></span
+              ><span class="legend__label">${t.label}</span>
+            </div>`,
+        )}
+      ${LEGEND_ITEMS.map(
+        (item) =>
+          html` <div class="legend__item">
+            <span class="legend__swatch" dangerouslySetInnerHTML=${{ __html: SWATCHES[item[0]] }}></span><span class="legend__label">${item[1]}</span>
+          </div>`,
+      )}
+    </div>`;
   }
   if (id === 'entities') {
     return html`<${EntitiesBody} ctx=${ctx} />`;
@@ -272,21 +314,26 @@ function body(id, s) {
 }
 
 function EntitiesBody({ ctx }) {
-  return html`
-    <div id="type-filters" class="filters">
-      ${ctx.presentTypes().map((t) => html`
-        <label class="filters__item">
-          <input type="checkbox" checked=${t.visible} onChange=${(e) => ctx.setTypeVisible(t.type, e.target.checked)} />
-          <span class="filters__swatch" style=${{ background: t.color }}></span>${t.label}
-        </label>`)}
+  return html` <div id="type-filters" class="filters">
+      ${ctx.presentTypes().map(
+        (t) =>
+          html` <label class="filters__item">
+            <input type="checkbox" checked=${t.visible} onChange=${(e) => ctx.setTypeVisible(t.type, e.target.checked)} />
+            <span class="filters__swatch" style=${{ background: t.color }}></span>${t.label}
+          </label>`,
+      )}
     </div>
     <div id="entity-list" class="entity-list">
-      ${ctx.entities().map((e) => html`
-        <div class="entity-row" data-type=${e.entityType}>
-          <button class="entity-row__name" title="Focus this entity on the canvas" onClick=${() => ctx.focusEntity(e.id)}><b>${e.label}</b> <span class="entity-row__type">${ctx.typeLabel(e.entityType)}</span></button>
-          <span class="entity-row__count">${e.fieldCount}</span>
-          <button class="entity-row__fields" title="Show this entity's fields in the table" onClick=${() => openTableFor(e.id)}>fields</button>
-        </div>`)}
+      ${ctx.entities().map(
+        (e) =>
+          html` <div class="entity-row" data-type=${e.entityType}>
+            <button class="entity-row__name" title="Focus this entity on the canvas" onClick=${() => ctx.focusEntity(e.id)}>
+              <b>${e.label}</b> <span class="entity-row__type">${ctx.typeLabel(e.entityType)}</span>
+            </button>
+            <span class="entity-row__count">${e.fieldCount}</span>
+            <button class="entity-row__fields" title="Show this entity's fields in the table" onClick=${() => openTableFor(e.id)}>fields</button>
+          </div>`,
+      )}
     </div>`;
 }
 
@@ -320,27 +367,73 @@ function TableBody({ ctx, filter }) {
   records.forEach((r) => {
     if (r.entityId !== current) {
       current = r.entityId;
-      rows.push(html`<tr class="is-group"><td colspan="5">${r.entity} · ${ctx.typeLabel(r.entityType)}</td></tr>`);
+      rows.push(
+        html`<tr class="is-group">
+          <td colspan="5">${r.entity} · ${ctx.typeLabel(r.entityType)}</td>
+        </tr>`,
+      );
     }
-    rows.push(html`<tr>
-      <td>${r.field}<br/><code>${r.name}</code></td><td>${r.type}</td>
-      <td>${cardBadge(r)}</td>
-      <td>${r.required ? '✓' : ''}</td><td>${r.refs.map((ref, i) => html`${i ? ', ' : ''}<a class="table__reflink" href="#" title=${'Locate ' + ref.label + ' on the canvas'} onClick=${(e) => { e.preventDefault(); ctx.focusEntity(ref.id); }}>${ref.label}</a>`)}</td>
-    </tr>`);
+    rows.push(
+      html`<tr>
+        <td>${r.field}<br /><code>${r.name}</code></td>
+        <td>${r.type}</td>
+        <td>${cardBadge(r)}</td>
+        <td>${r.required ? '✓' : ''}</td>
+        <td>
+          ${r.refs.map(
+            (ref, i) =>
+              html`${i ? ', ' : ''}<a
+                  class="table__reflink"
+                  href="#"
+                  title=${'Locate ' + ref.label + ' on the canvas'}
+                  onClick=${(e) => {
+                    e.preventDefault();
+                    ctx.focusEntity(ref.id);
+                  }}
+                  >${ref.label}</a
+                >`,
+          )}
+        </td>
+      </tr>`,
+    );
   });
 
-  return html`
-    <div class="panel__toolbar">
+  return html` <div class="panel__toolbar">
       <sl-select id="table-entity" class="panel__select" size="small" value=${filter} onsl-change=${(e) => setTableFilter(e.target.value)}>
         <sl-option value="__all__">All entities</sl-option>
         ${ctx.entities().map((e) => html`<sl-option value=${e.id}>${e.label}</sl-option>`)}
       </sl-select>
-      <sl-input id="table-search" class="panel__search" size="small" type="search" placeholder="Filter fields…" clearable value=${term} onsl-input=${(e) => setTerm(e.target.value)}></sl-input>
+      <sl-input
+        id="table-search"
+        class="panel__search"
+        size="small"
+        type="search"
+        placeholder="Filter fields…"
+        clearable
+        value=${term}
+        onsl-input=${(e) => setTerm(e.target.value)}
+      ></sl-input>
     </div>
     <div class="table-wrap">
       <table id="field-table" class="field-table">
-        <thead><tr><th>Field</th><th>Type</th><th>Card.</th><th>Req</th><th>References</th></tr></thead>
-        <tbody>${rows.length ? rows : html`<tr><td colspan="5">No fields match.</td></tr>`}</tbody>
+        <thead>
+          <tr>
+            <th>Field</th>
+            <th>Type</th>
+            <th>Card.</th>
+            <th>Req</th>
+            <th>References</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${
+            rows.length
+              ? rows
+              : html`<tr>
+                  <td colspan="5">No fields match.</td>
+                </tr>`
+          }
+        </tbody>
       </table>
     </div>`;
 }
@@ -360,41 +453,70 @@ function SettingsBody({ ctx }) {
     }
   }
 
-  return html`
-    <div class="settings-body">
-      <h3 class="settings-section__title">Entity types</h3>
-      <div id="type-settings" class="type-settings">
-        ${ctx.allTypes().map((t) => html`
-          <div class="type-row" data-type-row=${t}>
+  return html` <div class="settings-body">
+    <h3 class="settings-section__title">Entity types</h3>
+    <div id="type-settings" class="type-settings">
+      ${ctx.allTypes().map(
+        (t) =>
+          html` <div class="type-row" data-type-row=${t}>
             <span class="type-row__label">${ctx.typeLabel(t)}</span>
             <div class="type-row__controls">
-              <sl-color-picker data-color=${t} value=${ctx.colorFor(t)} format="hex" size="small" no-format-toggle hoist onsl-input=${(e) => ctx.applyColor(t, e.target.value)}></sl-color-picker>
+              <sl-color-picker
+                data-color=${t}
+                value=${ctx.colorFor(t)}
+                format="hex"
+                size="small"
+                no-format-toggle
+                hoist
+                onsl-input=${(e) => ctx.applyColor(t, e.target.value)}
+              ></sl-color-picker>
               ${symbolSelect(ctx, t, ctx.symbolFor(t), (e) => ctx.applySymbol(t, e.target.value))}
               ${ctx.isCustomType(t) ? html`<button class="type-row__remove" type="button" title="Remove this custom type" onClick=${() => ctx.removeCustomType(t)}>${rawIcon('x', 14)}</button>` : null}
             </div>
-          </div>`)}
+          </div>`,
+      )}
+    </div>
+    <div class="type-add">
+      <div class="type-add__names">
+        <input
+          class="type-add__input"
+          data-new-type
+          placeholder="machine_name"
+          value=${nt.name}
+          onInput=${(e) => setNt((p) => ({ ...p, name: e.target.value }))}
+        />
+        <input class="type-add__input" placeholder="Label" value=${nt.label} onInput=${(e) => setNt((p) => ({ ...p, label: e.target.value }))} />
       </div>
-      <div class="type-add">
-        <div class="type-add__names">
-          <input class="type-add__input" data-new-type placeholder="machine_name" value=${nt.name} onInput=${(e) => setNt((p) => ({ ...p, name: e.target.value }))} />
-          <input class="type-add__input" placeholder="Label" value=${nt.label} onInput=${(e) => setNt((p) => ({ ...p, label: e.target.value }))} />
-        </div>
-        <div class="type-add__controls">
-          <sl-color-picker value=${nt.color} format="hex" size="small" no-format-toggle hoist onsl-input=${(e) => setNt((p) => ({ ...p, color: e.target.value }))}></sl-color-picker>
-          ${symbolSelect(ctx, null, nt.symbol, (e) => setNt((p) => ({ ...p, symbol: e.target.value })))}
-          <sl-button size="small" variant="primary" data-add-type title="Add a custom entity type" onClick=${add}>${rawIcon('plus')}Add</sl-button>
-        </div>
+      <div class="type-add__controls">
+        <sl-color-picker
+          value=${nt.color}
+          format="hex"
+          size="small"
+          no-format-toggle
+          hoist
+          onsl-input=${(e) => setNt((p) => ({ ...p, color: e.target.value }))}
+        ></sl-color-picker>
+        ${symbolSelect(ctx, null, nt.symbol, (e) => setNt((p) => ({ ...p, symbol: e.target.value })))}
+        <sl-button size="small" variant="primary" data-add-type title="Add a custom entity type" onClick=${add}>${rawIcon('plus')}Add</sl-button>
       </div>
-      <sl-button id="settings-reset" class="settings-reset" size="small" title="Restore the default colours and symbols" onClick=${() => ctx.resetColors()}>${rawIcon('rotate-ccw')}Reset to defaults</sl-button>
-      <p class="panel__note">Saved to this browser and reused across diagrams.</p>
-    </div>`;
+    </div>
+    <sl-button id="settings-reset" class="settings-reset" size="small" title="Restore the default colours and symbols" onClick=${() => ctx.resetColors()}
+      >${rawIcon('rotate-ccw')}Reset to defaults</sl-button
+    >
+    <p class="panel__note">Saved to this browser and reused across diagrams.</p>
+  </div>`;
 }
 
 /* Boot -------------------------------------------------------------------- */
 
 function syncToggles() {
   const s = getState();
-  [['entities-toggle', 'entities'], ['table-toggle', 'table'], ['legend-toggle', 'legend'], ['settings-toggle', 'settings']].forEach(([btn, id]) => {
+  [
+    ['entities-toggle', 'entities'],
+    ['table-toggle', 'table'],
+    ['legend-toggle', 'legend'],
+    ['settings-toggle', 'settings'],
+  ].forEach(([btn, id]) => {
     const el = document.getElementById(btn);
     if (el) {
       el.classList.toggle('is-active', s.panels[id].open);
@@ -405,7 +527,12 @@ function syncToggles() {
 export function initUI() {
   render(html`<${StageApp} />`, document.getElementById('stage-root'));
 
-  [['entities-toggle', 'entities'], ['table-toggle', 'table'], ['legend-toggle', 'legend'], ['settings-toggle', 'settings']].forEach(([btn, id]) => {
+  [
+    ['entities-toggle', 'entities'],
+    ['table-toggle', 'table'],
+    ['legend-toggle', 'legend'],
+    ['settings-toggle', 'settings'],
+  ].forEach(([btn, id]) => {
     const el = document.getElementById(btn);
     if (el) {
       el.addEventListener('click', () => togglePanel(id));
