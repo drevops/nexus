@@ -841,6 +841,8 @@ function buildController(model, options = {}) {
       });
     });
     positionCaptions();
+    // No Cytoscape frame is drawn here, so no 'render' event fires.
+    cy.emit('captions');
   }
 
   // Below 35% zoom the captions are too small to read.

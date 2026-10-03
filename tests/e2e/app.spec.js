@@ -729,6 +729,19 @@ test('keeps the bottom handle at the entity box while its captions are hidden', 
   expectJustBelow(gaps.box);
 });
 
+test('moves the bottom handle when machine names are toggled on a selected entity', async ({ page }) => {
+  await selectProgram(page, 1);
+  expectJustBelow((await bottomHandleGaps(page)).caption);
+
+  await page.click('#machine-names');
+  const hidden = await bottomHandleGaps(page);
+  expect(hidden.caption).toBeNull();
+  expectJustBelow(hidden.box);
+
+  await page.click('#machine-names');
+  expectJustBelow((await bottomHandleGaps(page)).caption);
+});
+
 test('adds a field below an entity from its bottom handle', async ({ page }) => {
   await selectProgram(page, 1);
   const before = await page.evaluate(() => window.__nexus.cy.nodes('[group="field"][entity="node.program"]').map((field) => field.id()));

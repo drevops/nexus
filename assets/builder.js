@@ -244,6 +244,7 @@ export function attachBuilder(instance) {
       positionHandles();
     });
   });
+  cy.on('captions', positionHandles);
   setBuilder({ createEntity, createField, createAnnotation, addReference, removeReference, deleteNode, renameEntity, renameField });
   applyMode();
 }
