@@ -503,7 +503,18 @@ function nearestEntity(position) {
 /* Renaming machine names re-ids the node and its dependent edges (the
    cascade the immutable-id rule otherwise avoids). Cytoscape drops
    render-only elements with the old node and the next render rebuilds them,
-   so only the persisted has and ref edges are migrated. */
+   so only the persisted has, ref and annotation edges are migrated. */
+
+function moveAnnotationEdges(oldId, newId) {
+  const edges = cy.getElementById(oldId).connectedEdges('[group="annotation"]');
+
+  // Each copy keeps its edge's id, so the original is removed first.
+  edges.forEach((edge) => {
+    const data = { ...edge.data() };
+    edge.remove();
+    cy.add({ group: 'edges', data: { ...data, source: data.source === oldId ? newId : data.source, target: data.target === oldId ? newId : data.target } });
+  });
+}
 
 function reidField(field, entityId, name) {
   const newId = fieldNodeId(entityId, name);
@@ -515,6 +526,7 @@ function reidField(field, entityId, name) {
       cy.add({ group: 'edges', data: { ...edge.data(), id: refEdgeId(newId, target), source: newId, target: target } });
     }
   });
+  moveAnnotationEdges(field.id(), newId);
   field.remove();
 }
 
@@ -532,6 +544,7 @@ function renameEntity(oldId, newBundleRaw) {
   }
 
   cy.add({ group: 'nodes', data: { ...node.data(), id: newId, bundle: newBundle }, position: { ...node.position() } });
+  moveAnnotationEdges(oldId, newId);
   cy.edges('[group="ref"]').forEach((edge) => {
     if (edge.target().id() === oldId) {
       const source = edge.source().id();

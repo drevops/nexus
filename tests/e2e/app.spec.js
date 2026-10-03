@@ -919,6 +919,48 @@ test('derives machine names the same way for bundles, fields and custom entity t
   await expect(page.locator('#settings [data-type-row="my_widget__type"]')).toHaveCount(1);
 });
 
+function annotationEdges(page) {
+  return page.evaluate(() =>
+    window.__nexus.cy
+      .edges('[group="annotation"]')
+      .map((edge) => edge.source().id() + '>' + edge.target().id() + ' ' + edge.data('label'))
+      .sort(),
+  );
+}
+
+test('keeps the annotation edges of a renamed entity and its fields', async ({ page }) => {
+  await openDocument(page, {
+    nexus: 1,
+    title: 'Annotated renames',
+    entities: [
+      {
+        entityType: 'node',
+        bundle: 'article',
+        label: 'Article',
+        fields: [{ name: 'field_tags', label: 'Tags', fieldType: 'string', kind: 'single' }],
+      },
+    ],
+    annotations: {
+      nodes: [
+        { id: 'sync', kind: 'api', label: 'Sync API' },
+        { id: 'published', kind: 'event', label: 'Published' },
+      ],
+      edges: [
+        { from: 'node.article', to: 'published', label: 'emits' },
+        { from: 'sync', to: 'field:node.article:field_tags', label: 'fills' },
+      ],
+    },
+  });
+  await page.click('#mode-build');
+
+  await tapNode(page, 'field:node.article:field_tags');
+  await slFill(page, '#inspector sl-input[data-machine-name]', 'field_topics');
+  await tapNode(page, 'node.article');
+  await slFill(page, '#inspector sl-input[data-machine-name]', 'story');
+
+  expect(await annotationEdges(page)).toEqual(['node.story>published emits', 'sync>field:node.story:field_topics fills']);
+});
+
 test('shows the edit palette as a second toolbar row only in edit mode', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);
