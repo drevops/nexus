@@ -279,6 +279,16 @@ function overlaps(a, b) {
   return a.x1 < b.x2 && b.x1 < a.x2 && a.y1 < b.y2 && b.y1 < a.y2;
 }
 
+// The elements without the 'hidden' class, with their style brought up to
+// date. Cytoscape restyles an element after a class change only later, so
+// until then :visible and the element's size reflect its old class.
+function shown(elements) {
+  const current = elements.not('.hidden');
+  current.cleanStyle();
+
+  return current;
+}
+
 function buildElements(model) {
   const nodes = model.nodes || [];
   const ids = new Set(nodes.map((n) => n.data.id));
@@ -600,7 +610,7 @@ function buildController(model, options = {}) {
     // box), so widen the in-rank gap to fit them when they are shown.
     const captionRoom = showMachineNames ? 18 : 0;
     const spacing = fieldsMode ? LAYOUT_SPACING.fields : LAYOUT_SPACING.overview;
-    cy.elements(':visible')
+    shown(cy.elements())
       .layout({
         name: 'dagre',
         rankDir: rankDir,
@@ -637,21 +647,21 @@ function buildController(model, options = {}) {
   // nearest the field, clear of every other visible node. A hidden proxy is
   // left to the layout run that shows it.
   function placeProxies(proxies) {
-    const placing = proxies.filter(':visible');
+    const placing = shown(proxies);
     if (placing.empty()) {
       return;
     }
 
-    const taken = cy
-      .nodes(':visible')
+    const taken = shown(cy.nodes())
       .difference(placing)
       .map((node) => node.boundingBox());
     placing.forEach((proxy) => {
       const field = proxy.incomers('node');
       const x = proxyColumn(field, proxy, placing);
       const y = field.position('y');
-      const width = proxy.outerWidth();
-      const height = proxy.outerHeight();
+      // The taken boxes are bounding boxes, which extend past the outer size,
+      // so the slot is measured the same way.
+      const { w: width, h: height } = proxy.boundingBox();
       const step = height + LAYOUT_SPACING.fields.nodeSep;
       const slotBox = (dy) => ({ x1: x - width / 2, x2: x + width / 2, y1: y + dy - height / 2, y2: y + dy + height / 2 });
       let offset = 0;
@@ -671,7 +681,7 @@ function buildController(model, options = {}) {
   // widest of the entity's fields stacked with this one, so no proxy is drawn
   // beside another field.
   function proxyColumn(field, proxy, placing) {
-    const placed = field.outgoers('node[group="proxy"]:visible').difference(placing);
+    const placed = shown(field.outgoers('node[group="proxy"]')).difference(placing);
     if (placed.nonempty()) {
       return placed.first().position('x');
     }

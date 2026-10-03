@@ -9,6 +9,18 @@ function entityCount(page) {
   return page.evaluate(() => window.__nexus.cy.nodes('[group="entity"]').length);
 }
 
+// The position of each node the selector matches, or of every node, keyed by
+// node id.
+function nodePositions(page, selector) {
+  return page.evaluate((nodeSelector) => {
+    const positions = {};
+    window.__nexus.cy.nodes(nodeSelector).forEach((node) => {
+      positions[node.id()] = node.position();
+    });
+    return positions;
+  }, selector);
+}
+
 async function waitForGraph(page) {
   await page.waitForFunction(() => window.__nexus && window.__nexus.cy.nodes('[group="entity"]').length > 0);
 }
@@ -474,14 +486,7 @@ test('reopens a saved diagram with every node where it was saved', async ({ page
   await page.setInputFiles('#doc-open', saved);
   await waitForGraph(page);
 
-  const positions = await page.evaluate(() => {
-    const result = {};
-    window.__nexus.cy.nodes().forEach((node) => {
-      result[node.id()] = node.position();
-    });
-    return result;
-  });
-  expect(positions).toEqual(doc.layout);
+  expect(await nodePositions(page)).toEqual(doc.layout);
 });
 
 function proxyPlacement(page) {
@@ -523,7 +528,9 @@ test('places proxies missing from a saved layout beside their field', async ({ p
   });
 });
 
-test('leaves hidden proxies out of a saved layout and places them beside their field on open', async ({ page }) => {
+// The layout saved with proxies hidden leaves no room beside the fields, so a
+// proxy can land well above or below its field.
+test("leaves hidden proxies out of a saved layout and places them in their field's proxy column on open", async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);
   await page.click('#proxy-toggle');
@@ -540,7 +547,6 @@ test('leaves hidden proxies out of a saved layout and places them beside their f
   placement.forEach((proxy) => {
     expect(proxy.gap).toBeGreaterThan(0);
     expect(proxy.dx).toBeLessThan(300);
-    expect(proxy.dy).toBeLessThan(200);
     expect(proxy.overlaps).toBe(0);
   });
 });
@@ -839,16 +845,6 @@ function addTarget(page, target) {
   return slSelect(page, '#inspector sl-select[placeholder="Add target…"]', target);
 }
 
-function proxyPositions(page) {
-  return page.evaluate(() => {
-    const positions = {};
-    window.__nexus.cy.nodes('[group="proxy"]').forEach((proxy) => {
-      positions[proxy.id()] = proxy.position();
-    });
-    return positions;
-  });
-}
-
 // Proxies left on the canvas without the reference they draw.
 function orphanProxies(page) {
   return page.evaluate(() => {
@@ -934,13 +930,13 @@ test('saves the proxy of a reference added in edit mode and reopens it where it 
 for (const [name, nodeId, machineName, renamedId] of dataProviderRenamedProxies()) {
   test(`keeps every proxy where it was when ${name} is renamed`, async ({ page }) => {
     await editExample(page);
-    const before = await proxyPositions(page);
+    const before = await nodePositions(page, '[group="proxy"]');
 
     await tapNode(page, nodeId);
     await slFill(page, '#inspector sl-input[data-machine-name]', machineName);
 
     const expected = Object.fromEntries(Object.entries(before).map(([id, position]) => [id.split(nodeId).join(renamedId), position]));
-    expect(await proxyPositions(page)).toEqual(expected);
+    expect(await nodePositions(page, '[group="proxy"]')).toEqual(expected);
   });
 }
 
@@ -1001,6 +997,44 @@ test('lists a reference added in edit mode in the tooltip of its field', async (
   }, ACL_FIELD);
 
   await expect(page.locator('#tooltip')).toContainText('→ ACL Programs, Program');
+});
+
+for (const [name, toggle] of dataProviderLayoutToggles()) {
+  test(`lays the diagram out as Tidy does after turning ${name} off and on`, async ({ page }) => {
+    await page.click('#example-btn');
+    await waitForGraph(page);
+    await page.click('#entities-toggle');
+    await page.click('#tidy');
+    const tidied = await nodePositions(page);
+
+    await toggle(page);
+    await toggle(page);
+
+    expect(await nodePositions(page)).toEqual(tidied);
+  });
+}
+
+function dataProviderLayoutToggles() {
+  return [
+    ['Fields', (page) => page.click('#fields-toggle')],
+    ['Proxies', (page) => page.click('#proxy-toggle')],
+    ['the Media filter', (page) => page.locator('#type-filters label', { hasText: 'Media' }).locator('input').click()],
+  ];
+}
+
+test('lays out the proxy of a reference added while its target type was filtered out once the filter is lifted', async ({ page }) => {
+  await editExample(page);
+  await page.click('#entities-toggle');
+  const media = page.locator('#type-filters label', { hasText: 'Media' }).locator('input');
+  await media.uncheck();
+  await tapNode(page, 'field:node.program:field_media');
+  await addTarget(page, 'media.document');
+  await media.check();
+  const shown = await nodePositions(page);
+
+  await page.click('#tidy');
+
+  expect(await nodePositions(page)).toEqual(shown);
 });
 
 test('adds a field from an entity + handle, then renames it', async ({ page }) => {
