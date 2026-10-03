@@ -24,7 +24,6 @@ let counter = 0;
 let handleEntityId = null;
 let handleRaf = false;
 let placeKind = null;
-let pendingPosition = null;
 let isolatedIds = new Set();
 let dragLast = null;
 
@@ -136,16 +135,10 @@ export function initBuilder() {
 
   Array.prototype.forEach.call(document.querySelectorAll('[data-add-entity]'), (btn) => {
     const type = btn.getAttribute('data-add-entity');
-    btn.addEventListener('click', () => {
-      pendingPosition = null;
-      openInspector({ kind: 'new-entity', entityType: type });
-    });
+    btn.addEventListener('click', () => openInspector({ kind: 'new-entity', entityType: type }));
     makeDraggable(btn, 'entity:' + type);
   });
-  $('add-field').addEventListener('click', () => {
-    pendingPosition = null;
-    openInspector({ kind: 'new-field' });
-  });
+  $('add-field').addEventListener('click', () => openInspector({ kind: 'new-field' }));
   makeDraggable($('add-field'), 'field');
   Array.prototype.forEach.call(document.querySelectorAll('[data-add-note]'), (btn) => {
     const kind = btn.getAttribute('data-add-note');
@@ -165,13 +158,17 @@ export function initBuilder() {
   });
   $('handles').addEventListener('click', (evt) => {
     const btn = evt.target.closest('.handle');
-    if (btn && handleEntityId) {
-      const name = uniqueFieldName(handleEntityId);
-      const id = addField(handleEntityId, name, prettify(name), 'string', 1, btn.getAttribute('data-side'));
-      if (id) {
-        selectNode(id);
-        bump();
-      }
+
+    if (!btn || !handleEntityId) {
+      return;
+    }
+
+    const name = uniqueFieldName(handleEntityId);
+    const id = addField(handleEntityId, name, prettify(name), 'string', 1, btn.getAttribute('data-side'));
+
+    if (id) {
+      selectNode(id);
+      bump();
     }
   });
 }
@@ -666,8 +663,7 @@ function createEntity(form) {
     return;
   }
   const label = (form.label || '').trim() || bundle;
-  const id = addEntity(form.entityType, bundle, label, pendingPosition);
-  pendingPosition = null;
+  const id = addEntity(form.entityType, bundle, label);
   if (id) {
     selectNode(id);
     bump();
@@ -677,12 +673,10 @@ function createEntity(form) {
 function createField(entityId, form, side) {
   const name = slug(form.name);
   if (!entityId || !name) {
-    pendingPosition = null;
     return;
   }
   const label = (form.label || '').trim() || name;
-  const id = addField(entityId, name, label, form.fieldType, form.cardinality != null ? form.cardinality : 1, side, pendingPosition);
-  pendingPosition = null;
+  const id = addField(entityId, name, label, form.fieldType, form.cardinality != null ? form.cardinality : 1, side);
   if (id) {
     if (form.target) {
       addReference(id, form.target);

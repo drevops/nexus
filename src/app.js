@@ -171,24 +171,31 @@ function walkEntry(entry, files) {
         },
         () => resolve(),
       );
-    } else if (entry.isDirectory) {
-      const reader = entry.createReader();
-      const readBatch = () => {
-        reader.readEntries(
-          (entries) => {
-            if (!entries.length) {
-              resolve();
-              return;
-            }
-            Promise.all(entries.map((child) => walkEntry(child, files))).then(readBatch);
-          },
-          () => resolve(),
-        );
-      };
-      readBatch();
-    } else {
-      resolve();
+
+      return;
     }
+
+    if (!entry.isDirectory) {
+      resolve();
+      return;
+    }
+
+    const reader = entry.createReader();
+    const readBatch = () => {
+      reader.readEntries(
+        (entries) => {
+          if (!entries.length) {
+            resolve();
+            return;
+          }
+
+          Promise.all(entries.map((child) => walkEntry(child, files))).then(readBatch);
+        },
+        () => resolve(),
+      );
+    };
+
+    readBatch();
   });
 }
 

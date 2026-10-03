@@ -24,6 +24,34 @@ function splitId(id) {
   return { entityType: id.slice(0, index), bundle: id.slice(index + 1) };
 }
 
+function serializeField(field) {
+  let targetType = null;
+  const targetBundles = [];
+
+  field.connectedEdges('[group="ref"]').forEach((edge) => {
+    if (edge.source().id() !== field.id()) {
+      return;
+    }
+    const target = splitId(edge.target().id());
+    targetType = targetType || target.entityType;
+    if (target.bundle !== '*') {
+      targetBundles.push(target.bundle);
+    }
+  });
+
+  return {
+    name: field.data('name'),
+    label: field.data('label'),
+    fieldType: field.data('fieldType'),
+    kind: field.data('kind'),
+    cardinality: field.data('cardinality') != null ? field.data('cardinality') : 1,
+    required: !!field.data('required'),
+    note: field.data('note') || '',
+    targetType: targetType,
+    targetBundles: targetBundles,
+  };
+}
+
 export function documentFromGraph(cy, meta = {}) {
   const layout = {};
   cy.nodes().forEach((node) => {
@@ -44,33 +72,7 @@ export function documentFromGraph(cy, meta = {}) {
   });
 
   const entities = cy.nodes('[group="entity"]').map((node) => {
-    const fields = (fieldsByEntity[node.id()] || []).map((field) => {
-      let targetType = null;
-      const targetBundles = [];
-
-      field.connectedEdges('[group="ref"]').forEach((edge) => {
-        if (edge.source().id() !== field.id()) {
-          return;
-        }
-        const target = splitId(edge.target().id());
-        targetType = targetType || target.entityType;
-        if (target.bundle !== '*') {
-          targetBundles.push(target.bundle);
-        }
-      });
-
-      return {
-        name: field.data('name'),
-        label: field.data('label'),
-        fieldType: field.data('fieldType'),
-        kind: field.data('kind'),
-        cardinality: field.data('cardinality') != null ? field.data('cardinality') : 1,
-        required: !!field.data('required'),
-        note: field.data('note') || '',
-        targetType: targetType,
-        targetBundles: targetBundles,
-      };
-    });
+    const fields = (fieldsByEntity[node.id()] || []).map(serializeField);
 
     return { entityType: node.data('entityType'), bundle: node.data('bundle'), label: node.data('label'), note: node.data('note') || '', fields: fields };
   });
@@ -116,7 +118,7 @@ export function documentToModel(doc) {
     const built = new Entity(entity.entityType, entity.bundle, entity.label != null ? entity.label : entity.bundle);
     built.note = entity.note || '';
     (entity.fields || []).forEach((field) => {
-      const built_field = new Field(
+      const builtField = new Field(
         field.name,
         field.label,
         field.fieldType,
@@ -126,8 +128,8 @@ export function documentToModel(doc) {
         Array.isArray(field.targetBundles) ? field.targetBundles : [],
         field.cardinality != null ? field.cardinality : field.kind === 'multi' ? -1 : 1,
       );
-      built_field.note = field.note || '';
-      built.addField(built_field);
+      builtField.note = field.note || '';
+      built.addField(builtField);
     });
     model.addEntity(built);
   });
