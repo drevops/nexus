@@ -629,6 +629,18 @@ test('reopens the import screen and cancels back to the diagram', async ({ page 
   expect(await entityCount(page)).toBeGreaterThan(0);
 });
 
+test('scrolls the landing screen to every part of the card in a short window', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 460 });
+  const card = page.locator('.landing__card');
+  expect((await card.boundingBox()).y).toBeGreaterThanOrEqual(0);
+
+  await page.locator('#landing').evaluate((landing) => {
+    landing.scrollTop = landing.scrollHeight;
+  });
+  const box = await card.boundingBox();
+  expect(box.y + box.height).toBeLessThanOrEqual(460);
+});
+
 test('renders toolbar icons from the icon set', async ({ page }) => {
   await expect(page.locator('#doc-import svg.icon')).toBeVisible();
   await expect(page.locator('#doc-save svg.icon')).toBeVisible();
