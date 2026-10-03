@@ -40,6 +40,20 @@ jobs:
           RELEASE_VERSION: ${{ github.event.release.tag_name || 'dev' }}
         run: echo "export const VERSION = '${RELEASE_VERSION}';" > _site/src/version.js
 
+      # The source ships analytics-id.js empty; stamp the measurement ID so only
+      # the published site reports page views. A quote in the value would break
+      # the stamped module, so a malformed ID fails the release.
+      - name: Stamp the Google Analytics ID
+        if: vars.GOOGLE_ANALYTICS_ID != ''
+        env:
+          GOOGLE_ANALYTICS_ID: ${{ vars.GOOGLE_ANALYTICS_ID }}
+        run: |
+          if [[ ! $GOOGLE_ANALYTICS_ID =~ ^G-[A-Z0-9]+$ ]]; then
+            echo "FAIL: GOOGLE_ANALYTICS_ID must be a measurement ID like G-XXXXXXXXXX"
+            exit 1
+          fi
+          echo "export const GOOGLE_ANALYTICS_ID = '${GOOGLE_ANALYTICS_ID}';" > _site/src/analytics-id.js
+
       - name: Configure Pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6
         with:

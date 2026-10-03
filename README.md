@@ -20,9 +20,9 @@ Draw a Drupal site's content model as an interactive diagram - entirely in your 
 
 ---
 
-Nexus is a static web app. Drop a Drupal **exported configuration folder** onto the page and it reconstructs the site's logical content model - bundles, fields and entity-reference relationships - and draws it on an infinite, pannable canvas. From there you can edit the model, or start one from scratch, and save it as a document to open again later. **Everything runs client-side: your configuration never leaves the browser.** Nothing is uploaded to any server, which makes it safe to point at client work.
+Nexus is a static web app. Drop a Drupal **exported configuration folder** onto the page and it reconstructs the site's logical content model - bundles, fields and entity-reference relationships - and draws it on an infinite, pannable canvas. From there you can edit the model, or start one from scratch, and save it as a document to open again later. **Everything runs client-side: your configuration never leaves the browser.** None of it is uploaded to any server, which makes it safe to point at client work.
 
-**[Open the app →](https://drevops.github.io/nexus/)**
+**[Open the app →](https://nexus.drevops.com/)**
 
 ![The bundled example content model drawn in Nexus as an overview of its entity types and the references between them](screenshot.png)
 
@@ -39,7 +39,7 @@ Nexus is a static web app. Drop a Drupal **exported configuration folder** onto 
 
 ## Installation
 
-There's nothing to install: [open the app](https://drevops.github.io/nexus/) in a modern browser.
+There's nothing to install: [open the app](https://nexus.drevops.com/) in a modern browser.
 
 To host your own copy, serve `index.html`, `src/`, `assets/` and `examples/` from any static web server. Opening `index.html` straight from disk won't work, because browsers don't load ES modules over `file://`.
 
@@ -139,7 +139,11 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for local development setup, the lintin
 
 ## Privacy
 
-Nexus has no backend. The configuration you import and the diagrams you build stay in your browser's memory and leave it only when you save or export a file; nothing is uploaded to or processed by any server. Your preferences - theme, panel layout, entity colours and symbols, and custom entity types - are kept in the browser's `localStorage`. Nexus is provided as is, without warranty of any kind, and the authors accept no responsibility or liability for any data you load into it or create with it.
+Nexus has no backend. The configuration you import and the diagrams you build stay in your browser's memory and leave it only when you save or export a file; nothing is uploaded to or processed by any server. Your preferences - theme, panel layout, entity colours and symbols, and custom entity types - are kept in the browser's `localStorage`.
+
+The hosted app at [nexus.drevops.com](https://nexus.drevops.com/) counts visits with Google Analytics. It sets Google's cookies and sends Google the usual visit details: the page address, the site that linked you there, your browser and device, and the approximate location Google works out from your IP address. It never sends your configuration, your diagrams or their titles - every hit reports the page title as "Nexus", whatever your diagram is called. A copy you host yourself loads no analytics, because the code ships with an empty measurement ID.
+
+Nexus is provided as is, without warranty of any kind, and the authors accept no responsibility or liability for any data you load into it or create with it.
 
 ## License
 

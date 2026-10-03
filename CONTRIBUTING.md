@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for considering a contribution to Nexus. This guide covers setting up a local environment, running the linting and tests, previewing a pull request on Netlify, how a release reaches GitHub Pages, and pulling in updates from the project template.
+Thank you for considering a contribution to Nexus. This guide covers setting up a local environment, running the linting and tests, previewing a pull request on Netlify, how a release reaches GitHub Pages, how the published site counts visits, and pulling in updates from the project template.
 
 ## Local setup
 
@@ -18,7 +18,7 @@ Set `PORT` to serve on another port, for example `PORT=8001 npm start`.
 
 `npm run lint` checks the code with ESLint and Prettier, and `npm run lint-fix` fixes what it can. `npm run test` runs both suites, which you can also run on their own:
 
-- `npm run test-unit` - Node's built-in test runner over the pure model modules (the parser, model, annotations and document), plus checks that `npm run assemble` ships every file the app loads and that the page's Nexus mark matches `logo.svg`.
+- `npm run test-unit` - Node's built-in test runner over the pure model modules (the parser, model, annotations and document) and the analytics loader, plus checks that `npm run assemble` ships every file the app loads, that the release workflow stamps only constants the source exports and rejects a malformed measurement ID, and that the page's Nexus mark matches `logo.svg`.
 - `npm run test-e2e` - Playwright drives the app end to end in Chromium: importing, rendering, editing, saving and exporting. It needs its browser installed once with `npx playwright install chromium`. The suite starts the dev server on port 8000, or reuses one already listening there - so if another checkout is serving that port, stop it first or the tests run against that checkout's code.
 - `npm run test-coverage` - the unit tests with c8 coverage, written to `.logs/`.
 
@@ -58,7 +58,21 @@ Without the variable the job is skipped, and without the token its deploy step i
 
 ## Releasing
 
-Every push to `main` updates a draft release that lists the pull requests merged since the last one. Publishing that draft creates its tag and triggers `.github/workflows/release.yml`, which assembles `index.html`, `src/`, `assets/` and `examples/` with `npm run assemble`, stamps the release tag as the app version and deploys the site to GitHub Pages. Pushes to `main` never touch GitHub Pages: they run the tests and update the Netlify project's main address. Pages needs enabling once, with "GitHub Actions" as the source.
+Every push to `main` updates a draft release that lists the pull requests merged since the last one. Publishing that draft creates its tag and triggers `.github/workflows/release.yml`, which assembles `index.html`, `src/`, `assets/` and `examples/` with `npm run assemble`, stamps the release tag as the app version and deploys the site to GitHub Pages, which serves it at https://nexus.drevops.com. Pushes to `main` never touch GitHub Pages: they run the tests and update the Netlify project's main address.
+
+GitHub Pages needs setting up once, under **Settings → Pages**: choose "GitHub Actions" as the source, enter `nexus.drevops.com` as the custom domain, and tick **Enforce HTTPS** once GitHub has issued the certificate. The domain resolves through a `CNAME` record for `nexus` in the `drevops.com` DNS zone that points at `drevops.github.io`. The repository has no `CNAME` file, because Pages ignores one when a workflow does the deploying. The old address, https://drevops.github.io/nexus/, redirects to the new one.
+
+## Analytics
+
+The published site counts visits with Google Analytics. `src/analytics-id.js` ships with an empty measurement ID, so a local copy, the tests and the Netlify previews load no analytics. A release stamps the ID into the deployed copy, the same way it stamps the version, from 1 repository setting under **Settings → Secrets and variables → Actions**:
+
+| Name                  | Kind     | Value                                                                                       |
+|-----------------------|----------|---------------------------------------------------------------------------------------------|
+| `GOOGLE_ANALYTICS_ID` | Variable | The measurement ID of the GA4 web data stream for `nexus.drevops.com`, like `G-XXXXXXXXXX`. |
+
+Without the variable, the release skips the stamp and the site loads no analytics. A value that isn't shaped like a measurement ID fails the release instead, because a stray quote would break the stamped module and switch analytics off without an error anyone would see.
+
+`index.html` starts `src/analytics.js` from its own module, never through `src/app.js`, so an ad blocker that blocks the analytics files can't stop the app - an end-to-end test blocks them and loads a diagram to prove it. Every hit reports the page title as "Nexus", because the browser tab shows the open diagram's title, and that's often a client's name.
 
 ## Updating from the template
 
