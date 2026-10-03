@@ -18,6 +18,13 @@ on:
         required: false
         default: false
 
+# A new push to a pull request cancels its superseded run. Pushes and manual
+# runs on a branch share 1 queue, so the newest commit deploys last. Scheduled
+# runs get their own group, so they never replace a queued deploy.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || (github.event_name == 'schedule' && 'schedule') || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   test-nodejs:
     name: Node.js ${{ matrix.node }}
@@ -122,3 +129,43 @@ jobs:
       - name: Run end-to-end tests
         run: npm run test-e2e
         continue-on-error: ${{ vars.CI_TEST_IGNORE_FAILURE == '1' }}
+
+  deploy:
+    name: Deploy to Netlify
+    needs:
+      - test-nodejs
+      - test-e2e
+    if: github.event_name != 'schedule' && vars.NETLIFY_SITE_ID != ''
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pull-requests: write # 'actions-netlify' posts the deploy URL as a pull request comment.
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Assemble static site
+        run: npm run assemble
+
+      - name: Deploy to Netlify
+        if: env.NETLIFY_AUTH_TOKEN != ''
+        uses: nwtgck/actions-netlify@d22a32a27c918fe470bbc562e984f80ec48c2668 # v4.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          publish-dir: _site
+          production-branch: main
+          alias: ${{ github.event_name == 'pull_request' && format('deploy-preview-{0}', github.event.pull_request.number) || '' }}
+          deploy-message: 'Deploy from GitHub Actions'
+          enable-pull-request-comment: true
+          overwrites-pull-request-comment: true
+          enable-commit-comment: false
+          enable-commit-status: false
+          enable-github-deployment: false
+        env:
+          NETLIFY_SITE_ID: ${{ vars.NETLIFY_SITE_ID }}
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+        timeout-minutes: 5
