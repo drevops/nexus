@@ -18,7 +18,7 @@ Set `PORT` to serve on another port, for example `PORT=8001 npm start`.
 
 `npm run lint` checks the code with ESLint and Prettier, and `npm run lint-fix` fixes what it can. `npm run test` runs both suites, which you can also run on their own:
 
-- `npm run test-unit` - Node's built-in test runner over the pure model modules (the parser, model, annotations, document, entity types and name conversions) and the analytics loader, plus checks that `npm run assemble` ships every file the app loads, that the release workflow stamps only constants the source exports and rejects a malformed measurement ID, that the page's Nexus mark matches `logo.svg`, and that the edit palette offers every built-in entity type.
+- `npm run test-unit` - Node's built-in test runner over the pure model modules (the parser, model, annotations, document, reference elements, entity types and name conversions) and the analytics loader, plus checks that `npm run assemble` ships every file the app loads, that the release workflow stamps only constants the source exports and rejects a malformed measurement ID, that the page's Nexus mark matches `logo.svg`, and that the edit palette offers every built-in entity type.
 - `npm run test-e2e` - Playwright drives the app end to end in Chromium: importing, rendering, editing, saving and exporting. It needs its browser installed once with `npx playwright install chromium`. The suite starts the dev server on port 8000, or reuses one already listening there - so if another checkout is serving that port, stop it first or the tests run against that checkout's code.
 - `npm run test-coverage` - the unit tests with c8 coverage, written to `.logs/`.
 
@@ -26,7 +26,7 @@ Set `PORT` to serve on another port, for example `PORT=8001 npm start`.
 
 The app's own code lives in `src/`. The third-party builds it loads live in `assets/vendor/`. Don't edit those.
 
-- `src/{parser,model,base-fields,annotations,document,entity-types,names}.js` - the offline model builder, the built-in entity types, the name conversions and the saved `.nexus.json` format (pure, dependency-free).
+- `src/{parser,model,base-fields,annotations,document,references,entity-types,names}.js` - the offline model builder, the built-in entity types, the name conversions, the saved `.nexus.json` format and the proxies and collapsed edges drawn for each reference (pure, dependency-free).
 - `src/render.js` - the Cytoscape renderer.
 - `src/{builder,inspector,ui,store,dom}.js` - edit mode, the Preact panels, the state they share and the `$()` element lookup.
 - `src/{app,export}.js` - the entry point (folder loading, saved documents, the theme and the status bar) and every download: the PNG, SVG and CSV exports and the `.nexus.json` document.
