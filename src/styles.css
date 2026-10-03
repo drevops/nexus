@@ -1128,11 +1128,20 @@ sl-button#zoom-level::part(base) {
 }
 
 .landing__actions {
-  display: flex;
-  flex-wrap: wrap;
+  --button-width: min(13rem, 100%);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, var(--button-width));
   gap: 0.6rem;
   justify-content: center;
   margin-top: 0.5rem;
+}
+
+/* A 5th button would sit alone in the left column, so Cancel spans the row,
+   centred at the width of 1 column. */
+.landing__cancel {
+  grid-column: 1 / -1;
+  justify-self: center;
+  width: var(--button-width);
 }
 
 .landing__actions sl-button svg.icon {
