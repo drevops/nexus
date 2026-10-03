@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 221 221">
+  <style>.ink{fill:#333e43}.ref{fill:#53b4eb}@media (prefers-color-scheme:dark){.ink{fill:#fff}}</style>
+  <g transform="translate(-290.5 -248.75)">
+    <path class="ink" d="M306 268H349V399A42 42 0 0 0 306 396Z"/>
+    <path class="ink" d="M449 323L470 344L491 323V459H449Z"/>
+    <circle class="ink" cx="325" cy="433.5" r="32.5"/>
+    <path class="ref" d="M306 268H359L491 459H438Z"/>
+    <path class="ref" d="M470 252.5L509 291.5L470 330.5L431 291.5Z"/>
+  </g>
+</svg>

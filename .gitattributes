@@ -4,7 +4,7 @@
 /.gitattributes  export-ignore
 /.github         export-ignore
 /.gitignore      export-ignore
-/logo.png        export-ignore
+/logo.svg        export-ignore
 /screenshot.png  export-ignore
 /tests           export-ignore
 /.npmignore      export-ignore

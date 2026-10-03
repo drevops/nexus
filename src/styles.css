@@ -1078,9 +1078,18 @@ sl-button#zoom-level::part(base) {
 }
 
 .landing__logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
   margin: 0 0 0.25rem;
   font-size: 1.6rem;
   font-weight: 700;
+}
+
+.landing__logo .icon--nexus {
+  width: 64px;
+  height: 64px;
 }
 
 .landing__version {
@@ -1143,7 +1152,27 @@ sl-button[hidden] {
 }
 
 .toolbar__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   font-weight: 700;
+}
+
+.toolbar__brand .icon--nexus {
+  width: 20px;
+  height: 20px;
+}
+
+.icon--nexus .ink {
+  fill: #333e43;
+}
+
+.icon--nexus .ref {
+  fill: #53b4eb;
+}
+
+html.sl-theme-dark .icon--nexus .ink {
+  fill: #fff;
 }
 
 .visually-hidden {

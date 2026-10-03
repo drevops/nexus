@@ -16,7 +16,7 @@ Nexus has no build step: it's static ES modules in `src/` plus vendored librarie
 
 `npm run lint` checks the code with ESLint and Prettier, and `npm run lint-fix` fixes what it can. `npm run test` runs both suites, which you can also run on their own:
 
-- `npm run test-unit` - Node's built-in test runner over the pure model modules (the parser, model, annotations and document), plus a check that `npm run assemble` ships every file the app loads.
+- `npm run test-unit` - Node's built-in test runner over the pure model modules (the parser, model, annotations and document), plus checks that `npm run assemble` ships every file the app loads and that the page's Nexus mark matches `logo.svg`.
 - `npm run test-e2e` - Playwright drives the app end to end: upload, render and export. It needs its browser installed once with `npx playwright install chromium`.
 - `npm run test-coverage` - the unit tests with c8 coverage, written to `.logs/`.
 
@@ -28,9 +28,11 @@ The app's own code lives in `src/`. The third-party builds it loads live in `ass
 - `src/render.js` - the Cytoscape renderer.
 - `src/{builder,inspector,ui,store}.js` - edit mode, the Preact panels and the state they share.
 - `src/{app,export}.js` - folder loading and PNG/SVG/CSV export.
-- `src/icons.js` - inline SVG icons.
+- `src/icons.js` - inline SVG icons, including the Nexus mark.
 - `src/version.js` - the version string, `dev` until a release stamps it.
 - `src/styles.css` - the page's styles.
+
+The Nexus mark lives in 3 places: `logo.svg` for the README, `assets/favicon.svg` for the browser tab and the `nexus` icon in `src/icons.js` for the page. The 2 files switch to white ink in a dark colour scheme by themselves, while the page's copy takes its colours from `src/styles.css` so it follows the app's theme toggle. A change to the mark's shapes goes into all 3, and `npm run test-unit` fails while `src/icons.js` and `logo.svg` differ.
 
 ## Previews on Netlify
 
