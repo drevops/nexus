@@ -62,7 +62,7 @@ export function documentFromGraph(cy, meta = {}) {
   const layout = {};
   cy.nodes().forEach((node) => {
     // Layout runs skip hidden proxies, so their positions are stale (see
-    // placeMissingProxies() in render.js).
+    // placeProxies() in render.js).
     if (node.data('group') === 'proxy' && !node.visible()) {
       return;
     }

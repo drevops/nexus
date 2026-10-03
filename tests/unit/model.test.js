@@ -12,6 +12,9 @@ import {
   fieldNodeId,
   hasEdgeId,
   refEdgeId,
+  proxyNodeId,
+  proxyEdgeId,
+  collapsedEdgeId,
   identifierSegments,
   fitFontSize,
 } from '../../src/model.js';
@@ -105,6 +108,9 @@ test('builds graph ids from entity types, bundles and field names', () => {
   assert.equal(fieldNodeId('node.article', 'field_tags'), 'field:node.article:field_tags');
   assert.equal(hasEdgeId('field:node.article:field_tags'), 'has:field:node.article:field_tags');
   assert.equal(refEdgeId('field:node.article:field_tags', 'taxonomy_term.tags'), 'ref:field:node.article:field_tags>taxonomy_term.tags');
+  assert.equal(proxyNodeId('field:node.article:field_tags', 'taxonomy_term.tags'), 'proxy:field:node.article:field_tags>taxonomy_term.tags');
+  assert.equal(proxyEdgeId('field:node.article:field_tags', 'taxonomy_term.tags'), 'pe:field:node.article:field_tags>taxonomy_term.tags');
+  assert.equal(collapsedEdgeId('node.article', 'taxonomy_term.tags'), 'c:node.article>taxonomy_term.tags');
 });
 
 test('toArray names its nodes and edges with the graph id helpers', () => {
