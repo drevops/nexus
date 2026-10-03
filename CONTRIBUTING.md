@@ -30,8 +30,8 @@ Nexus has no build step: it's static ES modules plus vendored libraries under `a
 
 Once the repository settings below are in place, every pull request from a branch of this repository gets a live preview, so you can click through a change before it merges. The `Deploy to Netlify` job in `.github/workflows/test-nodejs.yml` waits for every other job in that workflow, so it runs only once linting, the unit tests on each Node version and the end-to-end suite have all passed. It builds `_site/` with `npm run assemble`, the same step a release uses, then uploads it to the Netlify project:
 
-- A pull request deploys to its own address, `https://deploy-preview-<number>--<project>.netlify.app`, and the job posts that link as a comment on the pull request. Later pushes update the same address and the same comment.
-- A push to `main` deploys to the project's main address, `https://<project>.netlify.app`, so it always shows the latest merged code.
+- A pull request deploys to its own address, `https://deploy-preview-<number>--drevops-nexus.netlify.app`, and the job posts that link as a comment on the pull request. Later pushes update the same address and the same comment.
+- A push to `main` deploys to the project's main address, `https://drevops-nexus.netlify.app`, so it always shows the latest merged code.
 
 Scheduled runs never deploy. Pull requests from forks don't either, because GitHub doesn't pass repository secrets to them. A manual run from the Actions tab does deploy: from `main` to the main address, and from any other branch to a one-off draft address that the job prints in its log. To see exactly what gets published, run `npm run assemble` and look in `_site/`.
 
@@ -39,10 +39,10 @@ A new push to a pull request cancels the run it replaces, so an older build can'
 
 The job needs 2 repository settings, under **Settings → Secrets and variables → Actions**:
 
-| Name                   | Kind     | Value                                                         |
-|------------------------|----------|---------------------------------------------------------------|
-| `NETLIFY_PROJECT_NAME` | Variable | The Netlify project's name, for example `drevops-nexus`.      |
-| `NETLIFY_AUTH_TOKEN`   | Secret   | A Netlify personal access token that can deploy that project. |
+| Name                 | Kind     | Value                                                         |
+|----------------------|----------|---------------------------------------------------------------|
+| `NETLIFY_SITE_ID`    | Variable | The Netlify project's ID, a UUID (not its name).              |
+| `NETLIFY_AUTH_TOKEN` | Secret   | A Netlify personal access token that can deploy that project. |
 
 Without the variable the job is skipped, and without the token its deploy step is. The workflow uploads the assembled files itself, so the Netlify project shouldn't build from this repository as well: keep it unlinked from Git, or stop its builds.
 

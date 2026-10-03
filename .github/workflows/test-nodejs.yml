@@ -134,7 +134,7 @@ jobs:
     needs:
       - test-nodejs
       - test-e2e
-    if: github.event_name != 'schedule' && vars.NETLIFY_PROJECT_NAME != ''
+    if: github.event_name != 'schedule' && vars.NETLIFY_SITE_ID != ''
     runs-on: ubuntu-latest
 
     permissions:
@@ -165,8 +165,6 @@ jobs:
           enable-commit-status: false
           enable-github-deployment: false
         env:
-          # Netlify API paths accept a project's domain in place of its site ID:
-          # https://docs.netlify.com/api-and-cli-guides/api-guides/get-started-with-api/
-          NETLIFY_SITE_ID: ${{ vars.NETLIFY_PROJECT_NAME }}.netlify.app
+          NETLIFY_SITE_ID: ${{ vars.NETLIFY_SITE_ID }}
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
         timeout-minutes: 5

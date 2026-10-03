@@ -61,7 +61,7 @@ npm run test-coverage
 
 ## CI/CD
 
-- `.github/workflows/test-nodejs.yml` - lint, unit tests with coverage on Node 22 and 24, a Playwright end-to-end job, and a Netlify deploy that runs once both pass: each pull request to its own preview, `main` to the project's main URL. The deploy reads the `NETLIFY_PROJECT_NAME` variable and the `NETLIFY_AUTH_TOKEN` secret and is skipped without them. A new push to a pull request cancels its superseded run, while runs for `main` queue so they deploy in order
+- `.github/workflows/test-nodejs.yml` - lint, unit tests with coverage on Node 22 and 24, a Playwright end-to-end job, and a Netlify deploy that runs once both pass: each pull request to its own preview, `main` to the project's main URL. The deploy reads the `NETLIFY_SITE_ID` variable and the `NETLIFY_AUTH_TOKEN` secret and is skipped without them. A new push to a pull request cancels its superseded run, while runs for `main` queue so they deploy in order
 - `.github/workflows/release.yml` - on a published release, assembles `index.html`, `assets/` and `examples/` into `_site` with `npm run assemble`, stamps the version and deploys to GitHub Pages
 - `.github/workflows/draft-release-notes.yml` - keeps a draft release up to date as pull requests merge
 - `.github/workflows/assign-author.yml` - assigns each pull request to its author
