@@ -18,7 +18,7 @@ Set `PORT` to serve on another port, for example `PORT=8001 npm start`.
 
 `npm run lint` checks the code with ESLint and Prettier, and `npm run lint-fix` fixes what it can. `npm run test` runs both suites, which you can also run on their own:
 
-- `npm run test-unit` - Node's built-in test runner over the pure model modules (the parser, model, annotations and document) and the analytics loader, plus checks that `npm run assemble` ships every file the app loads, that the release workflow stamps only constants the source exports and rejects a malformed measurement ID, and that the page's Nexus mark matches `logo.svg`.
+- `npm run test-unit` - Node's built-in test runner over the pure model modules (the parser, model, annotations, document, entity types and name conversions) and the analytics loader, plus checks that `npm run assemble` ships every file the app loads, that the release workflow stamps only constants the source exports and rejects a malformed measurement ID, that the page's Nexus mark matches `logo.svg`, and that the edit palette offers every built-in entity type.
 - `npm run test-e2e` - Playwright drives the app end to end in Chromium: importing, rendering, editing, saving and exporting. It needs its browser installed once with `npx playwright install chromium`. The suite starts the dev server on port 8000, or reuses one already listening there - so if another checkout is serving that port, stop it first or the tests run against that checkout's code.
 - `npm run test-coverage` - the unit tests with c8 coverage, written to `.logs/`.
 
@@ -26,13 +26,15 @@ Set `PORT` to serve on another port, for example `PORT=8001 npm start`.
 
 The app's own code lives in `src/`. The third-party builds it loads live in `assets/vendor/`. Don't edit those.
 
-- `src/{parser,model,base-fields,annotations,document}.js` - the offline model builder and the saved `.nexus.json` format (pure, dependency-free).
+- `src/{parser,model,base-fields,annotations,document,entity-types,names}.js` - the offline model builder, the built-in entity types, the name conversions and the saved `.nexus.json` format (pure, dependency-free).
 - `src/render.js` - the Cytoscape renderer.
-- `src/{builder,inspector,ui,store}.js` - edit mode, the Preact panels and the state they share.
-- `src/{app,export}.js` - the entry point (folder loading, saved documents, the theme and the status bar) and PNG/SVG/CSV export.
+- `src/{builder,inspector,ui,store,dom}.js` - edit mode, the Preact panels, the state they share and the `$()` element lookup.
+- `src/{app,export}.js` - the entry point (folder loading, saved documents, the theme and the status bar) and every download: the PNG, SVG and CSV exports and the `.nexus.json` document.
 - `src/icons.js` - inline SVG icons, including the Nexus mark.
 - `src/version.js` - the version string, `dev` until a release stamps it.
 - `src/styles.css` - the page's styles.
+
+Each built-in entity type, annotation kind and name conversion is defined once: the entity types in `src/entity-types.js`, the annotation kinds in `src/annotations.js` and the conversions in `src/names.js`. Import them from there rather than copying them into another module, so the copies can't drift apart. Adding an entity type also means adding its button to the edit palette in `index.html`, and `npm run test-unit` fails until you do.
 
 The Nexus mark lives in 3 places: `logo.svg` for the README, `assets/favicon.svg` for the browser tab and the `nexus` icon in `src/icons.js` for the page. The 2 files switch to white ink in a dark colour scheme by themselves, while the page's copy takes its colours from `src/styles.css` so it follows the app's theme toggle. A change to the mark's shapes goes into all 3, and `npm run test-unit` fails while `src/icons.js` and `logo.svg` differ.
 

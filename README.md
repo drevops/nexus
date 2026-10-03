@@ -57,7 +57,7 @@ The page renders a legend describing every symbol. Nexus derives entities, field
 
 | Symbol | Meaning | Source |
 |--------|---------|--------|
-| Coloured shape, set per entity type | An entity bundle - content type, vocabulary, media, paragraph, block, user | Config |
+| Colored shape, set per entity type | An entity bundle - content type, vocabulary, media, paragraph, block, user or external entity | Config |
 | Faded copy of an entity, dashed border | A proxy: a reference's target, drawn beside the field that references it | Config |
 | Ellipse, solid border | Single-value field | Config |
 | Ellipse, double border | Multi-value field | Config |
@@ -67,7 +67,7 @@ The page renders a legend describing every symbol. Nexus derives entities, field
 | Hexagon | API | Annotation |
 | Rectangle with a method | Callback | Annotation |
 
-By default, content types are rounded rectangles, vocabularies are tags, media are barrels, paragraphs are cut rectangles, blocks are rectangles and users are ellipses; **Settings** changes the colour and shape of any type. A field label ending in `*` marks a required field, and reference arrows carry the field's cardinality: `1`, `1..N` for a limit of N, or `1..n` for unlimited.
+By default, content types are rounded rectangles, vocabularies are tags, media are barrels, paragraphs are cut rectangles, blocks are rectangles, users are ellipses and external entities are hexagons; **Settings** changes the color and shape of any type. A field label ending in `*` marks a required field, and reference arrows carry the field's cardinality: `1`, `1..N` for a limit of N, or `1..n` for unlimited.
 
 ## Navigating the diagram
 
@@ -91,7 +91,7 @@ Panels float over the canvas. Drag one by its header, or drop it at the left or 
 
 Switch to **Edit** and a palette appears under the toolbar:
 
-- **Content**, **Vocab**, **Media**, **Para**, **Block** and **User** add an entity. Click one to fill in a form, or drag it onto the canvas to drop one in place.
+- **Content**, **Vocab**, **Media**, **Para**, **Block**, **User** and **External** add an entity. Click one to fill in a form, or drag it onto the canvas to drop one in place.
 - **Field** adds a field to an entity and can reuse the definition of a field that already exists. The **+** handles around a selected entity add a field in a single click.
 - **Event**, **API** and **Callback** place an annotation: click one and then the canvas, or drag it into place.
 - **Connect** lets you drag from a field to an entity to create a reference.
