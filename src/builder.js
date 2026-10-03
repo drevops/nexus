@@ -503,9 +503,9 @@ function nearestEntity(position) {
   return best;
 }
 
-/* Renaming machine names re-ids the node and its dependent edges. Cytoscape
-   drops render-only elements with the old node and the next render rebuilds
-   them, so only the persisted has, ref and annotation edges are migrated. */
+/* Renaming a machine name re-ids the node with its has, ref and annotation
+   edges. The proxies are derived from the ref edges, so syncReferences() gets
+   the renames to keep each renamed proxy where it was. */
 
 function moveAnnotationEdges(oldId, newId) {
   const edges = cy.getElementById(oldId).connectedEdges('[group="annotation"]');
@@ -530,6 +530,8 @@ function reidField(field, entityId, name) {
   });
   moveAnnotationEdges(field.id(), newId);
   field.remove();
+
+  return newId;
 }
 
 function renameEntity(oldId, newBundleRaw) {
@@ -553,8 +555,13 @@ function renameEntity(oldId, newBundleRaw) {
       cy.add({ group: 'edges', data: { ...edge.data(), id: refEdgeId(source, newId), source: source, target: newId } });
     }
   });
-  cy.nodes('[group="field"][entity="' + oldId + '"]').forEach((field) => reidField(field, newId, field.data('name')));
+
+  const renames = { [oldId]: newId };
+  cy.nodes('[group="field"][entity="' + oldId + '"]').forEach((field) => {
+    renames[field.id()] = reidField(field, newId, field.data('name'));
+  });
   node.remove();
+  getController().syncReferences(renames);
   selectNode(newId);
   bump();
 }
@@ -573,6 +580,7 @@ function renameField(oldId, newNameRaw) {
   }
 
   reidField(field, entityId, newName);
+  getController().syncReferences({ [oldId]: newId });
   selectNode(newId);
   bump();
 }
@@ -647,10 +655,12 @@ function addReference(fieldId, targetId) {
   const field = cy.getElementById(fieldId);
   const card = cardinalityLabel(field.data('cardinality') != null ? field.data('cardinality') : 1);
   cy.add({ group: 'edges', data: { id: id, source: fieldId, target: targetId, group: 'ref', cardinality: card } });
+  getController().syncReferences();
 }
 
 function removeReference(fieldId, targetId) {
   cy.getElementById(refEdgeId(fieldId, targetId)).remove();
+  getController().syncReferences();
 }
 
 function deleteNode(id) {
@@ -659,6 +669,7 @@ function deleteNode(id) {
     cy.nodes('[group="field"][entity="' + id + '"]').remove();
   }
   node.remove();
+  getController().syncReferences();
   closeInspector();
   hideHandles();
   bump();

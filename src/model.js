@@ -23,6 +23,9 @@ export function kindForCardinality(cardinality) {
  * 'field:<entityId>:<name>'. Each field has a 'has:' edge from its entity and
  * 1 'ref:' edge per reference target.
  *
+ * Each reference is also drawn as a 'proxy:' node joined to its field by a
+ * 'pe:' edge, and as a 'c:' edge from the field's entity to the target.
+ *
  * Saved layouts key positions by node id, so the node id formats are part of
  * the saved document format.
  */
@@ -40,6 +43,18 @@ export function hasEdgeId(fieldId) {
 
 export function refEdgeId(fieldId, targetId) {
   return 'ref:' + fieldId + '>' + targetId;
+}
+
+export function proxyNodeId(fieldId, targetId) {
+  return 'proxy:' + fieldId + '>' + targetId;
+}
+
+export function proxyEdgeId(fieldId, targetId) {
+  return 'pe:' + fieldId + '>' + targetId;
+}
+
+export function collapsedEdgeId(entityId, targetId) {
+  return 'c:' + entityId + '>' + targetId;
 }
 
 /**

@@ -9,6 +9,10 @@
  * toggles each of them. Hiding fields collapses the diagram to an
  * entity-only overview.
  *
+ * The proxies and the overview's collapsed edges are derived from the ref
+ * edges (see src/references.js). The controller's syncReferences() brings
+ * them in line with a changed graph.
+ *
  * The controller that render() returns sets entity type colours and symbols
  * and adds or removes custom entity types, saving each change to
  * localStorage.
@@ -20,6 +24,7 @@ import { setController, bump, closeInspector } from './store.js';
 import { icon } from './icons.js';
 import { ENTITY_TYPE_ORDER, findEntityType } from './entity-types.js';
 import { humanize, machineName } from './names.js';
+import { REFERENCE_ELEMENTS, syncReferenceElements } from './references.js';
 import { $ } from './dom.js';
 
 // A small library of UML-ish node shapes, keyed for settings/persistence; the
@@ -59,10 +64,6 @@ let proxyMode = false;
 let rankDir = 'LR';
 let showMachineNames = false;
 let typeVisible = {};
-
-let entityById = {};
-let fieldById = {};
-let refsByField = {};
 
 let controller = null;
 let wired = false;
@@ -278,68 +279,12 @@ function overlaps(a, b) {
   return a.x1 < b.x2 && b.x1 < a.x2 && a.y1 < b.y2 && b.y1 < a.y2;
 }
 
-function proxyNodeId(fieldId, targetId) {
-  return 'proxy:' + fieldId + '>' + targetId;
-}
-
 function buildElements(model) {
   const nodes = model.nodes || [];
-  const ids = {};
-  nodes.forEach((n) => {
-    ids[n.data.id] = true;
-    if (n.data.group === 'entity') {
-      entityById[n.data.id] = n.data;
-    } else if (n.data.group === 'field') {
-      fieldById[n.data.id] = n.data;
-    }
-  });
+  const ids = new Set(nodes.map((n) => n.data.id));
+  const edges = (model.edges || []).filter((e) => ids.has(e.data.source) && ids.has(e.data.target));
 
-  const edges = (model.edges || []).filter((e) => ids[e.data.source] && ids[e.data.target]);
-
-  const seen = {};
-  const collapsed = [];
-  const proxyNodes = [];
-  const proxyEdges = [];
-  edges.forEach((e) => {
-    if (e.data.group !== 'ref') {
-      return;
-    }
-    (refsByField[e.data.source] = refsByField[e.data.source] || []).push(e.data.target);
-
-    // A proxy is a semi-opaque stand-in for the target entity placed beside
-    // the referencing field, so a distant reference gets a short edge.
-    const field = fieldById[e.data.source];
-    const target = entityById[e.data.target];
-    const proxyId = proxyNodeId(e.data.source, e.data.target);
-    proxyNodes.push({
-      data: {
-        id: proxyId,
-        group: 'proxy',
-        target: e.data.target,
-        entity: field ? field.entity : '',
-        entityType: target ? target.entityType : '',
-        label: target ? target.label : e.data.target,
-      },
-    });
-    proxyEdges.push({
-      data: { id: 'pe:' + e.data.source + '>' + e.data.target, source: e.data.source, target: proxyId, group: 'proxyedge', cardinality: e.data.cardinality },
-    });
-  });
-  Object.keys(refsByField).forEach((fieldId) => {
-    const field = fieldById[fieldId];
-    if (!field) {
-      return;
-    }
-    refsByField[fieldId].forEach((target) => {
-      const key = field.entity + '>' + target;
-      if (!seen[key] && ids[field.entity]) {
-        seen[key] = true;
-        collapsed.push({ data: { id: 'c:' + key, source: field.entity, target: target, group: 'collapsed' } });
-      }
-    });
-  });
-
-  return { nodes: nodes.concat(proxyNodes), edges: edges.concat(collapsed).concat(proxyEdges) };
+  return { nodes: nodes, edges: edges };
 }
 
 function themeColors() {
@@ -514,8 +459,8 @@ function style() {
   ];
 }
 
-function fieldReferences(fieldId) {
-  return (refsByField[fieldId] || []).map((target) => (entityById[target] ? entityById[target].label : target));
+function fieldReferences(field) {
+  return field.outgoers('edge[group="ref"]').map((edge) => edge.target().data('label') ?? edge.target().id());
 }
 
 function tooltipHtml(node) {
@@ -537,7 +482,7 @@ function tooltipHtml(node) {
 
   if (group === 'field') {
     const meta = [humanize(node.data('kind')) + ' field', esc(node.data('fieldType'))];
-    const refs = fieldReferences(node.id());
+    const refs = fieldReferences(node);
     if (refs.length) {
       meta.push('→ ' + esc(refs.join(', ')));
     }
@@ -549,9 +494,6 @@ function tooltipHtml(node) {
 }
 
 function buildController(model, options = {}) {
-  entityById = {};
-  fieldById = {};
-  refsByField = {};
   typeVisible = {};
   fieldsMode = true;
   proxyMode = true;
@@ -582,6 +524,7 @@ function buildController(model, options = {}) {
     maxZoom: 3,
     layout: { name: 'grid' },
   });
+  syncReferenceElements(cy);
 
   const captionsEl = $('captions');
   let captionMap = {};
@@ -589,7 +532,9 @@ function buildController(model, options = {}) {
   let noteMap = {};
 
   function entityTypeOf(entityId) {
-    return entityById[entityId] ? entityById[entityId].entityType : null;
+    const entity = cy.getElementById(entityId);
+
+    return entity.nonempty() ? entity.data('entityType') : null;
   }
 
   function nodeVisible(node) {
@@ -606,32 +551,38 @@ function buildController(model, options = {}) {
     return true;
   }
 
+  function edgeVisible(edge) {
+    const group = edge.data('group');
+    const ends = !edge.source().hasClass('hidden') && !edge.target().hasClass('hidden');
+
+    if (group === 'has') {
+      return fieldsMode && ends;
+    }
+
+    if (group === 'ref') {
+      return fieldsMode && !proxyMode && ends;
+    }
+
+    if (group === 'proxyedge') {
+      return fieldsMode && proxyMode && ends;
+    }
+
+    if (group === 'collapsed') {
+      return !fieldsMode && ends;
+    }
+
+    return ends;
+  }
+
+  // An edge is shown only while both of its ends are, so nodes are updated
+  // first.
+  function applyVisibility(elements) {
+    elements.nodes().forEach((node) => node.toggleClass('hidden', !nodeVisible(node)));
+    elements.edges().forEach((edge) => edge.toggleClass('hidden', !edgeVisible(edge)));
+  }
+
   function refresh(relayout) {
-    const visible = {};
-    cy.nodes().forEach((n) => {
-      const vis = nodeVisible(n);
-      n.toggleClass('hidden', !vis);
-      if (vis) {
-        visible[n.id()] = true;
-      }
-    });
-    cy.edges().forEach((e) => {
-      const group = e.data('group');
-      const ends = visible[e.data('source')] && visible[e.data('target')];
-      let vis;
-      if (group === 'has') {
-        vis = fieldsMode && ends;
-      } else if (group === 'ref') {
-        vis = fieldsMode && !proxyMode && ends;
-      } else if (group === 'proxyedge') {
-        vis = fieldsMode && proxyMode && ends;
-      } else if (group === 'collapsed') {
-        vis = !fieldsMode && ends;
-      } else {
-        vis = ends;
-      }
-      e.toggleClass('hidden', !vis);
-    });
+    applyVisibility(cy.elements());
     if (relayout) {
       runLayout();
     }
@@ -675,26 +626,29 @@ function buildController(model, options = {}) {
         node.position(layout[node.id()]);
       }
     });
-    placeMissingProxies(layout);
+    // A saved layout leaves out hidden proxies (see documentFromGraph()).
+    placeProxies(cy.nodes('[group="proxy"]').filter((proxy) => !layout[proxy.id()]));
     resetView();
     positionCaptions();
     positionNotes();
   }
 
-  // Proxies are built at render time, so a saved layout can lack positions for
-  // some (see addReference() in builder.js). A missing proxy is placed in the
-  // free slot of its field's proxy column nearest the field.
-  function placeMissingProxies(layout) {
-    const missing = cy.nodes('[group="proxy"]').filter((proxy) => !layout[proxy.id()]);
-    if (missing.empty()) {
+  // Places each visible proxy in the free slot of its field's proxy column
+  // nearest the field, clear of every other visible node. A hidden proxy is
+  // left to the layout run that shows it.
+  function placeProxies(proxies) {
+    const placing = proxies.filter(':visible');
+    if (placing.empty()) {
       return;
     }
 
-    const settled = cy.nodes().difference(missing);
-    const taken = settled.map((node) => node.boundingBox());
-    missing.forEach((proxy) => {
+    const taken = cy
+      .nodes(':visible')
+      .difference(placing)
+      .map((node) => node.boundingBox());
+    placing.forEach((proxy) => {
       const field = proxy.incomers('node');
-      const x = proxyColumn(field, proxy, missing);
+      const x = proxyColumn(field, proxy, placing);
       const y = field.position('y');
       const width = proxy.outerWidth();
       const height = proxy.outerHeight();
@@ -716,8 +670,8 @@ function buildController(model, options = {}) {
   // A field's placed proxies fix its column. Otherwise the column clears the
   // widest of the entity's fields stacked with this one, so no proxy is drawn
   // beside another field.
-  function proxyColumn(field, proxy, missing) {
-    const placed = field.outgoers('node[group="proxy"]').difference(missing);
+  function proxyColumn(field, proxy, placing) {
+    const placed = field.outgoers('node[group="proxy"]:visible').difference(placing);
     if (placed.nonempty()) {
       return placed.first().position('x');
     }
@@ -734,6 +688,16 @@ function buildController(model, options = {}) {
     const edge = side > 0 ? box.x2 : box.x1;
 
     return edge + side * (LAYOUT_SPACING.fields.rankSep + proxy.outerWidth() / 2);
+  }
+
+  // Brings the reference elements in line with the ref edges and places each
+  // new proxy beside its field. Only reference elements and ref edges are
+  // re-filtered, so entities and fields keep their visibility.
+  function syncReferences(renames) {
+    const added = syncReferenceElements(cy, renames);
+
+    applyVisibility(cy.elements(REFERENCE_ELEMENTS).union(cy.edges('[group="ref"]')));
+    placeProxies(added);
   }
 
   function focusEntity(id) {
@@ -1104,11 +1068,6 @@ function buildController(model, options = {}) {
     removeNoteBadge(evt.target);
   });
 
-  // A proxy draws 1 reference, so removing the reference removes its proxy.
-  cy.on('remove', 'edge[group="ref"]', (evt) => {
-    cy.getElementById(proxyNodeId(evt.target.data('source'), evt.target.data('target'))).remove();
-  });
-
   $('fields-toggle').classList.add('is-active');
   $('proxy-toggle').classList.add('is-active');
   $('layout-toggle').querySelector('.layout-label').textContent = 'Layout: LR';
@@ -1120,6 +1079,7 @@ function buildController(model, options = {}) {
     refresh,
     runLayout,
     applyLayout,
+    syncReferences,
     resetView,
     clearFocus,
     focusEntity,
