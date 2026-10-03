@@ -1002,9 +1002,11 @@ test('shows the edit palette as a second toolbar row only in edit mode', async (
 });
 
 function paletteSwatches(page) {
-  return page.locator('#build-tools [data-add-entity]').evaluateAll((buttons) =>
-    buttons.map((btn) => ({ type: btn.dataset.addEntity, color: getComputedStyle(btn.querySelector('.palette__swatch')).backgroundColor })),
-  );
+  return page
+    .locator('#build-tools [data-add-entity]')
+    .evaluateAll((buttons) =>
+      buttons.map((btn) => ({ type: btn.dataset.addEntity, color: getComputedStyle(btn.querySelector('.palette__swatch')).backgroundColor })),
+    );
 }
 
 test('paints each palette swatch in the colour of its entity type', async ({ page }) => {

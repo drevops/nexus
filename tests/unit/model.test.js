@@ -126,8 +126,14 @@ test('toArray names its nodes and edges with the graph id helpers', () => {
     refEdgeId(sectionsId, entityNodeId('paragraph', '*')),
   ];
 
-  assert.deepEqual(data.nodes.map((n) => n.data.id), [articleId, tagsId, sectionsId]);
-  assert.deepEqual(data.edges.map((e) => e.data.id), edgeIds);
+  assert.deepEqual(
+    data.nodes.map((n) => n.data.id),
+    [articleId, tagsId, sectionsId],
+  );
+  assert.deepEqual(
+    data.edges.map((e) => e.data.id),
+    edgeIds,
+  );
 });
 
 test('splits an identifier after each underscore run between 2 words', async (t) => {

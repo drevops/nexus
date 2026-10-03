@@ -10,7 +10,10 @@ const INDEX = readFileSync(join(ROOT, 'index.html'), 'utf8');
 
 test('lists each built-in entity type once, in diagram order', () => {
   assert.deepEqual(ENTITY_TYPE_ORDER, ['node', 'taxonomy_term', 'media', 'paragraph', 'block_content', 'user', 'external']);
-  assert.deepEqual(ENTITY_TYPES.map((entry) => entry.type), ENTITY_TYPE_ORDER);
+  assert.deepEqual(
+    ENTITY_TYPES.map((entry) => entry.type),
+    ENTITY_TYPE_ORDER,
+  );
 });
 
 test('describes every built-in entity type completely', () => {
@@ -55,5 +58,8 @@ test('paints no palette swatch colour in the markup', () => {
   const swatches = [...INDEX.matchAll(/<span class="palette__swatch"[^>]*>/g)].map((match) => match[0]);
 
   assert.equal(swatches.length, ENTITY_TYPE_ORDER.length);
-  assert.deepEqual(swatches.filter((swatch) => swatch.includes('style=')), []);
+  assert.deepEqual(
+    swatches.filter((swatch) => swatch.includes('style=')),
+    [],
+  );
 });
