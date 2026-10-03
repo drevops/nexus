@@ -14,6 +14,7 @@ The project was created from the Scaffold template, which supplies the CI workfl
 - **Model builder (pure, no DOM):** `src/parser.js` turns parsed config YAML into a `ContentModel` from `src/model.js`; `src/base-fields.js` adds curated system fields and `src/annotations.js` applies the optional `annotations.yml` overlay.
 - **Documents:** `src/document.js` converts between the live graph and a saved `.nexus.json` document.
 - **UI (browser only):** `src/render.js` draws the model with Cytoscape, `src/builder.js` adds build-mode editing, `src/inspector.js` and `src/ui.js` are Preact components over Shoelace controls, `src/store.js` is the shared UI store, `src/export.js` handles PNG and SVG export, `src/icons.js` holds inline SVG icons and `src/styles.css` styles the page.
+- **Logo and favicon:** `logo.svg` is the README logo and `assets/favicon.svg` the browser tab icon; both turn the mark's ink white under a dark colour scheme on their own. The page draws the same mark inline as the `nexus` icon in `src/icons.js`, coloured from `src/styles.css`, because Safari renders an `<img>` SVG in the system colour scheme rather than the app's theme.
 - **Version:** `src/version.js` ships as `dev`; the release workflow stamps the release tag into the deployed copy.
 - **Vendored libraries:** `assets/vendor/` holds third-party builds. Don't edit, lint or format them.
 - **Example:** `examples/example/` is the bundled demo configuration, loaded through its `manifest.json`.
@@ -50,6 +51,7 @@ npm run test-coverage
 
 - `tests/unit/*.test.js` use `node:test` and `node:assert` against the pure model modules, with shared fixtures in `tests/fixtures/`.
 - `tests/unit/assemble.test.js` runs `npm run assemble` and checks that `_site/` holds every file `index.html` and the bundled example load, so a file the app needs can't be left out of a deploy.
+- `tests/unit/logo.test.js` checks that the `nexus` icon in `src/icons.js` draws the same shapes as `logo.svg`, that `logo.svg` turns its ink white in a dark colour scheme, and that the README shows it.
 - `tests/e2e/app.spec.js` drives the app with Playwright against `tests/server.mjs`, a dependency-free static server on port 8000, with config fixtures in `tests/e2e/fixtures/`. Code inside `page.evaluate()` runs in the browser, not in Node.
 - Coverage counts only the modules the unit tests load (`"all": false` in `.c8rc.json`), so browser-only modules don't count against the CI threshold.
 

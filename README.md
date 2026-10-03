@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="200" height="200" src="https://placehold.jp/000000/ffffff/200x200.png?text=nexus&css=%7B%22border-radius%22%3A%22%20100px%22%7D" alt="nexus logo">
+  <img width="200" height="200" src="logo.svg" alt="Nexus logo">
 </p>
 
 <h1 align="center">Nexus</h1>

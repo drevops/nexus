@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Nexus - Drupal content-model diagrams</title>
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="assets/vendor/shoelace/themes/light.css">
 <link rel="stylesheet" href="assets/vendor/shoelace/themes/dark.css">
 <link rel="stylesheet" href="src/styles.css">
@@ -31,7 +32,7 @@
 <header class="toolbar">
   <div class="toolbar__brandline">
     <div class="toolbar__actions">
-      <span class="toolbar__brand">Nexus</span>
+      <span class="toolbar__brand" data-icon="nexus">Nexus</span>
       <sl-input id="diagram-title" class="toolbar__title" size="small" placeholder="Untitled content model" title="Rename this content model - used for the saved file names" aria-label="Content model name"></sl-input>
     </div>
     <div class="toolbar__actions">
@@ -121,7 +122,7 @@
 
 <div id="landing" class="landing">
   <sl-card class="landing__card">
-    <p class="landing__logo">Nexus</p>
+    <p class="landing__logo" data-icon="nexus">Nexus</p>
     <p class="landing__version" id="landing-version" data-version>dev</p>
     <p class="landing__tag">Draw a Drupal site's content model from its exported configuration - entirely in your browser.</p>
     <div id="dropzone" class="dropzone">

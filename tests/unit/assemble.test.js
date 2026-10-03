@@ -35,6 +35,7 @@ test('ships every file index.html loads', () => {
 
   assert.ok(refs.includes('src/app.js'));
   assert.ok(refs.includes('./assets/vendor/preact.module.js'));
+  assert.ok(refs.includes('assets/favicon.svg'));
 
   const pending = refs.map((ref) => join(SITE, ref));
   const shipped = new Set();
