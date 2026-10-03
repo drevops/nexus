@@ -1467,6 +1467,8 @@ test('keeps about, settings, theme and github on the brand line', async ({ page 
 });
 
 test('opens an about dialog explaining browser-only storage and the licence', async ({ page }) => {
+  const { license } = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'package.json'), 'utf8'));
+
   await page.click('#example-btn');
   await waitForGraph(page);
   await expect(page.locator('#about-dialog')).not.toBeVisible();
@@ -1478,6 +1480,8 @@ test('opens an about dialog explaining browser-only storage and the licence', as
   await expect(page.locator('#about-dialog')).toContainText('without warranty');
   await expect(page.locator('#about-repo')).toHaveAttribute('href', 'https://github.com/drevops/nexus');
   await expect(page.locator('#about-license')).toHaveAttribute('href', 'https://github.com/drevops/nexus/blob/main/LICENSE');
+  await expect(page.locator('#about-license')).toHaveText('GNU General Public License, version 2 or later');
+  await expect(page.locator('#about-dialog')).toContainText('(' + license + ')');
 
   await page.click('#about-close');
   await expect(page.locator('#about-dialog')).not.toBeVisible();

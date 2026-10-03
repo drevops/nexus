@@ -104,7 +104,7 @@ Nexus has no backend. The configuration you import and the diagrams you build st
 
 ## License
 
-Nexus is free software, released under the [GNU General Public License, version 2](LICENSE) (GPL-2.0-or-later), matching the Drupal ecosystem it serves.
+Nexus is free software, released under the [GNU General Public License, version 2 or later](LICENSE) (GPL-2.0-or-later), matching the Drupal ecosystem it serves.
 
 ---
 _Rendered with [Cytoscape.js](https://js.cytoscape.org/) and [Dagre](https://github.com/dagrejs/dagre); YAML via [js-yaml](https://github.com/nodeca/js-yaml)._
