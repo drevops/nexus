@@ -51,8 +51,8 @@ jobs:
           path: _site
 
       # GitHub Pages intermittently rejects a deployment with "try again later"
-      # while its backend is busy. Attempt up to three times with a growing pause
-      # so a transient blip self-heals; an extended outage still needs a re-run.
+      # while its backend is busy. The deploy is attempted up to 3 times with
+      # a growing pause; an extended outage still needs a re-run.
       - name: Deploy
         id: deployment
         continue-on-error: true

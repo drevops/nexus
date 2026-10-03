@@ -18,9 +18,9 @@ on:
         required: false
         default: false
 
-# A new push to a pull request cancels its superseded run. Pushes and manual
-# runs on a branch share 1 queue, so the newest commit deploys last. Scheduled
-# runs get their own group, so they never replace a queued deploy.
+# A pull request push cancels its superseded run; pushes and manual runs on a
+# branch share 1 queue, so the newest commit deploys last. Scheduled runs get
+# their own group, so they never replace a queued deploy.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || (github.event_name == 'schedule' && 'schedule') || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}

@@ -1,12 +1,16 @@
 /**
  * Preact UI layer: toolbar-driven panels rendered over the Cytoscape canvas.
  *
- * The whole stage (side docks + canvas host + floating panels) is one Preact
+ * The whole stage (side docks + canvas host + floating panels) is 1 Preact
  * tree driven by the shared store. Panels float and are dragged by their
- * header; dropping near an edge (or clicking pin) docks them into a side rail,
- * where any number stack, each scrolling independently, and the rail can be
- * resized horizontally. The canvas host is a no-update component so the
- * Cytoscape instance and the imperative overlays it owns are never re-rendered.
+ * header.
+ *
+ * Dropping a panel near an edge, or clicking its pin, docks it into a side
+ * rail. Any number of docked panels stack, each scrolling independently, and
+ * the rail can be resized horizontally.
+ *
+ * The canvas host is a no-update component so the Cytoscape instance and the
+ * imperative overlays it owns are never re-rendered.
  */
 
 import { h, render, Component } from 'preact';

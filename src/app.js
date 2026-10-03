@@ -230,8 +230,7 @@ function wireLanding() {
   });
 }
 
-// Reopening the import screen over a loaded diagram offers a way back; on first
-// load there is nothing to preserve, so the cancel affordance stays hidden.
+// Cancel returns to a loaded diagram, so it stays hidden until one exists.
 function showLanding() {
   showError('');
   $('landing-cancel').hidden = !window.__nexus;
@@ -269,7 +268,6 @@ function downloadText(text, filename, type) {
   URL.revokeObjectURL(url);
 }
 
-// The Fields table, one row per field, as CSV.
 function recordsToCsv(records, typeLabel) {
   const esc = (value) => {
     const s = String(value == null ? '' : value);

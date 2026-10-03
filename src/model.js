@@ -1,8 +1,8 @@
 /**
  * Content model: entities, their fields, and the graph they produce.
  *
- * toArray() returns the { meta, nodes, edges } structure consumed by the
- * renderer (Cytoscape elements).
+ * toArray() returns { meta, nodes, edges }, with nodes and edges as Cytoscape
+ * element definitions.
  */
 
 export const KIND_SINGLE = 'single';
@@ -122,13 +122,9 @@ export class Entity {
   }
 }
 
-/**
- * The whole content model.
- */
 export class ContentModel {
   constructor(title = 'Content model') {
     this.title = title;
-    // A Map preserves insertion order, which the deterministic sort relies on.
     this.entities = new Map();
     this.extraNodes = [];
     this.extraEdges = [];

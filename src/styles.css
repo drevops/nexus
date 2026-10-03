@@ -124,8 +124,9 @@ sl-input.toolbar__title:focus-within::part(base) {
   background: var(--panel-bg);
 }
 
-/* Shoelace toolbar buttons: neutralise the generic host box (that box lives on
-   ::part(base) instead) and drive the active toggle state through the part. */
+/* Shoelace toolbar buttons: neutralise the generic host box (Shoelace draws
+   the box on ::part(base)) and drive the active toggle state through the
+   part. */
 sl-button.toolbar__button {
   background: none;
   border: none;
@@ -346,8 +347,9 @@ sl-button#zoom-level::part(base) {
   min-width: 0;
 }
 
-/* Side rail: any number of pinned panels stack and scroll; drag the inner
-   edge to resize. Width is driven by the store, applied inline. */
+/* Side rail: any number of pinned panels stack and scroll, and dragging the
+   inner edge resizes the rail. Width is driven by the store, applied
+   inline. */
 .dock {
   position: relative;
   flex: 0 0 auto;
@@ -472,8 +474,9 @@ sl-button#zoom-level::part(base) {
   display: none;
 }
 
-/* Note badges: the layer ignores the pointer so the canvas stays draggable, but
-   each badge opts back in so it can be hovered and clicked. */
+/* Note badges: the layer sets pointer-events: none so the canvas stays
+   draggable. Each badge sets pointer-events: auto so it can be hovered and
+   clicked. */
 .notes {
   position: absolute;
   inset: 0;
@@ -555,8 +558,8 @@ sl-button#zoom-level::part(base) {
   display: none;
 }
 
-/* Docked into a side rail: static, fills the rail width, keeps a
-   user-resizable height (drag the bottom edge) and scrolls its body. */
+/* Docked into a side rail: static, fills the rail width, keeps a height
+   resizable from the bottom edge and scrolls its body. */
 .panel.is-docked {
   position: relative;
   flex: 0 0 auto;
@@ -1137,7 +1140,7 @@ sl-button#zoom-level::part(base) {
 }
 
 /* Honour the hidden attribute on Shoelace buttons: the component sets its own
-   host display, which would otherwise win over the UA [hidden] rule. */
+   host display, which would otherwise override the UA [hidden] rule. */
 sl-button[hidden] {
   display: none;
 }
@@ -1218,7 +1221,7 @@ html.sl-theme-dark .icon--nexus .ink {
 }
 
 /* Shoelace inspector controls: full width in the form grid, and neutralise the
-   old native-button host boxes (styling now lives on ::part). */
+   native-button host boxes (styling is on ::part). */
 .insp sl-input,
 .insp sl-select,
 .insp__note sl-textarea {

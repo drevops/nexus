@@ -1,5 +1,5 @@
 /**
- * The Nexus diagram document (".nexus.json") - the save/load "diagram language".
+ * The Nexus diagram document (".nexus.json"), the format of saved diagrams.
  *
  * Schema (version 1):
  * {
@@ -55,9 +55,8 @@ function serializeField(field) {
 export function documentFromGraph(cy, meta = {}) {
   const layout = {};
   cy.nodes().forEach((node) => {
-    // Layout runs skip hidden proxies, so their positions are stale. Unlike
-    // other nodes, a proxy without a saved position is placed beside its field
-    // on open.
+    // Layout runs skip hidden proxies, so their positions are stale (see
+    // placeMissingProxies() in render.js).
     if (node.data('group') === 'proxy' && !node.visible()) {
       return;
     }
