@@ -1136,6 +1136,21 @@ test('exports the diagram as PNG named after the title', async ({ page }) => {
   expect(download.suggestedFilename()).toBe('example-content-model.png');
 });
 
+test('loads the SVG exporter without a duplicate registration warning', async ({ page }) => {
+  const warnings = [];
+  page.on('console', (message) => {
+    if (message.type() === 'warning') {
+      warnings.push(message.text());
+    }
+  });
+
+  await page.reload();
+  await page.click('#example-btn');
+  await waitForGraph(page);
+
+  expect(warnings.filter((warning) => warning.includes('Can not register'))).toEqual([]);
+});
+
 test('exports the diagram as SVG and honours a renamed title', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);

@@ -8,7 +8,7 @@
 import { cardinalityLabel, DEFAULT_TITLE } from './model.js';
 import { fileSlug } from './names.js';
 
-if (window.cytoscape && window.cytoscapeSvg) {
+if (window.cytoscape && window.cytoscapeSvg && !window.cytoscape('core', 'svg')) {
   window.cytoscape.use(window.cytoscapeSvg);
 }
 
