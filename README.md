@@ -24,6 +24,8 @@ Nexus is a static web app. Drop a Drupal **exported configuration folder** onto 
 
 **[Open the app →](https://drevops.github.io/nexus/)**
 
+![The bundled example content model drawn in Nexus as an overview of its entity types and the references between them](screenshot.png)
+
 ## Features
 
 - **100% client-side.** Parsing and rendering happen in the browser; no backend, no upload, no install.
@@ -104,7 +106,7 @@ Nexus has no backend. The configuration you import and the diagrams you build st
 
 ## License
 
-Nexus is free software, released under the [GNU General Public License, version 2](LICENSE) (GPL-2.0-or-later), matching the Drupal ecosystem it serves.
+Nexus is free software, released under the [GNU General Public License, version 2 or later](LICENSE) (GPL-2.0-or-later), matching the Drupal ecosystem it serves.
 
 ---
 _Rendered with [Cytoscape.js](https://js.cytoscape.org/) and [Dagre](https://github.com/dagrejs/dagre); YAML via [js-yaml](https://github.com/nodeca/js-yaml)._
