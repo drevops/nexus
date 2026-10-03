@@ -5,6 +5,7 @@
 /.github         export-ignore
 /.gitignore      export-ignore
 /logo.png        export-ignore
+/screenshot.png  export-ignore
 /tests           export-ignore
 /.npmignore      export-ignore
 /renovate.json   export-ignore

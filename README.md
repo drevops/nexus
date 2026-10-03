@@ -24,6 +24,8 @@ Nexus is a static web app. Drop a Drupal **exported configuration folder** onto 
 
 **[Open the app →](https://drevops.github.io/nexus/)**
 
+![The bundled example content model drawn in Nexus as an overview of its entity types and the references between them](screenshot.png)
+
 ## Features
 
 - **100% client-side.** Parsing and rendering happen in the browser; no backend, no upload, no install.
