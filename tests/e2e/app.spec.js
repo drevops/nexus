@@ -179,6 +179,12 @@ function markFills(page, selector) {
   });
 }
 
+const LANDING_BUTTONS = ['#folder-btn', '#example-btn', '#landing-open', '#new-btn'];
+
+function boxesOf(page, selectors) {
+  return Promise.all(selectors.map((selector) => page.locator(selector).boundingBox()));
+}
+
 test.beforeEach(async ({ page }) => {
   await page.goto('/index.html');
 });
@@ -637,6 +643,44 @@ test('scrolls the landing screen to every part of the card in a short window', a
   });
   const box = await card.boundingBox();
   expect(box.y + box.height).toBeLessThanOrEqual(460);
+});
+
+test('lays the landing buttons out in 2 columns of equal width', async ({ page }) => {
+  const [folder, example, open, scratch] = await boxesOf(page, LANDING_BUTTONS);
+
+  for (const box of [example, open, scratch]) {
+    expect(box.width).toBe(folder.width);
+  }
+
+  expect(example.y).toBe(folder.y);
+  expect(example.x).toBeGreaterThan(folder.x + folder.width);
+  expect(open.x).toBe(folder.x);
+  expect(open.y).toBeGreaterThan(folder.y + folder.height);
+  expect(scratch.x).toBe(example.x);
+  expect(scratch.y).toBe(open.y);
+});
+
+test('stacks the landing buttons in 1 column of equal width in a narrow window', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  const [folder, ...rest] = await boxesOf(page, LANDING_BUTTONS);
+
+  for (const box of rest) {
+    expect(box.x).toBe(folder.x);
+    expect(box.width).toBe(folder.width);
+  }
+});
+
+test('centres Cancel below the landing buttons at the same width', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+  await page.click('#doc-import');
+  await expect(page.locator('#landing-cancel')).toBeVisible();
+
+  const [folder, example, scratch, cancel] = await boxesOf(page, ['#folder-btn', '#example-btn', '#new-btn', '#landing-cancel']);
+
+  expect(cancel.width).toBe(folder.width);
+  expect(cancel.y).toBeGreaterThan(scratch.y + scratch.height);
+  expect(cancel.x + cancel.width / 2).toBeCloseTo((folder.x + example.x + example.width) / 2, 0);
 });
 
 test('renders toolbar icons from the icon set', async ({ page }) => {
