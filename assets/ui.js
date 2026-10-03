@@ -10,10 +10,10 @@
  */
 
 import { h, render, Component } from 'preact';
-import { useState, useEffect, useRef } from 'preact/hooks';
+import { useState, useEffect, useLayoutEffect, useRef } from 'preact/hooks';
 import htmBase from 'htm';
 import { icon } from './icons.js';
-import { cardinalityLabel, identifierSegments } from './model.js';
+import { cardinalityLabel, identifierSegments, fitFontSize } from './model.js';
 import { InspectorBody } from './inspector.js';
 import {
   getState,
@@ -355,8 +355,100 @@ function wrappable(value) {
   return identifierSegments(value).map((segment, i) => (i ? html`<wbr />${segment}` : segment));
 }
 
+// 0.625rem is 10px at the default root size and grows with a larger default
+// font, so readers who chose bigger text keep it.
+const MIN_IDENTIFIER_REM = 0.625;
+
+// Canvas and layout widths differ by a few hundredths of a pixel, so fitted
+// text keeps a 1px margin.
+const FIT_MARGIN = 1;
+
+let measureContext = null;
+
+// Chrome breaks at a <wbr> even under white-space: nowrap, so widths come
+// from a canvas. Each <wbr> also splits the text into separately shaped runs,
+// so the width is the sum of the segment widths.
+function widthAtSize(element) {
+  const style = getComputedStyle(element);
+  const prefix = style.fontStyle + ' ' + style.fontWeight + ' ';
+  const family = style.fontFamily;
+  const segments = identifierSegments(element.textContent);
+
+  measureContext = measureContext || document.createElement('canvas').getContext('2d');
+
+  return (fontSize) => {
+    measureContext.font = prefix + fontSize + 'px ' + family;
+
+    return segments.reduce((width, segment) => width + measureContext.measureText(segment).width, 0);
+  };
+}
+
+function contentWidth(cell) {
+  const style = getComputedStyle(cell);
+
+  return cell.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+}
+
+// Shrinks each identifier to fit its cell on 1 line, down to the minimum size.
+// An identifier that cannot fit keeps its size and wraps at its <wbr>s.
+function fitIdentifiers(table) {
+  const identifiers = [...table.querySelectorAll('[data-fit]')];
+  const minFontSize = MIN_IDENTIFIER_REM * parseFloat(getComputedStyle(document.documentElement).fontSize);
+
+  identifiers.forEach((element) => {
+    element.style.fontSize = '';
+  });
+
+  const sizes = identifiers.map((element) => {
+    const availableWidth = contentWidth(element.closest('td')) - FIT_MARGIN;
+
+    return fitFontSize(widthAtSize(element), availableWidth, parseFloat(getComputedStyle(element).fontSize), minFontSize);
+  });
+
+  identifiers.forEach((element, i) => {
+    element.style.fontSize = sizes[i] === null ? '' : sizes[i] + 'px';
+  });
+}
+
 function TableBody({ ctx, filter }) {
   const [term, setTerm] = useState('');
+  const tableRef = useRef(null);
+  const fitKey = useRef('');
+
+  // Every store update re-renders the table, so it refits only when its
+  // width, the root font size or its text changed.
+  function refit() {
+    const table = tableRef.current;
+    const key = [table.clientWidth, getComputedStyle(document.documentElement).fontSize, table.tBodies[0].textContent].join('|');
+
+    if (key === fitKey.current) {
+      return;
+    }
+
+    fitKey.current = key;
+    fitIdentifiers(table);
+  }
+
+  useLayoutEffect(refit);
+
+  // Browser zoom and window resizes change the width without a store update.
+  // The refit waits a frame because resizing the table inside the observer
+  // callback triggers a ResizeObserver loop error.
+  useEffect(() => {
+    let frame = 0;
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(refit);
+    });
+
+    observer.observe(tableRef.current);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, []);
+
   const records = ctx.records().filter((r) => {
     if (filter && filter !== '__all__' && r.entityId !== filter) {
       return false;
@@ -381,8 +473,8 @@ function TableBody({ ctx, filter }) {
     }
     rows.push(
       html`<tr>
-        <td>${r.field}<br /><code>${wrappable(r.name)}</code></td>
-        <td>${wrappable(r.type)}</td>
+        <td>${r.field}<br /><code data-fit>${wrappable(r.name)}</code></td>
+        <td data-fit>${wrappable(r.type)}</td>
         <td>${cardBadge(r)}</td>
         <td>${r.required ? '✓' : ''}</td>
         <td>
@@ -421,7 +513,7 @@ function TableBody({ ctx, filter }) {
       ></sl-input>
     </div>
     <div class="table-wrap">
-      <table id="field-table" class="field-table">
+      <table id="field-table" class="field-table" ref=${tableRef}>
         <thead>
           <tr>
             <th>Field</th>

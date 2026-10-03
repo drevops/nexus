@@ -40,6 +40,42 @@ export function identifierSegments(value) {
   return String(value).split(/(?<=[^_]_+)(?=[^_])/);
 }
 
+const FIT_PASSES = 4;
+
+/**
+ * Shrinks `fontSize` until text whose width at a size is `measure(size)` fits
+ * `availableWidth`, in steps rounded down to 0.01px. Returns null when the
+ * text already fits, or when no size from `minFontSize` up fits within
+ * FIT_PASSES passes.
+ */
+export function fitFontSize(measure, availableWidth, fontSize, minFontSize) {
+  let width = measure(fontSize);
+
+  if (width <= availableWidth) {
+    return null;
+  }
+
+  let size = fontSize;
+
+  // Glyph spacing varies with font size, so each guess is rescaled from the
+  // width measured at the previous one.
+  for (let pass = 0; pass < FIT_PASSES; pass++) {
+    size = Math.floor(((size * availableWidth) / width) * 100) / 100;
+
+    if (size < minFontSize) {
+      return null;
+    }
+
+    width = measure(size);
+
+    if (width <= availableWidth) {
+      return size;
+    }
+  }
+
+  return null;
+}
+
 /**
  * A single field on an entity bundle.
  */

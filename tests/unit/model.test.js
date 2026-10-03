@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ContentModel, Entity, Field, KIND_SINGLE, KIND_MULTI, identifierSegments } from '../../assets/model.js';
+import { ContentModel, Entity, Field, KIND_SINGLE, KIND_MULTI, identifierSegments, fitFontSize } from '../../assets/model.js';
 
 function edgesByGroup(data, group) {
   return data.edges.filter((edge) => (edge.data.group || '') === group);
@@ -88,5 +88,35 @@ function dataProviderIdentifierSegments() {
     ['null', null, []],
     ['undefined', undefined, []],
     ['a number', 42, ['42']],
+  ];
+}
+
+test('shrinks a font size until the text fits, down to a minimum', async (t) => {
+  for (const [name, measure, availableWidth, expected] of dataProviderFitFontSize()) {
+    await t.test(name, () => {
+      assert.equal(fitFontSize(measure, availableWidth, 16, 10), expected);
+    });
+  }
+});
+
+function dataProviderFitFontSize() {
+  // 8px of width per pixel of font size, so 128px at 16px.
+  const linear = (size) => size * 8;
+  // A fixed 16px of extra spacing that does not shrink with the font.
+  const tracked = (size) => size * 8 + 16;
+
+  return [
+    ['text narrower than the space', linear, 140, null],
+    ['text exactly as wide as the space', linear, 128, null],
+    ['text a little too wide', linear, 100, 12.5],
+    ['a size rounded down to 0.01px', linear, 99, 12.37],
+    ['text that shrinks to exactly the minimum', linear, 80, 10],
+    ['text that would need less than the minimum', linear, 79, null],
+    ['spacing that does not scale, fitted over passes', tracked, 120, 13],
+    ['spacing that does not scale, near the minimum', tracked, 97, 10.12],
+    ['a width that never shrinks', () => 100, 90, null],
+    ['no space at all', linear, 0, null],
+    ['empty text', () => 0, 90, null],
+    ['an unmeasured width', () => NaN, 90, null],
   ];
 }
