@@ -95,7 +95,7 @@ const SAVED_DOC = {
 };
 
 // Saves a headless graph of the elements. The preset layout keeps their
-// positions, and the .hidden class hides an element as the renderer does.
+// positions, and styleEnabled lets visible() see the .hidden class.
 function saveGraph(elements, meta) {
   const cy = globalThis.cytoscape({
     headless: true,
@@ -105,7 +105,7 @@ function saveGraph(elements, meta) {
     elements: elements,
   });
 
-  // An instance that is never destroyed keeps the test process from exiting.
+  // A styled instance that is never destroyed keeps the process from exiting.
   try {
     return documentFromGraph(cy, meta);
   } finally {
