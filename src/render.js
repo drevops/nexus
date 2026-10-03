@@ -271,6 +271,10 @@ function overlaps(a, b) {
   return a.x1 < b.x2 && b.x1 < a.x2 && a.y1 < b.y2 && b.y1 < a.y2;
 }
 
+function proxyNodeId(fieldId, targetId) {
+  return 'proxy:' + fieldId + '>' + targetId;
+}
+
 function buildElements(model) {
   const nodes = model.nodes || [];
   const ids = {};
@@ -299,7 +303,7 @@ function buildElements(model) {
     // the referencing field, so a distant reference gets a short edge.
     const field = fieldById[e.data.source];
     const target = entityById[e.data.target];
-    const proxyId = 'proxy:' + e.data.source + '>' + e.data.target;
+    const proxyId = proxyNodeId(e.data.source, e.data.target);
     proxyNodes.push({
       data: {
         id: proxyId,
@@ -1091,6 +1095,11 @@ function buildController(model, options = {}) {
   cy.on('remove', 'node', (evt) => {
     removeCaptions(evt.target);
     removeNoteBadge(evt.target);
+  });
+
+  // A proxy draws 1 reference, so removing the reference removes its proxy.
+  cy.on('remove', 'edge[group="ref"]', (evt) => {
+    cy.getElementById(proxyNodeId(evt.target.data('source'), evt.target.data('target'))).remove();
   });
 
   $('fields-toggle').classList.add('is-active');

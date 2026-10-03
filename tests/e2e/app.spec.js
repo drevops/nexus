@@ -749,6 +749,33 @@ test('edits a reference loaded from configuration in the inspector', async ({ pa
   await tags.evaluate((el) => el.dispatchEvent(new Event('sl-remove', { bubbles: true })));
   expect(await refCount(page, ref.field, ref.target)).toBe(0);
   await expect(tags).toHaveCount(0);
+  expect(await page.evaluate((id) => window.__nexus.cy.getElementById(id).length, 'proxy:' + ref.field + '>' + ref.target)).toBe(0);
+});
+
+// Proxies left on the canvas with no edge to their field.
+function orphanProxies(page) {
+  return page.evaluate(() =>
+    window.__nexus.cy
+      .nodes('[group="proxy"]')
+      .filter((proxy) => proxy.connectedEdges().empty())
+      .map((proxy) => proxy.id()),
+  );
+}
+
+test('removes the proxies of references dropped by deleting a field or renaming an entity', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+  await page.click('#mode-build');
+
+  const field = await page.evaluate(() => window.__nexus.cy.nodes('[group="proxy"]').first().incomers('node').id());
+  await tapNode(page, field);
+  await page.click('#inspector .insp__delete');
+  expect(await orphanProxies(page)).toEqual([]);
+
+  await tapNode(page, 'node.program');
+  await slFill(page, '#inspector sl-input[data-machine-name]', 'show');
+  expect(await page.evaluate(() => window.__nexus.cy.getElementById('node.show').length)).toBe(1);
+  expect(await orphanProxies(page)).toEqual([]);
 });
 
 test('adds a field from an entity + handle, then renames it', async ({ page }) => {
