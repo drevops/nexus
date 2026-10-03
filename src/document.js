@@ -6,10 +6,16 @@
  *   "nexus": 1,
  *   "title": "…",
  *   "colors": { "<entityType>": "#hex" },        // colour overrides
- *   "entities": [ { entityType, bundle, label, fields: [
- *       { name, label, fieldType, kind, required, targetType, targetBundles } ] } ],
- *   "annotations": { nodes: [ { id, kind, label, method? } ], edges: [ { from, to, label } ] },
- *   "layout": { "<nodeId>": { x, y } }            // exact canvas positions
+ *   "symbols": { "<entityType>": "<symbol>" },   // symbol overrides
+ *   "customTypes": [ { type, label } ],          // custom entity types
+ *   "entities": [ { entityType, bundle, label, note, fields: [
+ *       { name, label, fieldType, kind, cardinality, required, note,
+ *         targetType, targetBundles } ] } ],
+ *   "annotations": {
+ *     nodes: [ { id, kind, label, method?, note? } ],
+ *     edges: [ { from, to, label } ] },
+ *   "layout": { "<nodeId>": { x, y } },          // exact canvas positions
+ *   "ui": { … } | null                           // panel arrangement
  * }
  *
  * `documentFromGraph` reads a live Cytoscape instance; `documentToModel` is a
