@@ -792,6 +792,27 @@ test('builds a new entity and field and saves them', async ({ page }) => {
   expect(campaign.fields.some((f) => f.name === 'field_body')).toBe(true);
 });
 
+// Whether each element that draws the reference from the field to the target
+// is on the canvas and shown.
+function referenceView(page, field, target) {
+  return page.evaluate(
+    ([fieldId, targetId]) => {
+      const cy = window.__nexus.cy;
+      const shown = (id) => cy.getElementById(id).nonempty() && cy.getElementById(id).visible();
+      const entity = cy.getElementById(fieldId).data('entity');
+      return {
+        ref: shown('ref:' + fieldId + '>' + targetId),
+        proxy: shown('proxy:' + fieldId + '>' + targetId),
+        proxyEdge: shown('pe:' + fieldId + '>' + targetId),
+        collapsed: shown('c:' + entity + '>' + targetId),
+      };
+    },
+    [field, target],
+  );
+}
+
+const PROXY_VIEW = { ref: false, proxy: true, proxyEdge: true, collapsed: false };
+
 test('connects a reference by dragging on the canvas', async ({ page }) => {
   await page.click('#new-btn');
   await page.click('#mode-build');
@@ -831,6 +852,7 @@ test('connects a reference by dragging on the canvas', async ({ page }) => {
   await page.mouse.up();
 
   expect(await page.evaluate(() => window.__nexus.cy.getElementById('ref:field:node.a:field_ref>node.b').length)).toBe(1);
+  expect(await referenceView(page, 'field:node.a:field_ref', 'node.b')).toEqual(PROXY_VIEW);
 });
 
 function refCount(page, fieldId, targetId) {
@@ -867,20 +889,52 @@ test('edits a reference loaded from configuration in the inspector', async ({ pa
   expect(await page.evaluate((id) => window.__nexus.cy.getElementById(id).length, 'proxy:' + ref.field + '>' + ref.target)).toBe(0);
 });
 
-// Proxies left on the canvas with no edge to their field.
-function orphanProxies(page) {
-  return page.evaluate(() =>
-    window.__nexus.cy
-      .nodes('[group="proxy"]')
-      .filter((proxy) => proxy.connectedEdges().empty())
-      .map((proxy) => proxy.id()),
-  );
-}
+const ACL_FIELD = 'field:node.episode:field_acl';
+const ACL_PROGRAMS = 'taxonomy_term.acl_programs';
 
-test('removes the proxies of references dropped by deleting a field or renaming an entity', async ({ page }) => {
+// The bundled example in edit mode.
+async function editExample(page) {
   await page.click('#example-btn');
   await waitForGraph(page);
   await page.click('#mode-build');
+}
+
+// The bundled example in edit mode, with Episode's ACL field selected in the
+// inspector. The field references the ACL Programs vocabulary only.
+async function selectAclField(page) {
+  await editExample(page);
+  await tapNode(page, ACL_FIELD);
+}
+
+function addTarget(page, target) {
+  return slSelect(page, '#inspector sl-select[placeholder="Add target…"]', target);
+}
+
+function proxyPositions(page) {
+  return page.evaluate(() => {
+    const positions = {};
+    window.__nexus.cy.nodes('[group="proxy"]').forEach((proxy) => {
+      positions[proxy.id()] = proxy.position();
+    });
+    return positions;
+  });
+}
+
+// Proxies left on the canvas without the reference they draw.
+function orphanProxies(page) {
+  return page.evaluate(() => {
+    const cy = window.__nexus.cy;
+    const drawn = (proxy) => proxy.incomers('node').some((field) => cy.getElementById('ref:' + field.id() + '>' + proxy.data('target')).nonempty());
+
+    return cy
+      .nodes('[group="proxy"]')
+      .filter((proxy) => !drawn(proxy))
+      .map((proxy) => proxy.id());
+  });
+}
+
+test('removes the proxies of references dropped by deleting a field, deleting an entity or renaming an entity', async ({ page }) => {
+  await editExample(page);
 
   const field = await page.evaluate(() => window.__nexus.cy.nodes('[group="proxy"]').first().incomers('node').id());
   await tapNode(page, field);
@@ -891,6 +945,133 @@ test('removes the proxies of references dropped by deleting a field or renaming 
   await slFill(page, '#inspector sl-input[data-machine-name]', 'show');
   expect(await page.evaluate(() => window.__nexus.cy.getElementById('node.show').length)).toBe(1);
   expect(await orphanProxies(page)).toEqual([]);
+
+  await tapNode(page, ACL_PROGRAMS);
+  await page.click('#inspector .insp__delete');
+  expect(await page.evaluate((id) => window.__nexus.cy.getElementById(id).empty(), ACL_PROGRAMS)).toBe(true);
+  expect(await orphanProxies(page)).toEqual([]);
+});
+
+test('draws a reference added in edit mode as a proxy in the column of its field', async ({ page }) => {
+  await selectAclField(page);
+  await addTarget(page, 'node.program');
+
+  expect(await referenceView(page, ACL_FIELD, 'node.program')).toEqual(PROXY_VIEW);
+
+  const placement = await page.evaluate(
+    ([added, sibling]) => {
+      const cy = window.__nexus.cy;
+      const proxy = cy.getElementById(added);
+      const box = proxy.boundingBox();
+      const overlap = (a, b) => a.x1 < b.x2 && b.x1 < a.x2 && a.y1 < b.y2 && b.y1 < a.y2;
+      return {
+        dx: proxy.position('x') - cy.getElementById(sibling).position('x'),
+        overlaps: cy.nodes(':visible').filter((node) => !node.same(proxy) && overlap(node.boundingBox(), box)).length,
+      };
+    },
+    ['proxy:' + ACL_FIELD + '>node.program', 'proxy:' + ACL_FIELD + '>' + ACL_PROGRAMS],
+  );
+  expect(placement).toEqual({ dx: 0, overlaps: 0 });
+});
+
+test('shows a reference added in edit mode in the overview and as a proxy again after it', async ({ page }) => {
+  await selectAclField(page);
+  await addTarget(page, 'node.program');
+
+  await page.click('#fields-toggle');
+  expect(await referenceView(page, ACL_FIELD, 'node.program')).toEqual({ ref: false, proxy: false, proxyEdge: false, collapsed: true });
+
+  await page.click('#fields-toggle');
+  expect(await referenceView(page, ACL_FIELD, 'node.program')).toEqual(PROXY_VIEW);
+});
+
+test('saves the proxy of a reference added in edit mode and reopens it where it was', async ({ page }) => {
+  await selectAclField(page);
+  // A saved field holds 1 target entity type, so the new target is a
+  // vocabulary too.
+  await addTarget(page, 'taxonomy_term.artists');
+  const proxyId = 'proxy:' + ACL_FIELD + '>taxonomy_term.artists';
+
+  const [download] = await Promise.all([page.waitForEvent('download'), page.click('#doc-save')]);
+  const doc = JSON.parse(readFileSync(await download.path(), 'utf8'));
+  expect(doc.layout[proxyId]).toBeDefined();
+
+  await page.goto('/index.html');
+  await openDocument(page, doc);
+
+  expect(await page.evaluate((id) => window.__nexus.cy.getElementById(id).position(), proxyId)).toEqual(doc.layout[proxyId]);
+});
+
+for (const [name, nodeId, machineName, renamedId] of dataProviderRenamedProxies()) {
+  test(`keeps every proxy where it was when ${name} is renamed`, async ({ page }) => {
+    await editExample(page);
+    const before = await proxyPositions(page);
+
+    await tapNode(page, nodeId);
+    await slFill(page, '#inspector sl-input[data-machine-name]', machineName);
+
+    const expected = Object.fromEntries(Object.entries(before).map(([id, position]) => [id.split(nodeId).join(renamedId), position]));
+    expect(await proxyPositions(page)).toEqual(expected);
+  });
+}
+
+function dataProviderRenamedProxies() {
+  return [
+    ["Episode's ACL field", ACL_FIELD, 'field_acl_renamed', 'field:node.episode:field_acl_renamed'],
+    ['the ACL Programs vocabulary', ACL_PROGRAMS, 'acl_groups', 'taxonomy_term.acl_groups'],
+  ];
+}
+
+test('relabels the proxies of an entity relabelled in edit mode', async ({ page }) => {
+  await editExample(page);
+
+  await tapNode(page, 'media.image');
+  await slFill(page, '#inspector sl-input[data-label]', 'Picture');
+
+  const labels = await page.evaluate(() => window.__nexus.cy.nodes('[group="proxy"][target="media.image"]').map((proxy) => proxy.data('label')));
+  expect(labels.length).toBeGreaterThan(0);
+  expect([...new Set(labels)]).toEqual(['Picture']);
+});
+
+test('relabels the proxy edges of a field whose cardinality changes in edit mode', async ({ page }) => {
+  await selectAclField(page);
+  await slSelect(page, '#inspector sl-select[data-cardinality]', '3');
+
+  expect(await page.evaluate((id) => window.__nexus.cy.getElementById(id).data('cardinality'), 'pe:' + ACL_FIELD + '>' + ACL_PROGRAMS)).toBe('1..3');
+});
+
+test('removes the overview edge of the last reference between 2 entities', async ({ page }) => {
+  await editExample(page);
+
+  // The only reference from the Artists vocabulary to Image media.
+  await tapNode(page, 'field:taxonomy_term.artists:field_artist_image');
+  const tags = page.locator('#inspector sl-tag.insp__reftag');
+  await expect(tags).toHaveCount(1);
+  await tags.evaluate((el) => el.dispatchEvent(new Event('sl-remove', { bubbles: true })));
+  await page.click('#fields-toggle');
+
+  expect(await page.evaluate(() => window.__nexus.cy.getElementById('c:taxonomy_term.artists>media.image').length)).toBe(0);
+});
+
+test('hides the fields of an entity renamed in edit mode with its entity type', async ({ page }) => {
+  await editExample(page);
+
+  await tapNode(page, 'node.program');
+  await slFill(page, '#inspector sl-input[data-machine-name]', 'show');
+  await page.click('#entities-toggle');
+  await page.locator('#type-filters label', { hasText: 'Content type' }).locator('input').uncheck();
+
+  expect(await page.evaluate(() => window.__nexus.cy.nodes('[group="field"][entity="node.show"]:visible').length)).toBe(0);
+});
+
+test('lists a reference added in edit mode in the tooltip of its field', async ({ page }) => {
+  await selectAclField(page);
+  await addTarget(page, 'node.program');
+  await page.evaluate((id) => {
+    window.__nexus.cy.getElementById(id).emit('mouseover');
+  }, ACL_FIELD);
+
+  await expect(page.locator('#tooltip')).toContainText('→ ACL Programs, Program');
 });
 
 test('adds a field from an entity + handle, then renames it', async ({ page }) => {

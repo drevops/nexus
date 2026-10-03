@@ -143,10 +143,13 @@ export function EntityForm({ id }) {
     <${Row} label="Label">
       <sl-input
         size="small"
+        data-label
         value=${label}
         onsl-input=${(e) => {
           setLabel(e.target.value);
           node.data('label', e.target.value);
+          // Each proxy holds a copy of its target's label.
+          getController().syncReferences();
           bump();
         }}
       ></sl-input>
@@ -197,6 +200,8 @@ export function FieldForm({ id }) {
     node.data('cardinality', cardinality);
     node.data('kind', kindForCardinality(cardinality));
     node.connectedEdges('[group="ref"]').data('cardinality', cardinalityLabel(cardinality));
+    // Each proxy edge holds a copy of its ref edge's cardinality.
+    getController().syncReferences();
     setS((prev) => ({ ...prev, cardinality: cardinality }));
     bump();
   }
