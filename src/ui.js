@@ -20,7 +20,6 @@ import { icon } from './icons.js';
 import { cardinalityLabel, identifierSegments, fitFontSize } from './model.js';
 import { InspectorBody } from './inspector.js';
 import {
-  PANEL_ORDER,
   getState,
   subscribe,
   getController,
@@ -39,6 +38,7 @@ import { $ } from './dom.js';
 
 const html = htmBase.bind(h);
 
+const PANEL_ORDER = ['entities', 'table', 'settings', 'legend', 'inspector'];
 const TITLES = { entities: 'Entities', table: 'Fields', settings: 'Settings', legend: 'Legend', inspector: 'Inspector' };
 const WIDE = { table: true };
 const PANEL_TOGGLES = [

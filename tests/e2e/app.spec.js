@@ -410,6 +410,17 @@ test('keeps a panel clicked many times below the zoom menu and the import screen
   await expect.poll(() => topmostOf(page, ['#landing', '#legend'])).toBe('#landing');
 });
 
+// The tooltip ignores the pointer, so a hit test can't find it. It shares the
+// root stacking context with the panels, so z-indexes decide the order.
+test('draws the canvas tooltip over a panel nobody has raised', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+
+  const [tooltip, legend] = await page.evaluate(() => ['tooltip', 'legend'].map((id) => Number(getComputedStyle(document.getElementById(id)).zIndex)));
+
+  expect(tooltip).toBeGreaterThan(legend);
+});
+
 test('shows a loading screen while the example loads', async ({ page }) => {
   await page.route('**/manifest.json', async (route) => {
     await new Promise((resolve) => setTimeout(resolve, 500));

@@ -1,9 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { PANEL_ORDER, getState, focusPanel, openPanel, togglePanel, closePanel, openTableFor, openInspector, importLayout } from '../../src/store.js';
+import { getState, focusPanel, openPanel, togglePanel, closePanel, openTableFor, openInspector, importLayout } from '../../src/store.js';
 
 // The store holds 1 state per module, so these tests share it and run in
 // order. Node has no window, so the store starts from its default layout.
+
+const PANELS = Object.keys(getState().panels);
 
 const SELECTION = { kind: 'entity', id: 'node.article' };
 
@@ -11,13 +13,23 @@ function zIndexOf(id) {
   return getState().panels[id].z;
 }
 
-// Panel ids from the bottom of the stack to the top.
-function stack() {
-  return [...PANEL_ORDER].sort((a, b) => zIndexOf(a) - zIndexOf(b));
+const START_Z = zIndexOf(PANELS[0]);
+
+// Panel ids from the bottom of the stack to the top, leaving out 1 panel.
+// Panels that share a z-index keep the store's order.
+function stackWithout(id) {
+  return [...PANELS].sort((a, b) => zIndexOf(a) - zIndexOf(b)).filter((other) => other !== id);
 }
 
-function zIndexes() {
-  return PANEL_ORDER.map(zIndexOf).sort((a, b) => a - b);
+function isOnTop(id) {
+  return PANELS.every((other) => other === id || zIndexOf(other) < zIndexOf(id));
+}
+
+// The z-indexes of the panels that have been raised, lowest first.
+function raisedZIndexes() {
+  const raised = PANELS.map(zIndexOf).filter((z) => z !== START_Z);
+
+  return raised.sort((a, b) => a - b);
 }
 
 // The state values for the keys of the expected object.
@@ -25,33 +37,27 @@ function stateFor(expected) {
   return Object.fromEntries(Object.keys(expected).map((key) => [key, getState()[key]]));
 }
 
-const BAND = zIndexes();
-
-test('lists every panel of the store once in the panel order', () => {
-  assert.deepEqual([...PANEL_ORDER].sort(), Object.keys(getState().panels).sort());
+test('starts with no panel raised', () => {
+  assert.deepEqual(raisedZIndexes(), []);
 });
 
-test('gives each panel its own z-index from a band of consecutive values', () => {
-  assert.deepEqual(
-    BAND,
-    PANEL_ORDER.map((id, i) => BAND[0] + i),
-  );
-});
-
-test('stacks the panels in the panel order until one is raised', () => {
-  assert.deepEqual(stack(), PANEL_ORDER);
-});
-
-test('opens a raised panel on top and keeps the others in order', async (t) => {
+test('opens a raised panel above every other and keeps the others in order', async (t) => {
   for (const [name, id, raise, expected] of dataProviderRaise()) {
     await t.test(name, () => {
-      const others = stack().filter((other) => other !== id);
+      const others = stackWithout(id);
 
-      assert.notEqual(stack().at(-1), id, id + ' is on top before it is raised');
+      assert.equal(isOnTop(id), false, id + ' is on top before it is raised');
       raise();
 
-      assert.deepEqual(stack(), [...others, id]);
-      assert.deepEqual(zIndexes(), BAND);
+      const raised = raisedZIndexes();
+
+      assert.equal(isOnTop(id), true);
+      assert.deepEqual(stackWithout(id), others);
+      assert.ok(raised[0] > START_Z);
+      assert.deepEqual(
+        raised,
+        raised.map((z, i) => raised[0] + i),
+      );
       assert.equal(getState().panels[id].open, true);
       assert.deepEqual(stateFor(expected), expected);
     });
@@ -70,39 +76,45 @@ function dataProviderRaise() {
 }
 
 test('keeps the stack when the top panel is raised again', () => {
-  const before = PANEL_ORDER.map(zIndexOf);
+  const before = PANELS.map(zIndexOf);
+  const top = PANELS.find(isOnTop);
 
-  focusPanel(stack().at(-1));
+  focusPanel(top);
 
-  assert.deepEqual(PANEL_ORDER.map(zIndexOf), before);
+  assert.deepEqual(PANELS.map(zIndexOf), before);
 });
 
 test('keeps a closed panel in its place in the stack', () => {
-  const before = PANEL_ORDER.map(zIndexOf);
+  const before = PANELS.map(zIndexOf);
 
   closePanel('table');
 
   assert.equal(getState().panels.table.open, false);
-  assert.deepEqual(PANEL_ORDER.map(zIndexOf), before);
+  assert.deepEqual(PANELS.map(zIndexOf), before);
 });
 
 test('ignores a z-index in an imported layout', () => {
-  const before = PANEL_ORDER.map(zIndexOf);
+  const before = PANELS.map(zIndexOf);
 
   importLayout({ panels: { table: { open: true, z: 1000 } } });
 
   assert.equal(getState().panels.table.open, true);
-  assert.deepEqual(PANEL_ORDER.map(zIndexOf), before);
+  assert.deepEqual(PANELS.map(zIndexOf), before);
 });
 
-test('keeps every z-index in the band however often panels are raised', async (t) => {
+test('keeps the raised panels in 1 band however often they are raised', async (t) => {
+  PANELS.forEach((id) => focusPanel(id));
+  const band = raisedZIndexes();
+
+  assert.equal(band.length, PANELS.length);
+
   for (const [name, ids] of dataProviderRaiseSequence()) {
     await t.test(name, () => {
       for (const id of ids) {
         focusPanel(id);
 
-        assert.equal(stack().at(-1), id);
-        assert.deepEqual(zIndexes(), BAND);
+        assert.equal(isOnTop(id), true);
+        assert.deepEqual(raisedZIndexes(), band);
       }
     });
   }
@@ -112,6 +124,6 @@ function dataProviderRaiseSequence() {
   return [
     ['1 panel 45 times', Array(45).fill('legend')],
     ['2 panels in turn 500 times each', Array.from({ length: 1000 }, (_, i) => (i % 2 ? 'table' : 'settings'))],
-    ['every panel in turn 200 times', Array.from({ length: 200 }, () => PANEL_ORDER).flat()],
+    ['every panel in turn 200 times', Array.from({ length: 200 }, () => PANELS).flat()],
   ];
 }

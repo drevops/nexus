@@ -7,8 +7,6 @@
 
 const listeners = new Set();
 
-export const PANEL_ORDER = ['entities', 'table', 'settings', 'legend', 'inspector'];
-
 const DEFAULT_POS = {
   entities: { left: 16, top: 16 },
   table: { right: 16, top: 16 },
@@ -17,8 +15,8 @@ const DEFAULT_POS = {
   legend: { right: 16, bottom: 16 },
 };
 
-// PANEL_Z sits above the canvas overlay z-indexes in styles.css. Each panel
-// holds 1 z-index from PANEL_Z up.
+// Raised panels hold distinct z-indexes in a band from PANEL_Z up, 1 per
+// panel, above the z-index every panel starts at.
 const PANEL_Z = 10;
 
 const LAYOUT_KEY = 'nexusLayout';
@@ -30,7 +28,7 @@ let saveTimer = null;
 function initialPanels() {
   const panels = {};
   Object.keys(DEFAULT_POS).forEach((id) => {
-    panels[id] = { open: false, dock: null, pos: { ...DEFAULT_POS[id] }, z: PANEL_Z + PANEL_ORDER.indexOf(id), height: 260 };
+    panels[id] = { open: false, dock: null, pos: { ...DEFAULT_POS[id] }, z: 4, height: 260 };
   });
   return panels;
 }
@@ -106,8 +104,8 @@ function patchPanel(id, next) {
   emit({ panels: { ...state.panels, [id]: { ...state.panels[id], ...next } } });
 }
 
-// Returns the panels with the given one patched and on top. The panels above
-// it move down 1, so the set of z-indexes never changes.
+// Returns the panels with the given one patched and on top of the band. The
+// panels above it move down 1, so raised panels never pass the band's top.
 function raisedPanels(id, next = {}) {
   const z = state.panels[id].z;
   const panels = {};
@@ -117,7 +115,7 @@ function raisedPanels(id, next = {}) {
     panels[key] = panel.z > z ? { ...panel, z: panel.z - 1 } : panel;
   });
 
-  panels[id] = { ...state.panels[id], ...next, z: PANEL_Z + PANEL_ORDER.length - 1 };
+  panels[id] = { ...state.panels[id], ...next, z: PANEL_Z + Object.keys(state.panels).length - 1 };
 
   return panels;
 }
