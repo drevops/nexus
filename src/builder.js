@@ -199,9 +199,14 @@ export function attachBuilder(instance) {
     }
   });
   cy.on('tap', 'node', (evt) => {
-    if (buildMode) {
-      selectNode(evt.target.id());
+    if (!buildMode) {
+      return;
     }
+
+    // A proxy has no inspector form, so a tap on one selects the entity it
+    // stands in for.
+    const node = evt.target;
+    selectNode(node.data('group') === 'proxy' ? node.data('target') : node.id());
   });
 
   // A right-click on an entity isolates it and its fields to move as a unit;

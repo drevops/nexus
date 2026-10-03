@@ -1037,6 +1037,14 @@ test('lays out the proxy of a reference added while its target type was filtered
   expect(await nodePositions(page)).toEqual(shown);
 });
 
+test('selects the entity a proxy stands in for when the proxy is tapped in edit mode', async ({ page }) => {
+  await editExample(page);
+  await tapNode(page, 'proxy:' + ACL_FIELD + '>' + ACL_PROGRAMS);
+
+  await expect(page.locator('#inspector .insp__title')).toHaveText('Entity');
+  await expect(page.locator('#inspector sl-input[data-machine-name]')).toHaveJSProperty('value', 'acl_programs');
+});
+
 test('adds a field from an entity + handle, then renames it', async ({ page }) => {
   await page.click('#new-btn');
   await page.click('#mode-build');
