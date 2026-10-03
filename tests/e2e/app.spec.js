@@ -185,6 +185,26 @@ function boxesOf(page, selectors) {
   return Promise.all(selectors.map((selector) => page.locator(selector).boundingBox()));
 }
 
+// Returns the selector of the element drawn on top at the centre of the area
+// where all the matched elements overlap, or null when another element is.
+function topmostOf(page, selectors) {
+  return page.evaluate((list) => {
+    const boxes = list.map((selector) => document.querySelector(selector).getBoundingClientRect());
+    const left = Math.max(...boxes.map((box) => box.left));
+    const right = Math.min(...boxes.map((box) => box.right));
+    const top = Math.max(...boxes.map((box) => box.top));
+    const bottom = Math.min(...boxes.map((box) => box.bottom));
+
+    if (left >= right || top >= bottom) {
+      throw new Error(list.join(' and ') + ' do not overlap');
+    }
+
+    const hit = document.elementFromPoint((left + right) / 2, (top + bottom) / 2);
+
+    return list.find((selector) => hit.closest(selector)) || null;
+  }, selectors);
+}
+
 test.beforeEach(async ({ page }) => {
   await page.goto('/index.html');
 });
@@ -348,6 +368,57 @@ test('remembers the panel layout across reloads', async ({ page }) => {
 
   await expect(page.locator('#entities')).toHaveClass(/is-docked/);
   expect(await page.locator('#entities').evaluate((el) => el.closest('.dock').id)).toBe('dock-left');
+});
+
+test('draws a pressed panel above the panel it overlaps', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+
+  await page.click('#legend-toggle');
+  await page.click('#table-toggle');
+  await page.click('#settings-toggle');
+  await expect.poll(() => topmostOf(page, ['#table', '#settings'])).toBe('#settings');
+
+  await page.locator('#table').dispatchEvent('mousedown');
+  await expect.poll(() => topmostOf(page, ['#table', '#settings'])).toBe('#table');
+
+  await page.locator('#settings').dispatchEvent('mousedown');
+  await expect.poll(() => topmostOf(page, ['#table', '#settings'])).toBe('#settings');
+});
+
+test('keeps a panel clicked many times below the zoom menu and the import screen', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+
+  const legend = page.locator('#legend');
+  const body = await legend.locator('.legend-body').boundingBox();
+  await page.mouse.click(body.x + 8, body.y + 8);
+  const zIndex = await legend.evaluate((el) => getComputedStyle(el).zIndex);
+
+  for (let i = 0; i < 45; i++) {
+    await page.mouse.click(body.x + 8, body.y + 8);
+  }
+  await expect(legend).toHaveCSS('z-index', zIndex);
+
+  await page.click('#zoom-level');
+  await expect(page.locator('#zoom-menu')).toBeVisible();
+  await expect.poll(() => topmostOf(page, ['#zoom-menu', '#legend'])).toBe('#zoom-menu');
+  await page.keyboard.press('Escape');
+
+  await page.click('#doc-import');
+  await expect(page.locator('#landing')).toBeVisible();
+  await expect.poll(() => topmostOf(page, ['#landing', '#legend'])).toBe('#landing');
+});
+
+// The tooltip ignores the pointer, so a hit test can't find it. It shares the
+// root stacking context with the panels, so z-indexes decide the order.
+test('draws the canvas tooltip over a panel nobody has raised', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+
+  const [tooltip, legend] = await page.evaluate(() => ['tooltip', 'legend'].map((id) => Number(getComputedStyle(document.getElementById(id)).zIndex)));
+
+  expect(tooltip).toBeGreaterThan(legend);
 });
 
 test('shows a loading screen while the example loads', async ({ page }) => {

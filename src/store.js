@@ -15,9 +15,12 @@ const DEFAULT_POS = {
   legend: { right: 16, bottom: 16 },
 };
 
+// Raised panels hold distinct z-indexes in a band from PANEL_Z up, 1 per
+// panel, above the z-index every panel starts at.
+const PANEL_Z = 10;
+
 const LAYOUT_KEY = 'nexusLayout';
 
-let zCounter = 10;
 let controller = null;
 let builder = null;
 let saveTimer = null;
@@ -101,6 +104,22 @@ function patchPanel(id, next) {
   emit({ panels: { ...state.panels, [id]: { ...state.panels[id], ...next } } });
 }
 
+// Returns the panels with the given one patched and on top of the band. The
+// panels above it move down 1, so raised panels never pass the band's top.
+function raisedPanels(id, next = {}) {
+  const z = state.panels[id].z;
+  const panels = {};
+
+  Object.keys(state.panels).forEach((key) => {
+    const panel = state.panels[key];
+    panels[key] = panel.z > z ? { ...panel, z: panel.z - 1 } : panel;
+  });
+
+  panels[id] = { ...state.panels[id], ...next, z: PANEL_Z + Object.keys(state.panels).length - 1 };
+
+  return panels;
+}
+
 export function getState() {
   return state;
 }
@@ -131,8 +150,7 @@ export function setTableFilter(value) {
 }
 
 export function openTableFor(entityId) {
-  zCounter += 1;
-  emit({ tableFilter: entityId, panels: { ...state.panels, table: { ...state.panels.table, open: true, z: zCounter } } });
+  emit({ tableFilter: entityId, panels: raisedPanels('table', { open: true }) });
 }
 
 // The store holds no graph data, so this notifies subscribers of graph
@@ -142,8 +160,7 @@ export function bump() {
 }
 
 export function openPanel(id) {
-  zCounter += 1;
-  patchPanel(id, { open: true, z: zCounter });
+  emit({ panels: raisedPanels(id, { open: true }) });
 }
 
 export function closePanel(id) {
@@ -162,8 +179,7 @@ export function togglePanel(id) {
 }
 
 export function focusPanel(id) {
-  zCounter += 1;
-  patchPanel(id, { z: zCounter });
+  emit({ panels: raisedPanels(id) });
 }
 
 export function movePanel(id, left, top) {
@@ -209,8 +225,7 @@ export function importLayout(layout) {
 }
 
 export function openInspector(selected) {
-  zCounter += 1;
-  emit({ selected: selected, panels: { ...state.panels, inspector: { ...state.panels.inspector, open: true, z: zCounter } } });
+  emit({ selected: selected, panels: raisedPanels('inspector', { open: true }) });
 }
 
 export function closeInspector() {
