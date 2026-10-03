@@ -4,11 +4,10 @@
  * Adds entities, fields, references and annotation nodes to the live Cytoscape
  * graph, edits them through the Preact inspector, deletes them and drags them
  * around. Machine names and entity types are immutable after creation (as in
- * Drupal), so element ids never change and there is no cascade to manage. The
- * graph is the source of truth; save/load reads it via document.js. This module
- * owns the graph mutations and the on-canvas affordances (drag-to-connect, the
- * four "+" field handles); the inspector forms live in inspector.js and reach
- * these mutations through the builder controller on the store.
+ * Drupal), so element ids never change and there is no cascade to manage.
+ *
+ * The graph is the source of truth. This module holds the graph mutations and
+ * the on-canvas controls: drag-to-connect and the 4 "+" field handles.
  */
 
 import { cardinalityLabel } from './model.js';
@@ -24,7 +23,6 @@ let counter = 0;
 let handleEntityId = null;
 let handleRaf = false;
 let placeKind = null;
-let pendingPosition = null;
 let isolatedIds = new Set();
 let dragLast = null;
 
@@ -87,8 +85,8 @@ function onCanvasDrop(evt) {
   evt.preventDefault();
   const position = positionFromEvent(evt);
 
-  // Dropped items appear on the canvas straight away; the inspector opens on the
-  // real node so its name and everything else can be adjusted in place.
+  // Dropped items are created immediately and opened in the inspector, so
+  // their name and other properties are edited on the real node.
   if (data.indexOf('entity:') === 0) {
     const entityType = data.slice(7);
     const bundle = uniqueBundle(entityType);
@@ -136,16 +134,10 @@ export function initBuilder() {
 
   Array.prototype.forEach.call(document.querySelectorAll('[data-add-entity]'), (btn) => {
     const type = btn.getAttribute('data-add-entity');
-    btn.addEventListener('click', () => {
-      pendingPosition = null;
-      openInspector({ kind: 'new-entity', entityType: type });
-    });
+    btn.addEventListener('click', () => openInspector({ kind: 'new-entity', entityType: type }));
     makeDraggable(btn, 'entity:' + type);
   });
-  $('add-field').addEventListener('click', () => {
-    pendingPosition = null;
-    openInspector({ kind: 'new-field' });
-  });
+  $('add-field').addEventListener('click', () => openInspector({ kind: 'new-field' }));
   makeDraggable($('add-field'), 'field');
   Array.prototype.forEach.call(document.querySelectorAll('[data-add-note]'), (btn) => {
     const kind = btn.getAttribute('data-add-note');
@@ -165,13 +157,17 @@ export function initBuilder() {
   });
   $('handles').addEventListener('click', (evt) => {
     const btn = evt.target.closest('.handle');
-    if (btn && handleEntityId) {
-      const name = uniqueFieldName(handleEntityId);
-      const id = addField(handleEntityId, name, prettify(name), 'string', 1, btn.getAttribute('data-side'));
-      if (id) {
-        selectNode(id);
-        bump();
-      }
+
+    if (!btn || !handleEntityId) {
+      return;
+    }
+
+    const name = uniqueFieldName(handleEntityId);
+    const id = addField(handleEntityId, name, prettify(name), 'string', 1, btn.getAttribute('data-side'));
+
+    if (id) {
+      selectNode(id);
+      bump();
     }
   });
 }
@@ -194,9 +190,9 @@ export function attachBuilder(instance) {
     }
   });
 
-  // Right-click an entity to isolate it (and its fields) for moving as a unit; a
-  // tap on the empty canvas releases the isolation. The native context menu is
-  // suppressed so the gesture is the isolation, not the browser menu.
+  // A right-click on an entity isolates it and its fields to move as a unit;
+  // a tap on the empty canvas releases the isolation. The native context menu
+  // is suppressed, so a right-click only isolates.
   cy.on('cxttap', 'node[group="entity"]', (evt) => isolateEntity(evt.target.id()));
   cy.container().addEventListener('contextmenu', (evt) => evt.preventDefault());
   cy.on('tap', (evt) => {
@@ -268,8 +264,8 @@ function applyMode() {
   $('connect-toggle').classList.toggle('is-active', connectMode);
   updateInteraction();
 
-  // Switching modes drops any singled-out focus or isolation so neither mode
-  // inherits the other's trace/fade highlight or grab state.
+  // A mode switch clears focus and isolation, so no trace, fade or grab state
+  // remains from the previous mode.
   clearIsolation();
   const controller = getController();
   if (controller) {
@@ -306,9 +302,9 @@ function updateInteraction() {
   cy.boxSelectionEnabled(false);
 }
 
-// Isolate an entity and its fields (plus their proxies) as a movable unit: fade
-// everything else and make only this group grabbable, so a drag on any member
-// shifts the whole group together (see the grab/drag handlers).
+// Isolates an entity, its fields and their proxies as a movable unit.
+// Everything else is faded and only the group is grabbable, so dragging any
+// member moves the whole group (see the grab and drag handlers).
 function isolateEntity(entityId) {
   const entity = cy.getElementById(entityId);
   if (entity.empty() || entity.data('group') !== 'entity') {
@@ -391,7 +387,7 @@ function cleanupGhost() {
   cy.getElementById('__ghost__').remove();
 }
 
-/* Field handles: four "+" buttons around a selected entity. --------------- */
+/* Field handles: 4 "+" buttons around a selected entity. ---------------- */
 
 const HANDLE_SIDES = ['top', 'right', 'bottom', 'left'];
 
@@ -501,9 +497,9 @@ function nearestEntity(position) {
 }
 
 /* Renaming machine names re-ids the node and its dependent edges (the
-   cascade the immutable-id rule otherwise avoids). Ephemeral render-only
-   elements are dropped by Cytoscape when the old node goes and are rebuilt on
-   the next render, so only the persisted has/ref edges are migrated here. */
+   cascade the immutable-id rule otherwise avoids). Cytoscape drops
+   render-only elements with the old node and the next render rebuilds them,
+   so only the persisted has and ref edges are migrated. */
 
 function migrateField(field, newEntityId) {
   const name = field.data('name');
@@ -658,7 +654,7 @@ function deleteNode(id) {
   bump();
 }
 
-/* Builder controller (used by the Preact inspector forms) ----------------- */
+/* Builder controller ---------------------------------------------------- */
 
 function createEntity(form) {
   const bundle = slug(form.bundle);
@@ -666,8 +662,7 @@ function createEntity(form) {
     return;
   }
   const label = (form.label || '').trim() || bundle;
-  const id = addEntity(form.entityType, bundle, label, pendingPosition);
-  pendingPosition = null;
+  const id = addEntity(form.entityType, bundle, label);
   if (id) {
     selectNode(id);
     bump();
@@ -677,12 +672,10 @@ function createEntity(form) {
 function createField(entityId, form, side) {
   const name = slug(form.name);
   if (!entityId || !name) {
-    pendingPosition = null;
     return;
   }
   const label = (form.label || '').trim() || name;
-  const id = addField(entityId, name, label, form.fieldType, form.cardinality != null ? form.cardinality : 1, side, pendingPosition);
-  pendingPosition = null;
+  const id = addField(entityId, name, label, form.fieldType, form.cardinality != null ? form.cardinality : 1, side);
   if (id) {
     if (form.target) {
       addReference(id, form.target);

@@ -1,10 +1,8 @@
 /**
  * Shared UI store.
  *
- * A tiny observable that both the Preact UI layer and the imperative modules
- * (render.js, builder.js, app.js) read and write. Panel windowing, the
- * inspector target and dock widths all live here; the Preact roots subscribe
- * and re-render, while imperative callers just invoke the action functions.
+ * A tiny observable holding the panel windowing, the inspector target and
+ * the dock widths.
  */
 
 const listeners = new Set();
@@ -137,7 +135,8 @@ export function openTableFor(entityId) {
   emit({ tableFilter: entityId, panels: { ...state.panels, table: { ...state.panels.table, open: true, z: zCounter } } });
 }
 
-// Bump to force the data-driven panel bodies to re-read the graph after an edit.
+// The store holds no graph data, so this notifies subscribers of graph
+// changes.
 export function bump() {
   emit({ version: state.version + 1 });
 }
@@ -172,8 +171,7 @@ export function movePanel(id, left, top) {
 }
 
 export function pinPanel(id, side) {
-  // Clear any prior height so a freshly docked panel fills the sidebar; a manual
-  // resize sets a fixed height again, and other panels then share the space.
+  // Clear any prior height so a freshly docked panel fills the sidebar.
   patchPanel(id, { open: true, dock: side, height: null });
 }
 
@@ -197,8 +195,6 @@ export function setPanelHeight(id, height) {
   patchPanel(id, { height: Math.max(90, Math.min(900, Math.round(height))) });
 }
 
-// The panel layout persists to localStorage on every change; these let a saved
-// Nexus document carry its own layout so it round-trips with the project.
 export function exportLayout() {
   return layoutSnapshot();
 }

@@ -18,11 +18,10 @@
 }
 </script>
 <script type="module">
-  // Pin Shoelace's base path to an absolute URL before the autoloader runs.
-  // Left unset, it derives a document-relative path from this folder's own
-  // script src and builds a bare import specifier that never resolves, so no
-  // component upgrades. Deriving from document.baseURI keeps it correct whether
-  // the app is served from the domain root or a project subpath (GitHub Pages).
+  // Pin Shoelace's base path to an absolute URL before the autoloader runs,
+  // so it resolves at the domain root or a subpath (GitHub Pages).
+  // Left unset, it builds a bare import specifier from its script src that
+  // never resolves, so no component upgrades.
   import { setBasePath } from './assets/vendor/shoelace/utilities/base-path.js';
   setBasePath(new URL('assets/vendor/shoelace', document.baseURI).href);
 </script>

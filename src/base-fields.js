@@ -1,8 +1,7 @@
 /**
  * Curated Drupal base (system) fields per entity type.
  *
- * These are not present in exported field configuration, but the reference
- * diagrams show them as dashed "system field" nodes.
+ * These are not present in exported field configuration.
  */
 
 import { Field, KIND_SYSTEM } from './model.js';

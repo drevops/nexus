@@ -210,7 +210,6 @@ test('shows fields by default and collapses to an overview', async ({ page }) =>
   await page.click('#example-btn');
   await waitForGraph(page);
 
-  // Fields and machine names are shown by default.
   await expect(page.locator('#fields-toggle')).toHaveClass(/is-active/);
   await expect(page.locator('#machine-names')).toHaveClass(/is-active/);
   expect(await page.locator('#captions .caption').count()).toBeGreaterThan(0);
@@ -388,7 +387,6 @@ test('declutters references into faded proxies', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);
 
-  // Proxies are enabled by default.
   await expect(page.locator('#proxy-toggle')).toHaveClass(/is-active/);
   await expect(page.locator('#fields-toggle')).toHaveClass(/is-active/);
 
@@ -736,7 +734,6 @@ test('adds a field from an entity + handle, then renames it', async ({ page }) =
   await page.waitForFunction(() => window.__nexus.cy.nodes('[group="field"][entity="node.story"]').length === 1);
   await expect(page.locator('#inspector [data-new]')).toHaveCount(0);
 
-  // Renaming the machine name in the inspector re-ids the field.
   await slFill(page, '#inspector sl-input[data-machine-name]', 'field_summary');
 
   expect(await page.evaluate(() => window.__nexus.cy.getElementById('field:node.story:field_summary').length)).toBe(1);
@@ -1520,7 +1517,6 @@ test('keeps about, settings, theme and github on the brand line', async ({ page 
   await expect(page.locator('.toolbar__tools #settings-toggle')).toHaveCount(0);
   await expect(page.locator('#settings-toggle')).toHaveText('');
 
-  // About sits before the GitHub link in the brand line.
   const order = await page.evaluate(() => [...document.querySelectorAll('.toolbar__brandline [id]')].map((el) => el.id));
   expect(order.indexOf('about-toggle')).toBeLessThan(order.indexOf('github-link'));
 });
@@ -1576,11 +1572,9 @@ test('changes a type symbol and adds a custom entity type in settings', async ({
   await waitForGraph(page);
   await page.click('#settings-toggle');
 
-  // Change the content-type symbol to a diamond and see the node reshape.
   await slSelect(page, '#settings sl-select[data-symbol="node"]', 'diamond');
   await expect.poll(() => page.evaluate(() => window.__nexus.cy.nodes('[group="entity"][entityType="node"]').first().style('shape'))).toBe('diamond');
 
-  // Add a custom type; it becomes a settings row.
   await page.fill('#settings [data-new-type]', 'widget');
   await page.click('#settings [data-add-type]');
   await expect(page.locator('#settings [data-type-row="widget"]')).toHaveCount(1);

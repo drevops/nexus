@@ -1,6 +1,6 @@
 /**
- * Minimal static file server for local dev and e2e tests. Serves the repo root
- * over HTTP (ES modules do not load over file://). No dependencies.
+ * Minimal, dependency-free static file server for local dev and e2e tests.
+ * Serves the repo root over HTTP (ES modules do not load over file://).
  */
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';

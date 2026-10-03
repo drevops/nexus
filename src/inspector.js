@@ -1,13 +1,14 @@
 /**
  * Build-mode inspector, as Preact components over Shoelace controls.
  *
- * Inputs are sl-input, selects are sl-select, the required flag is an sl-switch
- * and references are sl-tags - all theming with light/dark automatically. Edits
- * write straight through to the live Cytoscape node; structural changes go
- * through the builder controller on the store. The new-field "machine name"
- * stays a native input because it needs a datalist for the reuse autocomplete,
- * which Shoelace 2.x has no equivalent for. A few data-* hooks remain so tests
- * and scripts can target controls by intent.
+ * Shoelace controls follow the light and dark themes automatically. Edits
+ * are written straight to the live Cytoscape node; structural changes go
+ * through the builder controller on the store.
+ *
+ * The new-field "machine name" stays a native input because it needs a
+ * datalist for the reuse autocomplete, which Shoelace 2.x has no equivalent
+ * for. The data-* attributes give tests and scripts hooks to target controls
+ * by intent.
  */
 
 import { h } from 'preact';

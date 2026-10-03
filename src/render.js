@@ -4,8 +4,9 @@
  * render(model) draws the { meta, nodes, edges } model produced by the parser
  * with Cytoscape.js, mapping each element to the diagram's visual language.
  * Fields collapse to an entity-only overview by default; the toolbar reveals
- * detail, filters, an entity index, a field table and colour settings. Safe to
- * call repeatedly - each call tears down the previous graph.
+ * detail, filters, an entity index, a field table and colour settings.
+ *
+ * Safe to call repeatedly - each call tears down the previous graph.
  */
 
 import { setController, bump, closeInspector } from './store.js';
@@ -108,7 +109,6 @@ function initColors() {
   });
 }
 
-// Fixed Drupal types plus any custom types the user has defined in settings.
 function customTypes() {
   return Array.isArray(settings.customTypes) ? settings.customTypes : [];
 }
@@ -121,7 +121,6 @@ function entityShape(entityType) {
   return (SYMBOLS[activeSymbols[entityType]] || SYMBOLS.rounded).shape;
 }
 
-// An inline SVG preview of a symbol filled with a colour, for the legend/settings.
 function symbolSvg(key, color, size) {
   const w = size || 26;
   const h = Math.round(w * 0.72);
@@ -326,9 +325,8 @@ function buildElements(model) {
     }
     (refsByField[e.data.source] = refsByField[e.data.source] || []).push(e.data.target);
 
-    // A proxy is a semi-opaque stand-in for the target entity placed beside the
-    // referencing field, so a distant reference reads as a short local hop
-    // instead of a long edge across the graph.
+    // A proxy is a semi-opaque stand-in for the target entity placed beside
+    // the referencing field, so a distant reference gets a short edge.
     const field = fieldById[e.data.source];
     const target = entityById[e.data.target];
     const proxyId = 'proxy:' + e.data.source + '>' + e.data.target;
@@ -399,9 +397,9 @@ function style() {
         'background-color': (ele) => entityColor(ele.data('entityType')),
         'border-color': tc.nodeBorder,
         'border-width': 1.5,
-        // A blank second line reserves in-box space for the type caption, which
-        // is drawn over it by positionCaptions (Cytoscape labels take a single
-        // style, so the differently-styled type cannot live in the label).
+        // A blank second line reserves in-box space for the type caption that
+        // positionCaptions() draws over it. Cytoscape labels take a single
+        // style, so the label cannot hold the differently styled type.
         label: (ele) => ele.data('label') + '\n ',
         'text-wrap': 'wrap',
         'text-max-width': 160,
@@ -807,9 +805,9 @@ function buildController(model, options = {}) {
     return '';
   }
 
-  // Under each node: the entity type (always, de-emphasised) then, when the
-  // toggle is on, the machine name. Cytoscape labels take a single style, so the
-  // differently-styled type line lives here in the HTML caption layer.
+  // Under each node: the entity type (always, de-emphasised) then, when
+  // showMachineNames is set, the machine name. Cytoscape labels take a single
+  // style, so the differently styled type line is in the HTML caption layer.
   function captionLinesFor(node) {
     const lines = [];
     if (node.data('group') === 'entity') {
@@ -875,8 +873,7 @@ function buildController(model, options = {}) {
   function positionCaptions() {
     const zoom = cy.zoom();
     // Scale the type with the zoom so captions grow and shrink with the canvas
-    // (Cytoscape's own node labels are 12px in model space); a flat clamp made
-    // them look pinned at high zoom.
+    // (Cytoscape's own node labels are 12px in model space).
     const size = CAPTION_SIZE * zoom;
     Object.keys(captionMap).forEach((id) => {
       const node = cy.getElementById(id);
@@ -889,7 +886,7 @@ function buildController(model, options = {}) {
       }
       const pos = node.renderedPosition();
       const stack = captionStack(node);
-      // Machine-name lines stack just below the node; the entity type sits over
+      // Machine-name lines stack just below the node. The entity type sits over
       // the reserved blank line inside the box, so it reads as a sub-label.
       let below = stack.top;
       divs.forEach((div) => {
@@ -1074,7 +1071,6 @@ function buildController(model, options = {}) {
     }
     matches.union(matches.closedNeighborhood().closedNeighborhood()).removeClass('faded');
 
-    // Move to the match at 100% zoom.
     cy.animate({ center: { eles: matches }, zoom: 1 }, { duration: 350 });
   }
 
@@ -1216,8 +1212,6 @@ function buildController(model, options = {}) {
   };
   setController(controller);
 
-  // Reset the toolbar view state for this render; the panel layout persists
-  // across renders and sessions, so it is deliberately left untouched here.
   $('fields-toggle').classList.add('is-active');
   $('proxy-toggle').classList.add('is-active');
   $('layout-toggle').querySelector('.layout-label').textContent = 'Layout: LR';
