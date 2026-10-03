@@ -35,7 +35,7 @@ function downloadText(text, filename, type) {
 function recordsToCsv(records, typeLabel) {
   const esc = (value) => {
     const s = String(value == null ? '' : value);
-    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
   };
   const headers = ['Entity', 'Entity type', 'Field', 'Machine name', 'Field type', 'Cardinality', 'Required', 'References'];
   const rows = records.map((r) =>

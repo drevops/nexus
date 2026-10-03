@@ -1479,6 +1479,29 @@ test('exports the fields table as CSV', async ({ page }) => {
   expect(lines.some((l) => l.startsWith('Episode,Content type,'))).toBe(true);
 });
 
+test('quotes CSV cells that hold a comma, a quote or a line break', async ({ page }) => {
+  const labels = ['Comma, label', 'Quote "label"', 'Line\nfeed', 'Carriage\rreturn'];
+  await openDocument(page, {
+    nexus: 1,
+    title: 'Special characters',
+    entities: [
+      {
+        entityType: 'node',
+        bundle: 'article',
+        label: 'Article',
+        fields: labels.map((label, i) => ({ name: 'field_' + i, label: label, fieldType: 'string', kind: 'single' })),
+      },
+    ],
+  });
+
+  const [download] = await Promise.all([page.waitForEvent('download'), page.click('#export-csv')]);
+  const csv = readFileSync(await download.path(), 'utf8');
+
+  for (const cell of ['"Comma, label"', '"Quote ""label"""', '"Line\nfeed"', '"Carriage\rreturn"']) {
+    expect(csv).toContain(',' + cell + ',');
+  }
+});
+
 test('wraps field types and machine names in the fields table only after an underscore', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);
