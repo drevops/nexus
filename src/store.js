@@ -110,8 +110,8 @@ export function subscribe(fn) {
   return () => listeners.delete(fn);
 }
 
-export function setController(ctx) {
-  controller = ctx;
+export function setController(value) {
+  controller = value;
 }
 
 export function getController() {

@@ -5,8 +5,10 @@
  * caller), keeping this module pure and dependency-free.
  */
 
-import { ContentModel, Entity, Field, KIND_SINGLE, KIND_MULTI } from './model.js';
+import { ContentModel, Entity, Field, REFERENCE_FIELD_TYPES, kindForCardinality, entityNodeId } from './model.js';
 import { baseFieldsForEntityType } from './base-fields.js';
+import { ENTITY_TYPE_ORDER } from './entity-types.js';
+import { humanize } from './names.js';
 
 const BUNDLE_PREFIXES = {
   'node.type.': 'node',
@@ -15,10 +17,6 @@ const BUNDLE_PREFIXES = {
   'paragraphs.paragraphs_type.': 'paragraph',
   'block_content.type.': 'block_content',
 };
-
-const REFERENCE_TYPES = ['entity_reference', 'entity_reference_revisions'];
-
-const ENTITY_TYPE_ORDER = ['node', 'taxonomy_term', 'media', 'paragraph', 'block_content', 'user', 'external'];
 
 export function parseConfig(files, options = {}) {
   if (!files || typeof files !== 'object') {
@@ -113,7 +111,7 @@ function addFieldInstance(model, data, storages) {
     return;
   }
 
-  const entityId = entityType + '.' + bundle;
+  const entityId = entityNodeId(entityType, bundle);
   let entity = model.getEntity(entityId);
 
   if (!entity) {
@@ -128,8 +126,8 @@ function addFieldInstance(model, data, storages) {
   };
 
   const fieldType = data.field_type != null ? String(data.field_type) : storage.type;
-  const isReference = REFERENCE_TYPES.includes(fieldType);
-  const kind = storage.cardinality === 1 ? KIND_SINGLE : KIND_MULTI;
+  const isReference = REFERENCE_FIELD_TYPES.includes(fieldType);
+  const kind = kindForCardinality(storage.cardinality);
   const label = data.label != null ? String(data.label) : fieldName;
   const required = Boolean(data.required);
   const targetType = isReference ? storage.targetType : null;
@@ -161,7 +159,7 @@ function resolveTargets(model) {
       const bundles = fieldItem.targetBundles.length === 0 ? ['*'] : fieldItem.targetBundles;
 
       for (const bundle of bundles) {
-        const id = targetType + '.' + bundle;
+        const id = entityNodeId(targetType, bundle);
 
         if (model.hasEntity(id)) {
           continue;
@@ -218,12 +216,6 @@ function typeRank(entityType) {
 
 function compare(a, b) {
   return a < b ? -1 : a > b ? 1 : 0;
-}
-
-function humanize(machineName) {
-  return String(machineName)
-    .replace(/[_.]/g, ' ')
-    .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function isObject(value) {

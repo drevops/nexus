@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ContentModel, Entity, KIND_CALCULATED } from '../../src/model.js';
-import { applyAnnotations } from '../../src/annotations.js';
+import { ANNOTATION_KINDS, applyAnnotations } from '../../src/annotations.js';
 
 const OVERLAY = {
   title: 'Annotated model',
@@ -56,6 +56,34 @@ test('adds calculated fields to existing entities', () => {
   assert.equal(computed.length, 1);
   assert.equal(computed[0].name, 'computed_url');
 });
+
+test('labels the event, API and callback annotation kinds', () => {
+  assert.deepEqual(ANNOTATION_KINDS, [
+    { kind: 'event', label: 'Event' },
+    { kind: 'api', label: 'API' },
+    { kind: 'callback', label: 'Callback' },
+  ]);
+});
+
+test('keeps every annotation kind and turns any other kind into an event', async (t) => {
+  for (const [name, kind, expected] of dataProviderAnnotationKind()) {
+    await t.test(name, () => {
+      const m = model();
+      applyAnnotations(m, { nodes: [{ id: 'note', kind: kind }] });
+
+      assert.equal(nodesById(m.toArray()).note.kind, expected);
+    });
+  }
+});
+
+function dataProviderAnnotationKind() {
+  return [
+    ...ANNOTATION_KINDS.map((entry) => ['the ' + entry.label + ' kind', entry.kind, entry.kind]),
+    ['an unknown kind', 'webhook', 'event'],
+    ['a missing kind', undefined, 'event'],
+    ['an inherited object property', 'constructor', 'event'],
+  ];
+}
 
 test('ignores non-object overlays', () => {
   const m = model();

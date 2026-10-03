@@ -9,20 +9,17 @@
 import { parseConfig } from './parser.js';
 import { applyAnnotations } from './annotations.js';
 import { render } from './render.js';
-import { exportPng, exportSvg } from './export.js';
+import { exportPng, exportSvg, exportCsv, exportDocument } from './export.js';
 import { documentFromGraph, documentToModel } from './document.js';
 import { initBuilder, attachBuilder } from './builder.js';
 import { initUI } from './ui.js';
 import { initIcons, icon } from './icons.js';
 import { VERSION } from './version.js';
-import { cardinalityLabel } from './model.js';
+import { DEFAULT_TITLE } from './model.js';
 import { exportLayout, importLayout, getController } from './store.js';
+import { $ } from './dom.js';
 
 const EXAMPLE_BASE = 'examples/example/';
-
-function $(id) {
-  return document.getElementById(id);
-}
 
 function basename(path) {
   const parts = String(path).split('/');
@@ -53,9 +50,9 @@ function hideLoader() {
 }
 
 function showDiagram(modelData, options) {
-  render(modelData, options || {});
-  attachBuilder(window.__nexus.cy);
-  const title = (modelData.meta && modelData.meta.title) || 'Content model';
+  const controller = render(modelData, options || {});
+  attachBuilder(controller.cy);
+  const title = (modelData.meta && modelData.meta.title) || DEFAULT_TITLE;
   $('diagram-title').value = title;
   document.title = title + ' - Nexus';
   $('landing').hidden = true;
@@ -233,99 +230,52 @@ function wireLanding() {
 // Cancel returns to a loaded diagram, so it stays hidden until one exists.
 function showLanding() {
   showError('');
-  $('landing-cancel').hidden = !window.__nexus;
+  $('landing-cancel').hidden = !getController();
   $('landing').hidden = false;
 }
 
 function wireExports() {
   $('export-png').addEventListener('click', () => {
-    if (window.__nexus) {
-      exportPng(window.__nexus.cy, $('diagram-title').value);
+    const controller = getController();
+
+    if (controller) {
+      exportPng(controller.cy, $('diagram-title').value);
     }
   });
   $('export-svg').addEventListener('click', () => {
-    if (window.__nexus) {
-      exportSvg(window.__nexus.cy, $('diagram-title').value);
+    const controller = getController();
+
+    if (controller) {
+      exportSvg(controller.cy, $('diagram-title').value);
     }
   });
   $('export-csv').addEventListener('click', () => {
-    const ctrl = getController();
-    if (ctrl) {
-      downloadText(recordsToCsv(ctrl.records(), ctrl.typeLabel), slug($('diagram-title').value) + '-fields.csv', 'text/csv');
+    const controller = getController();
+
+    if (controller) {
+      exportCsv(controller.records(), controller.typeLabel, $('diagram-title').value);
     }
   });
 }
 
-function downloadText(text, filename, type) {
-  const blob = new Blob([text], { type: type });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-}
-
-function recordsToCsv(records, typeLabel) {
-  const esc = (value) => {
-    const s = String(value == null ? '' : value);
-    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
-  };
-  const headers = ['Entity', 'Entity type', 'Field', 'Machine name', 'Field type', 'Cardinality', 'Required', 'References'];
-  const rows = records.map((r) =>
-    [
-      r.entity,
-      typeLabel(r.entityType),
-      r.field,
-      r.name,
-      r.type,
-      cardinalityLabel(r.cardinality),
-      r.required ? 'yes' : 'no',
-      r.refs.map((x) => x.label).join('; '),
-    ]
-      .map(esc)
-      .join(','),
-  );
-  return [headers.join(','), ...rows].join('\r\n');
-}
-
-function downloadJson(data, filename) {
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-}
-
-function slug(text) {
-  return (
-    String(text)
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '') || 'content-model'
-  );
-}
-
 function saveDocument() {
-  if (!window.__nexus) {
+  const controller = getController();
+
+  if (!controller) {
     return;
   }
-  const title = $('diagram-title').value || 'Content model';
-  const types = getController() ? getController().typeSettings() : { colors: window.__nexus.colors || {} };
-  const doc = documentFromGraph(window.__nexus.cy, {
+
+  const title = $('diagram-title').value || DEFAULT_TITLE;
+  const types = controller.typeSettings();
+  const doc = documentFromGraph(controller.cy, {
     title: title,
     colors: types.colors,
     symbols: types.symbols,
     customTypes: types.customTypes,
     ui: exportLayout(),
   });
-  downloadJson(doc, slug(title) + '.nexus.json');
+
+  exportDocument(doc, title);
 }
 
 async function openDocument(file) {
@@ -367,14 +317,19 @@ function wireDocument() {
 function applyTheme(dark) {
   document.documentElement.classList.toggle('sl-theme-dark', dark);
   const btn = $('theme-toggle');
+
   if (btn) {
     btn.innerHTML = icon(dark ? 'sun' : 'moon');
     // SlButton does not reflect its title property, so set the attribute.
     btn.setAttribute('title', dark ? 'Switch to light theme' : 'Switch to dark theme');
   }
-  if (window.__nexus && window.__nexus.applyTheme) {
-    window.__nexus.applyTheme();
+
+  const controller = getController();
+
+  if (controller) {
+    controller.applyTheme();
   }
+
   try {
     window.localStorage.setItem('nexusTheme', dark ? 'dark' : 'light');
   } catch {

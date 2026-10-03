@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseConfig } from '../../src/parser.js';
+import { ENTITY_TYPE_ORDER } from '../../src/entity-types.js';
 import { configMin } from '../fixtures/config-min.js';
 
 function field(entity, name) {
@@ -74,6 +75,26 @@ test('base fields can be disabled', () => {
 
   assert.deepEqual(names, ['field_image', 'field_sections', 'field_summary', 'field_tags']);
 });
+
+test('keeps fields on every built-in entity type and skips fields on any other type', async (t) => {
+  for (const [name, entityType, kept] of dataProviderFieldEntityType()) {
+    await t.test(name, () => {
+      const filename = 'field.field.' + entityType + '.thing.field_note.yml';
+      const config = { [filename]: { entity_type: entityType, bundle: 'thing', field_name: 'field_note', field_type: 'string' } };
+      const entity = parseConfig(config, { includeBaseFields: false }).getEntity(entityType + '.thing');
+
+      assert.deepEqual(entity ? entity.fields.map((f) => f.name) : null, kept ? ['field_note'] : null);
+    });
+  }
+});
+
+function dataProviderFieldEntityType() {
+  return [
+    ...ENTITY_TYPE_ORDER.map((entityType) => ['a field on ' + entityType, entityType, true]),
+    ['a field on a comment', 'comment', false],
+    ['a field on an inherited object property', 'constructor', false],
+  ];
+}
 
 test('produces deterministic output', () => {
   assert.deepEqual(parseConfig(configMin).toArray(), parseConfig(configMin).toArray());
