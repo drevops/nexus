@@ -4,7 +4,7 @@ Thank you for considering a contribution to Nexus. This guide covers setting up 
 
 ## Local setup
 
-Nexus has no build step: it's static ES modules plus vendored libraries under `assets/vendor/`. Browsers won't load ES modules over `file://`, so run the bundled dev server and open http://127.0.0.1:8000:
+Nexus has no build step: it's static ES modules in `src/` plus vendored libraries under `assets/vendor/`. Browsers won't load ES modules over `file://`, so run the bundled dev server and open http://127.0.0.1:8000:
 
     npm install
     npm start
@@ -22,9 +22,15 @@ Nexus has no build step: it's static ES modules plus vendored libraries under `a
 
 ## How the code is organized
 
-- `assets/{parser,model,base-fields,annotations}.js` - the offline model builder (pure, dependency-free).
-- `assets/render.js` - the Cytoscape renderer.
-- `assets/{app,export}.js` - folder loading and PNG/SVG/CSV export.
+The app's own code lives in `src/`. The third-party builds it loads live in `assets/vendor/`. Don't edit those.
+
+- `src/{parser,model,base-fields,annotations,document}.js` - the offline model builder and the saved `.nexus.json` format (pure, dependency-free).
+- `src/render.js` - the Cytoscape renderer.
+- `src/{builder,inspector,ui,store}.js` - edit mode, the Preact panels and the state they share.
+- `src/{app,export}.js` - folder loading and PNG/SVG/CSV export.
+- `src/icons.js` - inline SVG icons.
+- `src/version.js` - the version string, `dev` until a release stamps it.
+- `src/styles.css` - the page's styles.
 
 ## Previews on Netlify
 
@@ -48,4 +54,4 @@ Without the variable the job is skipped, and without the token its deploy step i
 
 ## Releasing
 
-Every push to `main` updates a draft release that lists the pull requests merged since the last one. Publishing that draft creates its tag and triggers `.github/workflows/release.yml`, which assembles `index.html`, `assets/` and `examples/` with `npm run assemble`, stamps the release tag as the app version and deploys the site to GitHub Pages. Pushes to `main` never touch GitHub Pages: they run the tests and update the Netlify project's main address. Pages needs enabling once, with "GitHub Actions" as the source.
+Every push to `main` updates a draft release that lists the pull requests merged since the last one. Publishing that draft creates its tag and triggers `.github/workflows/release.yml`, which assembles `index.html`, `src/`, `assets/` and `examples/` with `npm run assemble`, stamps the release tag as the app version and deploys the site to GitHub Pages. Pushes to `main` never touch GitHub Pages: they run the tests and update the Netlify project's main address. Pages needs enabling once, with "GitHub Actions" as the source.

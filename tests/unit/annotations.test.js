@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ContentModel, Entity, KIND_CALCULATED } from '../../assets/model.js';
-import { applyAnnotations } from '../../assets/annotations.js';
+import { ContentModel, Entity, KIND_CALCULATED } from '../../src/model.js';
+import { applyAnnotations } from '../../src/annotations.js';
 
 const OVERLAY = {
   title: 'Annotated model',

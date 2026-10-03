@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { documentToModel } from '../../assets/document.js';
+import { documentToModel } from '../../src/document.js';
 
 const DOC = {
   nexus: 1,

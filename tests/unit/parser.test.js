@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseConfig } from '../../assets/parser.js';
+import { parseConfig } from '../../src/parser.js';
 import { configMin } from '../fixtures/config-min.js';
 
 function field(entity, name) {
