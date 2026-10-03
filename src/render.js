@@ -1,10 +1,17 @@
 /**
  * Nexus diagram renderer.
  *
- * render(model) draws the { meta, nodes, edges } model produced by the parser
- * with Cytoscape.js, mapping each element to the diagram's visual language.
- * Fields collapse to an entity-only overview by default; the toolbar reveals
- * detail, filters, an entity index, a field table and colour settings.
+ * render(model) draws a { meta, nodes, edges } model with Cytoscape.js,
+ * mapping each element to the diagram's visual language. The model has the
+ * shape that ContentModel.toArray() returns.
+ *
+ * Each render shows fields, proxies and machine names, and the toolbar
+ * toggles each of them. Hiding fields collapses the diagram to an
+ * entity-only overview.
+ *
+ * The controller that render() returns sets entity type colours and symbols
+ * and adds or removes custom entity types, saving each change to
+ * localStorage.
  *
  * Safe to call repeatedly - each call tears down the previous graph.
  */

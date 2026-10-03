@@ -3,8 +3,11 @@
  *
  * Adds entities, fields, references and annotation nodes to the live Cytoscape
  * graph, edits them through the Preact inspector, deletes them and drags them
- * around. Machine names and entity types are immutable after creation (as in
- * Drupal), so element ids never change and there is no cascade to manage.
+ * around.
+ *
+ * An entity's type is fixed after creation, while bundle and field machine
+ * names can be renamed. Graph ids contain machine names, so a rename re-ids
+ * the node along with its fields and edges.
  *
  * The graph is the source of truth. This module holds the graph mutations and
  * the on-canvas controls: drag-to-connect and the 4 "+" field handles.
@@ -500,10 +503,9 @@ function nearestEntity(position) {
   return best;
 }
 
-/* Renaming machine names re-ids the node and its dependent edges (the
-   cascade the immutable-id rule otherwise avoids). Cytoscape drops
-   render-only elements with the old node and the next render rebuilds them,
-   so only the persisted has, ref and annotation edges are migrated. */
+/* Renaming machine names re-ids the node and its dependent edges. Cytoscape
+   drops render-only elements with the old node and the next render rebuilds
+   them, so only the persisted has, ref and annotation edges are migrated. */
 
 function moveAnnotationEdges(oldId, newId) {
   const edges = cy.getElementById(oldId).connectedEdges('[group="annotation"]');
