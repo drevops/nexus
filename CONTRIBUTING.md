@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for considering a contribution to Nexus. This guide covers setting up a local environment, running the linting and tests, previewing a pull request on Netlify, and how a release reaches GitHub Pages.
+Thank you for considering a contribution to Nexus. This guide covers setting up a local environment, running the linting and tests, previewing a pull request on Netlify, how a release reaches GitHub Pages, and pulling in updates from the project template.
 
 ## Local setup
 
@@ -8,6 +8,8 @@ Nexus has no build step: it's static ES modules in `src/` plus vendored librarie
 
     npm install
     npm start
+
+Set `PORT` to serve on another port, for example `PORT=8001 npm start`.
 
 ## Linting and tests
 
@@ -17,7 +19,7 @@ Nexus has no build step: it's static ES modules in `src/` plus vendored librarie
 `npm run lint` checks the code with ESLint and Prettier, and `npm run lint-fix` fixes what it can. `npm run test` runs both suites, which you can also run on their own:
 
 - `npm run test-unit` - Node's built-in test runner over the pure model modules (the parser, model, annotations and document), plus checks that `npm run assemble` ships every file the app loads and that the page's Nexus mark matches `logo.svg`.
-- `npm run test-e2e` - Playwright drives the app end to end: upload, render and export. It needs its browser installed once with `npx playwright install chromium`.
+- `npm run test-e2e` - Playwright drives the app end to end in Chromium: importing, rendering, editing, saving and exporting. It needs its browser installed once with `npx playwright install chromium`. The suite starts the dev server on port 8000, or reuses one already listening there - so if another checkout is serving that port, stop it first or the tests run against that checkout's code.
 - `npm run test-coverage` - the unit tests with c8 coverage, written to `.logs/`.
 
 ## How the code is organized
@@ -27,7 +29,7 @@ The app's own code lives in `src/`. The third-party builds it loads live in `ass
 - `src/{parser,model,base-fields,annotations,document}.js` - the offline model builder and the saved `.nexus.json` format (pure, dependency-free).
 - `src/render.js` - the Cytoscape renderer.
 - `src/{builder,inspector,ui,store}.js` - edit mode, the Preact panels and the state they share.
-- `src/{app,export}.js` - folder loading and PNG/SVG/CSV export.
+- `src/{app,export}.js` - the entry point (folder loading, saved documents, the theme and the status bar) and PNG/SVG/CSV export.
 - `src/icons.js` - inline SVG icons, including the Nexus mark.
 - `src/version.js` - the version string, `dev` until a release stamps it.
 - `src/styles.css` - the page's styles.
@@ -57,3 +59,7 @@ Without the variable the job is skipped, and without the token its deploy step i
 ## Releasing
 
 Every push to `main` updates a draft release that lists the pull requests merged since the last one. Publishing that draft creates its tag and triggers `.github/workflows/release.yml`, which assembles `index.html`, `src/`, `assets/` and `examples/` with `npm run assemble`, stamps the release tag as the app version and deploys the site to GitHub Pages. Pushes to `main` never touch GitHub Pages: they run the tests and update the Netlify project's main address. Pages needs enabling once, with "GitHub Actions" as the source.
+
+## Updating from the template
+
+Nexus was created from the [Scaffold](https://getscaffold.dev/) project template. To pull the template's latest infrastructure into this project, ask Claude Code to "update scaffold" - see [`AGENTS.md`](AGENTS.md) for details.
