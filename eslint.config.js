@@ -7,7 +7,7 @@ export default [
     ignores: ['assets/vendor/**', 'node_modules/**', '.logs/**', 'playwright-report/**', 'test-results/**', '_site/**'],
   },
   {
-    files: ['assets/**/*.js'],
+    files: ['src/**/*.js'],
     ...js.configs.recommended,
     languageOptions: {
       ecmaVersion: 2022,

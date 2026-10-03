@@ -38,7 +38,7 @@ jobs:
       - name: Stamp the release version
         env:
           RELEASE_VERSION: ${{ github.event.release.tag_name || 'dev' }}
-        run: echo "export const VERSION = '${RELEASE_VERSION}';" > _site/assets/version.js
+        run: echo "export const VERSION = '${RELEASE_VERSION}';" > _site/src/version.js
 
       - name: Configure Pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6

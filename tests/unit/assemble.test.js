@@ -33,7 +33,7 @@ before(() => {
 test('ships every file index.html loads', () => {
   const refs = localReferences(readFileSync(join(SITE, 'index.html'), 'utf8'));
 
-  assert.ok(refs.includes('assets/app.js'));
+  assert.ok(refs.includes('src/app.js'));
   assert.ok(refs.includes('./assets/vendor/preact.module.js'));
 
   const pending = refs.map((ref) => join(SITE, ref));
@@ -54,7 +54,7 @@ test('ships every file index.html loads', () => {
     }
   }
 
-  assert.ok(shipped.has(join(SITE, 'assets', 'parser.js')));
+  assert.ok(shipped.has(join(SITE, 'src', 'parser.js')));
 });
 
 test('ships the bundled example', () => {

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ContentModel, Entity, Field, KIND_SINGLE, KIND_MULTI, identifierSegments, fitFontSize } from '../../assets/model.js';
+import { ContentModel, Entity, Field, KIND_SINGLE, KIND_MULTI, identifierSegments, fitFontSize } from '../../src/model.js';
 
 function edgesByGroup(data, group) {
   return data.edges.filter((edge) => (edge.data.group || '') === group);
