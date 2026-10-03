@@ -18,10 +18,11 @@ on:
         required: false
         default: false
 
-# Runs queue per event and pull request or ref, so pushes to main deploy in
-# order. A new push to a pull request cancels its superseded run instead.
+# A new push to a pull request cancels its superseded run. Pushes and manual
+# runs on a branch share 1 queue, so the newest commit deploys last. Scheduled
+# runs get their own group, so they never replace a queued deploy.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || (github.event_name == 'schedule' && 'schedule') || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:

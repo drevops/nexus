@@ -35,7 +35,7 @@ Once the repository settings below are in place, every pull request from a branc
 
 Scheduled runs never deploy. Pull requests from forks don't either, because GitHub doesn't pass repository secrets to them. A manual run from the Actions tab does deploy: from `main` to the main address, and from any other branch to a one-off draft address that the job prints in its log. To see exactly what gets published, run `npm run assemble` and look in `_site/`.
 
-A new push to a pull request cancels the run it replaces, so an older build can't overwrite a newer preview. Runs for pushes to `main` wait for each other instead, so the newest push always deploys last.
+A new push to a pull request cancels the run it replaces, so an older build can't overwrite a newer preview. Pushes and manual runs on `main` wait for each other instead, so the newest commit always deploys last.
 
 The job needs 2 repository settings, under **Settings → Secrets and variables → Actions**:
 
