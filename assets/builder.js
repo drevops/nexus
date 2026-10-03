@@ -427,11 +427,12 @@ function positionHandles() {
   const pos = node.renderedPosition();
   const halfW = node.renderedOuterWidth() / 2;
   const halfH = node.renderedOuterHeight() / 2;
+  const bottom = getController().renderedBottom(handleEntityId);
   const gap = 15;
   const place = {
     top: [pos.x, pos.y - halfH - gap],
     right: [pos.x + halfW + gap, pos.y],
-    bottom: [pos.x, pos.y + halfH + gap],
+    bottom: [pos.x, bottom + gap],
     left: [pos.x - halfW - gap, pos.y],
   };
   Array.prototype.forEach.call(overlay.children, (btn) => {

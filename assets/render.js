@@ -66,6 +66,8 @@ const LAYOUT_SPACING = {
   overview: { nodeSep: 34, rankSep: 120 },
 };
 
+const CAPTION_SIZE = 10;
+
 let settings = loadSettings();
 const activeColors = {};
 const activeSymbols = {};
@@ -841,39 +843,68 @@ function buildController(model, options = {}) {
     positionCaptions();
   }
 
+  // Below 35% zoom the captions are too small to read.
+  function captionsShown(node) {
+    return node.nonempty() && !node.hasClass('hidden') && !node.hasClass('faded') && cy.zoom() >= 0.35;
+  }
+
+  // Rendered y of a node's box bottom and of the top of the first
+  // machine-name line below it. Each line below takes 1 step.
+  function captionStack(node) {
+    const zoom = cy.zoom();
+    const boxBottom = node.renderedPosition('y') + node.renderedOuterHeight() / 2;
+    return { boxBottom: boxBottom, top: boxBottom + 3 * zoom, step: (CAPTION_SIZE + 2) * zoom };
+  }
+
   function positionCaptions() {
     const zoom = cy.zoom();
-    const tooSmall = zoom < 0.35;
     // Scale the type with the zoom so captions grow and shrink with the canvas
     // (Cytoscape's own node labels are 12px in model space); a flat clamp made
     // them look pinned at high zoom.
-    const size = 10 * zoom;
+    const size = CAPTION_SIZE * zoom;
     Object.keys(captionMap).forEach((id) => {
       const node = cy.getElementById(id);
       const divs = captionMap[id];
-      if (node.empty() || node.hasClass('hidden') || node.hasClass('faded') || tooSmall) {
+      if (!captionsShown(node)) {
         divs.forEach((div) => {
           div.style.display = 'none';
         });
         return;
       }
       const pos = node.renderedPosition();
-      const halfH = node.renderedOuterHeight() / 2;
+      const stack = captionStack(node);
       // Machine-name lines stack just below the node; the entity type sits over
       // the reserved blank line inside the box, so it reads as a sub-label.
-      let below = pos.y + halfH + 3 * zoom;
+      let below = stack.top;
       divs.forEach((div) => {
         div.style.display = 'block';
         div.style.left = pos.x + 'px';
         div.style.fontSize = size + 'px';
         if (div.classList.contains('caption--type')) {
-          div.style.top = pos.y + halfH - size - 5 * zoom + 'px';
+          div.style.top = stack.boxBottom - size - 5 * zoom + 'px';
         } else {
           div.style.top = below + 'px';
-          below += size + 2 * zoom;
+          below += stack.step;
         }
       });
     });
+  }
+
+  // Rendered y of the lowest edge drawn for a node: the bottom of its box, or
+  // of the last machine-name line shown below it. Null for an unknown id.
+  function renderedBottom(id) {
+    const node = cy.getElementById(id);
+    if (node.empty()) {
+      return null;
+    }
+
+    const stack = captionStack(node);
+    const lines = (captionMap[id] || []).filter((div) => !div.classList.contains('caption--type')).length;
+    if (!lines || !captionsShown(node)) {
+      return stack.boxBottom;
+    }
+
+    return stack.top + lines * stack.step;
   }
 
   // A note badge sits at an entity's top-right corner; hovering or clicking it
@@ -1081,6 +1112,7 @@ function buildController(model, options = {}) {
     focusField,
     rebuildCaptions,
     rebuildNotes,
+    renderedBottom,
     searchHighlight,
     applyColor,
     applySymbol,
