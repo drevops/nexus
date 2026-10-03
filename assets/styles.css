@@ -851,8 +851,8 @@ sl-button#zoom-level::part(base) {
 }
 
 .badge--multi {
-  border-color: #3d444d;
-  color: #3d444d;
+  border-color: var(--sl-color-neutral-700);
+  color: var(--sl-color-neutral-700);
 }
 
 .badge--system {

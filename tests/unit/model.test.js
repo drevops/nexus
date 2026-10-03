@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ContentModel, Entity, Field, KIND_SINGLE, KIND_MULTI } from '../../assets/model.js';
+import { ContentModel, Entity, Field, KIND_SINGLE, KIND_MULTI, identifierSegments, fitFontSize } from '../../assets/model.js';
 
 function edgesByGroup(data, group) {
   return data.edges.filter((edge) => (edge.data.group || '') === group);
@@ -61,3 +61,62 @@ test('bounded cardinality uses a "1..N" reference label', () => {
   const ref = edgesByGroup(model.toArray(), 'ref')[0];
   assert.equal(ref.data.cardinality, '1..3');
 });
+
+test('splits an identifier after each underscore run between 2 words', async (t) => {
+  for (const [name, value, expected] of dataProviderIdentifierSegments()) {
+    await t.test(name, () => {
+      const segments = identifierSegments(value);
+
+      assert.deepEqual(segments, expected);
+      assert.equal(segments.join(''), String(value ?? ''));
+    });
+  }
+});
+
+function dataProviderIdentifierSegments() {
+  return [
+    ['a word without underscores', 'string', ['string']],
+    ['1 underscore', 'entity_reference', ['entity_', 'reference']],
+    ['2 underscores', 'entity_reference_revisions', ['entity_', 'reference_', 'revisions']],
+    ['a machine name', 'field_media_oembed_video', ['field_', 'media_', 'oembed_', 'video']],
+    ['a double underscore', 'field__body', ['field__', 'body']],
+    ['a leading underscore', '_private', ['_private']],
+    ['a leading underscore before more words', '_private_field', ['_private_', 'field']],
+    ['a trailing underscore', 'reserved_', ['reserved_']],
+    ['only underscores', '___', ['___']],
+    ['an empty string', '', []],
+    ['null', null, []],
+    ['undefined', undefined, []],
+    ['a number', 42, ['42']],
+  ];
+}
+
+test('shrinks a font size until the text fits, down to a minimum', async (t) => {
+  for (const [name, measure, availableWidth, expected] of dataProviderFitFontSize()) {
+    await t.test(name, () => {
+      assert.equal(fitFontSize(measure, availableWidth, 16, 10), expected);
+    });
+  }
+});
+
+function dataProviderFitFontSize() {
+  // 8px of width per pixel of font size, so 128px at 16px.
+  const linear = (size) => size * 8;
+  // A fixed 16px of extra spacing that does not shrink with the font.
+  const tracked = (size) => size * 8 + 16;
+
+  return [
+    ['text narrower than the space', linear, 140, null],
+    ['text exactly as wide as the space', linear, 128, null],
+    ['text a little too wide', linear, 100, 12.5],
+    ['a size rounded down to 0.01px', linear, 99, 12.37],
+    ['text that shrinks to exactly the minimum', linear, 80, 10],
+    ['text that would need less than the minimum', linear, 79, null],
+    ['spacing that does not scale, fitted over passes', tracked, 120, 13],
+    ['spacing that does not scale, near the minimum', tracked, 97, 10.12],
+    ['a width that never shrinks', () => 100, 90, null],
+    ['no space at all', linear, 0, null],
+    ['empty text', () => 0, 90, null],
+    ['an unmeasured width', () => NaN, 90, null],
+  ];
+}
