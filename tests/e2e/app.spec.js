@@ -122,6 +122,51 @@ function fittedIdentifier(page, text) {
   return fittedIdentifiers(page).then((identifiers) => identifiers.find((i) => i.text === text));
 }
 
+async function createEntity(page, entityType, bundle, label) {
+  await page.click('[data-add-entity="' + entityType + '"]');
+  await slFill(page, '[data-new-bundle]', bundle);
+  await slFill(page, '[data-new-label]', label);
+  await page.click('[data-create-entity]');
+}
+
+// A new document in edit mode holding a Story content type with 1 field,
+// 'field_1', which the inspector has selected.
+async function buildStoryWithField(page) {
+  await page.click('#new-btn');
+  await page.click('#mode-build');
+  await createEntity(page, 'node', 'story', 'Story');
+  await page.click('.handle--right');
+  await page.waitForFunction(() => window.__nexus.cy.getElementById('field:node.story:field_1').nonempty());
+}
+
+// The callback returns nothing, since Playwright is slow to serialize the
+// collection emit() returns.
+function tapNode(page, id) {
+  return page.evaluate((nodeId) => {
+    window.__nexus.cy.getElementById(nodeId).emit('tap');
+  }, id);
+}
+
+function captionsOf(page, id) {
+  return page.evaluate(
+    (nodeId) =>
+      [...document.querySelectorAll('#captions .caption')]
+        .filter((div) => div.dataset.nodeId === nodeId)
+        .map((div) => ({ text: div.textContent, shown: div.style.display === 'block' })),
+    id,
+  );
+}
+
+// Sorted by node id, so the result doesn't depend on the order badges were
+// drawn in.
+function noteBadges(page) {
+  return page.evaluate(() =>
+    [...document.querySelectorAll('#notes .note-badge')]
+      .map((badge) => ({ nodeId: badge.dataset.nodeId || '', shown: badge.style.display === 'flex' }))
+      .sort((a, b) => a.nodeId.localeCompare(b.nodeId)),
+  );
+}
+
 test.beforeEach(async ({ page }) => {
   await page.goto('/index.html');
 });
@@ -942,6 +987,76 @@ test('scales node captions with the canvas zoom', async ({ page }) => {
   expect(large).toBeGreaterThan(small * 2);
 });
 
+test('captions an entity created in edit mode the way it captions a loaded one', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+  await page.click('#mode-build');
+
+  await createEntity(page, 'node', 'podcast', 'Podcast');
+
+  expect(await captionsOf(page, 'node.program')).toEqual([
+    { text: 'Content type', shown: true },
+    { text: 'program', shown: true },
+  ]);
+  expect(await captionsOf(page, 'node.podcast')).toEqual([
+    { text: 'Content type', shown: true },
+    { text: 'podcast', shown: true },
+  ]);
+});
+
+test('captions a field created in edit mode and moves the caption when the field is renamed', async ({ page }) => {
+  await buildStoryWithField(page);
+  expect(await captionsOf(page, 'field:node.story:field_1')).toEqual([{ text: 'field_1', shown: true }]);
+
+  await slFill(page, '#inspector sl-input[data-machine-name]', 'field_summary');
+
+  expect(await captionsOf(page, 'field:node.story:field_summary')).toEqual([{ text: 'field_summary', shown: true }]);
+  expect(await captionsOf(page, 'field:node.story:field_1')).toEqual([]);
+});
+
+test('moves the captions of a renamed entity and its fields to their new ids', async ({ page }) => {
+  await buildStoryWithField(page);
+
+  await tapNode(page, 'node.story');
+  await slFill(page, '#inspector sl-input[data-machine-name]', 'article');
+
+  expect(await captionsOf(page, 'node.article')).toEqual([
+    { text: 'Content type', shown: true },
+    { text: 'article', shown: true },
+  ]);
+  expect(await captionsOf(page, 'field:node.article:field_1')).toEqual([{ text: 'field_1', shown: true }]);
+  expect(await captionsOf(page, 'node.story')).toEqual([]);
+  expect(await captionsOf(page, 'field:node.story:field_1')).toEqual([]);
+});
+
+test('removes the captions of a deleted entity and its fields', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+  await page.click('#mode-build');
+  expect(await captionsOf(page, 'node.program')).not.toEqual([]);
+
+  await tapNode(page, 'node.program');
+  await page.click('#inspector .insp__delete');
+
+  expect(await page.evaluate(() => window.__nexus.cy.getElementById('node.program').empty())).toBe(true);
+  const orphans = await page.evaluate(() => {
+    const cy = window.__nexus.cy;
+    return [...document.querySelectorAll('#captions .caption')].filter((div) => cy.getElementById(div.dataset.nodeId).empty()).length;
+  });
+  expect(orphans).toBe(0);
+});
+
+test('captions a new entity with its type alone while machine names are hidden', async ({ page }) => {
+  await page.click('#new-btn');
+  await page.click('#machine-names');
+  await expect(page.locator('#machine-names')).not.toHaveClass(/is-active/);
+  await page.click('#mode-build');
+
+  await createEntity(page, 'node', 'story', 'Story');
+
+  expect(await captionsOf(page, 'node.story')).toEqual([{ text: 'Content type', shown: true }]);
+});
+
 test('adds an entity note that badges the canvas and reveals on hover', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);
@@ -991,6 +1106,29 @@ test('adds a note to a field too, not just entities', async ({ page }) => {
   });
 
   await expect(page.locator('#notes .note-badge')).toHaveCount(1);
+});
+
+test('keeps the note badges of a renamed entity and its fields', async ({ page }) => {
+  await buildStoryWithField(page);
+  await slFill(page, '#inspector sl-textarea[data-note]', 'Field note');
+  await tapNode(page, 'node.story');
+  await slFill(page, '#inspector sl-textarea[data-note]', 'Entity note');
+  expect(await noteBadges(page)).toEqual([
+    { nodeId: 'field:node.story:field_1', shown: true },
+    { nodeId: 'node.story', shown: true },
+  ]);
+
+  await slFill(page, '#inspector sl-input[data-machine-name]', 'article');
+
+  expect(await noteBadges(page)).toEqual([
+    { nodeId: 'field:node.article:field_1', shown: true },
+    { nodeId: 'node.article', shown: true },
+  ]);
+  const reveal = await page.evaluate(() => {
+    document.querySelector('#notes .note-badge[data-node-id="node.article"]').dispatchEvent(new Event('mouseenter'));
+    return document.getElementById('tooltip').textContent;
+  });
+  expect(reveal).toBe('Entity note');
 });
 
 test('resets the singled-out focus when switching modes', async ({ page }) => {
