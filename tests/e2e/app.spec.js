@@ -718,6 +718,90 @@ test('adds a field from an entity + handle, then renames it', async ({ page }) =
   expect(await page.evaluate(() => window.__nexus.cy.getElementById('field:node.story:field_summary').length)).toBe(1);
 });
 
+// Captions and handles are repositioned 1 frame after a Cytoscape redraw, so
+// this resolves 2 frames after the redraw the selection causes.
+async function selectProgram(page, zoom) {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+  await page.click('#mode-build');
+  await page.evaluate(
+    (z) =>
+      new Promise((resolve) => {
+        const cy = window.__nexus.cy;
+        const program = cy.getElementById('node.program');
+        cy.one('render', () => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        cy.zoom(z);
+        cy.center(program);
+        program.emit('tap');
+      }),
+    zoom,
+  );
+  await expect(page.locator('.handle--bottom')).toBeVisible();
+}
+
+// Viewport pixels from the bottom edges of Program's box and of its shown
+// machine-name caption down to the top edge of its bottom handle.
+function bottomHandleGaps(page) {
+  return page.evaluate(() => {
+    const cy = window.__nexus.cy;
+    const program = cy.getElementById('node.program');
+    const handleTop = document.querySelector('.handle--bottom').getBoundingClientRect().top;
+    const boxBottom = cy.container().getBoundingClientRect().top + program.renderedPosition('y') + program.renderedOuterHeight() / 2;
+    const names = [...document.querySelectorAll('#captions .caption:not(.caption--type)')];
+    const caption = names.find((c) => c.textContent === 'program' && c.style.display === 'block');
+    return { box: handleTop - boxBottom, caption: caption ? handleTop - caption.getBoundingClientRect().bottom : null };
+  });
+}
+
+function expectJustBelow(gap) {
+  expect(gap).toBeGreaterThanOrEqual(0);
+  expect(gap).toBeLessThan(10);
+}
+
+for (const zoom of [0.5, 1, 2, 3]) {
+  test(`keeps the bottom handle clear of the selected entity's machine name at ${zoom * 100}% zoom`, async ({ page }) => {
+    await selectProgram(page, zoom);
+
+    expectJustBelow((await bottomHandleGaps(page)).caption);
+  });
+}
+
+test('keeps the bottom handle at the entity box while its captions are hidden', async ({ page }) => {
+  await selectProgram(page, 0.3);
+
+  const gaps = await bottomHandleGaps(page);
+  expect(gaps.caption).toBeNull();
+  expectJustBelow(gaps.box);
+});
+
+test('moves the bottom handle when machine names are toggled on a selected entity', async ({ page }) => {
+  await selectProgram(page, 1);
+  expectJustBelow((await bottomHandleGaps(page)).caption);
+
+  await page.click('#machine-names');
+  const hidden = await bottomHandleGaps(page);
+  expect(hidden.caption).toBeNull();
+  expectJustBelow(hidden.box);
+
+  await page.click('#machine-names');
+  expectJustBelow((await bottomHandleGaps(page)).caption);
+});
+
+test('adds a field below an entity from its bottom handle', async ({ page }) => {
+  await selectProgram(page, 1);
+  const before = await page.evaluate(() => window.__nexus.cy.nodes('[group="field"][entity="node.program"]').map((field) => field.id()));
+
+  await page.click('.handle--bottom');
+
+  await page.waitForFunction((count) => window.__nexus.cy.nodes('[group="field"][entity="node.program"]').length === count + 1, before.length);
+  const offset = await page.evaluate((ids) => {
+    const cy = window.__nexus.cy;
+    const added = cy.nodes('[group="field"][entity="node.program"]').filter((field) => !ids.includes(field.id()));
+    return added.position('y') - cy.getElementById('node.program').position('y');
+  }, before);
+  expect(offset).toBeGreaterThan(0);
+});
+
 test('reuses an existing field via autocomplete from the field tool', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);
