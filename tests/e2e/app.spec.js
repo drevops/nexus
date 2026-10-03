@@ -115,9 +115,7 @@ async function fittedIdentifiers(page) {
 // Returns the identifiers that break the fitting rules: drawn below 10px,
 // shrunk but still wrapped, or wrapped anywhere but after an underscore.
 function fitViolations(identifiers) {
-  return identifiers.filter(
-    (i) => i.size < 10 || (i.size < i.normal && i.lines.length > 1) || i.lines.slice(0, -1).some((line) => !line.endsWith('_')),
-  );
+  return identifiers.filter((i) => i.size < 10 || (i.size < i.normal && i.lines.length > 1) || i.lines.slice(0, -1).some((line) => !line.endsWith('_')));
 }
 
 function fittedIdentifier(page, text) {
