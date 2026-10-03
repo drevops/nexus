@@ -38,6 +38,8 @@ Each built-in entity type, annotation kind and name conversion is defined once: 
 
 The Nexus mark lives in 3 places: `logo.svg` for the README, `assets/favicon.svg` for the browser tab and the `nexus` icon in `src/icons.js` for the page. The 2 files switch to white ink in a dark colour scheme by themselves, while the page's copy takes its colours from `src/styles.css` so it follows the app's theme toggle. A change to the mark's shapes goes into all 3, and `npm run test-unit` fails while `src/icons.js` and `logo.svg` differ.
 
+The schema in the `src/document.js` docblock describes the saved `.nexus.json` format. A change to what a document holds goes into that schema too, and into the full document in `tests/unit/document.test.js`: the unit tests open it into a headless Cytoscape graph, save it again and fail unless the copy matches the original exactly.
+
 ## Previews on Netlify
 
 Once the repository settings below are in place, every pull request from a branch of this repository gets a live preview, so you can click through a change before it merges. The `Deploy to Netlify` job in `.github/workflows/test-nodejs.yml` waits for every other job in that workflow, so it runs only once linting, the unit tests on each Node version and the end-to-end suite have all passed. It builds `_site/` with `npm run assemble`, the same step a release uses, then uploads it to the Netlify project:
