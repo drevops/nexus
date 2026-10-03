@@ -16,7 +16,7 @@
  * pure transform back to renderable model data (so it can be unit-tested).
  */
 
-import { ContentModel, Entity, Field } from './model.js';
+import { ContentModel, Entity, Field, DEFAULT_TITLE } from './model.js';
 import { applyAnnotations } from './annotations.js';
 
 function splitId(id) {
@@ -95,7 +95,7 @@ export function documentFromGraph(cy, meta = {}) {
 
   return {
     nexus: 1,
-    title: meta.title || 'Content model',
+    title: meta.title || DEFAULT_TITLE,
     colors: meta.colors || {},
     symbols: meta.symbols || {},
     customTypes: meta.customTypes || [],
@@ -111,7 +111,7 @@ export function documentToModel(doc) {
     throw new Error('Not a valid Nexus document.');
   }
 
-  const model = new ContentModel(typeof doc.title === 'string' ? doc.title : 'Content model');
+  const model = new ContentModel(typeof doc.title === 'string' ? doc.title : DEFAULT_TITLE);
 
   doc.entities.forEach((entity) => {
     const built = new Entity(entity.entityType, entity.bundle, entity.label != null ? entity.label : entity.bundle);

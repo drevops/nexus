@@ -11,28 +11,9 @@
 
 import { setController, bump, closeInspector } from './store.js';
 import { icon } from './icons.js';
-
-const DEFAULT_COLORS = {
-  node: '#d9e2f3',
-  taxonomy_term: '#9fc5e8',
-  media: '#f6b26b',
-  paragraph: '#cdbdec',
-  block_content: '#b6d7a8',
-  user: '#ea9999',
-  external: '#ea9999',
-};
-
-const ENTITY_TYPE_LABELS = {
-  node: 'Content type',
-  taxonomy_term: 'Vocabulary',
-  media: 'Media',
-  paragraph: 'Paragraph',
-  block_content: 'Block',
-  user: 'User',
-  external: 'External entity',
-};
-
-const TYPE_ORDER = ['node', 'taxonomy_term', 'media', 'paragraph', 'block_content', 'user', 'external'];
+import { ENTITY_TYPE_ORDER, findEntityType } from './entity-types.js';
+import { humanize, machineName } from './names.js';
+import { $ } from './dom.js';
 
 // A small library of UML-ish node shapes, keyed for settings/persistence; the
 // value is the Cytoscape shape that draws it.
@@ -50,15 +31,8 @@ const SYMBOLS = {
   octagon: { shape: 'octagon', label: 'Octagon' },
 };
 
-const DEFAULT_SYMBOLS = {
-  node: 'rounded',
-  taxonomy_term: 'tag',
-  media: 'barrel',
-  paragraph: 'cut',
-  block_content: 'rectangle',
-  user: 'ellipse',
-  external: 'hexagon',
-};
+const FALLBACK_COLOR = '#eceff3';
+const FALLBACK_SYMBOL = 'rounded';
 
 const SETTINGS_KEY = 'nexusSettings';
 
@@ -83,7 +57,7 @@ let entityById = {};
 let fieldById = {};
 let refsByField = {};
 
-let ctx = null;
+let controller = null;
 let wired = false;
 
 function loadSettings() {
@@ -104,8 +78,9 @@ function saveSettings() {
 
 function initColors() {
   allTypeKeys().forEach((type) => {
-    activeColors[type] = (settings.colors && settings.colors[type]) || DEFAULT_COLORS[type] || '#eceff3';
-    activeSymbols[type] = (settings.symbols && settings.symbols[type]) || DEFAULT_SYMBOLS[type] || 'rounded';
+    const builtIn = findEntityType(type);
+    activeColors[type] = (settings.colors && settings.colors[type]) || (builtIn ? builtIn.color : FALLBACK_COLOR);
+    activeSymbols[type] = (settings.symbols && settings.symbols[type]) || (builtIn ? builtIn.symbol : FALLBACK_SYMBOL);
   });
 }
 
@@ -114,11 +89,11 @@ function customTypes() {
 }
 
 function allTypeKeys() {
-  return TYPE_ORDER.concat(customTypes().map((t) => t.type));
+  return ENTITY_TYPE_ORDER.concat(customTypes().map((t) => t.type));
 }
 
 function entityShape(entityType) {
-  return (SYMBOLS[activeSymbols[entityType]] || SYMBOLS.rounded).shape;
+  return (SYMBOLS[activeSymbols[entityType]] || SYMBOLS[FALLBACK_SYMBOL]).shape;
 }
 
 function symbolSvg(key, color, size) {
@@ -270,25 +245,20 @@ function symbolSvg(key, color, size) {
       s +
       '"/>',
   };
-  return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">' + (shapes[key] || shapes.rounded) + '</svg>';
-}
-
-function prettify(value) {
-  return String(value || '')
-    .replace(/[_.]/g, ' ')
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+  return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">' + (shapes[key] || shapes[FALLBACK_SYMBOL]) + '</svg>';
 }
 
 function typeLabel(entityType) {
   const custom = customTypes().find((t) => t.type === entityType);
   if (custom) {
-    return custom.label || prettify(entityType);
+    return custom.label || humanize(entityType);
   }
-  return ENTITY_TYPE_LABELS[entityType] || prettify(entityType);
+  const builtIn = findEntityType(entityType);
+  return builtIn ? builtIn.label : humanize(entityType);
 }
 
 function entityColor(entityType) {
-  return activeColors[entityType] || '#eceff3';
+  return activeColors[entityType] || FALLBACK_COLOR;
 }
 
 function esc(value) {
@@ -299,6 +269,10 @@ function esc(value) {
 
 function overlaps(a, b) {
   return a.x1 < b.x2 && b.x1 < a.x2 && a.y1 < b.y2 && b.y1 < a.y2;
+}
+
+function proxyNodeId(fieldId, targetId) {
+  return 'proxy:' + fieldId + '>' + targetId;
 }
 
 function buildElements(model) {
@@ -329,7 +303,7 @@ function buildElements(model) {
     // the referencing field, so a distant reference gets a short edge.
     const field = fieldById[e.data.source];
     const target = entityById[e.data.target];
-    const proxyId = 'proxy:' + e.data.source + '>' + e.data.target;
+    const proxyId = proxyNodeId(e.data.source, e.data.target);
     proxyNodes.push({
       data: {
         id: proxyId,
@@ -555,7 +529,7 @@ function tooltipHtml(node) {
   }
 
   if (group === 'field') {
-    const meta = [prettify(node.data('kind')) + ' field', esc(node.data('fieldType'))];
+    const meta = [humanize(node.data('kind')) + ' field', esc(node.data('fieldType'))];
     const refs = fieldReferences(node.id());
     if (refs.length) {
       meta.push('→ ' + esc(refs.join(', ')));
@@ -564,11 +538,7 @@ function tooltipHtml(node) {
   }
 
   const extra = node.data('method') ? ' · ' + esc(node.data('method')) : '';
-  return '<div class="tooltip__name">' + name + '</div><div class="tooltip__meta">' + esc(prettify(node.data('kind'))) + extra + '</div>';
-}
-
-function $(id) {
-  return document.getElementById(id);
+  return '<div class="tooltip__name">' + name + '</div><div class="tooltip__meta">' + esc(humanize(node.data('kind'))) + extra + '</div>';
 }
 
 function buildController(model, options = {}) {
@@ -593,13 +563,9 @@ function buildController(model, options = {}) {
   }
 
   const elements = buildElements(model);
-  TYPE_ORDER.forEach((t) => {
+  ENTITY_TYPE_ORDER.forEach((t) => {
     typeVisible[t] = true;
   });
-
-  if (ctx && ctx.cy) {
-    ctx.cy.destroy();
-  }
 
   const cy = window.cytoscape({
     container: $('cy'),
@@ -1007,15 +973,12 @@ function buildController(model, options = {}) {
     settings.colors = settings.colors || {};
     settings.colors[type] = color;
     saveSettings();
-    if (window.__nexus) {
-      window.__nexus.colors = { ...activeColors };
-    }
     bump();
   }
 
   function applySymbol(type, key) {
     activeSymbols[type] = key;
-    cy.nodes('[entityType="' + type + '"]').style('shape', (SYMBOLS[key] || SYMBOLS.rounded).shape);
+    cy.nodes('[entityType="' + type + '"]').style('shape', (SYMBOLS[key] || SYMBOLS[FALLBACK_SYMBOL]).shape);
     settings.symbols = settings.symbols || {};
     settings.symbols[type] = key;
     saveSettings();
@@ -1033,23 +996,17 @@ function buildController(model, options = {}) {
     cy.style(style());
     positionCaptions();
     positionNotes();
-    if (window.__nexus) {
-      window.__nexus.colors = { ...activeColors };
-    }
     bump();
   }
 
   function addCustomType(type, label, color, symbol) {
-    const key = String(type || '')
-      .toLowerCase()
-      .replace(/[^a-z0-9_]+/g, '_')
-      .replace(/^_+|_+$/g, '');
+    const key = machineName(type);
     if (!key || allTypeKeys().includes(key)) {
       return null;
     }
-    settings.customTypes = customTypes().concat([{ type: key, label: (label || '').trim() || prettify(key) }]);
-    settings.colors = { ...(settings.colors || {}), [key]: color || '#eceff3' };
-    settings.symbols = { ...(settings.symbols || {}), [key]: symbol || 'rounded' };
+    settings.customTypes = customTypes().concat([{ type: key, label: (label || '').trim() || humanize(key) }]);
+    settings.colors = { ...(settings.colors || {}), [key]: color || FALLBACK_COLOR };
+    settings.symbols = { ...(settings.symbols || {}), [key]: symbol || FALLBACK_SYMBOL };
     activeColors[key] = settings.colors[key];
     activeSymbols[key] = settings.symbols[key];
     saveSettings();
@@ -1140,7 +1097,18 @@ function buildController(model, options = {}) {
     removeNoteBadge(evt.target);
   });
 
-  const controller = {
+  // A proxy draws 1 reference, so removing the reference removes its proxy.
+  cy.on('remove', 'edge[group="ref"]', (evt) => {
+    cy.getElementById(proxyNodeId(evt.target.data('source'), evt.target.data('target'))).remove();
+  });
+
+  $('fields-toggle').classList.add('is-active');
+  $('proxy-toggle').classList.add('is-active');
+  $('layout-toggle').querySelector('.layout-label').textContent = 'Layout: LR';
+  $('machine-names').classList.add('is-active');
+  $('search').value = '';
+
+  return {
     cy,
     refresh,
     runLayout,
@@ -1164,7 +1132,7 @@ function buildController(model, options = {}) {
     },
     typeLabel,
     colorFor: entityColor,
-    symbolFor: (type) => activeSymbols[type] || 'rounded',
+    symbolFor: (type) => activeSymbols[type] || FALLBACK_SYMBOL,
     typeSettings: () => ({ colors: { ...activeColors }, symbols: { ...activeSymbols }, customTypes: customTypes().map((t) => ({ ...t })) }),
     symbolSvg: (key, color, size) => symbolSvg(key, color, size),
     symbolOptions: () => Object.keys(SYMBOLS).map((key) => ({ key: key, label: SYMBOLS[key].label })),
@@ -1203,53 +1171,43 @@ function buildController(model, options = {}) {
     presentTypes: () =>
       allTypeKeys()
         .filter((t) => cy.nodes('[group="entity"][entityType="' + t + '"]').nonempty())
-        .map((t) => ({ type: t, label: typeLabel(t), color: entityColor(t), symbol: activeSymbols[t] || 'rounded', visible: typeVisible[t] !== false })),
+        .map((t) => ({ type: t, label: typeLabel(t), color: entityColor(t), symbol: activeSymbols[t] || FALLBACK_SYMBOL, visible: typeVisible[t] !== false })),
     setTypeVisible: (type, vis) => {
       typeVisible[type] = vis;
       refresh(true);
       bump();
     },
   };
-  setController(controller);
-
-  $('fields-toggle').classList.add('is-active');
-  $('proxy-toggle').classList.add('is-active');
-  $('layout-toggle').querySelector('.layout-label').textContent = 'Layout: LR';
-  $('machine-names').classList.add('is-active');
-  $('search').value = '';
-  closeInspector();
-
-  return controller;
 }
 
 function wire() {
   $('zoom-in').addEventListener('click', () =>
-    ctx.cy.zoom({ level: ctx.cy.zoom() * 1.25, renderedPosition: { x: ctx.cy.width() / 2, y: ctx.cy.height() / 2 } }),
+    controller.cy.zoom({ level: controller.cy.zoom() * 1.25, renderedPosition: { x: controller.cy.width() / 2, y: controller.cy.height() / 2 } }),
   );
   $('zoom-out').addEventListener('click', () =>
-    ctx.cy.zoom({ level: ctx.cy.zoom() * 0.8, renderedPosition: { x: ctx.cy.width() / 2, y: ctx.cy.height() / 2 } }),
+    controller.cy.zoom({ level: controller.cy.zoom() * 0.8, renderedPosition: { x: controller.cy.width() / 2, y: controller.cy.height() / 2 } }),
   );
-  $('fit').addEventListener('click', () => ctx.cy.fit(undefined, 45));
+  $('fit').addEventListener('click', () => controller.cy.fit(undefined, 45));
   $('reset').addEventListener('click', () => {
-    ctx.clearFocus();
-    ctx.resetView();
+    controller.clearFocus();
+    controller.resetView();
   });
-  $('tidy').addEventListener('click', () => ctx.runLayout());
+  $('tidy').addEventListener('click', () => controller.runLayout());
 
   $('zoom-menu').addEventListener('sl-select', (evt) => {
     const value = evt.detail.item.value;
     if (value === 'fit') {
-      ctx.cy.fit(undefined, 45);
+      controller.cy.fit(undefined, 45);
       return;
     }
-    ctx.cy.zoom({ level: parseFloat(value), renderedPosition: { x: ctx.cy.width() / 2, y: ctx.cy.height() / 2 } });
+    controller.cy.zoom({ level: parseFloat(value), renderedPosition: { x: controller.cy.width() / 2, y: controller.cy.height() / 2 } });
   });
 
   $('fields-toggle').addEventListener('click', (evt) => {
     fieldsMode = !fieldsMode;
     evt.target.classList.toggle('is-active', fieldsMode);
-    ctx.clearFocus();
-    ctx.refresh(true);
+    controller.clearFocus();
+    controller.refresh(true);
   });
 
   $('proxy-toggle').addEventListener('click', (evt) => {
@@ -1259,29 +1217,29 @@ function wire() {
       fieldsMode = true;
       $('fields-toggle').classList.add('is-active');
     }
-    ctx.clearFocus();
-    ctx.refresh(true);
+    controller.clearFocus();
+    controller.refresh(true);
   });
 
   $('layout-toggle').addEventListener('click', () => {
     rankDir = rankDir === 'LR' ? 'TB' : 'LR';
     $('layout-toggle').querySelector('.layout-label').textContent = 'Layout: ' + rankDir;
-    ctx.runLayout();
+    controller.runLayout();
   });
 
   $('machine-names').addEventListener('click', (evt) => {
     showMachineNames = !showMachineNames;
     evt.target.classList.toggle('is-active', showMachineNames);
-    ctx.rebuildCaptions();
+    controller.rebuildCaptions();
   });
 
   function runSearch() {
     const term = $('search').value.trim().toLowerCase();
     if (!term) {
-      ctx.clearFocus();
+      controller.clearFocus();
       return;
     }
-    ctx.searchHighlight(term);
+    controller.searchHighlight(term);
   }
   $('search-btn').addEventListener('click', runSearch);
   $('search').addEventListener('keydown', (evt) => {
@@ -1289,22 +1247,32 @@ function wire() {
       runSearch();
     }
   });
-  $('search').addEventListener('sl-clear', () => ctx.clearFocus());
+  $('search').addEventListener('sl-clear', () => controller.clearFocus());
 }
 
 export function render(model, options = {}) {
-  ctx = buildController(model, options);
+  if (controller) {
+    controller.cy.destroy();
+  }
+
+  controller = buildController(model, options);
+  setController(controller);
+  closeInspector();
+
   if (!wired) {
     wire();
     wired = true;
   }
+
   if (options.layout && Object.keys(options.layout).length) {
-    ctx.applyLayout(options.layout);
+    controller.applyLayout(options.layout);
   } else {
-    ctx.refresh(true);
+    controller.refresh(true);
   }
-  ctx.rebuildCaptions();
-  ctx.rebuildNotes();
-  window.__nexus = { cy: ctx.cy, model, colors: { ...activeColors }, applyTheme: ctx.applyTheme };
-  return ctx;
+
+  controller.rebuildCaptions();
+  controller.rebuildNotes();
+  window.__nexus = { cy: controller.cy, model };
+
+  return controller;
 }

@@ -15,19 +15,12 @@ import { h } from 'preact';
 import { useState } from 'preact/hooks';
 import htmBase from 'htm';
 import { icon } from './icons.js';
-import { cardinalityLabel } from './model.js';
+import { cardinalityLabel, kindForCardinality, REFERENCE_FIELD_TYPES } from './model.js';
+import { ANNOTATION_KINDS } from './annotations.js';
 import { getController, getBuilder, openInspector, bump } from './store.js';
 
 const html = htmBase.bind(h);
 
-const ENTITY_TYPES = [
-  ['node', 'Content type'],
-  ['taxonomy_term', 'Vocabulary'],
-  ['media', 'Media'],
-  ['paragraph', 'Paragraph'],
-  ['block_content', 'Block'],
-  ['user', 'User'],
-];
 const CARDINALITY_OPTIONS = [
   ['1', 'Single'],
   ['2', '2'],
@@ -55,24 +48,9 @@ const FIELD_TYPES = [
   'list_string',
   'image',
   'file',
-  'entity_reference',
-  'entity_reference_revisions',
+  ...REFERENCE_FIELD_TYPES,
 ];
-const REFERENCE_TYPES = ['entity_reference', 'entity_reference_revisions'];
-const ANNOTATION_KINDS = [
-  ['event', 'Event'],
-  ['api', 'API'],
-  ['callback', 'Callback'],
-];
-const TYPE_LABELS = {
-  node: 'Content type',
-  taxonomy_term: 'Vocabulary',
-  media: 'Media',
-  paragraph: 'Paragraph',
-  block_content: 'Block',
-  user: 'User',
-  external: 'External entity',
-};
+const ANNOTATION_OPTIONS = ANNOTATION_KINDS.map((entry) => [entry.kind, entry.label]);
 
 function cy() {
   return getController().cy;
@@ -173,7 +151,7 @@ export function EntityForm({ id }) {
         }}
       ></sl-input>
     <//>
-    <${Row} label="Type"><span class="insp__ro">${TYPE_LABELS[node.data('entityType')] || node.data('entityType')}</span><//>
+    <${Row} label="Type"><span class="insp__ro">${getController().typeLabel(node.data('entityType'))}</span><//>
     <${Row} label="Machine name"
       ><sl-input
         size="small"
@@ -217,13 +195,13 @@ export function FieldForm({ id }) {
   function setCardinality(value) {
     const cardinality = parseInt(value, 10);
     node.data('cardinality', cardinality);
-    node.data('kind', cardinality === 1 ? 'single' : 'multi');
+    node.data('kind', kindForCardinality(cardinality));
     node.connectedEdges('[group="ref"]').data('cardinality', cardinalityLabel(cardinality));
     setS((prev) => ({ ...prev, cardinality: cardinality }));
     bump();
   }
 
-  const isRef = REFERENCE_TYPES.includes(s.fieldType);
+  const isRef = REFERENCE_FIELD_TYPES.includes(s.fieldType);
   const targets = refTargets(id);
   const entityOptions = cy()
     .nodes('[group="entity"]')
@@ -307,7 +285,7 @@ export function AnnotationForm({ id }) {
     <p class="insp__title">Annotation</p>
     <${Row} label="Label"><sl-input size="small" value=${s.label} onsl-input=${(e) => set('label', e.target.value)}></sl-input><//>
     <${Row} label="Kind"
-      ><sl-select size="small" value=${s.kind} onsl-change=${(e) => set('kind', e.target.value)}>${slOptions(ANNOTATION_KINDS)}</sl-select><//
+      ><sl-select size="small" value=${s.kind} onsl-change=${(e) => set('kind', e.target.value)}>${slOptions(ANNOTATION_OPTIONS)}</sl-select><//
     >
     <${Row} label="Method"><sl-input size="small" value=${s.method} placeholder="POST, GET…" onsl-input=${(e) => set('method', e.target.value)}></sl-input><//>
     <${NoteField} node=${node} />
@@ -319,16 +297,11 @@ export function AnnotationForm({ id }) {
 
 export function NewEntityForm({ entityType }) {
   const [form, setForm] = useState({ entityType: entityType || 'node', bundle: '', label: '' });
-  const ctrl = getController();
-  const typeOptions = ENTITY_TYPES.concat(
-    ctrl
-      .allTypes()
-      .filter((t) => ctrl.isCustomType(t))
-      .map((t) => [t, ctrl.typeLabel(t)]),
-  );
+  const controller = getController();
+  const typeOptions = controller.allTypes().map((type) => [type, controller.typeLabel(type)]);
 
   return html` <div class="insp" data-new="entity">
-    <p class="insp__title">New ${TYPE_LABELS[form.entityType] || ctrl.typeLabel(form.entityType) || 'entity'}</p>
+    <p class="insp__title">New ${controller.typeLabel(form.entityType) || 'entity'}</p>
     <${Row} label="Type"
       ><sl-select size="small" value=${form.entityType} onsl-change=${(e) => setForm((p) => ({ ...p, entityType: e.target.value }))}
         >${slOptions(typeOptions)}</sl-select
@@ -378,7 +351,7 @@ export function NewFieldForm({ entityId, side }) {
   }
 
   const resolvedEntity = entityId || form.entity;
-  const isRef = REFERENCE_TYPES.includes(form.fieldType);
+  const isRef = REFERENCE_FIELD_TYPES.includes(form.fieldType);
   const entityOptions = entities.map((e) => html`<sl-option value=${e.id()}>${e.data('label')}</sl-option>`);
 
   return html` <div class="insp" data-new="field" data-side=${side || ''}>
@@ -440,7 +413,7 @@ export function NewAnnotationForm() {
     <p class="insp__title">New annotation</p>
     <${Row} label="Kind"
       ><sl-select size="small" value=${form.kind} onsl-change=${(e) => setForm((p) => ({ ...p, kind: e.target.value }))}
-        >${slOptions(ANNOTATION_KINDS)}</sl-select
+        >${slOptions(ANNOTATION_OPTIONS)}</sl-select
       ><//
     >
     <${Row} label="Label"

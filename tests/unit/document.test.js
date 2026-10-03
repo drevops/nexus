@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { documentToModel } from '../../src/document.js';
+import { DEFAULT_TITLE } from '../../src/model.js';
 
 const DOC = {
   nexus: 1,
@@ -47,6 +48,22 @@ test('rebuilds a model from a Nexus document', () => {
   assert.deepEqual(layout, { 'node.article': { x: 10, y: 20 } });
   assert.equal(colors.paragraph, '#112233');
 });
+
+test('opens a document without a text title under the default title', async (t) => {
+  for (const [name, title] of dataProviderUntitledDocument()) {
+    await t.test(name, () => {
+      assert.equal(documentToModel({ ...DOC, title: title }).modelData.meta.title, DEFAULT_TITLE);
+    });
+  }
+});
+
+function dataProviderUntitledDocument() {
+  return [
+    ['a missing title', undefined],
+    ['a null title', null],
+    ['a numeric title', 42],
+  ];
+}
 
 test('rejects input that is not a Nexus document', () => {
   assert.throws(() => documentToModel({}));

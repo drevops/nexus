@@ -34,12 +34,19 @@ import {
   setTableFilter,
   openTableFor,
 } from './store.js';
+import { $ } from './dom.js';
 
 const html = htmBase.bind(h);
 
 const PANEL_ORDER = ['entities', 'table', 'settings', 'legend', 'inspector'];
 const TITLES = { entities: 'Entities', table: 'Fields', settings: 'Settings', legend: 'Legend', inspector: 'Inspector' };
 const WIDE = { table: true };
+const PANEL_TOGGLES = [
+  ['entities-toggle', 'entities'],
+  ['table-toggle', 'table'],
+  ['legend-toggle', 'legend'],
+  ['settings-toggle', 'settings'],
+];
 
 const SWATCHES = {
   entity: '<svg width="34" height="24"><rect x="2" y="4" width="30" height="16" rx="3" fill="#9fc5e8" stroke="#5b6470"/></svg>',
@@ -90,7 +97,7 @@ function floatStyle(panel) {
 /* Drag, drag-to-dock and pin ---------------------------------------------- */
 
 function edgeSide(clientX) {
-  const stage = document.getElementById('stage-root').getBoundingClientRect();
+  const stage = $('stage-root').getBoundingClientRect();
   if (clientX <= stage.left + 90) {
     return 'left';
   }
@@ -101,7 +108,7 @@ function edgeSide(clientX) {
 }
 
 function highlightDrop(side) {
-  const stage = document.getElementById('stage-root');
+  const stage = $('stage-root');
   stage.classList.toggle('drop-left', side === 'left');
   stage.classList.toggle('drop-right', side === 'right');
 }
@@ -149,7 +156,7 @@ function pinFromButton(id, el) {
 }
 
 function startResize(side, evt) {
-  const dock = document.getElementById('dock-' + side);
+  const dock = $('dock-' + side);
   const startX = evt.clientX;
   const startW = dock.getBoundingClientRect().width;
 
@@ -265,9 +272,9 @@ function StageApp() {
   const s = useStore();
   const sig = PANEL_ORDER.map((id) => s.panels[id].dock || '').join() + ':' + s.dockWidth.left + ':' + s.dockWidth.right;
   useEffect(() => {
-    const c = getController();
-    if (c && c.cy) {
-      c.cy.resize();
+    const controller = getController();
+    if (controller) {
+      controller.cy.resize();
     }
   }, [sig]);
 
@@ -282,21 +289,21 @@ function StageApp() {
 /* Bodies ------------------------------------------------------------------ */
 
 function body(id, s) {
-  const ctx = getController();
+  const controller = getController();
   if (id === 'inspector') {
     return html`<${InspectorBody} selected=${s.selected} />`;
   }
-  if (!ctx) {
+  if (!controller) {
     return null;
   }
   if (id === 'legend') {
     return html`<div class="legend-body">
-      ${ctx
+      ${controller
         .presentTypes()
         .map(
           (t) =>
             html` <div class="legend__item">
-              <span class="legend__swatch" dangerouslySetInnerHTML=${{ __html: ctx.symbolSvg(t.symbol, t.color) }}></span
+              <span class="legend__swatch" dangerouslySetInnerHTML=${{ __html: controller.symbolSvg(t.symbol, t.color) }}></span
               ><span class="legend__label">${t.label}</span>
             </div>`,
         )}
@@ -309,30 +316,30 @@ function body(id, s) {
     </div>`;
   }
   if (id === 'entities') {
-    return html`<${EntitiesBody} ctx=${ctx} />`;
+    return html`<${EntitiesBody} controller=${controller} />`;
   }
   if (id === 'table') {
-    return html`<${TableBody} ctx=${ctx} filter=${s.tableFilter} />`;
+    return html`<${TableBody} controller=${controller} filter=${s.tableFilter} />`;
   }
-  return html`<${SettingsBody} ctx=${ctx} />`;
+  return html`<${SettingsBody} controller=${controller} />`;
 }
 
-function EntitiesBody({ ctx }) {
+function EntitiesBody({ controller }) {
   return html` <div id="type-filters" class="filters">
-      ${ctx.presentTypes().map(
+      ${controller.presentTypes().map(
         (t) =>
           html` <label class="filters__item">
-            <input type="checkbox" checked=${t.visible} onChange=${(e) => ctx.setTypeVisible(t.type, e.target.checked)} />
+            <input type="checkbox" checked=${t.visible} onChange=${(e) => controller.setTypeVisible(t.type, e.target.checked)} />
             <span class="filters__swatch" style=${{ background: t.color }}></span>${t.label}
           </label>`,
       )}
     </div>
     <div id="entity-list" class="entity-list">
-      ${ctx.entities().map(
+      ${controller.entities().map(
         (e) =>
           html` <div class="entity-row" data-type=${e.entityType}>
-            <button class="entity-row__name" title="Focus this entity on the canvas" onClick=${() => ctx.focusEntity(e.id)}>
-              <b>${e.label}</b> <span class="entity-row__type">${ctx.typeLabel(e.entityType)}</span>
+            <button class="entity-row__name" title="Focus this entity on the canvas" onClick=${() => controller.focusEntity(e.id)}>
+              <b>${e.label}</b> <span class="entity-row__type">${controller.typeLabel(e.entityType)}</span>
             </button>
             <span class="entity-row__count">${e.fieldCount}</span>
             <button class="entity-row__fields" title="Show this entity's fields in the table" onClick=${() => openTableFor(e.id)}>fields</button>
@@ -414,7 +421,7 @@ function fitIdentifiers(table) {
   });
 }
 
-function TableBody({ ctx, filter }) {
+function TableBody({ controller, filter }) {
   const [term, setTerm] = useState('');
   const tableRef = useRef(null);
   const fitKey = useRef('');
@@ -453,7 +460,7 @@ function TableBody({ ctx, filter }) {
     };
   }, []);
 
-  const records = ctx.records().filter((r) => {
+  const records = controller.records().filter((r) => {
     if (filter && filter !== '__all__' && r.entityId !== filter) {
       return false;
     }
@@ -471,7 +478,7 @@ function TableBody({ ctx, filter }) {
       current = r.entityId;
       rows.push(
         html`<tr class="is-group">
-          <td colspan="5">${r.entity} · ${ctx.typeLabel(r.entityType)}</td>
+          <td colspan="5">${r.entity} · ${controller.typeLabel(r.entityType)}</td>
         </tr>`,
       );
     }
@@ -490,7 +497,7 @@ function TableBody({ ctx, filter }) {
                   title=${'Locate ' + ref.label + ' on the canvas'}
                   onClick=${(e) => {
                     e.preventDefault();
-                    ctx.focusEntity(ref.id);
+                    controller.focusEntity(ref.id);
                   }}
                   >${ref.label}</a
                 >`,
@@ -503,7 +510,7 @@ function TableBody({ ctx, filter }) {
   return html` <div class="panel__toolbar">
       <sl-select id="table-entity" class="panel__select" size="small" value=${filter} onsl-change=${(e) => setTableFilter(e.target.value)}>
         <sl-option value="__all__">All entities</sl-option>
-        ${ctx.entities().map((e) => html`<sl-option value=${e.id}>${e.label}</sl-option>`)}
+        ${controller.entities().map((e) => html`<sl-option value=${e.id}>${e.label}</sl-option>`)}
       </sl-select>
       <sl-input
         id="table-search"
@@ -540,17 +547,17 @@ function TableBody({ ctx, filter }) {
     </div>`;
 }
 
-function symbolSelect(ctx, type, value, onChange) {
+function symbolSelect(controller, type, value, onChange) {
   return html`<sl-select class="type-row__symbol" size="small" hoist data-symbol=${type || ''} value=${value} onsl-change=${onChange}>
-    ${ctx.symbolOptions().map((o) => html`<sl-option value=${o.key}><span slot="prefix" class="type-row__preview" dangerouslySetInnerHTML=${{ __html: ctx.symbolSvg(o.key, '#c7d2df', 20) }}></span>${o.label}</sl-option>`)}
+    ${controller.symbolOptions().map((o) => html`<sl-option value=${o.key}><span slot="prefix" class="type-row__preview" dangerouslySetInnerHTML=${{ __html: controller.symbolSvg(o.key, '#c7d2df', 20) }}></span>${o.label}</sl-option>`)}
   </sl-select>`;
 }
 
-function SettingsBody({ ctx }) {
+function SettingsBody({ controller }) {
   const [nt, setNt] = useState({ name: '', label: '', color: '#cfe3f7', symbol: 'rounded' });
 
   function add() {
-    if (ctx.addCustomType(nt.name, nt.label, nt.color, nt.symbol)) {
+    if (controller.addCustomType(nt.name, nt.label, nt.color, nt.symbol)) {
       setNt({ name: '', label: '', color: '#cfe3f7', symbol: 'rounded' });
     }
   }
@@ -558,22 +565,22 @@ function SettingsBody({ ctx }) {
   return html` <div class="settings-body">
     <h3 class="settings-section__title">Entity types</h3>
     <div id="type-settings" class="type-settings">
-      ${ctx.allTypes().map(
+      ${controller.allTypes().map(
         (t) =>
           html` <div class="type-row" data-type-row=${t}>
-            <span class="type-row__label">${ctx.typeLabel(t)}</span>
+            <span class="type-row__label">${controller.typeLabel(t)}</span>
             <div class="type-row__controls">
               <sl-color-picker
                 data-color=${t}
-                value=${ctx.colorFor(t)}
+                value=${controller.colorFor(t)}
                 format="hex"
                 size="small"
                 no-format-toggle
                 hoist
-                onsl-input=${(e) => ctx.applyColor(t, e.target.value)}
+                onsl-input=${(e) => controller.applyColor(t, e.target.value)}
               ></sl-color-picker>
-              ${symbolSelect(ctx, t, ctx.symbolFor(t), (e) => ctx.applySymbol(t, e.target.value))}
-              ${ctx.isCustomType(t) ? html`<button class="type-row__remove" type="button" title="Remove this custom type" onClick=${() => ctx.removeCustomType(t)}>${rawIcon('x', 14)}</button>` : null}
+              ${symbolSelect(controller, t, controller.symbolFor(t), (e) => controller.applySymbol(t, e.target.value))}
+              ${controller.isCustomType(t) ? html`<button class="type-row__remove" type="button" title="Remove this custom type" onClick=${() => controller.removeCustomType(t)}>${rawIcon('x', 14)}</button>` : null}
             </div>
           </div>`,
       )}
@@ -598,11 +605,11 @@ function SettingsBody({ ctx }) {
           hoist
           onsl-input=${(e) => setNt((p) => ({ ...p, color: e.target.value }))}
         ></sl-color-picker>
-        ${symbolSelect(ctx, null, nt.symbol, (e) => setNt((p) => ({ ...p, symbol: e.target.value })))}
+        ${symbolSelect(controller, null, nt.symbol, (e) => setNt((p) => ({ ...p, symbol: e.target.value })))}
         <sl-button size="small" variant="primary" data-add-type title="Add a custom entity type" onClick=${add}>${rawIcon('plus')}Add</sl-button>
       </div>
     </div>
-    <sl-button id="settings-reset" class="settings-reset" size="small" title="Restore the default colours and symbols" onClick=${() => ctx.resetColors()}
+    <sl-button id="settings-reset" class="settings-reset" size="small" title="Restore the default colours and symbols" onClick=${() => controller.resetColors()}
       >${rawIcon('rotate-ccw')}Reset to defaults</sl-button
     >
     <p class="panel__note">Saved to this browser and reused across diagrams.</p>
@@ -613,13 +620,10 @@ function SettingsBody({ ctx }) {
 
 function syncToggles() {
   const s = getState();
-  [
-    ['entities-toggle', 'entities'],
-    ['table-toggle', 'table'],
-    ['legend-toggle', 'legend'],
-    ['settings-toggle', 'settings'],
-  ].forEach(([btn, id]) => {
-    const el = document.getElementById(btn);
+
+  PANEL_TOGGLES.forEach(([btn, id]) => {
+    const el = $(btn);
+
     if (el) {
       el.classList.toggle('is-active', s.panels[id].open);
     }
@@ -627,15 +631,11 @@ function syncToggles() {
 }
 
 export function initUI() {
-  render(html`<${StageApp} />`, document.getElementById('stage-root'));
+  render(html`<${StageApp} />`, $('stage-root'));
 
-  [
-    ['entities-toggle', 'entities'],
-    ['table-toggle', 'table'],
-    ['legend-toggle', 'legend'],
-    ['settings-toggle', 'settings'],
-  ].forEach(([btn, id]) => {
-    const el = document.getElementById(btn);
+  PANEL_TOGGLES.forEach(([btn, id]) => {
+    const el = $(btn);
+
     if (el) {
       el.addEventListener('click', () => togglePanel(id));
     }

@@ -1,6 +1,20 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ContentModel, Entity, Field, KIND_SINGLE, KIND_MULTI, identifierSegments, fitFontSize } from '../../src/model.js';
+import {
+  ContentModel,
+  Entity,
+  Field,
+  KIND_SINGLE,
+  KIND_MULTI,
+  DEFAULT_TITLE,
+  kindForCardinality,
+  entityNodeId,
+  fieldNodeId,
+  hasEdgeId,
+  refEdgeId,
+  identifierSegments,
+  fitFontSize,
+} from '../../src/model.js';
 
 function edgesByGroup(data, group) {
   return data.edges.filter((edge) => (edge.data.group || '') === group);
@@ -60,6 +74,66 @@ test('bounded cardinality uses a "1..N" reference label', () => {
 
   const ref = edgesByGroup(model.toArray(), 'ref')[0];
   assert.equal(ref.data.cardinality, '1..3');
+});
+
+test('names a content model "Content model" by default', () => {
+  assert.equal(DEFAULT_TITLE, 'Content model');
+  assert.equal(new ContentModel().getTitle(), DEFAULT_TITLE);
+  assert.equal(new ContentModel().toArray().meta.title, DEFAULT_TITLE);
+});
+
+test('derives a field kind from its cardinality', async (t) => {
+  for (const [name, cardinality, expected] of dataProviderKindForCardinality()) {
+    await t.test(name, () => {
+      assert.equal(kindForCardinality(cardinality), expected);
+    });
+  }
+});
+
+function dataProviderKindForCardinality() {
+  return [
+    ['a single value', 1, KIND_SINGLE],
+    ['unlimited values', -1, KIND_MULTI],
+    ['a limit of 2', 2, KIND_MULTI],
+    ['a limit of 10', 10, KIND_MULTI],
+  ];
+}
+
+test('builds graph ids from entity types, bundles and field names', () => {
+  assert.equal(entityNodeId('node', 'article'), 'node.article');
+  assert.equal(entityNodeId('paragraph', '*'), 'paragraph.*');
+  assert.equal(fieldNodeId('node.article', 'field_tags'), 'field:node.article:field_tags');
+  assert.equal(hasEdgeId('field:node.article:field_tags'), 'has:field:node.article:field_tags');
+  assert.equal(refEdgeId('field:node.article:field_tags', 'taxonomy_term.tags'), 'ref:field:node.article:field_tags>taxonomy_term.tags');
+});
+
+test('toArray names its nodes and edges with the graph id helpers', () => {
+  const model = new ContentModel();
+  const article = new Entity('node', 'article', 'Article');
+  article.addField(new Field('field_tags', 'Tags', 'entity_reference', KIND_MULTI, false, 'taxonomy_term', ['tags', 'topics'], -1));
+  article.addField(new Field('field_sections', 'Sections', 'entity_reference_revisions', KIND_MULTI, false, 'paragraph', [], -1));
+  model.addEntity(article);
+
+  const data = model.toArray();
+  const articleId = entityNodeId('node', 'article');
+  const tagsId = fieldNodeId(articleId, 'field_tags');
+  const sectionsId = fieldNodeId(articleId, 'field_sections');
+  const edgeIds = [
+    hasEdgeId(tagsId),
+    refEdgeId(tagsId, entityNodeId('taxonomy_term', 'tags')),
+    refEdgeId(tagsId, entityNodeId('taxonomy_term', 'topics')),
+    hasEdgeId(sectionsId),
+    refEdgeId(sectionsId, entityNodeId('paragraph', '*')),
+  ];
+
+  assert.deepEqual(
+    data.nodes.map((n) => n.data.id),
+    [articleId, tagsId, sectionsId],
+  );
+  assert.deepEqual(
+    data.edges.map((e) => e.data.id),
+    edgeIds,
+  );
 });
 
 test('splits an identifier after each underscore run between 2 words', async (t) => {

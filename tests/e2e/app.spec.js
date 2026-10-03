@@ -718,6 +718,66 @@ test('connects a reference by dragging on the canvas', async ({ page }) => {
   expect(await page.evaluate(() => window.__nexus.cy.getElementById('ref:field:node.a:field_ref>node.b').length)).toBe(1);
 });
 
+function refCount(page, fieldId, targetId) {
+  return page.evaluate(
+    ([source, target]) => window.__nexus.cy.edges('[group="ref"]').filter((edge) => edge.source().id() === source && edge.target().id() === target).length,
+    [fieldId, targetId],
+  );
+}
+
+test('edits a reference loaded from configuration in the inspector', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+  await page.click('#mode-build');
+
+  // A field with 1 reference target, so the inspector shows exactly 1 tag.
+  const ref = await page.evaluate(() => {
+    const edge = window.__nexus.cy
+      .edges('[group="ref"]')
+      .filter((e) => e.source().outgoers('edge[group="ref"]').length === 1)
+      .first();
+    return { field: edge.source().id(), target: edge.target().id() };
+  });
+  await tapNode(page, ref.field);
+  const tags = page.locator('#inspector sl-tag.insp__reftag');
+  await expect(tags).toHaveCount(1);
+
+  await slSelect(page, '#inspector sl-select[placeholder="Add target…"]', ref.target);
+  expect(await refCount(page, ref.field, ref.target)).toBe(1);
+  await expect(tags).toHaveCount(1);
+
+  await tags.evaluate((el) => el.dispatchEvent(new Event('sl-remove', { bubbles: true })));
+  expect(await refCount(page, ref.field, ref.target)).toBe(0);
+  await expect(tags).toHaveCount(0);
+  expect(await page.evaluate((id) => window.__nexus.cy.getElementById(id).length, 'proxy:' + ref.field + '>' + ref.target)).toBe(0);
+});
+
+// Proxies left on the canvas with no edge to their field.
+function orphanProxies(page) {
+  return page.evaluate(() =>
+    window.__nexus.cy
+      .nodes('[group="proxy"]')
+      .filter((proxy) => proxy.connectedEdges().empty())
+      .map((proxy) => proxy.id()),
+  );
+}
+
+test('removes the proxies of references dropped by deleting a field or renaming an entity', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+  await page.click('#mode-build');
+
+  const field = await page.evaluate(() => window.__nexus.cy.nodes('[group="proxy"]').first().incomers('node').id());
+  await tapNode(page, field);
+  await page.click('#inspector .insp__delete');
+  expect(await orphanProxies(page)).toEqual([]);
+
+  await tapNode(page, 'node.program');
+  await slFill(page, '#inspector sl-input[data-machine-name]', 'show');
+  expect(await page.evaluate(() => window.__nexus.cy.getElementById('node.show').length)).toBe(1);
+  expect(await orphanProxies(page)).toEqual([]);
+});
+
 test('adds a field from an entity + handle, then renames it', async ({ page }) => {
   await page.click('#new-btn');
   await page.click('#mode-build');
@@ -867,6 +927,67 @@ test('renames an entity machine name and migrates its fields', async ({ page }) 
   expect(await page.evaluate(() => window.__nexus.cy.nodes('[group="field"][entity="node.article"]').length)).toBe(1);
 });
 
+test('derives machine names the same way for bundles, fields and custom entity types', async ({ page }) => {
+  await page.click('#new-btn');
+  await page.click('#mode-build');
+
+  await createEntity(page, 'node', 'Blog  Post', 'Blog post');
+  await page.click('.handle--right');
+  await page.waitForFunction(() => window.__nexus.cy.getElementById('field:node.blog_post:field_1').nonempty());
+  await slFill(page, '#inspector sl-input[data-machine-name]', 'Field__Body');
+
+  await page.click('#settings-toggle');
+  await page.fill('#settings [data-new-type]', 'My Widget__Type');
+  await page.click('#settings [data-add-type]');
+
+  const ids = await page.evaluate(() => window.__nexus.cy.nodes().map((node) => node.id()));
+  expect(ids).toContain('node.blog_post');
+  expect(ids).toContain('field:node.blog_post:field__body');
+  await expect(page.locator('#settings [data-type-row="my_widget__type"]')).toHaveCount(1);
+});
+
+function annotationEdges(page) {
+  return page.evaluate(() =>
+    window.__nexus.cy
+      .edges('[group="annotation"]')
+      .map((edge) => edge.source().id() + '>' + edge.target().id() + ' ' + edge.data('label'))
+      .sort(),
+  );
+}
+
+test('keeps the annotation edges of a renamed entity and its fields', async ({ page }) => {
+  await openDocument(page, {
+    nexus: 1,
+    title: 'Annotated renames',
+    entities: [
+      {
+        entityType: 'node',
+        bundle: 'article',
+        label: 'Article',
+        fields: [{ name: 'field_tags', label: 'Tags', fieldType: 'string', kind: 'single' }],
+      },
+    ],
+    annotations: {
+      nodes: [
+        { id: 'sync', kind: 'api', label: 'Sync API' },
+        { id: 'published', kind: 'event', label: 'Published' },
+      ],
+      edges: [
+        { from: 'node.article', to: 'published', label: 'emits' },
+        { from: 'sync', to: 'field:node.article:field_tags', label: 'fills' },
+      ],
+    },
+  });
+  await page.click('#mode-build');
+
+  await tapNode(page, 'field:node.article:field_tags');
+  await slFill(page, '#inspector sl-input[data-machine-name]', 'field_topics');
+  await tapNode(page, 'node.article');
+  await slFill(page, '#inspector sl-input[data-machine-name]', 'story');
+
+  expect(await annotationEdges(page)).toEqual(['node.story>published emits', 'sync>field:node.story:field_topics fills']);
+});
+
 test('shows the edit palette as a second toolbar row only in edit mode', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);
@@ -878,6 +999,59 @@ test('shows the edit palette as a second toolbar row only in edit mode', async (
 
   await page.click('#mode-build');
   await expect(palette).toBeVisible();
+});
+
+function paletteSwatches(page) {
+  return page
+    .locator('#build-tools [data-add-entity]')
+    .evaluateAll((buttons) =>
+      buttons.map((btn) => ({ type: btn.dataset.addEntity, color: getComputedStyle(btn.querySelector('.palette__swatch')).backgroundColor })),
+    );
+}
+
+test('paints each palette swatch in the colour of its entity type', async ({ page }) => {
+  await page.click('#example-btn');
+  await waitForGraph(page);
+  await page.click('#mode-build');
+  await page.click('#settings-toggle');
+
+  const types = await page.locator('#settings [data-type-row]').evaluateAll((rows) => rows.map((row) => row.dataset.typeRow));
+  const swatches = await paletteSwatches(page);
+  expect(swatches.map((swatch) => swatch.type)).toEqual(types);
+  expect(swatches.find((swatch) => swatch.type === 'paragraph').color).toBe('rgb(205, 189, 236)');
+
+  await slFill(page, 'sl-color-picker[data-color="paragraph"]', '#112233');
+  expect((await paletteSwatches(page)).find((swatch) => swatch.type === 'paragraph').color).toBe('rgb(17, 34, 51)');
+});
+
+test('adds an external entity from the palette', async ({ page }) => {
+  await page.click('#new-btn');
+  await page.click('#mode-build');
+
+  await page.click('[data-add-entity="external"]');
+  await expect(page.locator('[data-new="entity"] .insp__title')).toHaveText('New External entity');
+  await expect(page.locator('[data-new="entity"] sl-option[value="external"]')).toHaveCount(1);
+  await slFill(page, '[data-new-bundle]', 'crm_contact');
+  await slFill(page, '[data-new-label]', 'CRM contact');
+  await page.click('[data-create-entity]');
+
+  expect(await page.evaluate(() => window.__nexus.cy.getElementById('external.crm_contact').style('shape'))).toBe('hexagon');
+  expect(await captionsOf(page, 'external.crm_contact')).toEqual([
+    { text: 'External entity', shown: true },
+    { text: 'crm_contact', shown: true },
+  ]);
+});
+
+test('names entities dropped from the palette after their type', async ({ page }) => {
+  await page.click('#new-btn');
+  await page.click('#mode-build');
+
+  await page.dragAndDrop('[data-add-entity="node"]', '#cy', { targetPosition: { x: 200, y: 160 } });
+  await page.dragAndDrop('[data-add-entity="external"]', '#cy', { targetPosition: { x: 420, y: 160 } });
+  await page.waitForFunction(() => window.__nexus.cy.nodes('[group="entity"]').length === 2);
+
+  const entities = await page.evaluate(() => window.__nexus.cy.nodes('[group="entity"]').map((node) => node.id() + ' ' + node.data('label')));
+  expect(entities.sort()).toEqual(['external.external_entity_1 External Entity 1', 'node.content_type_1 Content Type 1']);
 });
 
 test('adds an entity from a palette type button', async ({ page }) => {
@@ -964,6 +1138,21 @@ test('exports the diagram as PNG named after the title', async ({ page }) => {
   expect(download.suggestedFilename()).toBe('example-content-model.png');
 });
 
+test('loads the SVG exporter without a duplicate registration warning', async ({ page }) => {
+  const warnings = [];
+  page.on('console', (message) => {
+    if (message.type() === 'warning') {
+      warnings.push(message.text());
+    }
+  });
+
+  await page.reload();
+  await page.click('#example-btn');
+  await waitForGraph(page);
+
+  expect(warnings.filter((warning) => warning.includes('Can not register'))).toEqual([]);
+});
+
 test('exports the diagram as SVG and honours a renamed title', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);
@@ -973,6 +1162,26 @@ test('exports the diagram as SVG and honours a renamed title', async ({ page }) 
   const [download] = await Promise.all([page.waitForEvent('download'), page.click('#export-svg')]);
   expect(download.suggestedFilename()).toBe('my-model.svg');
 });
+
+for (const [button, filename] of dataProviderUntitledDownloads()) {
+  test(`names the ${filename} download after the default title when the title is empty`, async ({ page }) => {
+    await page.click('#example-btn');
+    await waitForGraph(page);
+    await slFill(page, '#diagram-title', '');
+
+    const [download] = await Promise.all([page.waitForEvent('download'), page.click(button)]);
+    expect(download.suggestedFilename()).toBe(filename);
+  });
+}
+
+function dataProviderUntitledDownloads() {
+  return [
+    ['#export-png', 'content-model.png'],
+    ['#export-svg', 'content-model.svg'],
+    ['#export-csv', 'content-model-fields.csv'],
+    ['#doc-save', 'content-model.nexus.json'],
+  ];
+}
 
 test('enables proxy declutter by default on render', async ({ page }) => {
   await page.click('#example-btn');
@@ -1314,6 +1523,29 @@ test('exports the fields table as CSV', async ({ page }) => {
   expect(lines.some((l) => l.startsWith('Episode,Content type,'))).toBe(true);
 });
 
+test('quotes CSV cells that hold a comma, a quote or a line break', async ({ page }) => {
+  const labels = ['Comma, label', 'Quote "label"', 'Line\nfeed', 'Carriage\rreturn'];
+  await openDocument(page, {
+    nexus: 1,
+    title: 'Special characters',
+    entities: [
+      {
+        entityType: 'node',
+        bundle: 'article',
+        label: 'Article',
+        fields: labels.map((label, i) => ({ name: 'field_' + i, label: label, fieldType: 'string', kind: 'single' })),
+      },
+    ],
+  });
+
+  const [download] = await Promise.all([page.waitForEvent('download'), page.click('#export-csv')]);
+  const csv = readFileSync(await download.path(), 'utf8');
+
+  for (const cell of ['"Comma, label"', '"Quote ""label"""', '"Line\nfeed"', '"Carriage\rreturn"']) {
+    expect(csv).toContain(',' + cell + ',');
+  }
+});
+
 test('wraps field types and machine names in the fields table only after an underscore', async ({ page }) => {
   await page.click('#example-btn');
   await waitForGraph(page);
@@ -1623,6 +1855,24 @@ test('changes a type symbol and adds a custom entity type in settings', async ({
   await page.fill('#settings [data-new-type]', 'widget');
   await page.click('#settings [data-add-type]');
   await expect(page.locator('#settings [data-type-row="widget"]')).toHaveCount(1);
+});
+
+test('labels an entity of a custom type with the custom label in the inspector', async ({ page }) => {
+  await page.click('#new-btn');
+  await page.click('#settings-toggle');
+  await page.fill('#settings [data-new-type]', 'widget');
+  await page.fill('#settings input[placeholder="Label"]', 'Gadget widget');
+  await page.click('#settings [data-add-type]');
+  await page.click('#settings .panel__close');
+  await page.click('#mode-build');
+
+  await page.click('[data-add-entity="node"]');
+  await slSelect(page, '[data-new="entity"] sl-select', 'widget');
+  await expect(page.locator('[data-new="entity"] .insp__title')).toHaveText('New Gadget widget');
+  await slFill(page, '[data-new-bundle]', 'spinner');
+  await page.click('[data-create-entity]');
+
+  await expect(page.locator('#inspector .insp__ro')).toHaveText('Gadget widget');
 });
 
 test('resets colours and symbols to defaults from settings', async ({ page }) => {

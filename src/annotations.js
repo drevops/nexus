@@ -8,7 +8,11 @@
 
 import { Field, KIND_CALCULATED } from './model.js';
 
-const NODE_KINDS = ['event', 'api', 'callback'];
+export const ANNOTATION_KINDS = [
+  { kind: 'event', label: 'Event' },
+  { kind: 'api', label: 'API' },
+  { kind: 'callback', label: 'Callback' },
+];
 
 export function applyAnnotations(model, data) {
   if (!data || typeof data !== 'object') {
@@ -32,7 +36,7 @@ export function applyAnnotations(model, data) {
 
     const id = String(node.id);
     let kind = node.kind != null ? String(node.kind) : 'event';
-    kind = NODE_KINDS.includes(kind) ? kind : 'event';
+    kind = ANNOTATION_KINDS.some((entry) => entry.kind === kind) ? kind : 'event';
 
     const payload = { id, group: 'annotation', kind, label: node.label != null ? String(node.label) : id };
     if (node.method != null) {

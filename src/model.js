@@ -10,6 +10,38 @@ export const KIND_MULTI = 'multi';
 export const KIND_SYSTEM = 'system';
 export const KIND_CALCULATED = 'calculated';
 
+export const DEFAULT_TITLE = 'Content model';
+
+export const REFERENCE_FIELD_TYPES = ['entity_reference', 'entity_reference_revisions'];
+
+export function kindForCardinality(cardinality) {
+  return cardinality === 1 ? KIND_SINGLE : KIND_MULTI;
+}
+
+/**
+ * Graph ids: an entity node is '<entityType>.<bundle>' and a field node is
+ * 'field:<entityId>:<name>'. Each field has a 'has:' edge from its entity and
+ * 1 'ref:' edge per reference target.
+ *
+ * Saved layouts key positions by node id, so the node id formats are part of
+ * the saved document format.
+ */
+export function entityNodeId(entityType, bundle) {
+  return entityType + '.' + bundle;
+}
+
+export function fieldNodeId(entityId, name) {
+  return 'field:' + entityId + ':' + name;
+}
+
+export function hasEdgeId(fieldId) {
+  return 'has:' + fieldId;
+}
+
+export function refEdgeId(fieldId, targetId) {
+  return 'ref:' + fieldId + '>' + targetId;
+}
+
 /**
  * Human label for a Drupal storage cardinality: 1 is single-valued, -1 is
  * unlimited, any other N caps the number of values at N.
@@ -110,7 +142,7 @@ export class Entity {
   }
 
   id() {
-    return this.entityType + '.' + this.bundle;
+    return entityNodeId(this.entityType, this.bundle);
   }
 
   addField(field) {
@@ -123,7 +155,7 @@ export class Entity {
 }
 
 export class ContentModel {
-  constructor(title = 'Content model') {
+  constructor(title = DEFAULT_TITLE) {
     this.title = title;
     this.entities = new Map();
     this.extraNodes = [];
@@ -172,7 +204,6 @@ export class ContentModel {
   toArray() {
     const nodes = [];
     const edges = [];
-    let edgeIndex = 0;
 
     for (const entity of this.entities.values()) {
       nodes.push({
@@ -187,7 +218,7 @@ export class ContentModel {
       });
 
       for (const fieldItem of entity.fields) {
-        const fieldId = 'field:' + entity.id() + ':' + fieldItem.name;
+        const fieldId = fieldNodeId(entity.id(), fieldItem.name);
 
         nodes.push({
           data: {
@@ -204,20 +235,21 @@ export class ContentModel {
           },
         });
 
-        edges.push({ data: { id: 'e' + edgeIndex++, source: entity.id(), target: fieldId, group: 'has' } });
+        edges.push({ data: { id: hasEdgeId(fieldId), source: entity.id(), target: fieldId, group: 'has' } });
 
         if (!fieldItem.isReference()) {
           continue;
         }
 
         const targetType = String(fieldItem.targetType);
-        const bundles = fieldItem.targetBundles;
-        const targetIds = bundles.length === 0 ? [targetType + '.*'] : bundles.map((bundle) => targetType + '.' + bundle);
+        const bundles = fieldItem.targetBundles.length === 0 ? ['*'] : fieldItem.targetBundles;
 
-        for (const targetId of targetIds) {
+        for (const bundle of bundles) {
+          const targetId = entityNodeId(targetType, bundle);
+
           edges.push({
             data: {
-              id: 'e' + edgeIndex++,
+              id: refEdgeId(fieldId, targetId),
               source: fieldId,
               target: targetId,
               group: 'ref',

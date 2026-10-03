@@ -10,10 +10,12 @@
  * the on-canvas controls: drag-to-connect and the 4 "+" field handles.
  */
 
-import { cardinalityLabel } from './model.js';
-import { openInspector, closeInspector, setBuilder, bump, getController } from './store.js';
-
-const NOTE_LABELS = { event: 'Event', api: 'API', callback: 'Callback' };
+import { cardinalityLabel, kindForCardinality, entityNodeId, fieldNodeId, hasEdgeId, refEdgeId } from './model.js';
+import { ANNOTATION_KINDS } from './annotations.js';
+import { findEntityType } from './entity-types.js';
+import { humanize, machineName } from './names.js';
+import { openInspector, closeInspector, setBuilder, bump, getController, subscribe } from './store.js';
+import { $ } from './dom.js';
 
 let cy = null;
 let buildMode = false;
@@ -90,7 +92,7 @@ function onCanvasDrop(evt) {
   if (data.indexOf('entity:') === 0) {
     const entityType = data.slice(7);
     const bundle = uniqueBundle(entityType);
-    const id = addEntity(entityType, bundle, prettify(bundle), position);
+    const id = addEntity(entityType, bundle, humanize(bundle), position);
     if (id) {
       selectNode(id);
       bump();
@@ -99,7 +101,7 @@ function onCanvasDrop(evt) {
     const entityId = entityAt(position) || nearestEntity(position);
     if (entityId) {
       const name = uniqueFieldName(entityId);
-      const id = addField(entityId, name, prettify(name), 'string', 1, null, position);
+      const id = addField(entityId, name, humanize(name), 'string', 1, null, position);
       if (id) {
         selectNode(id);
         bump();
@@ -107,20 +109,27 @@ function onCanvasDrop(evt) {
     }
   } else if (data.indexOf('note:') === 0) {
     const kind = data.slice(5);
-    selectNode(addAnnotation(kind, NOTE_LABELS[kind] || 'Note', '', position));
+    selectNode(addAnnotation(kind, noteLabel(kind), '', position));
     bump();
   }
 }
 
-function $(id) {
-  return document.getElementById(id);
+function noteLabel(kind) {
+  const entry = ANNOTATION_KINDS.find((candidate) => candidate.kind === kind);
+
+  return entry ? entry.label : 'Note';
 }
 
-function slug(text) {
-  return String(text)
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '_')
-    .replace(/^_+|_+$/g, '');
+function paintSwatches() {
+  const controller = getController();
+
+  if (!controller) {
+    return;
+  }
+
+  document.querySelectorAll('[data-add-entity]').forEach((btn) => {
+    btn.querySelector('.palette__swatch').style.background = controller.colorFor(btn.getAttribute('data-add-entity'));
+  });
 }
 
 function viewportCenter() {
@@ -163,13 +172,15 @@ export function initBuilder() {
     }
 
     const name = uniqueFieldName(handleEntityId);
-    const id = addField(handleEntityId, name, prettify(name), 'string', 1, btn.getAttribute('data-side'));
+    const id = addField(handleEntityId, name, humanize(name), 'string', 1, btn.getAttribute('data-side'));
 
     if (id) {
       selectNode(id);
       bump();
     }
   });
+
+  subscribe(paintSwatches);
 }
 
 export function attachBuilder(instance) {
@@ -179,7 +190,7 @@ export function attachBuilder(instance) {
     if (evt.target === cy && placeKind) {
       const kind = placeKind;
       cancelPlace();
-      const id = addAnnotation(kind, NOTE_LABELS[kind] || 'Note', '', evt.position);
+      const id = addAnnotation(kind, noteLabel(kind), '', evt.position);
       selectNode(id);
       bump();
     }
@@ -457,18 +468,11 @@ function selectNode(id) {
 
 /* Auto-naming for items created directly on the canvas ------------------- */
 
-const BUNDLE_BASE = { node: 'content_type', taxonomy_term: 'vocabulary', media: 'media_type', paragraph: 'paragraph', block_content: 'block', user: 'user' };
-
-function prettify(value) {
-  return String(value || '')
-    .replace(/[_.]/g, ' ')
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
 function uniqueBundle(entityType) {
-  const base = BUNDLE_BASE[entityType] || 'entity';
+  const builtIn = findEntityType(entityType);
+  const base = builtIn ? builtIn.bundleBase : 'entity';
   let n = 1;
-  while (cy.getElementById(entityType + '.' + base + '_' + n).nonempty()) {
+  while (cy.getElementById(entityNodeId(entityType, base + '_' + n)).nonempty()) {
     n += 1;
   }
   return base + '_' + n;
@@ -476,7 +480,7 @@ function uniqueBundle(entityType) {
 
 function uniqueFieldName(entityId) {
   let n = 1;
-  while (cy.getElementById('field:' + entityId + ':field_' + n).nonempty()) {
+  while (cy.getElementById(fieldNodeId(entityId, 'field_' + n)).nonempty()) {
     n += 1;
   }
   return 'field_' + n;
@@ -499,19 +503,30 @@ function nearestEntity(position) {
 /* Renaming machine names re-ids the node and its dependent edges (the
    cascade the immutable-id rule otherwise avoids). Cytoscape drops
    render-only elements with the old node and the next render rebuilds them,
-   so only the persisted has and ref edges are migrated. */
+   so only the persisted has, ref and annotation edges are migrated. */
 
-function migrateField(field, newEntityId) {
-  const name = field.data('name');
-  const newFieldId = 'field:' + newEntityId + ':' + name;
-  cy.add({ group: 'nodes', data: { ...field.data(), id: newFieldId, entity: newEntityId }, position: { ...field.position() } });
-  cy.add({ group: 'edges', data: { id: 'has:' + newFieldId, source: newEntityId, target: newFieldId, group: 'has' } });
+function moveAnnotationEdges(oldId, newId) {
+  const edges = cy.getElementById(oldId).connectedEdges('[group="annotation"]');
+
+  // Each copy keeps its edge's id, so the original is removed first.
+  edges.forEach((edge) => {
+    const data = { ...edge.data() };
+    edge.remove();
+    cy.add({ group: 'edges', data: { ...data, source: data.source === oldId ? newId : data.source, target: data.target === oldId ? newId : data.target } });
+  });
+}
+
+function reidField(field, entityId, name) {
+  const newId = fieldNodeId(entityId, name);
+  cy.add({ group: 'nodes', data: { ...field.data(), id: newId, entity: entityId, name: name }, position: { ...field.position() } });
+  cy.add({ group: 'edges', data: { id: hasEdgeId(newId), source: entityId, target: newId, group: 'has' } });
   field.connectedEdges('[group="ref"]').forEach((edge) => {
     if (edge.source().id() === field.id()) {
       const target = edge.target().id();
-      cy.add({ group: 'edges', data: { ...edge.data(), id: 'ref:' + newFieldId + '>' + target, source: newFieldId, target: target } });
+      cy.add({ group: 'edges', data: { ...edge.data(), id: refEdgeId(newId, target), source: newId, target: target } });
     }
   });
+  moveAnnotationEdges(field.id(), newId);
   field.remove();
 }
 
@@ -521,21 +536,22 @@ function renameEntity(oldId, newBundleRaw) {
     return;
   }
   const entityType = node.data('entityType');
-  const newBundle = slug(newBundleRaw);
-  const newId = entityType + '.' + newBundle;
+  const newBundle = machineName(newBundleRaw);
+  const newId = entityNodeId(entityType, newBundle);
   if (!newBundle || newId === oldId || cy.getElementById(newId).nonempty()) {
     selectNode(oldId);
     return;
   }
 
   cy.add({ group: 'nodes', data: { ...node.data(), id: newId, bundle: newBundle }, position: { ...node.position() } });
+  moveAnnotationEdges(oldId, newId);
   cy.edges('[group="ref"]').forEach((edge) => {
     if (edge.target().id() === oldId) {
       const source = edge.source().id();
-      cy.add({ group: 'edges', data: { ...edge.data(), id: 'ref:' + source + '>' + newId, source: source, target: newId } });
+      cy.add({ group: 'edges', data: { ...edge.data(), id: refEdgeId(source, newId), source: source, target: newId } });
     }
   });
-  cy.nodes('[group="field"][entity="' + oldId + '"]').forEach((field) => migrateField(field, newId));
+  cy.nodes('[group="field"][entity="' + oldId + '"]').forEach((field) => reidField(field, newId, field.data('name')));
   node.remove();
   selectNode(newId);
   bump();
@@ -547,22 +563,14 @@ function renameField(oldId, newNameRaw) {
     return;
   }
   const entityId = field.data('entity');
-  const newName = slug(newNameRaw);
-  const newId = 'field:' + entityId + ':' + newName;
+  const newName = machineName(newNameRaw);
+  const newId = fieldNodeId(entityId, newName);
   if (!newName || newId === oldId || cy.getElementById(newId).nonempty()) {
     selectNode(oldId);
     return;
   }
 
-  cy.add({ group: 'nodes', data: { ...field.data(), id: newId, name: newName }, position: { ...field.position() } });
-  cy.add({ group: 'edges', data: { id: 'has:' + newId, source: entityId, target: newId, group: 'has' } });
-  field.connectedEdges('[group="ref"]').forEach((edge) => {
-    if (edge.source().id() === oldId) {
-      const target = edge.target().id();
-      cy.add({ group: 'edges', data: { ...edge.data(), id: 'ref:' + newId + '>' + target, source: newId, target: target } });
-    }
-  });
-  field.remove();
+  reidField(field, entityId, newName);
   selectNode(newId);
   bump();
 }
@@ -570,7 +578,7 @@ function renameField(oldId, newNameRaw) {
 /* Mutations ------------------------------------------------------------- */
 
 function addEntity(entityType, bundle, label, position) {
-  const id = entityType + '.' + bundle;
+  const id = entityNodeId(entityType, bundle);
   if (cy.getElementById(id).nonempty()) {
     return null;
   }
@@ -594,11 +602,11 @@ function fieldPlacement(anchor, side) {
 }
 
 function addField(entityId, name, label, fieldType, cardinality, side, position) {
-  const fieldId = 'field:' + entityId + ':' + name;
+  const fieldId = fieldNodeId(entityId, name);
   if (cy.getElementById(fieldId).nonempty()) {
     return null;
   }
-  const kind = cardinality === 1 ? 'single' : 'multi';
+  const kind = kindForCardinality(cardinality);
   const anchor = cy.getElementById(entityId).position();
   cy.add({
     group: 'nodes',
@@ -615,7 +623,7 @@ function addField(entityId, name, label, fieldType, cardinality, side, position)
     },
     position: position || fieldPlacement(anchor, side),
   });
-  cy.add({ group: 'edges', data: { id: 'has:' + fieldId, source: entityId, target: fieldId, group: 'has' } });
+  cy.add({ group: 'edges', data: { id: hasEdgeId(fieldId), source: entityId, target: fieldId, group: 'has' } });
   return fieldId;
 }
 
@@ -630,7 +638,7 @@ function addAnnotation(kind, label, method, position) {
 }
 
 function addReference(fieldId, targetId) {
-  const id = 'ref:' + fieldId + '>' + targetId;
+  const id = refEdgeId(fieldId, targetId);
   if (cy.getElementById(id).nonempty() || cy.getElementById(targetId).empty()) {
     return;
   }
@@ -640,7 +648,7 @@ function addReference(fieldId, targetId) {
 }
 
 function removeReference(fieldId, targetId) {
-  cy.getElementById('ref:' + fieldId + '>' + targetId).remove();
+  cy.getElementById(refEdgeId(fieldId, targetId)).remove();
 }
 
 function deleteNode(id) {
@@ -657,7 +665,7 @@ function deleteNode(id) {
 /* Builder controller ---------------------------------------------------- */
 
 function createEntity(form) {
-  const bundle = slug(form.bundle);
+  const bundle = machineName(form.bundle);
   if (!bundle) {
     return;
   }
@@ -670,7 +678,7 @@ function createEntity(form) {
 }
 
 function createField(entityId, form, side) {
-  const name = slug(form.name);
+  const name = machineName(form.name);
   if (!entityId || !name) {
     return;
   }
