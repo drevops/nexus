@@ -61,6 +61,11 @@ const DEFAULT_SYMBOLS = {
 
 const SETTINGS_KEY = 'nexusSettings';
 
+const LAYOUT_SPACING = {
+  fields: { nodeSep: 10, rankSep: 62 },
+  overview: { nodeSep: 34, rankSep: 120 },
+};
+
 let settings = loadSettings();
 const activeColors = {};
 const activeSymbols = {};
@@ -289,6 +294,10 @@ function esc(value) {
   return String(value === null || value === undefined ? '' : value).replace(/[&<>"]/g, (c) => {
     return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
   });
+}
+
+function overlaps(a, b) {
+  return a.x1 < b.x2 && b.x1 < a.x2 && a.y1 < b.y2 && b.y1 < a.y2;
 }
 
 function buildElements(model) {
@@ -666,14 +675,15 @@ function buildController(model, options = {}) {
     // Machine-name captions hang ~16px below each node (outside its Cytoscape
     // box), so widen the in-rank gap to fit them when they are shown.
     const captionRoom = showMachineNames ? 18 : 0;
+    const spacing = fieldsMode ? LAYOUT_SPACING.fields : LAYOUT_SPACING.overview;
     cy.elements(':visible')
       .layout({
         name: 'dagre',
         rankDir: rankDir,
         ranker: 'network-simplex',
-        nodeSep: (fieldsMode ? 10 : 34) + captionRoom,
+        nodeSep: spacing.nodeSep + captionRoom,
         edgeSep: 6,
-        rankSep: fieldsMode ? 62 : 120,
+        rankSep: spacing.rankSep,
         nodeDimensionsIncludeLabels: true,
         animate: false,
       })
@@ -692,9 +702,65 @@ function buildController(model, options = {}) {
         node.position(layout[node.id()]);
       }
     });
+    placeMissingProxies(layout);
     resetView();
     positionCaptions();
     positionNotes();
+  }
+
+  // Proxies are built at render time, so a saved layout can lack positions for
+  // some (see addReference() in builder.js). A missing proxy is placed in the
+  // free slot of its field's proxy column nearest the field.
+  function placeMissingProxies(layout) {
+    const missing = cy.nodes('[group="proxy"]').filter((proxy) => !layout[proxy.id()]);
+    if (missing.empty()) {
+      return;
+    }
+
+    const settled = cy.nodes().difference(missing);
+    const taken = settled.map((node) => node.boundingBox());
+    missing.forEach((proxy) => {
+      const field = proxy.incomers('node');
+      const x = proxyColumn(field, proxy, missing);
+      const y = field.position('y');
+      const width = proxy.outerWidth();
+      const height = proxy.outerHeight();
+      const step = height + LAYOUT_SPACING.fields.nodeSep;
+      const slotBox = (dy) => ({ x1: x - width / 2, x2: x + width / 2, y1: y + dy - height / 2, y2: y + dy + height / 2 });
+      let offset = 0;
+
+      // Offsets alternate below and above the field (0, +1, -1, +2, -2...
+      // steps), so its proxies centre on it.
+      while (taken.some((other) => overlaps(other, slotBox(offset)))) {
+        offset = offset > 0 ? -offset : step - offset;
+      }
+
+      proxy.position({ x: x, y: y + offset });
+      taken.push(slotBox(offset));
+    });
+  }
+
+  // A field's placed proxies fix its column. Otherwise the column clears the
+  // widest of the entity's fields stacked with this one, so no proxy is drawn
+  // beside another field.
+  function proxyColumn(field, proxy, missing) {
+    const placed = field.outgoers('node[group="proxy"]').difference(missing);
+    if (placed.nonempty()) {
+      return placed.first().position('x');
+    }
+
+    const entity = cy.getElementById(field.data('entity'));
+    const sideOf = (node) => (node.position('x') < entity.position('x') ? -1 : 1);
+    const side = sideOf(field);
+    const own = field.boundingBox();
+    const stack = cy.nodes('[group="field"][entity="' + entity.id() + '"]').filter((peer) => {
+      const box = peer.boundingBox();
+      return sideOf(peer) === side && box.x1 < own.x2 && own.x1 < box.x2;
+    });
+    const box = stack.boundingBox();
+    const edge = side > 0 ? box.x2 : box.x1;
+
+    return edge + side * (LAYOUT_SPACING.fields.rankSep + proxy.outerWidth() / 2);
   }
 
   function focusEntity(id) {
