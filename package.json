@@ -11,6 +11,7 @@
     "contributors": [],
     "repository": "github:drevops/nexus",
     "bugs": "https://github.com/drevops/nexus/issues",
+    "homepage": "https://nexus.drevops.com",
     "private": true,
     "type": "module",
     "directories": {

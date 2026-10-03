@@ -1537,6 +1537,7 @@ test('opens an about dialog explaining browser-only storage and the licence', as
   await expect(page.locator('#about-license')).toHaveAttribute('href', 'https://github.com/drevops/nexus/blob/main/LICENSE');
   await expect(page.locator('#about-license')).toHaveText('GNU General Public License, version 2 or later');
   await expect(page.locator('#about-dialog')).toContainText('(' + license + ')');
+  await expect(page.locator('#about-dialog')).toContainText('Google Analytics');
 
   await page.click('#about-close');
   await expect(page.locator('#about-dialog')).not.toBeVisible();
@@ -1549,6 +1550,50 @@ test('shows the app version on the landing screen and in the about dialog', asyn
   await waitForGraph(page);
   await page.click('#about-toggle');
   await expect(page.locator('#about-version')).toHaveText('dev');
+});
+
+test('sends nothing to Google Analytics while the measurement ID is empty', async ({ page }) => {
+  const requests = [];
+  page.on('request', (request) => {
+    if (/google-analytics\.com|googletagmanager\.com/.test(request.url())) {
+      requests.push(request.url());
+    }
+  });
+
+  await page.reload({ waitUntil: 'networkidle' });
+
+  expect(requests).toEqual([]);
+  expect(await page.evaluate(() => 'dataLayer' in window)).toBe(false);
+});
+
+test('loads Google Analytics for a stamped measurement ID and reports a fixed page title', async ({ page }) => {
+  const stamped = "export const GOOGLE_ANALYTICS_ID = 'G-TEST123';";
+  await page.route('**/src/analytics-id.js', (route) => route.fulfill({ contentType: 'text/javascript', body: stamped }));
+  await page.route('https://www.googletagmanager.com/**', (route) => route.fulfill({ contentType: 'text/javascript', body: '' }));
+
+  const gtag = page.waitForRequest((request) => request.url() === 'https://www.googletagmanager.com/gtag/js?id=G-TEST123');
+  await page.reload();
+  await gtag;
+
+  await expect(page.locator('head script[src="https://www.googletagmanager.com/gtag/js?id=G-TEST123"]')).toHaveJSProperty('async', true);
+
+  const config = await page.evaluate(() => window.dataLayer.map((entry) => [...entry]).find((command) => command[0] === 'config'));
+  expect(config).toEqual(['config', 'G-TEST123', { page_title: 'Nexus' }]);
+});
+
+test('loads a diagram while an ad blocker blocks the analytics modules', async ({ page }) => {
+  const blocked = [];
+  await page.route('**/src/analytics*.js', (route) => {
+    blocked.push(new URL(route.request().url()).pathname);
+    return route.abort('blockedbyclient');
+  });
+
+  await page.reload();
+  await page.click('#example-btn');
+  await waitForGraph(page);
+
+  expect(blocked.sort()).toEqual(['/src/analytics-id.js', '/src/analytics.js']);
+  expect(await entityCount(page)).toBe(30);
 });
 
 test('draws entity types with their symbols and a dynamic legend', async ({ page }) => {

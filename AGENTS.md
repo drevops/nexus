@@ -4,18 +4,19 @@ This file provides guidance to AI agents when working with code in this reposito
 
 ## Project Overview
 
-Nexus is a static web app that draws a Drupal site's content model from its exported configuration, entirely in the browser. There's no backend and no build step: `index.html` loads the app's own ES modules and stylesheet from `src/` plus vendored libraries from `assets/vendor/`, and GitHub Pages serves the files as they are.
+Nexus is a static web app that draws a Drupal site's content model from its exported configuration, entirely in the browser. There's no backend and no build step: `index.html` loads the app's own ES modules and stylesheet from `src/` plus vendored libraries from `assets/vendor/`, and GitHub Pages serves the files as they are at https://nexus.drevops.com.
 
 The project was created from the Scaffold template, which supplies the CI workflows, the linting and test tooling, and the Renovate configuration.
 
 ## Application Architecture
 
-- **Entry point:** `index.html` declares an import map for Preact, Preact hooks and htm, loads the classic vendor scripts (Cytoscape, Dagre, cytoscape-dagre, cytoscape-svg, js-yaml) and the Shoelace autoloader, then starts `src/app.js`.
+- **Entry point:** `index.html` declares an import map for Preact, Preact hooks and htm, loads the classic vendor scripts (Cytoscape, Dagre, cytoscape-dagre, cytoscape-svg, js-yaml) and the Shoelace autoloader, then starts `src/app.js` and, from a separate inline module, `src/analytics.js`.
 - **Model builder (pure, no DOM):** `src/parser.js` turns parsed config YAML into a `ContentModel` from `src/model.js`; `src/base-fields.js` adds curated system fields and `src/annotations.js` applies the optional `annotations.yml` overlay.
 - **Documents:** `src/document.js` converts between the live graph and a saved `.nexus.json` document.
 - **UI (browser only):** `src/render.js` draws the model with Cytoscape, `src/builder.js` adds build-mode editing, `src/inspector.js` and `src/ui.js` are Preact components over Shoelace controls, `src/store.js` is the shared UI store, `src/export.js` handles PNG and SVG export, `src/icons.js` holds inline SVG icons and `src/styles.css` styles the page.
 - **Logo and favicon:** `logo.svg` is the README logo and `assets/favicon.svg` the browser tab icon; both turn the mark's ink white under a dark colour scheme on their own. The page draws the same mark inline as the `nexus` icon in `src/icons.js`, coloured from `src/styles.css`, because Safari renders an `<img>` SVG in the system colour scheme rather than the app's theme.
 - **Version:** `src/version.js` ships as `dev`; the release workflow stamps the release tag into the deployed copy.
+- **Analytics:** `src/analytics.js` loads Google Analytics 4 through `gtag.js` and reports every hit with the fixed page title `Nexus`, because `document.title` holds the open diagram's title. `index.html` starts it from its own inline module, never through `src/app.js`, so an ad blocker that blocks the analytics files can't stop the app. `src/analytics-id.js` ships an empty measurement ID, so local runs, tests and Netlify previews load no analytics; the release workflow stamps the `GOOGLE_ANALYTICS_ID` repository variable into the deployed copy.
 - **Vendored libraries:** `assets/vendor/` holds third-party builds. Don't edit, lint or format them.
 - **Example:** `examples/example/` is the bundled demo configuration, loaded through its `manifest.json`.
 
@@ -51,6 +52,8 @@ npm run test-coverage
 
 - `tests/unit/*.test.js` use `node:test` and `node:assert` against the pure model modules, with shared fixtures in `tests/fixtures/`.
 - `tests/unit/assemble.test.js` runs `npm run assemble` and checks that `_site/` holds every file `index.html` and the bundled example load, so a file the app needs can't be left out of a deploy.
+- `tests/unit/analytics.test.js` runs `startAnalytics()` against a fake window: an empty ID loads nothing, and an ID queues the gtag commands as `Arguments` objects with the fixed page title and adds the async `gtag.js` script.
+- `tests/unit/release.test.js` checks that every constant `release.yml` stamps is one its source module exports, and runs the Google Analytics stamp step's script against valid and malformed IDs.
 - `tests/unit/logo.test.js` checks that the `nexus` icon in `src/icons.js` draws the same shapes as `logo.svg`, that `logo.svg` turns its ink white in a dark colour scheme, and that the README shows it.
 - `tests/e2e/app.spec.js` drives the app with Playwright against `tests/server.mjs`, a dependency-free static server on port 8000, with config fixtures in `tests/e2e/fixtures/`. Code inside `page.evaluate()` runs in the browser, not in Node.
 - Coverage counts only the modules the unit tests load (`"all": false` in `.c8rc.json`), so browser-only modules don't count against the CI threshold.
@@ -64,7 +67,7 @@ npm run test-coverage
 ## CI/CD
 
 - `.github/workflows/test-nodejs.yml` - lint, unit tests with coverage on Node 22 and 24, a Playwright end-to-end job, and a Netlify deploy that runs once both pass: each pull request to its own preview, `main` to the project's main URL. The deploy reads the `NETLIFY_SITE_ID` variable and the `NETLIFY_AUTH_TOKEN` secret and is skipped without them. A new push to a pull request cancels its superseded run, while runs for `main` queue so they deploy in order
-- `.github/workflows/release.yml` - on a published release, assembles `index.html`, `src/`, `assets/` and `examples/` into `_site` with `npm run assemble`, stamps the version and deploys to GitHub Pages
+- `.github/workflows/release.yml` - on a published release, assembles `index.html`, `src/`, `assets/` and `examples/` into `_site` with `npm run assemble`, stamps the version and, when the `GOOGLE_ANALYTICS_ID` variable is set, the Google Analytics measurement ID, and deploys to GitHub Pages at https://nexus.drevops.com
 - `.github/workflows/draft-release-notes.yml` - keeps a draft release up to date as pull requests merge
 - `.github/workflows/assign-author.yml` - assigns each pull request to its author
 - `renovate.json` - Renovate keeps npm packages and the SHA-pinned actions up to date
