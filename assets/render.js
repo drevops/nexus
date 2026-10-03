@@ -822,22 +822,36 @@ function buildController(model, options = {}) {
     return lines;
   }
 
+  function addCaptions(node) {
+    const lines = captionLinesFor(node);
+    if (!lines.length) {
+      return;
+    }
+
+    captionMap[node.id()] = lines.map((line) => {
+      const div = document.createElement('div');
+      div.className = line.cls;
+      div.dataset.nodeId = node.id();
+      div.textContent = line.text;
+      captionsEl.appendChild(div);
+      return div;
+    });
+  }
+
+  function removeCaptions(node) {
+    const divs = captionMap[node.id()];
+    if (!divs) {
+      return;
+    }
+
+    divs.forEach((div) => div.remove());
+    delete captionMap[node.id()];
+  }
+
   function rebuildCaptions() {
     captionsEl.innerHTML = '';
     captionMap = {};
-    cy.nodes().forEach((node) => {
-      const lines = captionLinesFor(node);
-      if (!lines.length) {
-        return;
-      }
-      captionMap[node.id()] = lines.map((line) => {
-        const div = document.createElement('div');
-        div.className = line.cls;
-        div.textContent = line.text;
-        captionsEl.appendChild(div);
-        return div;
-      });
-    });
+    cy.nodes().forEach((node) => addCaptions(node));
     positionCaptions();
   }
 
@@ -878,27 +892,41 @@ function buildController(model, options = {}) {
 
   // A note badge sits at an entity's top-right corner; hovering or clicking it
   // reveals the note text in the shared tooltip.
+  function addNoteBadge(node) {
+    if (node.data('group') === 'proxy' || !(node.data('note') || '').trim()) {
+      return;
+    }
+
+    const badge = document.createElement('button');
+    badge.type = 'button';
+    badge.className = 'note-badge';
+    badge.dataset.nodeId = node.id();
+    badge.setAttribute('aria-label', 'Show note');
+    badge.innerHTML = icon('sticky-note');
+    badge.addEventListener('mouseenter', () => showNote(node.id()));
+    badge.addEventListener('mouseleave', hideNote);
+    badge.addEventListener('click', (evt) => {
+      evt.stopPropagation();
+      showNote(node.id());
+    });
+    notesEl.appendChild(badge);
+    noteMap[node.id()] = badge;
+  }
+
+  function removeNoteBadge(node) {
+    const badge = noteMap[node.id()];
+    if (!badge) {
+      return;
+    }
+
+    badge.remove();
+    delete noteMap[node.id()];
+  }
+
   function rebuildNotes() {
     notesEl.innerHTML = '';
     noteMap = {};
-    cy.nodes().forEach((node) => {
-      if (node.data('group') === 'proxy' || !(node.data('note') || '').trim()) {
-        return;
-      }
-      const badge = document.createElement('button');
-      badge.type = 'button';
-      badge.className = 'note-badge';
-      badge.setAttribute('aria-label', 'Show note');
-      badge.innerHTML = icon('sticky-note');
-      badge.addEventListener('mouseenter', () => showNote(node.id()));
-      badge.addEventListener('mouseleave', hideNote);
-      badge.addEventListener('click', (evt) => {
-        evt.stopPropagation();
-        showNote(node.id());
-      });
-      notesEl.appendChild(badge);
-      noteMap[node.id()] = badge;
-    });
+    cy.nodes().forEach((node) => addNoteBadge(node));
     positionNotes();
   }
 
@@ -1069,6 +1097,19 @@ function buildController(model, options = {}) {
     });
   });
   let captionRaf = false;
+
+  // rebuildCaptions() and rebuildNotes() only cover nodes present when they
+  // run, so these handlers apply later additions and removals to both layers.
+  cy.on('add', 'node', (evt) => {
+    addCaptions(evt.target);
+    addNoteBadge(evt.target);
+    positionCaptions();
+    positionNotes();
+  });
+  cy.on('remove', 'node', (evt) => {
+    removeCaptions(evt.target);
+    removeNoteBadge(evt.target);
+  });
 
   const controller = {
     cy,
