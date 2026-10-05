@@ -13,6 +13,9 @@
  * edges (see src/references.js). The controller's syncReferences() brings
  * them in line with a changed graph.
  *
+ * The toolbar's layout menu picks the layout that each layout run uses (see
+ * LAYOUTS), and localStorage keeps the pick for later diagrams.
+ *
  * The controller that render() returns sets entity type colours and symbols
  * and adds or removes custom entity types, saving each change to
  * localStorage.
@@ -27,6 +30,7 @@ import { humanize, machineName } from './names.js';
 import { REFERENCE_ELEMENTS, syncReferenceElements } from './references.js';
 import { fitWidth, wrapLabel } from './label-fit.js';
 import { checkpoint, untracked } from './undo.js';
+import { packColumns } from './packing.js';
 import { $ } from './dom.js';
 
 // A small library of UML-ish node shapes, keyed for settings/persistence; the
@@ -50,10 +54,23 @@ const FALLBACK_SYMBOL = 'rounded';
 
 const SETTINGS_KEY = 'nexusSettings';
 
+// columnSep and islandSep space the islands that a packed layout stacks in
+// columns.
 const LAYOUT_SPACING = {
-  fields: { nodeSep: 10, rankSep: 62 },
-  overview: { nodeSep: 34, rankSep: 120 },
+  fields: { nodeSep: 10, rankSep: 62, columnSep: 96, islandSep: 40 },
+  overview: { nodeSep: 34, rankSep: 120, columnSep: 160, islandSep: 60 },
 };
+
+// The layouts the toolbar's layout menu offers, keyed by menu item value. A
+// packed layout runs Dagre on each island of connected nodes on its own and
+// then stacks the islands in columns that fill the canvas.
+const LAYOUTS = {
+  lr: { label: 'LR', title: 'Tidy up: lay the diagram out left to right', rankDir: 'LR', packed: false },
+  tb: { label: 'TB', title: 'Tidy up: lay the diagram out top to bottom', rankDir: 'TB', packed: false },
+  columns: { label: 'Columns', title: 'Tidy up: stack the entities in columns that fill the screen', rankDir: 'LR', packed: true },
+};
+
+const DEFAULT_LAYOUT = 'columns';
 
 // Cytoscape's default label font, pinned so canvas measurement matches the
 // labels Cytoscape draws.
@@ -85,7 +102,7 @@ const captionStyles = {};
 
 let fieldsMode = false;
 let proxyMode = false;
-let rankDir = 'LR';
+let layoutName = Object.hasOwn(LAYOUTS, settings.layout) ? settings.layout : DEFAULT_LAYOUT;
 let showMachineNames = false;
 let typeVisible = {};
 
@@ -569,7 +586,7 @@ function style() {
       selector: 'edge',
       style: {
         'curve-style': 'taxi',
-        'taxi-direction': () => (rankDir === 'TB' ? 'vertical' : 'horizontal'),
+        'taxi-direction': () => (LAYOUTS[layoutName].rankDir === 'TB' ? 'vertical' : 'horizontal'),
         'taxi-turn': '50%',
         'taxi-turn-min-distance': '8px',
         width: 1.2,
@@ -651,7 +668,6 @@ function buildController(model, options = {}) {
   typeVisible = {};
   fieldsMode = true;
   proxyMode = true;
-  rankDir = 'LR';
   showMachineNames = true;
   initColors();
   if (Array.isArray(options.customTypes) && options.customTypes.length) {
@@ -751,21 +767,63 @@ function buildController(model, options = {}) {
 
   function runLayout() {
     const spacing = fieldsMode ? LAYOUT_SPACING.fields : LAYOUT_SPACING.overview;
-    shown(cy.elements())
-      .layout({
-        name: 'dagre',
-        rankDir: rankDir,
-        ranker: 'network-simplex',
-        nodeSep: spacing.nodeSep,
-        edgeSep: 6,
-        rankSep: spacing.rankSep,
-        nodeDimensionsIncludeLabels: true,
-        animate: false,
-      })
-      .run();
+    const layout = LAYOUTS[layoutName];
+    const elements = shown(cy.elements());
+    const options = {
+      name: 'dagre',
+      rankDir: layout.rankDir,
+      ranker: 'network-simplex',
+      nodeSep: spacing.nodeSep,
+      edgeSep: 6,
+      rankSep: spacing.rankSep,
+      nodeDimensionsIncludeLabels: true,
+      animate: false,
+    };
+
+    if (layout.packed) {
+      packIslands(elements, options, { x: spacing.columnSep, y: spacing.islandSep });
+    } else {
+      elements.layout(options).run();
+    }
+
     resetView();
     positionCaptions();
     positionNotes();
+  }
+
+  // A comparator that orders entities by the place of their type in the
+  // diagram's type list, then by label.
+  function entityOrder() {
+    const types = allTypeKeys();
+    const rank = (entity) => {
+      const index = types.indexOf(entity.data('entityType'));
+
+      return index === -1 ? types.length : index;
+    };
+
+    return (a, b) => rank(a) - rank(b) || String(a.data('label')).localeCompare(String(b.data('label')));
+  }
+
+  // Lays each island of connected elements out on its own, then stacks the
+  // islands in columns shaped like the canvas. An island takes the place of
+  // its first entity in entityOrder().
+  function packIslands(elements, options, gap) {
+    const compare = entityOrder();
+    const islands = elements.components().map((island) => {
+      island.layout({ ...options, fit: false }).run();
+
+      return { island: island, box: island.boundingBox(), lead: island.nodes('[group="entity"]').sort(compare).first() };
+    });
+
+    // An island with no entity, such as a lone note, goes last.
+    islands.sort((a, b) => (a.lead.empty() || b.lead.empty() ? b.lead.length - a.lead.length : compare(a.lead, b.lead)));
+
+    const packed = packColumns(islands.map((entry) => entry.box), { w: cy.width(), h: cy.height() }, gap);
+
+    islands.forEach((entry, index) => {
+      const { x, y } = packed.positions[index];
+      entry.island.nodes().shift({ x: x - entry.box.x1, y: y - entry.box.y1 });
+    });
   }
 
   function applyLayout(layout) {
@@ -1223,7 +1281,7 @@ function buildController(model, options = {}) {
 
   $('fields-toggle').classList.add('is-active');
   $('proxy-toggle').classList.add('is-active');
-  $('layout-toggle').querySelector('.layout-label').textContent = 'Layout: LR';
+  showLayout();
   $('machine-names').classList.add('is-active');
   $('search').value = '';
 
@@ -1300,6 +1358,20 @@ function buildController(model, options = {}) {
   };
 }
 
+// Names the picked layout on the layout button and ticks it in the menu.
+function showLayout() {
+  const layout = LAYOUTS[layoutName];
+  const button = $('layout-run');
+  const items = $('layout-menu').querySelectorAll('sl-menu-item');
+
+  button.querySelector('.layout-label').textContent = 'Layout: ' + layout.label;
+  // SlButton does not reflect its title property, so set the attribute.
+  button.setAttribute('title', layout.title);
+  items.forEach((item) => {
+    item.checked = item.getAttribute('value') === layoutName;
+  });
+}
+
 function wire() {
   $('zoom-in').addEventListener('click', () =>
     controller.cy.zoom({ level: controller.cy.zoom() * 1.25, renderedPosition: { x: controller.cy.width() / 2, y: controller.cy.height() / 2 } }),
@@ -1312,9 +1384,23 @@ function wire() {
     controller.clearFocus();
     controller.resetView();
   });
-  $('tidy').addEventListener('click', () => {
+  $('layout-run').addEventListener('click', () => {
     controller.runLayout();
-    checkpoint('Tidied the layout');
+    checkpoint('Re-ran the ' + LAYOUTS[layoutName].label + ' layout');
+  });
+
+  // The menu flips a checkbox item on every select, so showLayout() ticks
+  // the picked item again even when it was already ticked. Cytoscape caches
+  // the edges' taxi direction from style(), so the stylesheet is reapplied
+  // before the run. A pick changes the display, so its layout is not a history
+  // step, as for the display toggles below.
+  $('layout-menu').addEventListener('sl-select', (evt) => {
+    layoutName = evt.detail.item.value;
+    settings.layout = layoutName;
+    saveSettings();
+    showLayout();
+    controller.cy.style().update();
+    untracked(() => controller.runLayout());
   });
 
   $('zoom-menu').addEventListener('sl-select', (evt) => {
@@ -1344,12 +1430,6 @@ function wire() {
     }
     controller.clearFocus();
     untracked(() => controller.refresh(true));
-  });
-
-  $('layout-toggle').addEventListener('click', () => {
-    rankDir = rankDir === 'LR' ? 'TB' : 'LR';
-    $('layout-toggle').querySelector('.layout-label').textContent = 'Layout: ' + rankDir;
-    untracked(() => controller.runLayout());
   });
 
   $('machine-names').addEventListener('click', (evt) => {

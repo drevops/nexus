@@ -71,8 +71,15 @@
       <sl-button id="machine-names" class="toolbar__button" size="small" data-icon="code" title="Show or hide machine names under each symbol">Machine names</sl-button>
     </sl-button-group>
     <sl-button-group class="toolbar__group" label="Layout">
-      <sl-button id="layout-toggle" class="toolbar__button" size="small" data-icon="layout" title="Switch layout direction (left-right / top-bottom)"><span class="layout-label">Layout: LR</span></sl-button>
-      <sl-button id="tidy" class="toolbar__button" size="small" data-icon="tidy" title="Tidy up: re-run the layout to arrange everything neatly">Tidy</sl-button>
+      <sl-button id="layout-run" class="toolbar__button" size="small" data-icon="layout" title="Tidy up: stack the entities in columns that fill the screen"><span class="layout-label">Layout: Columns</span></sl-button>
+      <sl-dropdown placement="bottom-end" hoist>
+        <sl-button id="layout-pick" slot="trigger" class="toolbar__button" size="small" caret title="Choose a layout" aria-label="Choose a layout"></sl-button>
+        <sl-menu id="layout-menu">
+          <sl-menu-item type="checkbox" value="lr">Left to right (LR)</sl-menu-item>
+          <sl-menu-item type="checkbox" value="tb">Top to bottom (TB)</sl-menu-item>
+          <sl-menu-item type="checkbox" value="columns" checked>Columns</sl-menu-item>
+        </sl-menu>
+      </sl-dropdown>
     </sl-button-group>
     <sl-button-group class="toolbar__group" label="Panels">
       <sl-button id="entities-toggle" class="toolbar__button" size="small" data-icon="box" title="Toggle the entities panel">Entities</sl-button>

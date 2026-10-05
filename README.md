@@ -84,13 +84,13 @@ By default, content types are rounded rectangles, vocabularies are tags, media a
 
 ## Navigating the diagram
 
-The diagram opens laid out left to right, with every field, proxy and machine name on show. The toolbar offers:
+The diagram opens with its entities stacked in columns that fill the screen, with every field, proxy and machine name on show. The toolbar offers:
 
 - **Find entity** - type a name, then press Enter or the search button to fade everything else and zoom to the matches.
 - **Fields** - hide the fields to collapse the diagram to an entity-only overview, or show them again.
 - **Proxies** - draw each reference as a faded copy of its target beside the field, or as an edge to the entity itself.
 - **Machine names** - show each bundle/field machine name in monospace beneath its symbol.
-- **Layout: LR / TB** - switch the flow direction; **Tidy** re-runs the layout.
+- **Layout** - re-run the current layout, or pick another from the arrow beside it: **Columns** stacks each entity and its fields in columns that fill the screen, grouped by entity type, while **LR** and **TB** lay the whole diagram out as 1 flow, left to right or top to bottom. Your pick is remembered.
 - **Entities** - an index with per-type filters and field counts; click a bundle to focus it or open its fields.
 - **Table** - a searchable table of all fields (or a single entity's) with type, cardinality, requiredness and references.
 - **Legend** - what each symbol means.
@@ -162,7 +162,7 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for local development setup, the lintin
 
 ## Privacy
 
-Nexus has no backend. The configuration you import and the diagrams you build stay in your browser's memory and leave it only when you save or export a file; nothing is uploaded to or processed by any server. Your preferences - theme, panel layout, entity colours and symbols, custom entity types and the last export format - are kept in the browser's `localStorage`.
+Nexus has no backend. The configuration you import and the diagrams you build stay in your browser's memory and leave it only when you save or export a file; nothing is uploaded to or processed by any server. Your preferences - theme, panel layout, diagram layout, entity colours and symbols, custom entity types and the last export format - are kept in the browser's `localStorage`.
 
 Nexus is provided as is, without warranty of any kind, and the authors accept no responsibility or liability for any data you load into it or create with it.
 
