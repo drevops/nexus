@@ -818,7 +818,8 @@ function buildController(model, options = {}) {
     // An island with no entity, such as a lone note, goes last.
     islands.sort((a, b) => (a.lead.empty() || b.lead.empty() ? b.lead.length - a.lead.length : compare(a.lead, b.lead)));
 
-    const packed = packColumns(islands.map((entry) => entry.box), { w: cy.width(), h: cy.height() }, gap);
+    const boxes = islands.map((entry) => entry.box);
+    const packed = packColumns(boxes, { w: cy.width(), h: cy.height() }, gap);
 
     islands.forEach((entry, index) => {
       const { x, y } = packed.positions[index];
