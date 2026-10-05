@@ -18,7 +18,7 @@ Set `PORT` to serve on another port, for example `PORT=8001 npm start`.
 
 `npm run lint` checks the code with ESLint and Prettier, and `npm run lint-fix` fixes what it can. `npm run test` runs both suites, which you can also run on their own:
 
-- `npm run test-unit` - Node's built-in test runner over the pure model modules (the parser, model, annotations, document, reference elements, entity types, templates and name conversions) and the template update helpers, plus checks that `npm run assemble` ships every file the app loads, that each template's saved diagram carries its version and the bundles its landing row advertises, that the release workflow stamps only constants the source exports, that the page's Nexus mark matches `logo.svg`, and that the edit palette offers every built-in entity type.
+- `npm run test-unit` - Node's built-in test runner over the pure model modules (the parser, model, annotations, document, reference elements, entity types, templates and name conversions), the label fitting that sizes entity boxes and the template update helpers, plus checks that `npm run assemble` ships every file the app loads, that each template's saved diagram carries its version and the bundles its landing row advertises, that the release workflow stamps only constants the source exports, that the page's Nexus mark matches `logo.svg`, and that the edit palette offers every built-in entity type.
 - `npm run test-e2e` - Playwright drives the app end to end in Chromium: importing, rendering, editing, saving and exporting. It needs its browser installed once with `npx playwright install chromium`. The suite starts the dev server on port 8000, or reuses one already listening there - so if another checkout is serving that port, stop it first or the tests run against that checkout's code.
 - `npm run test-coverage` - the unit tests with c8 coverage, written to `.logs/`.
 
@@ -28,7 +28,7 @@ The app's own code lives in `src/`. The third-party builds it loads live in `ass
 
 - `src/{parser,model,base-fields,annotations,document,references,entity-types,names}.js` - the offline model builder, the built-in entity types, the name conversions, the saved `.nexus.json` format and the proxies and collapsed edges drawn for each reference (pure, dependency-free).
 - `src/templates.js` - the content-model templates the landing screen offers, with the upstream sources each one is built from (pure).
-- `src/render.js` - the Cytoscape renderer.
+- `src/render.js` - the Cytoscape renderer, with `src/label-fit.js` working out how wide each entity box must be for its name and type to fit inside its shape (pure).
 - `src/{builder,inspector,ui,store,dom}.js` - edit mode, the Preact panels, the state they share and the `$()` element lookup.
 - `src/{app,export}.js` - the entry point (folder loading, saved documents, the theme and the status bar) and every download: the PNG, SVG and CSV exports and the `.nexus.json` document.
 - `src/icons.js` - inline SVG icons, including the Nexus mark.
