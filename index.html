@@ -122,19 +122,30 @@
 
 <div id="landing" class="landing">
   <sl-card class="landing__card">
+    <sl-button id="landing-cancel" class="landing__close toolbar__button toolbar__button--icon" size="small" data-icon="x" title="Close this screen and keep the current diagram" aria-label="Close" hidden></sl-button>
     <p class="landing__logo" data-icon="nexus">Nexus</p>
     <p class="landing__version" id="landing-version" data-version>dev</p>
     <p class="landing__tag">Draw a Drupal site's content model from its exported configuration - entirely in your browser.</p>
-    <div id="dropzone" class="dropzone">
-      <p class="dropzone__hint">Drop a Drupal <strong>config</strong> folder here, or choose one. Your files never leave this page.</p>
-      <div class="landing__actions">
-        <sl-button id="folder-btn" variant="primary" data-icon="folder-input" title="Import a Drupal config folder">Choose a config folder</sl-button>
-        <input id="folder-input" class="visually-hidden" type="file" webkitdirectory directory multiple>
-        <sl-button id="example-btn" data-icon="sparkles" title="Load the bundled example content model">Try the example</sl-button>
-        <sl-button id="landing-open" data-icon="folder-open" title="Open a saved Nexus diagram (.nexus.json)">Open a saved diagram</sl-button>
-        <sl-button id="new-btn" data-icon="file-plus" title="Start a new empty content model">Start from scratch</sl-button>
-        <sl-button id="landing-cancel" class="landing__cancel" data-icon="x" title="Close this screen and keep the current diagram" hidden>Cancel</sl-button>
-      </div>
+    <div class="landing__columns">
+      <section aria-labelledby="landing-own-heading">
+        <h2 id="landing-own-heading" class="landing__heading">Your configuration</h2>
+        <div id="dropzone" class="dropzone">
+          <span class="dropzone__glyph" data-icon="folder-input"></span>
+          <p class="dropzone__hint">Drop a Drupal <strong>config</strong> folder here, or choose one.</p>
+          <sl-button id="folder-btn" variant="primary" data-icon="folder-input" title="Import a Drupal config folder">Choose a config folder</sl-button>
+          <input id="folder-input" class="visually-hidden" type="file" webkitdirectory directory multiple>
+          <p class="dropzone__privacy">Your files never leave this page.</p>
+        </div>
+        <div class="landing__actions">
+          <sl-button id="landing-open" size="small" data-icon="folder-open" title="Open a saved Nexus diagram (.nexus.json)">Open a saved diagram</sl-button>
+          <sl-button id="new-btn" size="small" data-icon="file-plus" title="Start a new empty content model">Start from scratch</sl-button>
+        </div>
+      </section>
+      <section aria-labelledby="landing-templates-heading">
+        <h2 id="landing-templates-heading" class="landing__heading">Start from a template</h2>
+        <div id="template-list" class="template-list"></div>
+        <p class="landing__more">Missing a theme or distribution? <a href="https://github.com/drevops/nexus/issues" target="_blank" rel="noopener">Suggest a template</a>.</p>
+      </section>
     </div>
     <sl-alert id="landing-error" class="landing__error" variant="danger" closable><span id="landing-error-text"></span></sl-alert>
     <p class="landing__note">Point at an exported config sync directory (the folder of <code>*.yml</code> files) or a module's <code>config/install</code>. Add an <code>annotations.yml</code> to overlay events, APIs and callbacks.</p>

@@ -191,7 +191,7 @@ function markFills(page, selector) {
   });
 }
 
-const LANDING_BUTTONS = ['#folder-btn', '#example-btn', '#landing-open', '#new-btn'];
+const EXAMPLE = '#template-radio-station';
 
 function boxesOf(page, selectors) {
   return Promise.all(selectors.map((selector) => page.locator(selector).boundingBox()));
@@ -223,7 +223,7 @@ test.beforeEach(async ({ page }) => {
 
 test('renders the bundled example', async ({ page }) => {
   await expect(page.locator('#landing')).toBeVisible();
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
 
   await expect(page.locator('#landing')).toBeHidden();
   await waitForGraph(page);
@@ -245,7 +245,7 @@ test('parses an uploaded config folder in the browser', async ({ page }) => {
 });
 
 test('shows fields by default and collapses to an overview', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   await expect(page.locator('#fields-toggle')).toHaveClass(/is-active/);
@@ -267,7 +267,7 @@ test('shows fields by default and collapses to an overview', async ({ page }) =>
 });
 
 test('floats, pins, unpins and closes a panel', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   const entities = page.locator('#entities');
@@ -290,7 +290,7 @@ test('floats, pins, unpins and closes a panel', async ({ page }) => {
 });
 
 test('drags a panel by its header', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   await page.click('#entities-toggle');
@@ -306,7 +306,7 @@ test('drags a panel by its header', async ({ page }) => {
 });
 
 test('stacks pinned panels in a side dock and resizes it', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   await page.click('#legend .panel__pin');
@@ -328,7 +328,7 @@ test('stacks pinned panels in a side dock and resizes it', async ({ page }) => {
 });
 
 test('docks a panel by dragging it to the screen edge', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
   await page.click('#entities-toggle');
 
@@ -348,7 +348,7 @@ test('docks a panel by dragging it to the screen edge', async ({ page }) => {
 });
 
 test('resizes a docked panel vertically', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   await page.click('#legend .panel__pin');
@@ -366,7 +366,7 @@ test('resizes a docked panel vertically', async ({ page }) => {
 });
 
 test('remembers the panel layout across reloads', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   await page.click('#entities-toggle');
@@ -375,7 +375,7 @@ test('remembers the panel layout across reloads', async ({ page }) => {
   await page.waitForTimeout(500);
 
   await page.reload();
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   await expect(page.locator('#entities')).toHaveClass(/is-docked/);
@@ -383,7 +383,7 @@ test('remembers the panel layout across reloads', async ({ page }) => {
 });
 
 test('draws a pressed panel above the panel it overlaps', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   await page.click('#legend-toggle');
@@ -399,7 +399,7 @@ test('draws a pressed panel above the panel it overlaps', async ({ page }) => {
 });
 
 test('keeps a panel clicked many times below the zoom menu and the import screen', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   const legend = page.locator('#legend');
@@ -425,7 +425,7 @@ test('keeps a panel clicked many times below the zoom menu and the import screen
 // The tooltip ignores the pointer, so a hit test can't find it. It shares the
 // root stacking context with the panels, so z-indexes decide the order.
 test('draws the canvas tooltip over a panel nobody has raised', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   const [tooltip, legend] = await page.evaluate(() => ['tooltip', 'legend'].map((id) => Number(getComputedStyle(document.getElementById(id)).zIndex)));
@@ -438,14 +438,14 @@ test('shows a loading screen while the example loads', async ({ page }) => {
     await new Promise((resolve) => setTimeout(resolve, 500));
     route.continue();
   });
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await expect(page.locator('#loader')).toBeVisible();
   await waitForGraph(page);
   await expect(page.locator('#loader')).toBeHidden();
 });
 
 test("traces a field's inbound and outbound connections", async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   const result = await page.evaluate(() => {
@@ -473,7 +473,7 @@ test("traces a field's inbound and outbound connections", async ({ page }) => {
 });
 
 test('declutters references into faded proxies', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   await expect(page.locator('#proxy-toggle')).toHaveClass(/is-active/);
@@ -511,7 +511,7 @@ test('declutters references into faded proxies', async ({ page }) => {
 });
 
 test('persists a custom entity colour across reloads', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   await page.click('#settings-toggle');
@@ -521,7 +521,7 @@ test('persists a custom entity colour across reloads', async ({ page }) => {
   expect(stored.colors.paragraph).toBe('#112233');
 
   await page.reload();
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   const applied = await page.evaluate(() => window.__nexus.cy.nodes('[group="entity"][entityType="paragraph"]').style('background-color'));
@@ -529,7 +529,7 @@ test('persists a custom entity colour across reloads', async ({ page }) => {
 });
 
 test('saves and reloads a Nexus diagram document', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
   const before = await entityCount(page);
 
@@ -546,7 +546,7 @@ test('saves and reloads a Nexus diagram document', async ({ page }) => {
 });
 
 test('reopens a saved diagram with every node where it was saved', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   const [download] = await Promise.all([page.waitForEvent('download'), page.click('#doc-save')]);
@@ -579,7 +579,7 @@ function proxyPlacement(page) {
 }
 
 test('places proxies missing from a saved layout beside their field', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   const [download] = await Promise.all([page.waitForEvent('download'), page.click('#doc-save')]);
@@ -602,7 +602,7 @@ test('places proxies missing from a saved layout beside their field', async ({ p
 // The layout saved with proxies hidden leaves no room beside the fields, so a
 // proxy can land well above or below its field.
 test("leaves hidden proxies out of a saved layout and places them in their field's proxy column on open", async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
   await page.click('#proxy-toggle');
 
@@ -698,7 +698,7 @@ test("adds a missing proxy to the column of its field's saved proxies", async ({
 });
 
 test('reopens the import screen and cancels back to the diagram', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   await page.click('#doc-import');
@@ -722,42 +722,119 @@ test('scrolls the landing screen to every part of the card in a short window', a
   expect(box.y + box.height).toBeLessThanOrEqual(460);
 });
 
-test('lays the landing buttons out in 2 columns of equal width', async ({ page }) => {
-  const [folder, example, open, scratch] = await boxesOf(page, LANDING_BUTTONS);
+test('lays the landing out with your configuration beside the templates', async ({ page }) => {
+  const [dropzone, list, open, scratch] = await boxesOf(page, ['#dropzone', '#template-list', '#landing-open', '#new-btn']);
 
-  for (const box of [example, open, scratch]) {
-    expect(box.width).toBe(folder.width);
-  }
-
-  expect(example.y).toBe(folder.y);
-  expect(example.x).toBeGreaterThan(folder.x + folder.width);
-  expect(open.x).toBe(folder.x);
-  expect(open.y).toBeGreaterThan(folder.y + folder.height);
-  expect(scratch.x).toBe(example.x);
+  expect(list.x).toBeGreaterThan(dropzone.x + dropzone.width);
+  expect(list.y).toBeCloseTo(dropzone.y, 0);
+  expect(scratch.x).toBeGreaterThan(open.x + open.width);
   expect(scratch.y).toBe(open.y);
+  expect(scratch.width).toBe(open.width);
 });
 
-test('stacks the landing buttons in 1 column of equal width in a narrow window', async ({ page }) => {
+test('stacks the templates below your configuration in a narrow window', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
-  const [folder, ...rest] = await boxesOf(page, LANDING_BUTTONS);
+  const [dropzone, list, open, scratch] = await boxesOf(page, ['#dropzone', '#template-list', '#landing-open', '#new-btn']);
 
-  for (const box of rest) {
-    expect(box.x).toBe(folder.x);
-    expect(box.width).toBe(folder.width);
-  }
+  expect(list.x).toBe(dropzone.x);
+  expect(list.width).toBe(dropzone.width);
+  expect(list.y).toBeGreaterThan(dropzone.y + dropzone.height);
+  expect(scratch.x).toBe(open.x);
+  expect(scratch.width).toBe(open.width);
 });
 
-test('centres Cancel below the landing buttons at the same width', async ({ page }) => {
-  await page.click('#example-btn');
+test('offers a close button in the corner of the card only while a diagram is open', async ({ page }) => {
+  await expect(page.locator('#landing-cancel')).toBeHidden();
+
+  await page.click(EXAMPLE);
   await waitForGraph(page);
   await page.click('#doc-import');
   await expect(page.locator('#landing-cancel')).toBeVisible();
 
-  const [folder, example, scratch, cancel] = await boxesOf(page, ['#folder-btn', '#example-btn', '#new-btn', '#landing-cancel']);
+  const [card, close] = await boxesOf(page, ['.landing__card', '#landing-cancel']);
 
-  expect(cancel.width).toBe(folder.width);
-  expect(cancel.y).toBeGreaterThan(scratch.y + scratch.height);
-  expect(cancel.x + cancel.width / 2).toBeCloseTo((folder.x + example.x + example.width) / 2, 0);
+  expect(close.x + close.width).toBeLessThanOrEqual(card.x + card.width);
+  expect(close.x).toBeGreaterThan(card.x + card.width - 100);
+  expect(close.y).toBeGreaterThanOrEqual(card.y);
+  expect(close.y).toBeLessThan(card.y + 50);
+});
+
+test('lists every template with its badge, its counts and a drawn mark', async ({ page }) => {
+  const rows = page.locator('.template-row');
+
+  await expect(rows).toHaveCount(3);
+  const ids = await rows.evaluateAll((elements) => elements.map((element) => element.id));
+
+  expect(ids).toEqual(['template-radio-station', 'template-civictheme', 'template-drupal-cms']);
+
+  for (const [id, label, badge, counts] of dataProviderTemplateRows()) {
+    const row = page.locator('#template-' + id);
+
+    await expect(row.locator('.template-row__name')).toHaveText(label);
+    await expect(row.locator('.template-row__badge')).toHaveText(badge);
+    await expect(row.locator('.template-row__counts')).toHaveText(counts);
+    expect(await row.locator('.template-row__mark svg.icon > *').count()).toBeGreaterThan(0);
+  }
+});
+
+function dataProviderTemplateRows() {
+  return [
+    ['radio-station', 'Radio station', 'Example', '7 content types · 9 vocabularies · 6 media types'],
+    ['civictheme', 'CivicTheme', '1.13.0', '3 content types · 31 paragraph types · 6 media types'],
+    ['drupal-cms', 'Drupal CMS', '2.2.2', '2 content types · 5 media types · 1 vocabulary'],
+  ];
+}
+
+for (const [id, title, entities, entityId] of dataProviderTemplates()) {
+  test(`loads the ${title} template`, async ({ page }) => {
+    await page.click('#template-' + id);
+    await waitForGraph(page);
+
+    expect(await entityCount(page)).toBe(entities);
+    expect(await page.evaluate((target) => window.__nexus.cy.getElementById(target).length, entityId)).toBe(1);
+    await expect(page.locator('#diagram-title')).toHaveJSProperty('value', title);
+  });
+}
+
+function dataProviderTemplates() {
+  return [
+    ['civictheme', 'CivicTheme 1.13.0', 49, 'paragraph.civictheme_accordion'],
+    ['drupal-cms', 'Drupal CMS 2.2.2', 9, 'node.blog'],
+  ];
+}
+
+test('fetches only the config files the parser reads', async ({ page }) => {
+  const fetched = [];
+
+  page.on('request', (request) => {
+    if (request.url().includes('/templates/radio-station/config/')) {
+      fetched.push(request.url());
+    }
+  });
+
+  await page.click(EXAMPLE);
+  await waitForGraph(page);
+
+  expect(fetched).toHaveLength(198);
+  expect(fetched.filter((url) => url.includes('/views.view.'))).toEqual([]);
+});
+
+test('names the file that stops a template from loading', async ({ page }) => {
+  await page.route('**/templates/civictheme/config/node.type.civictheme_page.yml', (route) => route.fulfill({ status: 404, body: 'Not found' }));
+  await page.click('#template-civictheme');
+
+  await expect(page.locator('#landing-error')).toHaveAttribute('open', '');
+  await expect(page.locator('#landing-error-text')).toHaveText('Could not load CivicTheme 1.13.0: node.type.civictheme_page.yml returned 404');
+  await expect(page.locator('#landing')).toBeVisible();
+  await expect(page.locator('#loader')).toBeHidden();
+});
+
+test('loads a template from the keyboard', async ({ page }) => {
+  await page.focus('#template-drupal-cms');
+  await page.keyboard.press('Enter');
+  await waitForGraph(page);
+
+  await expect(page.locator('#diagram-title')).toHaveJSProperty('value', 'Drupal CMS 2.2.2');
 });
 
 test('renders toolbar icons from the icon set', async ({ page }) => {
@@ -775,7 +852,7 @@ test('surfaces an alert when a diagram fails to open', async ({ page }) => {
 });
 
 test('builds a new entity and field and saves them', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   await page.click('#mode-build');
@@ -869,7 +946,7 @@ function refCount(page, fieldId, targetId) {
 }
 
 test('edits a reference loaded from configuration in the inspector', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
   await page.click('#mode-build');
 
@@ -900,7 +977,7 @@ const ACL_PROGRAMS = 'taxonomy_term.acl_programs';
 
 // The bundled example in edit mode.
 async function editExample(page) {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
   await page.click('#mode-build');
 }
@@ -1072,7 +1149,7 @@ test('lists a reference added in edit mode in the tooltip of its field', async (
 
 for (const [name, toggle] of dataProviderLayoutToggles()) {
   test(`lays the diagram out as Tidy does after turning ${name} off and on`, async ({ page }) => {
-    await page.click('#example-btn');
+    await page.click(EXAMPLE);
     await waitForGraph(page);
     await page.click('#entities-toggle');
     await page.click('#tidy');
@@ -1140,7 +1217,7 @@ test('adds a field from an entity + handle, then renames it', async ({ page }) =
 // Captions and handles are repositioned 1 frame after a Cytoscape redraw, so
 // this resolves 2 frames after the redraw the selection causes.
 async function selectProgram(page, zoom) {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
   await page.click('#mode-build');
   await page.evaluate(
@@ -1222,7 +1299,7 @@ test('adds a field below an entity from its bottom handle', async ({ page }) => 
 });
 
 test('reuses an existing field via autocomplete from the field tool', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
   await page.click('#mode-build');
 
@@ -1327,7 +1404,7 @@ test('keeps the annotation edges of a renamed entity and its fields', async ({ p
 });
 
 test('shows the edit palette as a second toolbar row only in edit mode', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   const palette = page.locator('#build-tools');
@@ -1348,7 +1425,7 @@ function paletteSwatches(page) {
 }
 
 test('paints each palette swatch in the colour of its entity type', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
   await page.click('#mode-build');
   await page.click('#settings-toggle');
@@ -1405,7 +1482,7 @@ test('adds an entity from a palette type button', async ({ page }) => {
 });
 
 test('adds a field from the toolbar field tool', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
   await page.click('#mode-build');
 
@@ -1451,7 +1528,7 @@ test('drags an entity type from the palette onto the canvas', async ({ page }) =
 });
 
 test('toggles a dark theme that persists across reloads', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   expect(await page.evaluate(() => document.documentElement.classList.contains('sl-theme-dark'))).toBe(false);
@@ -1462,14 +1539,14 @@ test('toggles a dark theme that persists across reloads', async ({ page }) => {
   expect(await page.evaluate(() => window.localStorage.getItem('nexusTheme'))).toBe('dark');
 
   await page.reload();
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
   expect(await page.evaluate(() => document.documentElement.classList.contains('sl-theme-dark'))).toBe(true);
   await expect(page.locator('#theme-toggle')).toHaveAttribute('title', 'Switch to light theme');
 });
 
 test('exports the diagram as PNG named after the title', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   const [download] = await Promise.all([page.waitForEvent('download'), page.click('#export-png')]);
@@ -1485,14 +1562,14 @@ test('loads the SVG exporter without a duplicate registration warning', async ({
   });
 
   await page.reload();
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   expect(warnings.filter((warning) => warning.includes('Can not register'))).toEqual([]);
 });
 
 test('exports the diagram as SVG and honours a renamed title', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   await slFill(page, '#diagram-title', 'My Model');
@@ -1503,7 +1580,7 @@ test('exports the diagram as SVG and honours a renamed title', async ({ page }) 
 
 for (const [button, filename] of dataProviderUntitledDownloads()) {
   test(`names the ${filename} download after the default title when the title is empty`, async ({ page }) => {
-    await page.click('#example-btn');
+    await page.click(EXAMPLE);
     await waitForGraph(page);
     await slFill(page, '#diagram-title', '');
 
@@ -1522,7 +1599,7 @@ function dataProviderUntitledDownloads() {
 }
 
 test('enables proxy declutter by default on render', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
   await expect(page.locator('#proxy-toggle')).toHaveClass(/is-active/);
   expect(await page.evaluate(() => window.__nexus.cy.nodes('[group="proxy"]:visible').length)).toBeGreaterThan(0);
@@ -1549,7 +1626,7 @@ test('changes a field cardinality from the inspector', async ({ page }) => {
 });
 
 test('sets the zoom level from the status bar dropdown', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   await page.click('#zoom-level');
@@ -1560,7 +1637,7 @@ test('sets the zoom level from the status bar dropdown', async ({ page }) => {
 });
 
 test('labels each entity with its type in the caption layer', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   const types = await page.locator('#captions .caption--type').allTextContents();
@@ -1569,7 +1646,7 @@ test('labels each entity with its type in the caption layer', async ({ page }) =
 });
 
 test('searches on the button and zooms to the match at 100%', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
   await page.evaluate(() => window.__nexus.cy.zoom(0.2));
 
@@ -1584,7 +1661,7 @@ test('searches on the button and zooms to the match at 100%', async ({ page }) =
 });
 
 test('a single docked panel fills the sidebar height', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   await page.click('#legend .panel__pin');
@@ -1600,7 +1677,7 @@ test('a single docked panel fills the sidebar height', async ({ page }) => {
 });
 
 test('labels reference edges with cardinality in the default proxy view', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   // Proxies are on by default, so the visible reference lines are proxy edges;
@@ -1615,7 +1692,7 @@ test('labels reference edges with cardinality in the default proxy view', async 
 });
 
 test('scales node captions with the canvas zoom', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   const sizeAtZoom = (zoom) =>
@@ -1640,7 +1717,7 @@ test('scales node captions with the canvas zoom', async ({ page }) => {
 });
 
 test('captions an entity created in edit mode the way it captions a loaded one', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
   await page.click('#mode-build');
 
@@ -1682,7 +1759,7 @@ test('moves the captions of a renamed entity and its fields to their new ids', a
 });
 
 test('removes the captions of a deleted entity and its fields', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
   await page.click('#mode-build');
   expect(await captionsOf(page, 'node.program')).not.toEqual([]);
@@ -1710,7 +1787,7 @@ test('captions a new entity with its type alone while machine names are hidden',
 });
 
 test('adds an entity note that badges the canvas and reveals on hover', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
   await page.click('#mode-build');
 
@@ -1740,7 +1817,7 @@ test('adds an entity note that badges the canvas and reveals on hover', async ({
 });
 
 test('adds a note to a field too, not just entities', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
   await page.click('#mode-build');
 
@@ -1784,7 +1861,7 @@ test('keeps the note badges of a renamed entity and its fields', async ({ page }
 });
 
 test('resets the singled-out focus when switching modes', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   await page.evaluate(() => window.__nexus.cy.getElementById('node.episode').emit('tap'));
@@ -1795,7 +1872,7 @@ test('resets the singled-out focus when switching modes', async ({ page }) => {
 });
 
 test('opens and tidies the diagram at 100% zoom', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
   expect(await page.evaluate(() => window.__nexus.cy.zoom())).toBeCloseTo(1, 2);
   await expect(page.locator('#zoom-level')).toHaveText('100%');
@@ -1806,7 +1883,7 @@ test('opens and tidies the diagram at 100% zoom', async ({ page }) => {
 });
 
 test('isolates an entity on right-click and moves it with its fields', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
   await page.click('#mode-build');
 
@@ -1849,7 +1926,7 @@ test('links to the project on GitHub from the toolbar', async ({ page }) => {
 });
 
 test('exports the fields table as CSV', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   const [download] = await Promise.all([page.waitForEvent('download'), page.click('#export-csv')]);
@@ -1885,7 +1962,7 @@ test('quotes CSV cells that hold a comma, a quote or a line break', async ({ pag
 });
 
 test('wraps field types and machine names in the fields table only after an underscore', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
   await page.click('#table-toggle');
   await expect(page.locator('#field-table')).toContainText('entity_reference_revisions');
@@ -1904,7 +1981,7 @@ test('wraps field types and machine names in the fields table only after an unde
 });
 
 test('shrinks identifiers in the fields table to fit 1 line, but not below 10px', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
   await page.click('#table-toggle');
   await expect(page.locator('#field-table')).toContainText('entity_reference_revisions');
@@ -1922,7 +1999,7 @@ test('shrinks identifiers in the fields table to fit 1 line, but not below 10px'
 });
 
 test('refits identifiers when browser zoom narrows the fields panel', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
   await page.click('#table-toggle');
   await expect(page.locator('#field-table')).toContainText('field_link_facebook');
@@ -1941,7 +2018,7 @@ test('refits identifiers when browser zoom narrows the fields panel', async ({ p
 });
 
 test('refits identifiers when the docked fields panel is resized', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
   await page.click('#table-toggle');
   await page.click('#table .panel__pin');
@@ -1962,7 +2039,7 @@ test('refits identifiers when the docked fields panel is resized', async ({ page
 });
 
 test('keeps the multi-value cardinality badge legible in both themes', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
   await page.click('#table-toggle');
 
@@ -1975,7 +2052,7 @@ test('keeps the multi-value cardinality badge legible in both themes', async ({ 
 });
 
 test('echoes a hovered control description into the status bar', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   await page.locator('#tidy').hover();
@@ -1983,7 +2060,7 @@ test('echoes a hovered control description into the status bar', async ({ page }
 });
 
 test('describes the switched theme when the theme toggle is hovered again', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   await page.click('#theme-toggle');
@@ -1995,7 +2072,7 @@ test('describes the switched theme when the theme toggle is hovered again', asyn
 });
 
 test('refreshes the status bar hint when the hovered theme toggle is clicked', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   // Rest the pointer beside the icon and click in place, so neither a replaced
@@ -2015,7 +2092,7 @@ test('refreshes the status bar hint when the hovered theme toggle is clicked', a
 });
 
 test('keeps the status bar hint on the hovered control when another control is retitled', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   await page.locator('#tidy').hover();
@@ -2069,7 +2146,7 @@ test('colours the Nexus mark for the app theme, not the system one', async ({ pa
   expect(await markFills(page, '.landing__logo')).toEqual(LIGHT_MARK);
   expect(await markFills(page, '.toolbar__brand')).toEqual(LIGHT_MARK);
 
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
   await page.click('#theme-toggle');
   await page.emulateMedia({ colorScheme: 'light' });
@@ -2094,7 +2171,7 @@ test('keeps about, settings, theme and github on the brand line', async ({ page 
 test('opens an about dialog explaining browser-only storage and the licence', async ({ page }) => {
   const { license } = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'package.json'), 'utf8'));
 
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
   await expect(page.locator('#about-dialog')).not.toBeVisible();
 
@@ -2116,7 +2193,7 @@ test('opens an about dialog explaining browser-only storage and the licence', as
 test('shows the app version on the landing screen and in the about dialog', async ({ page }) => {
   await expect(page.locator('#landing-version')).toHaveText('dev');
 
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
   await page.click('#about-toggle');
   await expect(page.locator('#about-version')).toHaveText('dev');
@@ -2159,7 +2236,7 @@ test('loads a diagram while an ad blocker blocks the analytics modules', async (
   });
 
   await page.reload();
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   expect(blocked.sort()).toEqual(['/src/analytics-id.js', '/src/analytics.js']);
@@ -2167,7 +2244,7 @@ test('loads a diagram while an ad blocker blocks the analytics modules', async (
 });
 
 test('draws entity types with their symbols and a dynamic legend', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
 
   const shapes = await page.evaluate(() => ({
@@ -2183,7 +2260,7 @@ test('draws entity types with their symbols and a dynamic legend', async ({ page
 });
 
 test('changes a type symbol and adds a custom entity type in settings', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
   await page.click('#settings-toggle');
 
@@ -2214,7 +2291,7 @@ test('labels an entity of a custom type with the custom label in the inspector',
 });
 
 test('resets colours and symbols to defaults from settings', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
   await page.click('#settings-toggle');
 
@@ -2228,7 +2305,7 @@ test('resets colours and symbols to defaults from settings', async ({ page }) =>
 });
 
 test('round-trips custom types and symbols through a saved document', async ({ page }) => {
-  await page.click('#example-btn');
+  await page.click(EXAMPLE);
   await waitForGraph(page);
   await page.click('#settings-toggle');
 

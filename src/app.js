@@ -17,7 +17,8 @@ import { initIcons, icon } from './icons.js';
 import { VERSION } from './version.js';
 import { DEFAULT_TITLE } from './model.js';
 import { exportLayout, importLayout, getController } from './store.js';
-import { TEMPLATES, templatePath, templateTitle } from './templates.js';
+import { TEMPLATES, summaryCounts, templateBadge, templatePath, templateTitle } from './templates.js';
+import { formatCount } from './entity-types.js';
 import { $ } from './dom.js';
 
 const ANNOTATION_FILES = ['annotations.yml', 'nexus.annotations.yml'];
@@ -223,7 +224,47 @@ function walkEntry(entry, files) {
   });
 }
 
+function element(tag, className, text) {
+  const node = document.createElement(tag);
+  node.className = className;
+
+  if (text !== undefined) {
+    node.textContent = text;
+  }
+
+  return node;
+}
+
+function templateRow(template) {
+  const row = element('button', 'template-row');
+  row.type = 'button';
+  row.id = 'template-' + template.id;
+  row.title = 'Load the ' + templateTitle(template) + ' content model';
+  row.addEventListener('click', () => loadTemplate(template));
+
+  const mark = element('span', 'template-row__mark');
+  mark.style.setProperty('--template-color', template.color);
+  mark.innerHTML = icon(template.icon);
+
+  const badge = element('span', template.version ? 'template-row__badge' : 'template-row__badge template-row__badge--example', templateBadge(template));
+  const head = element('span', 'template-row__head');
+  head.append(element('span', 'template-row__name', template.label), badge);
+
+  const counts = summaryCounts(template).map(({ type, count }) => formatCount(type, count));
+  const body = element('span', 'template-row__body');
+  body.append(head, element('span', 'template-row__summary', template.summary), element('span', 'template-row__counts', counts.join(' · ')));
+
+  const go = element('span', 'template-row__go');
+  go.innerHTML = icon('chevron-right');
+
+  row.append(mark, body, go);
+
+  return row;
+}
+
 function wireLanding() {
+  $('template-list').append(...TEMPLATES.map(templateRow));
+
   const zone = $('dropzone');
 
   zone.addEventListener('dragover', (evt) => {
@@ -246,7 +287,6 @@ function wireLanding() {
   $('folder-btn').addEventListener('click', () => $('folder-input').click());
   $('folder-input').addEventListener('change', (evt) => loadFromFiles(evt.target.files));
   $('landing-open').addEventListener('click', () => $('doc-open').click());
-  $('example-btn').addEventListener('click', () => loadTemplate(TEMPLATES[0]));
   $('new-btn').addEventListener('click', newDocument);
   $('doc-import').addEventListener('click', showLanding);
   $('landing-cancel').addEventListener('click', () => {
@@ -254,7 +294,8 @@ function wireLanding() {
   });
 }
 
-// Cancel returns to a loaded diagram, so it stays hidden until one exists.
+// The close button returns to a loaded diagram, so it stays hidden until one
+// exists.
 function showLanding() {
   showError('');
   $('landing-cancel').hidden = !getController();
