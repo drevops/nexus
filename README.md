@@ -46,7 +46,7 @@ To host your own copy, serve `index.html`, `src/`, `assets/` and `templates/` fr
 
 ## Usage
 
-1. Open the app (or your own copy - see [Installation](#installation)).
+1. Open the app (or your own copy - see [Installation](#installation)). The light/dark theme toggle sits in the top-right corner of the landing screen too, so you can pick a theme before loading anything.
 2. **Choose a config folder** or drag one onto the drop zone - the folder of `*.yml` files exported from a Drupal site (its config sync directory), or a module's `config/install`. Or pick one of the [templates](#templates) beside it, **Open a saved diagram** or **Start from scratch**.
 3. Explore with the toolbar, switch to **Edit** to change the model, then **Save** it or export it as PNG, SVG or CSV.
 

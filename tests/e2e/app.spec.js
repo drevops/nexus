@@ -219,6 +219,13 @@ function boxesOf(page, selectors) {
   return Promise.all(selectors.map((selector) => page.locator(selector).boundingBox()));
 }
 
+function expectInTopRightCorner(outer, box) {
+  expect(box.x + box.width).toBeLessThanOrEqual(outer.x + outer.width);
+  expect(box.x).toBeGreaterThan(outer.x + outer.width - 100);
+  expect(box.y).toBeGreaterThanOrEqual(outer.y);
+  expect(box.y).toBeLessThan(outer.y + 50);
+}
+
 // Returns the selector of the element drawn on top at the centre of the area
 // where all the matched elements overlap, or null when another element is.
 function topmostOf(page, selectors) {
@@ -776,22 +783,42 @@ test('offers a close button in the corner of the card only while a diagram is op
 
   const [card, close] = await boxesOf(page, ['.landing__card', '#landing-cancel']);
 
-  expect(close.x + close.width).toBeLessThanOrEqual(card.x + card.width);
-  expect(close.x).toBeGreaterThan(card.x + card.width - 100);
-  expect(close.y).toBeGreaterThanOrEqual(card.y);
-  expect(close.y).toBeLessThan(card.y + 50);
+  expectInTopRightCorner(card, close);
+});
+
+test('puts the theme toggle in the corner of the card, beside the close button once a diagram is open', async ({ page }) => {
+  const [card, toggle] = await boxesOf(page, ['.landing__card', '#landing-theme']);
+
+  expectInTopRightCorner(card, toggle);
+
+  await loadExample(page);
+  await page.click('#doc-import');
+  await expect(page.locator('#landing-cancel')).toBeVisible();
+
+  const [cardWithClose, beside, close] = await boxesOf(page, ['.landing__card', '#landing-theme', '#landing-cancel']);
+
+  expectInTopRightCorner(cardWithClose, close);
+  expect(beside.x + beside.width).toBeLessThanOrEqual(close.x);
+  expect(close.x - (beside.x + beside.width)).toBeLessThan(16);
+  expect(beside.y).toBe(close.y);
 });
 
 test('keeps keyboard focus on the landing screen while it is open', async ({ page }) => {
   const focusedId = () => page.evaluate(() => document.activeElement.id);
 
   // A Shoelace control takes focus only once it renders its inner control.
-  await page.waitForFunction(() => ['diagram-title', 'folder-btn'].every((id) => document.getElementById(id).shadowRoot?.querySelector('input, button')));
+  await page.waitForFunction(() =>
+    ['diagram-title', 'landing-theme', 'folder-btn'].every((id) => document.getElementById(id).shadowRoot?.querySelector('input, button')),
+  );
+  await page.keyboard.press('Tab');
+  expect(await focusedId()).toBe('landing-theme');
   await page.keyboard.press('Tab');
   expect(await focusedId()).toBe('folder-btn');
 
   await loadExample(page);
   await page.click('#doc-import');
+  await page.keyboard.press('Tab');
+  expect(await focusedId()).toBe('landing-theme');
   await page.keyboard.press('Tab');
   expect(await focusedId()).toBe('landing-cancel');
 
@@ -1616,6 +1643,48 @@ test('toggles a dark theme that persists across reloads', async ({ page }) => {
   await loadExample(page);
   expect(await page.evaluate(() => document.documentElement.classList.contains('sl-theme-dark'))).toBe(true);
   await expect(page.locator('#theme-toggle')).toHaveAttribute('title', 'Switch to light theme');
+});
+
+test('switches the theme from the landing screen and keeps it across reloads', async ({ page }) => {
+  const isDark = () => page.evaluate(() => document.documentElement.classList.contains('sl-theme-dark'));
+
+  await expect(page.locator('#landing-theme')).toBeVisible();
+  await expect(page.locator('#landing-theme')).toHaveAttribute('title', 'Switch to dark theme');
+  expect(await isDark()).toBe(false);
+
+  await page.click('#landing-theme');
+  expect(await isDark()).toBe(true);
+  expect(await page.evaluate(() => window.localStorage.getItem('nexusTheme'))).toBe('dark');
+  expect(await markFills(page, '.landing__logo')).toEqual(DARK_MARK);
+
+  for (const toggle of ['#landing-theme', '#theme-toggle']) {
+    await expect(page.locator(toggle)).toHaveAttribute('title', 'Switch to light theme');
+  }
+
+  await page.reload();
+  await expect(page.locator('#landing-theme')).toHaveAttribute('title', 'Switch to light theme');
+  expect(await isDark()).toBe(true);
+
+  await page.click('#landing-theme');
+  expect(await isDark()).toBe(false);
+  await expect(page.locator('#landing-theme')).toHaveAttribute('title', 'Switch to dark theme');
+});
+
+test('keeps the landing and toolbar theme toggles in step around an open diagram', async ({ page }) => {
+  const fieldFill = () => page.evaluate(() => window.__nexus.cy.nodes('[group="field"][kind="single"]').first().style('background-color').replace(/\s/g, ''));
+
+  await loadExample(page);
+  await page.click('#theme-toggle');
+  expect(await fieldFill()).toBe('rgb(43,48,57)');
+
+  await page.click('#doc-import');
+  await expect(page.locator('#landing-theme')).toHaveAttribute('title', 'Switch to light theme');
+
+  await page.click('#landing-theme');
+  expect(await fieldFill()).toBe('rgb(255,255,255)');
+
+  await page.click('#landing-cancel');
+  await expect(page.locator('#theme-toggle')).toHaveAttribute('title', 'Switch to dark theme');
 });
 
 test('exports the diagram as PNG named after the title', async ({ page }) => {
@@ -2574,9 +2643,9 @@ test('shows interaction tips in the middle of the status bar', async ({ page }) 
   await expect(page.locator('#statusbar .statusbar__tips')).toContainText('Right-click');
 });
 
-test('renders a non-empty glyph for every toolbar and status bar icon', async ({ page }) => {
+test('renders a non-empty glyph for every toolbar, status bar and landing icon', async ({ page }) => {
   const empty = await page.evaluate(() =>
-    [...document.querySelectorAll('.toolbar [data-icon], .statusbar [data-icon]')]
+    [...document.querySelectorAll('.toolbar [data-icon], .statusbar [data-icon], .landing [data-icon]')]
       .filter((el) => {
         const svg = el.querySelector('svg.icon');
         return !svg || svg.children.length === 0;

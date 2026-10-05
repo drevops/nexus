@@ -1081,10 +1081,12 @@ sl-button#zoom-level::part(base) {
   text-align: center;
 }
 
-.landing__close {
+.landing__corner {
   position: absolute;
   top: 0.75rem;
   right: 0.75rem;
+  display: flex;
+  gap: 0.45rem;
 }
 
 .landing__logo {
