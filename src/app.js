@@ -3,13 +3,14 @@
  *
  * Loads a Drupal config folder entirely in the browser (nothing is uploaded),
  * parses it, and renders the content-model diagram. Also handles the bundled
- * templates, PNG/SVG exports and the loading overlay.
+ * templates, the Export button and the loading overlay.
  */
 
 import { isModelConfig, parseConfig } from './parser.js';
 import { applyAnnotations } from './annotations.js';
 import { render } from './render.js';
 import { exportPng, exportSvg, exportCsv, exportDocument } from './export.js';
+import { EXPORT_FORMATS, findExportFormat, loadExportFormat, saveExportFormat } from './export-formats.js';
 import { documentFromGraph, documentToModel } from './document.js';
 import { initBuilder, attachBuilder } from './builder.js';
 import { initUI } from './ui.js';
@@ -22,6 +23,16 @@ import { formatCount } from './entity-types.js';
 import { $ } from './dom.js';
 
 const ANNOTATION_FILES = ['annotations.yml', 'nexus.annotations.yml'];
+
+const EXPORTERS = {
+  png: (controller, title) => exportPng(controller.cy, title),
+  svg: (controller, title) => exportSvg(controller.cy, title),
+  csv: (controller, title) => exportCsv(controller.records(), controller.typeLabel, title),
+};
+
+// The format the Export button repeats, or null until 1 is chosen from its
+// menu.
+let exportFormat = null;
 
 function basename(path) {
   const parts = String(path).split('/');
@@ -301,27 +312,69 @@ function showLanding() {
   setLandingOpen(true);
 }
 
+function runExport(format) {
+  const controller = getController();
+
+  if (controller) {
+    EXPORTERS[format.id](controller, $('diagram-title').value);
+  }
+}
+
+function setExportFormat(format) {
+  const button = $('export-run');
+
+  exportFormat = format;
+  button.querySelector('.export-label').textContent = 'Export ' + format.label;
+  button.setAttribute('title', format.title);
+}
+
+function exportMenuItem(format) {
+  const item = document.createElement('sl-menu-item');
+  const glyph = document.createElement('span');
+
+  glyph.slot = 'prefix';
+  glyph.innerHTML = icon(format.icon);
+  item.append(glyph, format.label);
+  item.setAttribute('value', format.id);
+  item.setAttribute('title', format.title);
+
+  return item;
+}
+
 function wireExports() {
-  $('export-png').addEventListener('click', () => {
-    const controller = getController();
+  const dropdown = $('export-dropdown');
+  const saved = loadExportFormat(window);
 
-    if (controller) {
-      exportPng(controller.cy, $('diagram-title').value);
-    }
+  $('export-menu').append(...EXPORT_FORMATS.map(exportMenuItem));
+
+  if (saved) {
+    setExportFormat(saved);
+  }
+
+  // Clicks on the main button count as inside the dropdown, so the button can
+  // close the menu it opened.
+  customElements.whenDefined('sl-dropdown').then(() => {
+    dropdown.containingElement = $('export-group');
   });
-  $('export-svg').addEventListener('click', () => {
-    const controller = getController();
 
-    if (controller) {
-      exportSvg(controller.cy, $('diagram-title').value);
+  $('export-run').addEventListener('click', () => {
+    // Until a format is chosen, the main button opens the menu as the caret
+    // does.
+    if (!exportFormat) {
+      $('export-choose').click();
+      return;
     }
+
+    dropdown.hide();
+    runExport(exportFormat);
   });
-  $('export-csv').addEventListener('click', () => {
-    const controller = getController();
 
-    if (controller) {
-      exportCsv(controller.records(), controller.typeLabel, $('diagram-title').value);
-    }
+  $('export-menu').addEventListener('sl-select', (evt) => {
+    const format = findExportFormat(evt.detail.item.value);
+
+    setExportFormat(format);
+    saveExportFormat(window, format);
+    runExport(format);
   });
 }
 
