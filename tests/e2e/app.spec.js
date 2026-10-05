@@ -792,7 +792,10 @@ test('closes the landing screen with Escape only while a diagram is open', async
 });
 
 test('heads the landing screen with the app name above its 2 sections', async ({ page }) => {
-  const headings = await page.locator('#landing').locator('h1, h2').evaluateAll((elements) => elements.map((element) => element.tagName + ' ' + element.textContent.trim()));
+  const headings = await page
+    .locator('#landing')
+    .locator('h1, h2')
+    .evaluateAll((elements) => elements.map((element) => element.tagName + ' ' + element.textContent.trim()));
 
   expect(headings).toEqual(['H1 Nexus', 'H2 Your configuration', 'H2 Start from a template']);
 });
@@ -871,7 +874,9 @@ test('asks to check the connection when a template cannot be downloaded', async 
   await page.route('**/templates/civictheme/manifest.json', (route) => route.abort());
   await page.click('#template-civictheme');
 
-  await expect(page.locator('#landing-error-text')).toHaveText('Could not load CivicTheme 1.13.0: manifest.json could not be downloaded. Check your connection and try again.');
+  await expect(page.locator('#landing-error-text')).toHaveText(
+    'Could not load CivicTheme 1.13.0: manifest.json could not be downloaded. Check your connection and try again.',
+  );
   await expect(page.locator('#landing')).toBeVisible();
 });
 
