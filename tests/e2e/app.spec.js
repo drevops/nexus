@@ -2861,6 +2861,21 @@ test('leaves the undo shortcut to a text field that has the focus', async ({ pag
   expect(await hasNode(page, 'node.story')).toBe(false);
 });
 
+// A Shoelace select shows its value in a read-only text input, which keeps
+// the focus once an option is picked.
+test('undoes with the shortcut while a dropdown has the focus', async ({ page }) => {
+  await selectTrackField(page);
+  const cardinality = page.locator('#inspector sl-select[data-cardinality]');
+  await cardinality.click();
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('Enter');
+  await expect(cardinality).toHaveJSProperty('value', '2');
+
+  await page.keyboard.press('Control+z');
+
+  await expect(cardinality).toHaveJSProperty('value', '1');
+});
+
 test('restores a deleted entity with its fields, references and proxies where they were', async ({ page }) => {
   await editExample(page);
   const before = await graphState(page);

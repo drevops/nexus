@@ -132,11 +132,17 @@ function fromTextField(evt) {
     return false;
   }
 
-  if (target.isContentEditable || target.tagName === 'TEXTAREA') {
+  if (target.isContentEditable) {
     return true;
   }
 
-  return target.tagName === 'INPUT' && !TEXTLESS_INPUTS.includes(target.type);
+  // A Shoelace select shows its value in a read-only text input, which has
+  // no typing to undo.
+  if (target.readOnly) {
+    return false;
+  }
+
+  return target.tagName === 'TEXTAREA' || (target.tagName === 'INPUT' && !TEXTLESS_INPUTS.includes(target.type));
 }
 
 // Whether a diagram is open with no landing screen, loader or dialog over it.
@@ -185,6 +191,8 @@ export function initUndo(onTitle) {
   showTitle = onTitle;
   $('undo').addEventListener('click', undo);
   $('redo').addEventListener('click', redo);
-  document.addEventListener('keydown', onKeydown);
+  // A Shoelace select stops the key presses it gets from propagating, so the
+  // shortcuts are read in the capture phase.
+  document.addEventListener('keydown', onKeydown, true);
   update();
 }
