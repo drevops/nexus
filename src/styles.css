@@ -161,6 +161,12 @@ sl-button-group.toolbar__group {
   padding: 0;
 }
 
+/* Shoelace wraps a dropdown's trigger in a block, so the trigger button sits
+   on a text line 1px above the buttons beside it. */
+sl-dropdown::part(trigger) {
+  display: flex;
+}
+
 .loader {
   position: fixed;
   inset: 0;

@@ -30,7 +30,7 @@ import { humanize, machineName } from './names.js';
 import { REFERENCE_ELEMENTS, syncReferenceElements } from './references.js';
 import { fitWidth, wrapLabel } from './label-fit.js';
 import { checkpoint, untracked } from './undo.js';
-import { packColumns } from './packing.js';
+import { packColumns, tidyColumns } from './packing.js';
 import { $ } from './dom.js';
 
 // A small library of UML-ish node shapes, keyed for settings/persistence; the
@@ -65,9 +65,9 @@ const LAYOUT_SPACING = {
 // packed layout runs Dagre on each island of connected nodes on its own and
 // then stacks the islands in columns that fill the canvas.
 const LAYOUTS = {
-  lr: { label: 'LR', title: 'Tidy up: lay the diagram out left to right', rankDir: 'LR', packed: false },
-  tb: { label: 'TB', title: 'Tidy up: lay the diagram out top to bottom', rankDir: 'TB', packed: false },
-  columns: { label: 'Columns', title: 'Tidy up: stack the entities in columns that fill the screen', rankDir: 'LR', packed: true },
+  lr: { label: 'LR', title: 'Lay the diagram out left to right', rankDir: 'LR', packed: false },
+  tb: { label: 'TB', title: 'Lay the diagram out top to bottom', rankDir: 'TB', packed: false },
+  columns: { label: 'Columns', title: 'Stack the entities in columns that fill the screen', rankDir: 'LR', packed: true },
 };
 
 const DEFAULT_LAYOUT = 'columns';
@@ -765,13 +765,13 @@ function buildController(model, options = {}) {
     cy.center();
   }
 
-  function runLayout() {
+  // The Dagre options for the picked layout, and the gap between the islands
+  // that packIslands() and tidy() line up.
+  function layoutSettings() {
     const spacing = fieldsMode ? LAYOUT_SPACING.fields : LAYOUT_SPACING.overview;
-    const layout = LAYOUTS[layoutName];
-    const elements = shown(cy.elements());
     const options = {
       name: 'dagre',
-      rankDir: layout.rankDir,
+      rankDir: LAYOUTS[layoutName].rankDir,
       ranker: 'network-simplex',
       nodeSep: spacing.nodeSep,
       edgeSep: 6,
@@ -780,13 +780,32 @@ function buildController(model, options = {}) {
       animate: false,
     };
 
-    if (layout.packed) {
-      packIslands(elements, options, { x: spacing.columnSep, y: spacing.islandSep });
+    return { options: options, gap: { x: spacing.columnSep, y: spacing.islandSep } };
+  }
+
+  function runLayout() {
+    const { options, gap } = layoutSettings();
+    const elements = shown(cy.elements());
+
+    if (LAYOUTS[layoutName].packed) {
+      packIslands(elements, options, gap);
     } else {
       elements.layout(options).run();
     }
 
     resetView();
+    positionCaptions();
+    positionNotes();
+  }
+
+  // Lays each island out on its own again and lines the islands up in
+  // columns near where they were (see tidyColumns()). The view stays put.
+  function tidy() {
+    const { options, gap } = layoutSettings();
+    const islands = layIslandsOut(shown(cy.elements()), options);
+    const boxes = islands.map((entry) => ({ x: entry.before.x1, y: entry.before.y1, w: entry.box.w, h: entry.box.h }));
+
+    placeIslands(islands, tidyColumns(boxes, gap).positions);
     positionCaptions();
     positionNotes();
   }
@@ -804,27 +823,38 @@ function buildController(model, options = {}) {
     return (a, b) => rank(a) - rank(b) || String(a.data('label')).localeCompare(String(b.data('label')));
   }
 
-  // Lays each island of connected elements out on its own, then stacks the
-  // islands in columns shaped like the canvas. An island takes the place of
-  // its first entity in entityOrder().
-  function packIslands(elements, options, gap) {
-    const compare = entityOrder();
-    const islands = elements.components().map((island) => {
+  // Runs Dagre on each island of connected elements on its own. Each entry
+  // holds the island and its box before and after the run.
+  function layIslandsOut(elements, options) {
+    return elements.components().map((island) => {
+      const before = island.boundingBox();
       island.layout({ ...options, fit: false }).run();
 
-      return { island: island, box: island.boundingBox(), lead: island.nodes('[group="entity"]').sort(compare).first() };
+      return { island: island, before: before, box: island.boundingBox() };
     });
+  }
+
+  // Moves each island so its box starts at the matching position.
+  function placeIslands(islands, positions) {
+    islands.forEach((entry, index) => {
+      const { x, y } = positions[index];
+      entry.island.nodes().shift({ x: x - entry.box.x1, y: y - entry.box.y1 });
+    });
+  }
+
+  // Lays each island out on its own, then stacks the islands in columns
+  // shaped like the canvas. An island takes the place of its first entity in
+  // entityOrder().
+  function packIslands(elements, options, gap) {
+    const compare = entityOrder();
+    const lead = (island) => island.nodes('[group="entity"]').sort(compare).first();
+    const islands = layIslandsOut(elements, options).map((entry) => ({ ...entry, lead: lead(entry.island) }));
 
     // An island with no entity, such as a lone note, goes last.
     islands.sort((a, b) => (a.lead.empty() || b.lead.empty() ? b.lead.length - a.lead.length : compare(a.lead, b.lead)));
 
     const boxes = islands.map((entry) => entry.box);
-    const packed = packColumns(boxes, { w: cy.width(), h: cy.height() }, gap);
-
-    islands.forEach((entry, index) => {
-      const { x, y } = packed.positions[index];
-      entry.island.nodes().shift({ x: x - entry.box.x1, y: y - entry.box.y1 });
-    });
+    placeIslands(islands, packColumns(boxes, { w: cy.width(), h: cy.height() }, gap).positions);
   }
 
   function applyLayout(layout) {
@@ -1290,6 +1320,7 @@ function buildController(model, options = {}) {
     cy,
     refresh,
     runLayout,
+    tidy,
     applyLayout,
     syncReferences,
     resetView,
@@ -1388,6 +1419,10 @@ function wire() {
   $('layout-run').addEventListener('click', () => {
     controller.runLayout();
     checkpoint('Re-ran the ' + LAYOUTS[layoutName].label + ' layout');
+  });
+  $('tidy').addEventListener('click', () => {
+    controller.tidy();
+    checkpoint('Tidied the layout');
   });
 
   // The menu flips a checkbox item on every select, so showLayout() ticks

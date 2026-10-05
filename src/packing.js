@@ -1,5 +1,5 @@
 /**
- * Column packing: arranges boxes in columns that fill a frame.
+ * Column packing: arranges boxes in columns.
  *
  * packColumns() keeps the boxes in their given order and fills each column
  * top to bottom before it starts the next. It tries every column count and
@@ -10,6 +10,9 @@
  * tallest column is the linear partition problem. shortestLimit() solves it
  * with a binary search over the column height, and splitColumns() tests each
  * height with a greedy fill.
+ *
+ * tidyColumns() takes the columns from where the boxes already are, so the
+ * boxes keep their place relative to each other.
  */
 
 // Fills columns top to bottom and starts a new one when the next box would
@@ -108,4 +111,47 @@ export function packColumns(boxes, frame, gap) {
   }
 
   return { positions: best.positions, w: best.w, h: best.h };
+}
+
+/**
+ * Lines boxes of { x, y, w, h } up in columns near where they are.
+ *
+ * Taken from left to right, a box joins the column of the box before it
+ * when its left edge is within half the width of that column's first box,
+ * or within `gap.x` of it for a narrower box. Otherwise it starts a column.
+ * Each column keeps its boxes in top-to-bottom order.
+ *
+ * The columns are spaced as packColumns() spaces them, from the top-left
+ * corner of all the boxes, so columns that already are tidy stay as they are.
+ *
+ * Returns the new top-left corner of each box, in input order, as
+ * `positions`, and the size of the whole arrangement as `w` and `h`.
+ */
+export function tidyColumns(boxes, gap) {
+  if (!boxes.length) {
+    return { positions: [], w: 0, h: 0 };
+  }
+
+  const byLeft = boxes.map((box, index) => index).sort((a, b) => boxes[a].x - boxes[b].x || boxes[a].y - boxes[b].y);
+  const columns = [];
+
+  byLeft.forEach((index) => {
+    const column = columns[columns.length - 1];
+    const first = column ? boxes[column[0]] : null;
+
+    if (first && boxes[index].x - first.x <= Math.max(gap.x, first.w / 2)) {
+      column.push(index);
+    } else {
+      columns.push([index]);
+    }
+  });
+
+  columns.forEach((column) => column.sort((a, b) => boxes[a].y - boxes[b].y || boxes[a].x - boxes[b].x));
+
+  const left = Math.min(...boxes.map((box) => box.x));
+  const top = Math.min(...boxes.map((box) => box.y));
+  const arrangement = arrange(boxes, columns, gap);
+  const positions = arrangement.positions.map((position) => ({ x: left + position.x, y: top + position.y }));
+
+  return { positions: positions, w: arrangement.w, h: arrangement.h };
 }

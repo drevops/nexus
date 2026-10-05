@@ -91,6 +91,7 @@ The diagram opens with its entities stacked in columns that fill the screen, wit
 - **Proxies** - draw each reference as a faded copy of its target beside the field, or as an edge to the entity itself.
 - **Machine names** - show each bundle/field machine name in monospace beneath its symbol.
 - **Layout** - re-run the current layout, or pick another from the arrow beside it: **Columns** stacks each entity and its fields in columns that fill the screen, grouped by entity type, while **LR** and **TB** lay the whole diagram out as 1 flow, left to right or top to bottom. Your pick is remembered.
+- **Tidy** - straighten each entity's fields and line the entities up in columns near where they already are, so a diagram you've dragged around or edited gets neat without being rearranged. Drag an entity roughly into place and Tidy slots it in.
 - **Entities** - an index with per-type filters and field counts; click a bundle to focus it or open its fields.
 - **Table** - a searchable table of all fields (or a single entity's) with type, cardinality, requiredness and references.
 - **Legend** - what each symbol means.

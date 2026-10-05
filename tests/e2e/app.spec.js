@@ -2575,6 +2575,117 @@ test('remembers the picked layout across reloads', async ({ page }) => {
   expect(await eventLayout(page)).toEqual({ right: true, below: false, turn: 'horizontal' });
 });
 
+for (const [name, button, trigger] of dataProviderDropdownTriggers()) {
+  test(`lines the ${name} up with the button beside it`, async ({ page }) => {
+    await loadExample(page);
+
+    const [buttonBox, triggerBox] = await page.evaluate(
+      (selectors) =>
+        selectors.map((selector) => {
+          const box = document.querySelector(selector).shadowRoot.querySelector('[part~="base"]').getBoundingClientRect();
+
+          return { top: Math.round(box.top * 10) / 10, bottom: Math.round(box.bottom * 10) / 10 };
+        }),
+      [button, trigger],
+    );
+
+    expect(triggerBox).toEqual(buttonBox);
+  });
+}
+
+function dataProviderDropdownTriggers() {
+  return [
+    ['layout menu caret', '#layout-run', '#layout-pick'],
+    ['zoom level menu', '#zoom-in', '#zoom-level'],
+  ];
+}
+
+// The position of every node, rounded to 0.01, so the rounding error of
+// moving an island away and back doesn't count.
+function roundedPositions(page) {
+  return page.evaluate(() => {
+    const positions = {};
+    window.__nexus.cy.nodes().forEach((node) => {
+      positions[node.id()] = { x: Math.round(node.position('x') * 100) / 100, y: Math.round(node.position('y') * 100) / 100 };
+    });
+    return positions;
+  });
+}
+
+// Moves the island of shown elements that holds each entity by its offset.
+function dragIslands(page, moves) {
+  return page.evaluate((list) => {
+    const cy = window.__nexus.cy;
+    const islands = cy.elements().not('.hidden').components();
+
+    list.forEach(([id, dx, dy]) => {
+      const island = islands.find((candidate) => candidate.contains(cy.getElementById(id)));
+      island.nodes().shift({ x: dx, y: dy });
+    });
+  }, moves);
+}
+
+test('leaves a fresh layout and the view as they are when tidied', async ({ page }) => {
+  await loadExample(page);
+  await page.evaluate(() => {
+    window.__nexus.cy.zoom(0.5);
+  });
+  const laidOut = await roundedPositions(page);
+
+  await page.click('#tidy');
+
+  expect(await roundedPositions(page)).toEqual(laidOut);
+  expect(await page.evaluate(() => window.__nexus.cy.zoom())).toBeCloseTo(0.5, 2);
+});
+
+test('slots an entity dragged a little out of its column back in when tidied', async ({ page }) => {
+  await loadExample(page);
+  const laidOut = await roundedPositions(page);
+
+  await dragIslands(page, [['node.news', 40, 15]]);
+  await page.click('#tidy');
+
+  expect(await roundedPositions(page)).toEqual(laidOut);
+});
+
+test('lines dragged entities up in columns that tidying again leaves alone', async ({ page }) => {
+  await loadExample(page);
+  await dragIslands(page, [
+    ['node.event', 900, 400],
+    ['media.image', -300, 1200],
+    ['paragraph.quote', 150, -200],
+  ]);
+
+  await page.click('#tidy');
+  const tidied = await roundedPositions(page);
+  const overlaps = await page.evaluate(() => {
+    const boxes = window.__nexus.cy
+      .elements()
+      .not('.hidden')
+      .components()
+      .map((island) => island.boundingBox());
+    const overlap = (a, b) => a.x1 < b.x2 && b.x1 < a.x2 && a.y1 < b.y2 && b.y1 < a.y2;
+
+    return boxes.filter((box, index) => boxes.some((other, otherIndex) => otherIndex !== index && overlap(box, other))).length;
+  });
+  await page.click('#tidy');
+
+  expect(overlaps).toBe(0);
+  expect(await roundedPositions(page)).toEqual(tidied);
+});
+
+test('lines a field added below an entity up with its other fields when tidied', async ({ page }) => {
+  await selectEvent(page, 1);
+  const count = await page.evaluate(() => window.__nexus.cy.nodes('[group="field"][entity="node.event"]').length);
+  await page.click('.handle--bottom');
+  await page.waitForFunction((before) => window.__nexus.cy.nodes('[group="field"][entity="node.event"]').length === before + 1, count);
+
+  await page.click('#tidy');
+
+  const xs = await page.evaluate(() => window.__nexus.cy.nodes('[group="field"][entity="node.event"]').map((field) => Math.round(field.position('x'))));
+  expect(new Set(xs).size).toBe(1);
+});
+
 test('isolates an entity on right-click and moves it with its fields', async ({ page }) => {
   await loadExample(page);
   await page.click('#mode-build');
@@ -2737,7 +2848,7 @@ test('keeps the multi-value cardinality badge legible in both themes', async ({ 
   expect(await textContrast(badge)).toBeGreaterThanOrEqual(4.5);
 });
 
-const LAYOUT_HINT = 'Tidy up: stack the entities in columns that fill the screen';
+const LAYOUT_HINT = 'Stack the entities in columns that fill the screen';
 
 test('echoes a hovered control description into the status bar', async ({ page }) => {
   await loadExample(page);
@@ -2751,7 +2862,7 @@ test('describes the picked layout when the layout button is hovered', async ({ p
   await pickLayout(page, 'tb');
 
   await page.locator('#layout-run').hover();
-  await expect(page.locator('#statusbar-hint')).toHaveText('Tidy up: lay the diagram out top to bottom');
+  await expect(page.locator('#statusbar-hint')).toHaveText('Lay the diagram out top to bottom');
 });
 
 test('describes the switched theme when the theme toggle is hovered again', async ({ page }) => {
