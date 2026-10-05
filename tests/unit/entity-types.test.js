@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { ENTITY_TYPES, ENTITY_TYPE_ORDER, findEntityType } from '../../src/entity-types.js';
+import { ENTITY_TYPES, ENTITY_TYPE_ORDER, findEntityType, formatCount } from '../../src/entity-types.js';
 import { machineName } from '../../src/names.js';
 
 const ROOT = join(import.meta.dirname, '..', '..');
@@ -45,6 +45,49 @@ function dataProviderFindEntityType() {
     ['an inherited object property', 'constructor', null],
     ['an empty string', '', null],
     ['undefined', undefined, null],
+  ];
+}
+
+test('formats a count of bundles in the singular or the plural', async (t) => {
+  for (const [name, type, count, expected] of dataProviderFormatCount()) {
+    await t.test(name, () => {
+      assert.equal(formatCount(type, count), expected);
+    });
+  }
+});
+
+function dataProviderFormatCount() {
+  return [
+    ['1 content type', 'node', 1, '1 content type'],
+    ['7 content types', 'node', 7, '7 content types'],
+    ['1 vocabulary', 'taxonomy_term', 1, '1 vocabulary'],
+    ['9 vocabularies', 'taxonomy_term', 9, '9 vocabularies'],
+    ['0 media types', 'media', 0, '0 media types'],
+    ['31 paragraph types', 'paragraph', 31, '31 paragraph types'],
+    ['5 block types', 'block_content', 5, '5 block types'],
+  ];
+}
+
+test('formats a count for every built-in entity type', () => {
+  for (const type of ENTITY_TYPE_ORDER) {
+    assert.match(formatCount(type, 1), /^1 [a-z ]+[^s]$/, type);
+    assert.match(formatCount(type, 2), /^2 [a-z ]+s$/, type);
+  }
+});
+
+test('refuses to format a count for a type that is not built in', async (t) => {
+  for (const [name, type] of dataProviderUnknownCountType()) {
+    await t.test(name, () => {
+      assert.throws(() => formatCount(type, 1), /Unknown entity type/);
+    });
+  }
+});
+
+function dataProviderUnknownCountType() {
+  return [
+    ['a custom type', 'widget'],
+    ['an inherited object property', 'constructor'],
+    ['an empty string', ''],
   ];
 }
 
