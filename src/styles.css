@@ -1069,6 +1069,7 @@ sl-button#zoom-level::part(base) {
   width: 940px;
   max-width: 100%;
   margin: auto;
+  container-type: inline-size;
 }
 
 .landing__card::part(base) {
@@ -1102,6 +1103,14 @@ sl-button#zoom-level::part(base) {
 .landing__logo .icon--nexus {
   width: 64px;
   height: 64px;
+}
+
+/* Below this width the corner buttons reach the centred mark, so the logo
+   starts below them. */
+@container (max-width: 18rem) {
+  .landing__logo {
+    margin-top: 1rem;
+  }
 }
 
 .landing__version {

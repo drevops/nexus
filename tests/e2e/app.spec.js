@@ -219,6 +219,10 @@ function boxesOf(page, selectors) {
   return Promise.all(selectors.map((selector) => page.locator(selector).boundingBox()));
 }
 
+function boxesOverlap(a, b) {
+  return a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+}
+
 function expectInTopRightCorner(outer, box) {
   expect(box.x + box.width).toBeLessThanOrEqual(outer.x + outer.width);
   expect(box.x).toBeGreaterThan(outer.x + outer.width - 100);
@@ -802,6 +806,24 @@ test('puts the theme toggle in the corner of the card, beside the close button o
   expect(close.x - (beside.x + beside.width)).toBeLessThan(16);
   expect(beside.y).toBe(close.y);
 });
+
+for (const width of dataProviderLandingWidths()) {
+  test(`keeps the corner buttons clear of the Nexus mark in a ${width}px window`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 700 });
+    await loadExample(page);
+    await page.click('#doc-import');
+    await expect(page.locator('#landing-cancel')).toBeVisible();
+
+    const [mark, toggle, close] = await boxesOf(page, ['.landing__logo svg.icon--nexus', '#landing-theme', '#landing-cancel']);
+
+    expect(boxesOverlap(mark, toggle)).toBe(false);
+    expect(boxesOverlap(mark, close)).toBe(false);
+  });
+}
+
+function dataProviderLandingWidths() {
+  return [375, 320, 280];
+}
 
 test('keeps keyboard focus on the landing screen while it is open', async ({ page }) => {
   const focusedId = () => page.evaluate(() => document.activeElement.id);
