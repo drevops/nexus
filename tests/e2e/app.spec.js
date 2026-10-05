@@ -759,6 +759,24 @@ test('offers a close button in the corner of the card only while a diagram is op
   expect(close.y).toBeLessThan(card.y + 50);
 });
 
+test('keeps keyboard focus on the landing screen while it is open', async ({ page }) => {
+  const focusedId = () => page.evaluate(() => document.activeElement.id);
+
+  // A Shoelace control takes focus only once it renders its inner control.
+  await page.waitForFunction(() => ['diagram-title', 'folder-btn'].every((id) => document.getElementById(id).shadowRoot?.querySelector('input, button')));
+  await page.keyboard.press('Tab');
+  expect(await focusedId()).toBe('folder-btn');
+
+  await page.click(EXAMPLE);
+  await waitForGraph(page);
+  await page.click('#doc-import');
+  await page.keyboard.press('Tab');
+  expect(await focusedId()).toBe('landing-cancel');
+
+  await page.click('#landing-cancel');
+  expect(await page.locator('.toolbar').evaluate((toolbar) => toolbar.inert)).toBe(false);
+});
+
 test('lists every template with its badge, its counts and a drawn mark', async ({ page }) => {
   const rows = page.locator('.template-row');
 

@@ -51,13 +51,23 @@ function hideLoader() {
   $('loader').hidden = true;
 }
 
+// The landing covers the toolbar, the canvas and the status bar, so they
+// leave the tab order and the accessibility tree while it is open.
+function setLandingOpen(open) {
+  $('landing').hidden = !open;
+
+  for (const region of [document.querySelector('.toolbar'), $('stage-root'), $('statusbar')]) {
+    region.inert = open;
+  }
+}
+
 function showDiagram(modelData, options) {
   const controller = render(modelData, options || {});
   attachBuilder(controller.cy);
   const title = (modelData.meta && modelData.meta.title) || DEFAULT_TITLE;
   $('diagram-title').value = title;
   document.title = title + ' - Nexus';
-  $('landing').hidden = true;
+  setLandingOpen(false);
 }
 
 function buildAndShow(map, annotations, title) {
@@ -289,9 +299,9 @@ function wireLanding() {
   $('landing-open').addEventListener('click', () => $('doc-open').click());
   $('new-btn').addEventListener('click', newDocument);
   $('doc-import').addEventListener('click', showLanding);
-  $('landing-cancel').addEventListener('click', () => {
-    $('landing').hidden = true;
-  });
+  $('landing-cancel').addEventListener('click', () => setLandingOpen(false));
+
+  setLandingOpen(!$('landing').hidden);
 }
 
 // The close button returns to a loaded diagram, so it stays hidden until one
@@ -299,7 +309,7 @@ function wireLanding() {
 function showLanding() {
   showError('');
   $('landing-cancel').hidden = !getController();
-  $('landing').hidden = false;
+  setLandingOpen(true);
 }
 
 function wireExports() {
@@ -356,7 +366,7 @@ async function openDocument(file) {
       importLayout(doc.ui);
     }
   } catch (e) {
-    $('landing').hidden = false;
+    showLanding();
     showError('Could not open that diagram: ' + e.message);
   } finally {
     hideLoader();
