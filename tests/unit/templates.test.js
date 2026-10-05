@@ -66,7 +66,7 @@ test('draws exactly the advertised bundles from each template diagram', () => {
     for (const node of documentToModel(documentOf(template)).modelData.nodes) {
       const { group, entityType, bundle } = node.data;
 
-      if (group === 'entity' && bundle !== '*' && Object.hasOwn(template.counts, entityType)) {
+      if (group === 'entity' && bundle !== '*') {
         drawn[entityType] = (drawn[entityType] || 0) + 1;
       }
     }

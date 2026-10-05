@@ -16,8 +16,8 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { TEMPLATES, templatePath, templateTitle } from '../src/templates.js';
-import { bundleCounts, isModelConfig } from '../src/parser.js';
-import { buildDocument, mergeConfig, readConfigFolder, renderCounts, renderDocument } from './lib/template-sources.mjs';
+import { isModelConfig } from '../src/parser.js';
+import { buildDocument, documentCounts, mergeConfig, readConfigFolder, renderCounts, renderDocument } from './lib/template-sources.mjs';
 
 // The vendored UMD build exports nothing to an ES module import and sets
 // globalThis.jsyaml instead.
@@ -74,9 +74,11 @@ function buildTemplate(template, clones) {
     }
   }
 
-  writeFileSync(join(ROOT, templatePath(template)), renderDocument(buildDocument(parsed, templateTitle(template))));
+  const doc = buildDocument(parsed, templateTitle(template));
 
-  return Object.keys(parsed);
+  writeFileSync(join(ROOT, templatePath(template)), renderDocument(doc));
+
+  return doc;
 }
 
 function main(ids) {
@@ -95,10 +97,10 @@ function main(ids) {
 
   try {
     for (const template of selected) {
-      const names = buildTemplate(template, clones);
-      const counts = bundleCounts(names);
+      const doc = buildTemplate(template, clones);
+      const counts = documentCounts(doc);
 
-      console.log(templateTitle(template) + ': ' + names.length + ' model files, ' + renderCounts(counts));
+      console.log(templateTitle(template) + ': ' + doc.entities.length + ' entities, ' + renderCounts(counts));
 
       if (!isDeepStrictEqual(counts, template.counts)) {
         stale = true;

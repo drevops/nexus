@@ -3,7 +3,7 @@
  *
  * Each template ships as a saved diagram, templates/<id>.nexus.json, which
  * 'npm run update-templates' builds from the config folders in 'sources'.
- * 'counts' holds the bundles that config defines, by entity type.
+ * 'counts' holds the bundles the diagram draws, by entity type.
  *
  * The sources are listed in the order Drupal installs them, because the first
  * folder to ship a file keeps it. 'version' is the tag of the source named
@@ -37,7 +37,7 @@ export const TEMPLATES = [
     summary: 'Byte site template: blog, pages, media',
     icon: 'droplet',
     color: '#0678be',
-    counts: { node: 2, taxonomy_term: 1, media: 5 },
+    counts: { node: 2, taxonomy_term: 1, media: 5, user: 1 },
     sources: [
       {
         name: 'Drupal core',

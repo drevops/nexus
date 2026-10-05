@@ -80,6 +80,23 @@ export function buildDocument(files, title) {
 }
 
 /**
+ * Counts the bundles a document draws, by entity type.
+ *
+ * A '*' bundle stands for any bundle of its type, so it is not counted.
+ */
+export function documentCounts(doc) {
+  const counts = {};
+
+  for (const { entityType, bundle } of doc.entities) {
+    if (bundle !== '*') {
+      counts[entityType] = (counts[entityType] || 0) + 1;
+    }
+  }
+
+  return counts;
+}
+
+/**
  * Renders a document as the JSON a template ships.
  */
 export function renderDocument(doc) {

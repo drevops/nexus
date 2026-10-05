@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { bundleCounts, isModelConfig, parseConfig } from '../../src/parser.js';
+import { isModelConfig, parseConfig } from '../../src/parser.js';
 import { ENTITY_TYPE_ORDER } from '../../src/entity-types.js';
 import { configMin } from '../fixtures/config-min.js';
 
@@ -127,34 +127,3 @@ function dataProviderModelConfig() {
     ['an annotation overlay', 'annotations.yml', false],
   ];
 }
-
-test('counts the bundles that config file names define, by entity type', () => {
-  const names = [
-    'node.type.article.yml',
-    'node.type.page.yml',
-    'taxonomy.vocabulary.tags.yml',
-    'media.type.image.yml',
-    'paragraphs.paragraphs_type.text.yml',
-    'block_content.type.basic.yml',
-    'field.field.node.article.field_tags.yml',
-    'views.view.content.yml',
-  ];
-
-  assert.deepEqual(bundleCounts(names), { node: 2, taxonomy_term: 1, media: 1, paragraph: 1, block_content: 1 });
-});
-
-test('counts no bundle the parser skips', () => {
-  assert.deepEqual(bundleCounts(['node.type.a.b.yml', 'field.storage.node.field_tags.yml']), {});
-});
-
-test('counts the same bundles parseConfig() builds from bundle files', () => {
-  const built = {};
-
-  for (const entity of parseConfig(configMin).getEntities()) {
-    if (entity.bundle !== '*') {
-      built[entity.entityType] = (built[entity.entityType] || 0) + 1;
-    }
-  }
-
-  assert.deepEqual(bundleCounts(Object.keys(configMin)), built);
-});

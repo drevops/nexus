@@ -31,26 +31,6 @@ export function isModelConfig(filename) {
   return MODEL_PREFIXES.some((prefix) => name.startsWith(prefix));
 }
 
-/**
- * Counts the bundles that the given config file names define, by entity type.
- *
- * A name that parseConfig() skips, such as 'node.type.a.b.yml', is not
- * counted.
- */
-export function bundleCounts(filenames) {
-  const counts = {};
-
-  for (const filename of filenames) {
-    const match = bundleOf(String(filename));
-
-    if (match) {
-      counts[match.entityType] = (counts[match.entityType] || 0) + 1;
-    }
-  }
-
-  return counts;
-}
-
 export function parseConfig(files, options = {}) {
   if (!files || typeof files !== 'object') {
     throw new Error('No configuration provided.');
@@ -87,7 +67,7 @@ export function parseConfig(files, options = {}) {
   return model;
 }
 
-function bundleOf(filename) {
+function matchBundle(filename, data) {
   for (const [prefix, entityType] of Object.entries(BUNDLE_PREFIXES)) {
     if (!filename.startsWith(prefix)) {
       continue;
@@ -95,22 +75,16 @@ function bundleOf(filename) {
 
     const bundle = filename.slice(prefix.length, filename.length - '.yml'.length);
 
-    return bundle.includes('.') ? null : { entityType, bundle };
+    if (bundle.includes('.')) {
+      return null;
+    }
+
+    const label = data?.name ?? data?.label ?? humanize(bundle);
+
+    return new Entity(entityType, bundle, String(label));
   }
 
   return null;
-}
-
-function matchBundle(filename, data) {
-  const match = bundleOf(filename);
-
-  if (!match) {
-    return null;
-  }
-
-  const label = data?.name ?? data?.label ?? humanize(match.bundle);
-
-  return new Entity(match.entityType, match.bundle, String(label));
 }
 
 function collectStorages(files, filenames) {

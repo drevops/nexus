@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
-import { buildDocument, mergeConfig, readConfigFolder, renderCounts, renderDocument } from '../../scripts/lib/template-sources.mjs';
+import { buildDocument, documentCounts, mergeConfig, readConfigFolder, renderCounts, renderDocument } from '../../scripts/lib/template-sources.mjs';
 import { parseConfig } from '../../src/parser.js';
 import { documentToModel } from '../../src/document.js';
 import { configMin } from '../fixtures/config-min.js';
@@ -62,6 +62,10 @@ test('builds a titled saved diagram without a layout that opens as the model the
   assert.equal(doc.title, 'Minimal 1.0.0');
   assert.deepEqual(doc.layout, {});
   assert.deepEqual(documentToModel(doc).modelData, model.toArray());
+});
+
+test('counts the bundles a document draws, leaving out any-bundle targets', () => {
+  assert.deepEqual(documentCounts(buildDocument(configMin, 'Minimal 1.0.0')), { node: 2, taxonomy_term: 1, media: 1, paragraph: 2 });
 });
 
 test('renders a document as indented JSON ending in a newline', () => {
