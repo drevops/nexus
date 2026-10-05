@@ -239,6 +239,27 @@ function topmostOf(page, selectors) {
   }, selectors);
 }
 
+// Returns what is drawn on top where the open list of the select overlaps the
+// toolbar: 'list', 'toolbar', or null while they do not overlap.
+function listOverToolbar(page, selector) {
+  return page.evaluate((selectSelector) => {
+    const list = document.querySelector(selectSelector).shadowRoot.querySelector('.select__listbox').getBoundingClientRect();
+    const toolbar = document.querySelector('.toolbar').getBoundingClientRect();
+
+    if (list.height === 0 || list.top >= toolbar.bottom) {
+      return null;
+    }
+
+    const hit = document.elementFromPoint(list.left + list.width / 2, (Math.max(list.top, toolbar.top) + toolbar.bottom) / 2);
+
+    if (hit.closest(selectSelector)) {
+      return 'list';
+    }
+
+    return hit.closest('.toolbar') ? 'toolbar' : null;
+  }, selector);
+}
+
 test.beforeEach(async ({ page }) => {
   await page.goto('/index.html');
 });
@@ -1799,6 +1820,21 @@ test('draws the export menu above a panel under it', async ({ page }) => {
   await page.click('#export-choose');
   await expect(page.locator('#export-menu')).toBeVisible();
   await expect.poll(() => topmostOf(page, ['#export-menu', '#entities'])).toBe('#export-menu');
+});
+
+// A short window leaves the select no room below, so its list opens upward
+// across the toolbar.
+test('draws a panel select that opens upward over the toolbar', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 400 });
+  await loadExample(page);
+  await page.click('#legend-toggle');
+  await page.click('#settings-toggle');
+
+  const select = '#settings sl-select[data-symbol="node"]';
+  await page.click(select);
+  await expect(page.locator(select)).toHaveJSProperty('open', true);
+
+  await expect.poll(() => listOverToolbar(page, select)).toBe('list');
 });
 
 test('describes the Export button in the status bar', async ({ page }) => {

@@ -35,8 +35,6 @@ body {
   background: var(--bg);
 }
 
-/* The toolbar sits above the floating panels, so its Export menu draws over
-   them. */
 .toolbar {
   display: flex;
   flex-direction: column;
@@ -45,7 +43,6 @@ body {
   background: var(--panel-bg);
   border-bottom: 1px solid var(--border);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  z-index: 40;
 }
 
 /* Row 1: brand and title on the left; GitHub, theme and settings on the right. */
