@@ -1,0 +1,13 @@
+langcode: en
+status: true
+dependencies: {  }
+id: node.field_topics
+field_name: field_topics
+entity_type: node
+type: entity_reference
+settings:
+  target_type: taxonomy_term
+module: core
+locked: false
+cardinality: -1
+translatable: true

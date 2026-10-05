@@ -1,0 +1,11 @@
+langcode: en
+status: true
+dependencies: {  }
+id: node.page.body
+field_name: body
+entity_type: node
+bundle: page
+label: 'Body'
+required: false
+settings: {  }
+field_type: text_with_summary

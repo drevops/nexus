@@ -1,0 +1,15 @@
+langcode: en
+status: true
+dependencies: {  }
+id: node.session.field_speakers
+field_name: field_speakers
+entity_type: node
+bundle: session
+label: 'Speakers'
+required: false
+settings:
+  handler: 'default:node'
+  handler_settings:
+    target_bundles:
+      speaker: speaker
+field_type: entity_reference

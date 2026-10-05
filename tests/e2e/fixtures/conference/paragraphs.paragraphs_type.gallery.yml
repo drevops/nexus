@@ -1,0 +1,6 @@
+langcode: en
+status: true
+dependencies: {  }
+id: gallery
+label: 'Gallery'
+description: 'A set of images.'

@@ -1,0 +1,6 @@
+langcode: en
+status: true
+dependencies: {  }
+id: remote_video
+label: 'Remote video'
+description: 'Recordings hosted elsewhere.'

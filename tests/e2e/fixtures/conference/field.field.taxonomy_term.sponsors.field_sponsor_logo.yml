@@ -1,0 +1,15 @@
+langcode: en
+status: true
+dependencies: {  }
+id: taxonomy_term.sponsors.field_sponsor_logo
+field_name: field_sponsor_logo
+entity_type: taxonomy_term
+bundle: sponsors
+label: 'Logo'
+required: false
+settings:
+  handler: 'default:media'
+  handler_settings:
+    target_bundles:
+      image: image
+field_type: entity_reference

@@ -1,0 +1,11 @@
+langcode: en
+status: true
+dependencies: {  }
+id: node.event.field_date
+field_name: field_date
+entity_type: node
+bundle: event
+label: 'Date'
+required: true
+settings: {  }
+field_type: daterange

@@ -1,0 +1,15 @@
+langcode: en
+status: true
+dependencies: {  }
+id: node.session.field_slides
+field_name: field_slides
+entity_type: node
+bundle: session
+label: 'Slides'
+required: false
+settings:
+  handler: 'default:media'
+  handler_settings:
+    target_bundles:
+      document: document
+field_type: entity_reference

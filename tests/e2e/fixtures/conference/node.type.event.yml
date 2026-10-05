@@ -1,0 +1,9 @@
+langcode: en
+status: true
+dependencies: {  }
+name: 'Event'
+type: event
+description: 'A conference or meetup with its sessions, venue and sponsors.'
+new_revision: true
+preview_mode: 1
+display_submitted: false

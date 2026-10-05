@@ -1,0 +1,11 @@
+langcode: en
+status: true
+dependencies: {  }
+id: node.session.field_start_time
+field_name: field_start_time
+entity_type: node
+bundle: session
+label: 'Start time'
+required: true
+settings: {  }
+field_type: datetime

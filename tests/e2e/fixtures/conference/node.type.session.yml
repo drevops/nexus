@@ -1,0 +1,9 @@
+langcode: en
+status: true
+dependencies: {  }
+name: 'Session'
+type: session
+description: 'A talk or workshop within an event.'
+new_revision: true
+preview_mode: 1
+display_submitted: false

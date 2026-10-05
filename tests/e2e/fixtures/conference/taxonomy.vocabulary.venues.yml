@@ -1,0 +1,7 @@
+langcode: en
+status: true
+dependencies: {  }
+name: 'Venues'
+vid: venues
+description: 'Places where events happen.'
+weight: 0

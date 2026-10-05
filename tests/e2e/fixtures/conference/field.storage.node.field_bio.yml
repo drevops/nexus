@@ -1,0 +1,12 @@
+langcode: en
+status: true
+dependencies: {  }
+id: node.field_bio
+field_name: field_bio
+entity_type: node
+type: text_long
+settings: {  }
+module: text
+locked: false
+cardinality: 1
+translatable: true

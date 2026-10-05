@@ -1,0 +1,9 @@
+langcode: en
+status: true
+dependencies: {  }
+name: 'Speaker'
+type: speaker
+description: 'A person presenting sessions.'
+new_revision: true
+preview_mode: 1
+display_submitted: false

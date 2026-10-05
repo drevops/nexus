@@ -1,0 +1,11 @@
+langcode: en
+status: true
+dependencies: {  }
+id: media.document.field_media_document
+field_name: field_media_document
+entity_type: media
+bundle: document
+label: 'Document'
+required: true
+settings: {  }
+field_type: file

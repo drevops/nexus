@@ -1,0 +1,15 @@
+langcode: en
+status: true
+dependencies: {  }
+id: node.speaker.field_topics
+field_name: field_topics
+entity_type: node
+bundle: speaker
+label: 'Topics'
+required: false
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      topics: topics
+field_type: entity_reference

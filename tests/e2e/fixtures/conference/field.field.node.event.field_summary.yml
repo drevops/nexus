@@ -1,0 +1,11 @@
+langcode: en
+status: true
+dependencies: {  }
+id: node.event.field_summary
+field_name: field_summary
+entity_type: node
+bundle: event
+label: 'Summary'
+required: true
+settings: {  }
+field_type: string_long

@@ -1,0 +1,13 @@
+langcode: en
+status: true
+dependencies: {  }
+id: paragraph.field_speaker
+field_name: field_speaker
+entity_type: paragraph
+type: entity_reference
+settings:
+  target_type: node
+module: core
+locked: false
+cardinality: 1
+translatable: true

@@ -1,0 +1,15 @@
+langcode: en
+status: true
+dependencies: {  }
+id: paragraph.quote.field_speaker
+field_name: field_speaker
+entity_type: paragraph
+bundle: quote
+label: 'Speaker'
+required: false
+settings:
+  handler: 'default:node'
+  handler_settings:
+    target_bundles:
+      speaker: speaker
+field_type: entity_reference

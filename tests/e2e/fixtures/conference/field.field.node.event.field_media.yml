@@ -1,0 +1,16 @@
+langcode: en
+status: true
+dependencies: {  }
+id: node.event.field_media
+field_name: field_media
+entity_type: node
+bundle: event
+label: 'Media'
+required: false
+settings:
+  handler: 'default:media'
+  handler_settings:
+    target_bundles:
+      image: image
+      remote_video: remote_video
+field_type: entity_reference

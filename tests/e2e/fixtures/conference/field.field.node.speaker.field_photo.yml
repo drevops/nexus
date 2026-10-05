@@ -1,0 +1,15 @@
+langcode: en
+status: true
+dependencies: {  }
+id: node.speaker.field_photo
+field_name: field_photo
+entity_type: node
+bundle: speaker
+label: 'Photo'
+required: false
+settings:
+  handler: 'default:media'
+  handler_settings:
+    target_bundles:
+      image: image
+field_type: entity_reference

@@ -1,0 +1,15 @@
+langcode: en
+status: true
+dependencies: {  }
+id: node.news.field_topics
+field_name: field_topics
+entity_type: node
+bundle: news
+label: 'Topics'
+required: false
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      topics: topics
+field_type: entity_reference

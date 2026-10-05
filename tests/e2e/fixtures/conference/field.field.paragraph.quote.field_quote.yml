@@ -1,0 +1,11 @@
+langcode: en
+status: true
+dependencies: {  }
+id: paragraph.quote.field_quote
+field_name: field_quote
+entity_type: paragraph
+bundle: quote
+label: 'Quote'
+required: true
+settings: {  }
+field_type: string_long
