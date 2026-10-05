@@ -26,6 +26,7 @@ import { ENTITY_TYPE_ORDER, findEntityType } from './entity-types.js';
 import { humanize, machineName } from './names.js';
 import { REFERENCE_ELEMENTS, syncReferenceElements } from './references.js';
 import { fitWidth, wrapLabel } from './label-fit.js';
+import { checkpoint, untracked } from './undo.js';
 import { $ } from './dom.js';
 
 // A small library of UML-ish node shapes, keyed for settings/persistence; the
@@ -1293,7 +1294,7 @@ function buildController(model, options = {}) {
         .map((t) => ({ type: t, label: typeLabel(t), color: entityColor(t), symbol: activeSymbols[t] || FALLBACK_SYMBOL, visible: typeVisible[t] !== false })),
     setTypeVisible: (type, vis) => {
       typeVisible[type] = vis;
-      refresh(true);
+      untracked(() => refresh(true));
       bump();
     },
   };
@@ -1311,7 +1312,10 @@ function wire() {
     controller.clearFocus();
     controller.resetView();
   });
-  $('tidy').addEventListener('click', () => controller.runLayout());
+  $('tidy').addEventListener('click', () => {
+    controller.runLayout();
+    checkpoint('Tidied the layout');
+  });
 
   $('zoom-menu').addEventListener('sl-select', (evt) => {
     const value = evt.detail.item.value;
@@ -1322,11 +1326,13 @@ function wire() {
     controller.cy.zoom({ level: parseFloat(value), renderedPosition: { x: controller.cy.width() / 2, y: controller.cy.height() / 2 } });
   });
 
+  // The display toggles re-run the layout too, but undo reverts edits only,
+  // so their layout is not a history step.
   $('fields-toggle').addEventListener('click', (evt) => {
     fieldsMode = !fieldsMode;
     evt.target.classList.toggle('is-active', fieldsMode);
     controller.clearFocus();
-    controller.refresh(true);
+    untracked(() => controller.refresh(true));
   });
 
   $('proxy-toggle').addEventListener('click', (evt) => {
@@ -1337,13 +1343,13 @@ function wire() {
       $('fields-toggle').classList.add('is-active');
     }
     controller.clearFocus();
-    controller.refresh(true);
+    untracked(() => controller.refresh(true));
   });
 
   $('layout-toggle').addEventListener('click', () => {
     rankDir = rankDir === 'LR' ? 'TB' : 'LR';
     $('layout-toggle').querySelector('.layout-label').textContent = 'Layout: ' + rankDir;
-    controller.runLayout();
+    untracked(() => controller.runLayout());
   });
 
   $('machine-names').addEventListener('click', (evt) => {

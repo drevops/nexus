@@ -3,7 +3,8 @@
  *
  * Loads a Drupal config folder entirely in the browser (nothing is uploaded),
  * parses it, and renders the content-model diagram. Also handles the bundled
- * templates, the Export button and the loading overlay.
+ * templates, the Export button and the loading overlay, and starts a history
+ * for each diagram it draws.
  */
 
 import { isModelConfig, parseConfig } from './parser.js';
@@ -14,6 +15,7 @@ import { EXPORT_FORMATS, findExportFormat, loadExportFormat, saveExportFormat } 
 import { documentFromGraph, documentToModel } from './document.js';
 import { initBuilder, attachBuilder } from './builder.js';
 import { initUI } from './ui.js';
+import { initUndo, resetHistory, checkpoint } from './undo.js';
 import { initIcons, icon } from './icons.js';
 import { VERSION } from './version.js';
 import { DEFAULT_TITLE } from './model.js';
@@ -72,13 +74,22 @@ function setLandingOpen(open) {
   }
 }
 
-function showDiagram(modelData, options) {
-  const controller = render(modelData, options || {});
-  attachBuilder(controller.cy);
-  const title = (modelData.meta && modelData.meta.title) || DEFAULT_TITLE;
+function pageTitle(title) {
+  return (title || 'Untitled') + ' - Nexus';
+}
+
+function showTitle(title) {
   $('diagram-title').value = title;
-  document.title = title + ' - Nexus';
+  document.title = pageTitle(title);
+}
+
+// `origin` labels the first version in the diagram's history.
+function showDiagram(modelData, options, origin) {
+  const controller = render(modelData, options);
+  attachBuilder(controller.cy);
+  showTitle((modelData.meta && modelData.meta.title) || DEFAULT_TITLE);
   setLandingOpen(false);
+  resetHistory(origin);
 }
 
 function buildAndShow(map, annotations) {
@@ -95,7 +106,7 @@ function buildAndShow(map, annotations) {
   }
 
   showError('');
-  showDiagram(data);
+  showDiagram(data, {}, 'Imported a config folder');
 }
 
 async function loadFromFiles(fileList) {
@@ -169,7 +180,7 @@ async function loadTemplate(template) {
   showError('');
   showLoader('Loading ' + title + '…');
   try {
-    showDocument(await fetchText(templatePath(template)));
+    showDocument(await fetchText(templatePath(template)), 'Loaded the ' + title + ' template');
   } catch (e) {
     showError('Could not load ' + title + ': ' + e.message);
   } finally {
@@ -402,9 +413,9 @@ function saveDocument() {
   exportDocument(doc, title);
 }
 
-function showDocument(text) {
+function showDocument(text, origin) {
   const doc = documentToModel(JSON.parse(text));
-  showDiagram(doc.modelData, { layout: doc.layout, colors: doc.colors, symbols: doc.symbols, customTypes: doc.customTypes });
+  showDiagram(doc.modelData, { layout: doc.layout, colors: doc.colors, symbols: doc.symbols, customTypes: doc.customTypes }, origin);
   if (doc.ui) {
     importLayout(doc.ui);
   }
@@ -414,7 +425,7 @@ async function openDocument(file) {
   showError('');
   showLoader('Opening diagram…');
   try {
-    showDocument(await file.text());
+    showDocument(await file.text(), 'Opened ' + file.name);
   } catch (e) {
     showLanding();
     showError('Could not open that diagram: ' + e.message);
@@ -424,7 +435,7 @@ async function openDocument(file) {
 }
 
 function newDocument() {
-  showDiagram({ meta: { title: 'New content model', entityCount: 0 }, nodes: [], edges: [] });
+  showDiagram({ meta: { title: 'New content model', entityCount: 0 }, nodes: [], edges: [] }, {}, 'Started a new content model');
 }
 
 function wireDocument() {
@@ -438,7 +449,8 @@ function wireDocument() {
     evt.target.value = '';
   });
   $('diagram-title').addEventListener('sl-input', () => {
-    document.title = ($('diagram-title').value || 'Untitled') + ' - Nexus';
+    document.title = pageTitle($('diagram-title').value);
+    checkpoint('Renamed the diagram', 'title');
   });
 }
 
@@ -523,6 +535,7 @@ wireExports();
 wireDocument();
 initUI();
 initBuilder();
+initUndo(showTitle);
 initIcons();
 initTheme();
 initStatusbar();

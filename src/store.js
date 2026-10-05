@@ -3,6 +3,8 @@
  *
  * A tiny observable holding the panel windowing, the inspector target and
  * the dock widths.
+ *
+ * `revision` counts the times the history changed the graph.
  */
 
 const listeners = new Set();
@@ -13,6 +15,7 @@ const DEFAULT_POS = {
   inspector: { right: 16, top: 16 },
   settings: { right: 16, top: 16 },
   legend: { right: 16, bottom: 16 },
+  history: { left: 16, bottom: 16 },
 };
 
 // Raised panels hold distinct z-indexes in a band from PANEL_Z up, 1 per
@@ -89,7 +92,7 @@ function initialState() {
   } else {
     panels.legend.open = true;
   }
-  return { panels: panels, dockWidth: dockWidth, selected: null, tableFilter: '__all__', version: 0 };
+  return { panels: panels, dockWidth: dockWidth, selected: null, tableFilter: '__all__', version: 0, revision: 0 };
 }
 
 let state = initialState();
@@ -157,6 +160,10 @@ export function openTableFor(entityId) {
 // changes.
 export function bump() {
   emit({ version: state.version + 1 });
+}
+
+export function revise() {
+  emit({ revision: state.revision + 1 });
 }
 
 export function openPanel(id) {
