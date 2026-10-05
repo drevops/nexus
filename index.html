@@ -48,10 +48,12 @@
       <sl-button id="doc-open-btn" class="toolbar__button" size="small" data-icon="folder-open" title="Open a saved Nexus diagram (.nexus.json)">Open</sl-button>
       <sl-button id="doc-save" class="toolbar__button" size="small" data-icon="download" title="Save this diagram as a Nexus document (.nexus.json)">Save</sl-button>
     </sl-button-group>
-    <sl-button-group class="toolbar__group" label="Export">
-      <sl-button id="export-png" class="toolbar__button" size="small" data-icon="image" title="Export the diagram as a PNG image">PNG</sl-button>
-      <sl-button id="export-svg" class="toolbar__button" size="small" data-icon="file-down" title="Export the diagram as a scalable SVG">SVG</sl-button>
-      <sl-button id="export-csv" class="toolbar__button" size="small" data-icon="table" title="Export the fields table as CSV">CSV</sl-button>
+    <sl-button-group id="export-group" class="toolbar__group" label="Export">
+      <sl-button id="export-run" class="toolbar__button" size="small" data-icon="share" title="Export the diagram or its fields table"><span class="export-label">Export</span></sl-button>
+      <sl-dropdown id="export-dropdown" placement="bottom-end" hoist>
+        <sl-button id="export-choose" slot="trigger" class="toolbar__button" size="small" caret title="Choose the export format" aria-label="Choose the export format"></sl-button>
+        <sl-menu id="export-menu"></sl-menu>
+      </sl-dropdown>
     </sl-button-group>
     <sl-button-group class="toolbar__group" label="Mode">
       <sl-button id="mode-view" class="toolbar__button is-active" size="small" data-icon="eye" title="View mode: explore the diagram">View</sl-button>

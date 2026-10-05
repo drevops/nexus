@@ -36,7 +36,7 @@ Nexus is a static web app. Drop a Drupal **exported configuration folder** onto 
 - **Editable.** Add entities, fields, references, events, APIs and callbacks in Edit mode, rename machine names and attach notes - or build a model from scratch.
 - **Saved as a document.** Save the diagram, layout and all, as a `.nexus.json` file and open it again later.
 - **Customisable & remembered.** Switch between light and dark themes, recolour entity types, swap their symbols or add types of your own; the choices persist in your browser and apply to every diagram you open.
-- **Export.** Export the whole canvas as **PNG** or **SVG**, or the field table as **CSV** - all client-side.
+- **Export.** Export the whole canvas as **PNG** or **SVG**, or the field table as **CSV** - all client-side. The Export button remembers the last format you picked, so the next export takes 1 click.
 
 ## Installation
 
@@ -93,7 +93,7 @@ The diagram opens laid out left to right, with every field, proxy and machine na
 - **Entities** - an index with per-type filters and field counts; click a bundle to focus it or open its fields.
 - **Table** - a searchable table of all fields (or a single entity's) with type, cardinality, requiredness and references.
 - **Legend** - what each symbol means.
-- **PNG / SVG / CSV** - export the whole canvas or the field table.
+- **Export** - export the whole canvas as PNG or SVG, or the field table as CSV. Pick a format from the arrow beside it and the button keeps that format, so the next press exports it straight away.
 
 The top-right corner holds the About box, a link to this repository, the light/dark theme toggle and **Settings**, where you choose each entity type's colour and symbol or add types of your own. The status bar holds the zoom controls - **Reset**, **Fit**, zoom out, zoom in and a zoom-level menu - and the mouse wheel zooms while dragging the canvas pans. Click a node to focus it and its connections, and right-click an entity to isolate it so it moves together with its fields.
 
@@ -151,7 +151,7 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for local development setup, the lintin
 
 ## Privacy
 
-Nexus has no backend. The configuration you import and the diagrams you build stay in your browser's memory and leave it only when you save or export a file; nothing is uploaded to or processed by any server. Your preferences - theme, panel layout, entity colours and symbols, and custom entity types - are kept in the browser's `localStorage`.
+Nexus has no backend. The configuration you import and the diagrams you build stay in your browser's memory and leave it only when you save or export a file; nothing is uploaded to or processed by any server. Your preferences - theme, panel layout, entity colours and symbols, custom entity types and the last export format - are kept in the browser's `localStorage`.
 
 Nexus is provided as is, without warranty of any kind, and the authors accept no responsibility or liability for any data you load into it or create with it.
 
