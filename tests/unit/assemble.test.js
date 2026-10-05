@@ -6,7 +6,7 @@ import { dirname, join, relative, sep } from 'node:path';
 
 const ROOT = join(import.meta.dirname, '..', '..');
 const SITE = join(ROOT, '_site');
-const EXAMPLE = join(SITE, 'examples', 'example');
+const EXAMPLE = join(SITE, 'templates', 'radio-station');
 
 // Local paths an HTML page loads: src and href values, plus the './' strings
 // in its import map and inline module imports.

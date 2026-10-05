@@ -20,7 +20,7 @@ The project was created from the Scaffold template, which supplies the CI workfl
 - **Version:** `src/version.js` ships as `dev`; the release workflow stamps the release tag into the deployed copy.
 - **Analytics:** `src/analytics.js` loads Google Analytics 4 through `gtag.js` and reports every hit with the fixed page title `Nexus`, because `document.title` holds the open diagram's title. `index.html` starts it from its own inline module, never through `src/app.js`, so an ad blocker that blocks the analytics files can't stop the app. `src/analytics-id.js` ships an empty measurement ID, so local runs, tests and Netlify previews load no analytics; the release workflow stamps the `GOOGLE_ANALYTICS_ID` repository variable into the deployed copy.
 - **Vendored libraries:** `assets/vendor/` holds third-party builds. Don't edit, lint or format them.
-- **Example:** `examples/example/` is the bundled demo configuration, loaded through its `manifest.json`.
+- **Example:** `templates/radio-station/` is the bundled demo configuration, loaded through its `manifest.json`.
 
 ## Commands
 
@@ -28,7 +28,7 @@ The project was created from the Scaffold template, which supplies the CI workfl
 # Serve the app at http://127.0.0.1:8000 (ES modules don't load over file://)
 npm start
 
-# Copy the files that ship (index.html, src/, assets/, examples/) into _site/
+# Copy the files that ship (index.html, src/, assets/, templates/) into _site/
 npm run assemble
 
 # Run all linters (ESLint, Prettier)
@@ -73,7 +73,7 @@ npm run test-coverage
 ## CI/CD
 
 - `.github/workflows/test-nodejs.yml` - lint, unit tests with coverage on Node 22 and 24, a Playwright end-to-end job, and a Netlify deploy that runs once both pass: each pull request to its own preview, `main` to the project's main URL. The deploy reads the `NETLIFY_SITE_ID` variable and the `NETLIFY_AUTH_TOKEN` secret and is skipped without them. A new push to a pull request cancels its superseded run, while runs for `main` queue so they deploy in order
-- `.github/workflows/release.yml` - on a published release, assembles `index.html`, `src/`, `assets/` and `examples/` into `_site` with `npm run assemble`, stamps the version and, when the `GOOGLE_ANALYTICS_ID` variable is set, the Google Analytics measurement ID, and deploys to GitHub Pages at https://nexus.drevops.com
+- `.github/workflows/release.yml` - on a published release, assembles `index.html`, `src/`, `assets/` and `templates/` into `_site` with `npm run assemble`, stamps the version and, when the `GOOGLE_ANALYTICS_ID` variable is set, the Google Analytics measurement ID, and deploys to GitHub Pages at https://nexus.drevops.com
 - `.github/workflows/draft-release-notes.yml` - keeps a draft release up to date as pull requests merge
 - `.github/workflows/assign-author.yml` - assigns each pull request to its author
 - `renovate.json` - Renovate keeps npm packages and the SHA-pinned actions up to date

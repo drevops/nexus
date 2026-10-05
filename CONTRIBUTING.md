@@ -62,7 +62,7 @@ Without the variable the job is skipped, and without the token its deploy step i
 
 ## Releasing
 
-Every push to `main` updates a draft release that lists the pull requests merged since the last one. Publishing that draft creates its tag and triggers `.github/workflows/release.yml`, which assembles `index.html`, `src/`, `assets/` and `examples/` with `npm run assemble`, stamps the release tag as the app version and deploys the site to GitHub Pages, which serves it at https://nexus.drevops.com. Pushes to `main` never touch GitHub Pages: they run the tests and update the Netlify project's main address.
+Every push to `main` updates a draft release that lists the pull requests merged since the last one. Publishing that draft creates its tag and triggers `.github/workflows/release.yml`, which assembles `index.html`, `src/`, `assets/` and `templates/` with `npm run assemble`, stamps the release tag as the app version and deploys the site to GitHub Pages, which serves it at https://nexus.drevops.com. Pushes to `main` never touch GitHub Pages: they run the tests and update the Netlify project's main address.
 
 GitHub Pages needs setting up once, under **Settings → Pages**: choose "GitHub Actions" as the source, enter `nexus.drevops.com` as the custom domain, and tick **Enforce HTTPS** once GitHub has issued the certificate. The domain resolves through a `CNAME` record for `nexus` in the `drevops.com` DNS zone that points at `drevops.github.io`. The repository has no `CNAME` file, because Pages ignores one when a workflow does the deploying. The old address, https://drevops.github.io/nexus/, redirects to the new one.
 

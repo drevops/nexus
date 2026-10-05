@@ -19,7 +19,7 @@ import { DEFAULT_TITLE } from './model.js';
 import { exportLayout, importLayout, getController } from './store.js';
 import { $ } from './dom.js';
 
-const EXAMPLE_BASE = 'examples/example/';
+const EXAMPLE_BASE = 'templates/radio-station/';
 
 function basename(path) {
   const parts = String(path).split('/');

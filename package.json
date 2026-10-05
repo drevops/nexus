@@ -19,7 +19,7 @@
     },
     "scripts": {
         "start": "node tests/server.mjs",
-        "assemble": "rm -rf _site && mkdir _site && cp -R index.html src assets examples _site/",
+        "assemble": "rm -rf _site && mkdir _site && cp -R index.html src assets templates _site/",
         "lint": "eslint src tests eslint.config.js playwright.config.js && prettier --check \"src/*.js\" \"tests/**/*.{js,mjs}\" eslint.config.js playwright.config.js",
         "lint-fix": "eslint --fix src tests eslint.config.js playwright.config.js && prettier --write \"src/*.js\" \"tests/**/*.{js,mjs}\" eslint.config.js playwright.config.js",
         "test": "npm run test-unit && npm run test-e2e",

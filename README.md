@@ -41,7 +41,7 @@ Nexus is a static web app. Drop a Drupal **exported configuration folder** onto 
 
 There's nothing to install: [open the app](https://nexus.drevops.com/) in a modern browser.
 
-To host your own copy, serve `index.html`, `src/`, `assets/` and `examples/` from any static web server. Opening `index.html` straight from disk won't work, because browsers don't load ES modules over `file://`.
+To host your own copy, serve `index.html`, `src/`, `assets/` and `templates/` from any static web server. Opening `index.html` straight from disk won't work, because browsers don't load ES modules over `file://`.
 
 ## Usage
 
