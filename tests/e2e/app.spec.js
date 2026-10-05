@@ -791,6 +791,12 @@ test('closes the landing screen with Escape only while a diagram is open', async
   expect(await entityCount(page)).toBe(30);
 });
 
+test('heads the landing screen with the app name above its 2 sections', async ({ page }) => {
+  const headings = await page.locator('#landing').locator('h1, h2').evaluateAll((elements) => elements.map((element) => element.tagName + ' ' + element.textContent.trim()));
+
+  expect(headings).toEqual(['H1 Nexus', 'H2 Your configuration', 'H2 Start from a template']);
+});
+
 test('lists every template with its badge, its counts and a drawn mark', async ({ page }) => {
   const rows = page.locator('.template-row');
 
