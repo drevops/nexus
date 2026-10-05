@@ -12,7 +12,7 @@ The project was created from the Scaffold template, which supplies the CI workfl
 
 - **Entry point:** `index.html` declares an import map for Preact, Preact hooks and htm, loads the classic vendor scripts (Cytoscape, Dagre, cytoscape-dagre, cytoscape-svg, js-yaml) and the Shoelace autoloader, then starts `src/app.js` and, from a separate inline module, `src/analytics.js`.
 - **Model builder (pure, no DOM):** `src/parser.js` turns parsed config YAML into a `ContentModel` from `src/model.js`; `src/base-fields.js` adds curated system fields and `src/annotations.js` applies the optional `annotations.yml` overlay.
-- **Shared definitions (pure):** `src/entity-types.js` lists the built-in entity types in diagram order, each with its label, default color, default symbol and the base name of bundles created on the canvas. `src/annotations.js` lists the annotation kinds, `src/names.js` converts between machine names, labels and file names, and `src/model.js` holds the default title, the reference field types and the graph id helpers. Import them from there instead of keeping a local copy, so the copies can't drift apart.
+- **Shared definitions (pure):** `src/entity-types.js` lists the built-in entity types in diagram order, each with its label, default color, default symbol and the base name of bundles created on the canvas, and `formatCount()` words a count of each type's bundles. `src/annotations.js` lists the annotation kinds, `src/names.js` converts between machine names, labels and file names, and `src/model.js` holds the default title, the reference field types and the graph id helpers. Import them from there instead of keeping a local copy, so the copies can't drift apart.
 - **Documents:** `src/document.js` converts between the live graph and a saved `.nexus.json` document, and its docblock holds the schema of the saved format.
 - **Reference elements:** `src/references.js` derives the render-only elements that draw each reference - a proxy beside the field, the proxy edge joining them and the overview's collapsed edge - from the ref edges of a live graph. `syncReferenceElements()` reconciles them with the graph and keeps a renamed reference's proxy in place. `render.js` runs it at render time and through the controller's `syncReferences()`, which `builder.js` and `inspector.js` call after each edit the elements depend on.
 - **UI (browser only):** `src/render.js` draws the model with Cytoscape, `src/builder.js` adds build-mode editing, `src/inspector.js` and `src/ui.js` are Preact components over Shoelace controls, `src/store.js` is the shared UI store and keeps raised panels in a fixed band of z-indexes, `src/export.js` handles every download (PNG, SVG, CSV and the saved document), `src/dom.js` holds the `$()` element lookup, `src/icons.js` holds inline SVG icons and `src/styles.css` styles the page.
@@ -20,7 +20,7 @@ The project was created from the Scaffold template, which supplies the CI workfl
 - **Version:** `src/version.js` ships as `dev`; the release workflow stamps the release tag into the deployed copy.
 - **Analytics:** `src/analytics.js` loads Google Analytics 4 through `gtag.js` and reports every hit with the fixed page title `Nexus`, because `document.title` holds the open diagram's title. `index.html` starts it from its own inline module, never through `src/app.js`, so an ad blocker that blocks the analytics files can't stop the app. `src/analytics-id.js` ships an empty measurement ID, so local runs, tests and Netlify previews load no analytics; the release workflow stamps the `GOOGLE_ANALYTICS_ID` repository variable into the deployed copy.
 - **Vendored libraries:** `assets/vendor/` holds third-party builds. Don't edit, lint or format them.
-- **Example:** `templates/radio-station/` is the bundled demo configuration, loaded through its `manifest.json`.
+- **Templates:** `src/templates.js` lists the content-model templates the landing offers - the bundled radio station example, CivicTheme and Drupal CMS - with each one's label, version, summary, mark, bundle counts and upstream sources. Each has a folder in `templates/<id>/` holding `config/`, a `manifest.json` and, for the radio station, an `annotations.yml`. `src/app.js` draws a row per template and loads one through `loadTemplate()`, which fetches only the files `isModelConfig()` in `src/parser.js` accepts and stops at the first file that fails. `scripts/update-templates.mjs` rebuilds the upstream templates at their pinned tags, merging their sources in install order so the first copy of a file wins, and records the commits in each folder's `source.json`; its pure helpers live in `scripts/lib/template-sources.mjs`.
 
 ## Commands
 
@@ -48,12 +48,18 @@ npm run test-e2e
 
 # Unit tests with coverage (reports in .logs/)
 npm run test-coverage
+
+# Rebuild every template folder, or 1 of them, from its pinned sources
+npm run update-templates
+npm run update-templates -- civictheme
 ```
 
 ## Testing Patterns
 
 - `tests/unit/*.test.js` use `node:test` and `node:assert` against the pure model modules, with shared fixtures in `tests/fixtures/`.
-- `tests/unit/assemble.test.js` runs `npm run assemble` and checks that `_site/` holds every file `index.html` and the bundled example load, so a file the app needs can't be left out of a deploy.
+- `tests/unit/assemble.test.js` runs `npm run assemble` and checks that `_site/` holds every file `index.html` and the templates load, so a file the app needs can't be left out of a deploy.
+- `tests/unit/templates.test.js` checks every template against its folder: the manifest lists exactly the YAML in `config/`, annotations exist when declared, the advertised counts match `bundleCounts()` and the model `parseConfig()` builds from the files, and `source.json` records the same sources as `src/templates.js`. It imports the vendored `assets/vendor/js-yaml.min.js`, which sets `globalThis.jsyaml`.
+- `tests/unit/template-sources.test.js` covers the update script's helpers against the folders in `tests/fixtures/template-sources/`: reading a config folder, merging folders with the first copy of a file winning, and rendering the manifest, `source.json` and README.
 - `tests/unit/analytics.test.js` runs `startAnalytics()` against a fake window: an empty ID loads nothing, and an ID queues the gtag commands as `Arguments` objects with the fixed page title and adds the async `gtag.js` script.
 - `tests/unit/release.test.js` checks that every constant `release.yml` stamps is one its source module exports, and runs the Google Analytics stamp step's script against valid and malformed IDs.
 - `tests/unit/logo.test.js` checks that the `nexus` icon in `src/icons.js` draws the same shapes as `logo.svg`, that `logo.svg` turns its ink white in a dark colour scheme, and that the README shows it.

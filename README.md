@@ -20,7 +20,7 @@ Draw a Drupal site's content model as an interactive diagram - entirely in your 
 
 ---
 
-Nexus is a static web app. Drop a Drupal **exported configuration folder** onto the page and it reconstructs the site's logical content model - bundles, fields and entity-reference relationships - and draws it on an infinite, pannable canvas. From there you can edit the model, or start one from scratch, and save it as a document to open again later. **Everything runs client-side: your configuration never leaves the browser.** None of it is uploaded to any server, which makes it safe to point at client work.
+Nexus is a static web app. Drop a Drupal **exported configuration folder** onto the page and it reconstructs the site's logical content model - bundles, fields and entity-reference relationships - and draws it on an infinite, pannable canvas. From there you can edit the model, or start one from scratch or from a template, and save it as a document to open again later. **Everything runs client-side: your configuration never leaves the browser.** None of it is uploaded to any server, which makes it safe to point at client work.
 
 **[Open the app →](https://nexus.drevops.com/)**
 
@@ -30,6 +30,7 @@ Nexus is a static web app. Drop a Drupal **exported configuration folder** onto 
 
 - **100% client-side.** Parsing and rendering happen in the browser; no backend, no upload, no install.
 - **Drop a folder.** Choose or drag a config sync directory (or a module's `config/install`). Nexus reads only its YAML files, locally.
+- **Start from a template.** Load the content model of CivicTheme, Drupal CMS or a real radio-station site in 1 click, each pinned to a release (see [Templates](#templates)).
 - **Faithful visual language.** Each entity type has its own colour and shape, and single / multi / system / calculated fields and Event / API / Callback annotations each have their own symbol (see the [legend](#the-visual-language)).
 - **Browsable.** Opens with every field and machine name on show, with tools to collapse it to an entity-only overview, filter by entity type, find and focus an entity, and read a searchable field table.
 - **Editable.** Add entities, fields, references, events, APIs and callbacks in Edit mode, rename machine names and attach notes - or build a model from scratch.
@@ -46,10 +47,22 @@ To host your own copy, serve `index.html`, `src/`, `assets/` and `templates/` fr
 ## Usage
 
 1. Open the app (or your own copy - see [Installation](#installation)).
-2. **Choose a config folder** or drag one onto the drop zone - the folder of `*.yml` files exported from a Drupal site (its config sync directory), or a module's `config/install`. Or click **Try the example**, **Open a saved diagram** or **Start from scratch**.
+2. **Choose a config folder** or drag one onto the drop zone - the folder of `*.yml` files exported from a Drupal site (its config sync directory), or a module's `config/install`. Or pick one of the [templates](#templates) beside it, **Open a saved diagram** or **Start from scratch**.
 3. Explore with the toolbar, switch to **Edit** to change the model, then **Save** it or export it as PNG, SVG or CSV.
 
 Add an `annotations.yml` file to the folder to overlay [events, APIs and callbacks](#annotation-overlay).
+
+## Templates
+
+No config export to hand? The landing screen offers 3 ready-made content models:
+
+| Template | Version | What it draws |
+|----------|---------|---------------|
+| Radio station | Example | A real radio-station site - programs, episodes, events and news - with an [annotation overlay](#annotation-overlay) of events, APIs and callbacks |
+| [CivicTheme](https://www.drupal.org/project/civictheme) | 1.13.0 | The government design system: 3 content types built from 31 paragraph types, plus its media types, vocabularies and blocks |
+| [Drupal CMS](https://www.drupal.org/project/cms) | 2.2.2 | Drupal CMS with its Byte site template: a utility page, a blog post, tags and 5 media types |
+
+Each upstream template is pinned to an exact release, and the README in its folder under `templates/` records the source it was built from. Drupal CMS builds its landing pages with Canvas rather than a content type, so those pages don't appear in its diagram. CivicTheme and Drupal CMS are released under GPL-2.0-or-later, like Nexus.
 
 ## The visual language
 
@@ -100,11 +113,11 @@ Select a node to edit or delete it in the **Inspector**: an entity's label and m
 
 ## Saving diagrams
 
-**Save** downloads the diagram as a `.nexus.json` document holding the model, its layout, the entity colours and symbols, any custom types and the panel arrangement, and **Open** brings it back with every node where you left it. The title box at the top left names the diagram and the files it saves and exports. **New** starts an empty model, and **Import** returns to the import screen to load another config folder.
+**Save** downloads the diagram as a `.nexus.json` document holding the model, its layout, the entity colours and symbols, any custom types and the panel arrangement, and **Open** brings it back with every node where you left it. The title box at the top left names the diagram and the files it saves and exports. **New** starts an empty model, and **Import** returns to the import screen to load another config folder or template.
 
 ## Annotation overlay
 
-Some architecture is not expressed in Drupal configuration - integration callbacks, external APIs and domain events. Include a YAML overlay named `annotations.yml` (or `nexus.annotations.yml`) in the folder. This excerpt comes from the one the bundled example ships:
+Some architecture is not expressed in Drupal configuration - integration callbacks, external APIs and domain events. Include a YAML overlay named `annotations.yml` (or `nexus.annotations.yml`) in the folder. This excerpt comes from the one the radio station template ships:
 
 ```yaml
 title: 'Example content model'
