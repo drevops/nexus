@@ -861,6 +861,14 @@ test('names the file that stops a template from loading', async ({ page }) => {
   await expect(page.locator('#loader')).toBeHidden();
 });
 
+test('asks to check the connection when a template cannot be downloaded', async ({ page }) => {
+  await page.route('**/templates/civictheme/manifest.json', (route) => route.abort());
+  await page.click('#template-civictheme');
+
+  await expect(page.locator('#landing-error-text')).toHaveText('Could not load CivicTheme 1.13.0: manifest.json could not be downloaded. Check your connection and try again.');
+  await expect(page.locator('#landing')).toBeVisible();
+});
+
 test('loads a template from the keyboard', async ({ page }) => {
   await page.focus('#template-drupal-cms');
   await page.keyboard.press('Enter');

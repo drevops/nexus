@@ -139,13 +139,21 @@ async function loadFromFiles(fileList) {
 }
 
 async function fetchText(url) {
-  const response = await fetch(url);
+  let response;
+  let text;
+
+  try {
+    response = await fetch(url);
+    text = await response.text();
+  } catch {
+    throw new Error(basename(url) + ' could not be downloaded. Check your connection and try again.');
+  }
 
   if (!response.ok) {
     throw new Error(basename(url) + ' returned ' + response.status);
   }
 
-  return response.text();
+  return text;
 }
 
 function parseYaml(text, name) {
