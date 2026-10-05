@@ -1712,6 +1712,31 @@ function dataProviderUnknownExportFormats() {
   ];
 }
 
+test('ignores an export menu item that names no format', async ({ page }) => {
+  await loadExample(page);
+
+  const errors = [];
+  const downloads = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  page.on('download', (download) => downloads.push(download));
+
+  await page.evaluate(() => {
+    const item = document.createElement('sl-menu-item');
+    item.setAttribute('value', 'pdf');
+    item.textContent = 'PDF';
+    document.getElementById('export-menu').append(item);
+  });
+
+  await page.click('#export-choose');
+  await page.click('#export-menu sl-menu-item[value="pdf"]');
+  await expect(page.locator('#export-menu')).toBeHidden();
+
+  await expect(page.locator('#export-run')).toHaveText('Export');
+  expect(await page.evaluate(() => window.localStorage.getItem('nexusExportFormat'))).toBeNull();
+  expect(errors).toEqual([]);
+  expect(downloads).toEqual([]);
+});
+
 test('switches the export format from the menu', async ({ page }) => {
   await loadExample(page);
   await exportFrom(page, 'svg');

@@ -372,6 +372,10 @@ function wireExports() {
   $('export-menu').addEventListener('sl-select', (evt) => {
     const format = findExportFormat(evt.detail.item.value);
 
+    if (!format) {
+      return;
+    }
+
     setExportFormat(format);
     saveExportFormat(window, format);
     runExport(format);
