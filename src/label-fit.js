@@ -11,6 +11,7 @@
 const PENTAGON_SHOULDER = 2 - Math.sqrt(5);
 const PENTAGON_FOOT = (Math.sqrt(5) - 1) / 2;
 const RHOMBOID_OFFSET = 0.333;
+const MIN_ROOM = 0.05;
 
 /**
  * The half-width each Cytoscape node shape leaves for centred text at height
@@ -102,7 +103,10 @@ export function fitWidth(lines, shape, halfHeight, padding, inset) {
 
   for (const line of lines) {
     const fraction = Math.min(room(line.top / halfHeight), room(line.bottom / halfHeight));
-    half = Math.max(half, line.width / 2 + padding, (line.width / 2 + inset) / fraction);
+    // A line at a shape's tip or outside the shape has no room, so the floor
+    // keeps the width finite.
+    const usable = fraction > MIN_ROOM ? fraction : MIN_ROOM;
+    half = Math.max(half, line.width / 2 + padding, (line.width / 2 + inset) / usable);
   }
 
   return 2 * (half - padding);

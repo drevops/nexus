@@ -100,6 +100,25 @@ test('widens a box until every line clears its shape by the inset', async (t) =>
   }
 });
 
+test('keeps the width finite for a line with no room in its shape', async (t) => {
+  for (const [name, shape, line] of dataProviderNoRoom()) {
+    await t.test(name, () => {
+      const width = fitWidth([line], shape, 10, 5, 2);
+
+      assert.ok(Number.isFinite(width), name + ' gives ' + width);
+      assert.ok(width > 20);
+    });
+  }
+});
+
+function dataProviderNoRoom() {
+  return [
+    ['a line at the apex of a pentagon', 'pentagon', { width: 20, top: -10, bottom: -8 }],
+    ['a line at the tip of a diamond', 'diamond', { width: 20, top: 8, bottom: 10 }],
+    ['a line outside an ellipse', 'ellipse', { width: 20, top: -12, bottom: -2 }],
+  ];
+}
+
 test('fits a line to the narrower of its top and bottom', () => {
   // The line spans -0.8 to 0.2 of a diamond's half-height, where the diamond
   // leaves 0.2 and 0.8 of its half-width.
