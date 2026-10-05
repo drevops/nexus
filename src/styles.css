@@ -448,7 +448,6 @@ sl-button#zoom-level::part(base) {
   background: var(--surface-2);
   border-radius: 3px;
   white-space: nowrap;
-  line-height: 1.2;
 }
 
 /* A quiet sub-label inside the entity box. The box keeps its light pastel fill

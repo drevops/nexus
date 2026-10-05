@@ -25,6 +25,7 @@ import { icon } from './icons.js';
 import { ENTITY_TYPE_ORDER, findEntityType } from './entity-types.js';
 import { humanize, machineName } from './names.js';
 import { REFERENCE_ELEMENTS, syncReferenceElements } from './references.js';
+import { fitWidth, wrapLabel } from './label-fit.js';
 import { $ } from './dom.js';
 
 // A small library of UML-ish node shapes, keyed for settings/persistence; the
@@ -53,11 +54,33 @@ const LAYOUT_SPACING = {
   overview: { nodeSep: 34, rankSep: 120 },
 };
 
+// Cytoscape's default label font, pinned so canvas measurement matches the
+// labels Cytoscape draws.
+const LABEL_FONT_FAMILY = 'Helvetica Neue, Helvetica, sans-serif';
+
+// Model-space label and box metrics of entity and field nodes. The inset is
+// the clearance between a text line and a slanted or curved edge. Box sizes
+// stay on a quarter-pixel grid, so layout arithmetic is exact and a repeated
+// layout gives identical positions.
+const ENTITY_BOX = { fontSize: 12, fontWeight: 600, lineHeight: 1.25, textMaxWidth: 160, padding: 10, border: 1.5, inset: 3 };
+const FIELD_BOX = { fontSize: 10, fontWeight: 'normal', padding: 7, border: 1 };
+
+// Model-space caption metrics: the font size, the height of 1 caption line
+// and the gap between a node's box and its first machine-name line.
 const CAPTION_SIZE = 10;
+const CAPTION_LINE = 12;
+const CAPTION_GAP = 6;
+
+const NAME_CAPTION = 'caption';
+const TYPE_CAPTION = 'caption caption--type';
 
 let settings = loadSettings();
 const activeColors = {};
 const activeSymbols = {};
+
+let measureContext = null;
+const textWidths = new Map();
+const captionStyles = {};
 
 let fieldsMode = false;
 let proxyMode = false;
@@ -289,6 +312,120 @@ function shown(elements) {
   return current;
 }
 
+// Width of text in a CSS font, rounded up the way Cytoscape measures labels.
+// Every restyle measures the same labels again, so widths are cached.
+function textWidth(text, font) {
+  const key = font + '\n' + text;
+
+  if (!textWidths.has(key)) {
+    if (!measureContext) {
+      measureContext = document.createElement('canvas').getContext('2d');
+    }
+    measureContext.font = font;
+    textWidths.set(key, Math.ceil(measureContext.measureText(text).width));
+  }
+
+  return textWidths.get(key);
+}
+
+// The canvas font Cytoscape draws a label in for the given box metrics.
+function labelFont(box) {
+  return 'normal ' + box.fontWeight + ' ' + box.fontSize + 'px ' + LABEL_FONT_FAMILY;
+}
+
+// The canvas font and horizontal padding of a caption line at zoom 1, read
+// from the stylesheet through a probe caption.
+function captionStyle(cls) {
+  if (!captionStyles[cls]) {
+    const probe = document.createElement('div');
+    probe.className = cls;
+    $('captions').appendChild(probe);
+    const computed = getComputedStyle(probe);
+    captionStyles[cls] = {
+      font: computed.fontStyle + ' ' + computed.fontWeight + ' ' + CAPTION_SIZE + 'px ' + computed.fontFamily,
+      padding: parseFloat(computed.paddingLeft) + parseFloat(computed.paddingRight),
+    };
+    probe.remove();
+  }
+
+  return captionStyles[cls];
+}
+
+// Model-space width of a caption line, padding included.
+function captionWidth(text, cls) {
+  const style = captionStyle(cls);
+
+  return textWidth(text, style.font) + style.padding;
+}
+
+function fieldLabel(ele) {
+  return ele.data('required') ? ele.data('label') + ' *' : ele.data('label');
+}
+
+// The text lines of an entity box and half the box's height. Each line has
+// its width and the offsets of its top and bottom from the box centre: the
+// name lines as Cytoscape wraps them, then the type caption on the label's
+// blank last line.
+function entityLines(ele) {
+  const font = labelFont(ENTITY_BOX);
+  const names = wrapLabel(ele.data('label'), ENTITY_BOX.textMaxWidth, (text) => textWidth(text, font));
+  const pitch = ENTITY_BOX.fontSize * ENTITY_BOX.lineHeight;
+  const labelBottom = (ENTITY_BOX.fontSize + names.length * pitch) / 2;
+  const lines = names.map((name, i) => {
+    const bottom = labelBottom - (names.length - i) * pitch;
+
+    return { width: textWidth(name, font), top: bottom - ENTITY_BOX.fontSize, bottom: bottom };
+  });
+  const typeCentre = labelBottom - ENTITY_BOX.fontSize / 2;
+  const typeWidth = captionWidth(typeLabel(ele.data('entityType')), TYPE_CAPTION);
+  lines.push({ width: typeWidth, top: typeCentre - CAPTION_LINE / 2, bottom: typeCentre + CAPTION_LINE / 2 });
+
+  return { lines: lines, halfHeight: labelBottom + ENTITY_BOX.padding };
+}
+
+// Model-space width of the text area of an entity box, wide enough for every
+// line to fit inside the entity's shape. It is rounded up to a whole pixel to
+// stay on the box grid.
+function entityTextWidth(ele) {
+  const box = entityLines(ele);
+
+  return Math.ceil(fitWidth(box.lines, entityShape(ele.data('entityType')), box.halfHeight, ENTITY_BOX.padding, ENTITY_BOX.inset));
+}
+
+// Model-space outer width of an entity or field box.
+function boxWidth(ele) {
+  if (ele.data('group') === 'entity') {
+    return entityTextWidth(ele) + 2 * ENTITY_BOX.padding + ENTITY_BOX.border;
+  }
+
+  return textWidth(fieldLabel(ele), labelFont(FIELD_BOX)) + 2 * FIELD_BOX.padding + FIELD_BOX.border;
+}
+
+function machineNameOf(node) {
+  const group = node.data('group');
+  if (group === 'entity') {
+    return node.data('bundle');
+  }
+  if (group === 'field') {
+    return node.data('name') || '';
+  }
+  return '';
+}
+
+// The room a node's machine-name caption takes below and beside its box, as
+// a bounds-expansion value.
+function captionFootprint(ele) {
+  const name = showMachineNames ? machineNameOf(ele) : '';
+
+  if (!name) {
+    return 0;
+  }
+
+  const side = Math.max(0, (captionWidth(name, NAME_CAPTION) - boxWidth(ele)) / 2);
+
+  return [0, side, CAPTION_GAP + CAPTION_LINE, side];
+}
+
 function buildElements(model) {
   const nodes = model.nodes || [];
   const ids = new Set(nodes.map((n) => n.data.id));
@@ -332,22 +469,23 @@ function style() {
         shape: (ele) => entityShape(ele.data('entityType')),
         'background-color': (ele) => entityColor(ele.data('entityType')),
         'border-color': tc.nodeBorder,
-        'border-width': 1.5,
-        // A blank second line reserves in-box space for the type caption that
-        // positionCaptions() draws over it. Cytoscape labels take a single
-        // style, so the label cannot hold the differently styled type.
-        label: (ele) => ele.data('label') + '\n ',
+        'border-width': ENTITY_BOX.border,
+        // Cytoscape labels take a single style, so positionCaptions() draws the
+        // type caption on a blank last line reserved here. The line holds a
+        // zero-width space, which survives the trim Cytoscape applies to labels.
+        label: (ele) => ele.data('label') + '\n\u200b',
         'text-wrap': 'wrap',
-        'text-max-width': 160,
+        'text-max-width': ENTITY_BOX.textMaxWidth,
         'text-valign': 'center',
         'text-halign': 'center',
-        'font-size': 12,
-        'font-weight': 600,
-        'line-height': 1.3,
+        'font-family': LABEL_FONT_FAMILY,
+        'font-size': ENTITY_BOX.fontSize,
+        'font-weight': ENTITY_BOX.fontWeight,
+        'line-height': ENTITY_BOX.lineHeight,
         color: '#1f2933',
-        width: 'label',
+        width: (ele) => entityTextWidth(ele),
         height: 'label',
-        padding: '10px',
+        padding: ENTITY_BOX.padding + 'px',
       },
     },
     {
@@ -356,17 +494,22 @@ function style() {
         shape: 'ellipse',
         'background-color': tc.fieldBg,
         'border-color': tc.fieldBorder,
-        'border-width': 1,
-        label: (ele) => (ele.data('required') ? ele.data('label') + ' *' : ele.data('label')),
+        'border-width': FIELD_BOX.border,
+        label: (ele) => fieldLabel(ele),
         'text-valign': 'center',
         'text-halign': 'center',
-        'font-size': 10,
+        'font-family': LABEL_FONT_FAMILY,
+        'font-size': FIELD_BOX.fontSize,
+        'font-weight': FIELD_BOX.fontWeight,
         color: tc.text,
         width: 'label',
         height: 'label',
-        padding: '7px',
+        padding: FIELD_BOX.padding + 'px',
       },
     },
+    // Bounding boxes cover the machine-name caption, so layouts, Fit and proxy
+    // placement keep other nodes off it.
+    { selector: 'node[group="entity"], node[group="field"]', style: { 'bounds-expansion': (ele) => captionFootprint(ele) } },
     { selector: 'node[group="field"][kind="multi"]', style: { 'border-width': 3, 'border-style': 'double', 'border-color': tc.fieldBorder } },
     { selector: 'node[group="field"][kind="system"]', style: { 'border-style': 'dashed', 'border-color': '#98a2b3', color: tc.muted } },
     { selector: 'node[group="field"][kind="calculated"]', style: { 'background-color': '#ffd966', 'border-color': '#c9a227', color: '#3a2f0a' } },
@@ -606,16 +749,13 @@ function buildController(model, options = {}) {
   }
 
   function runLayout() {
-    // Machine-name captions hang ~16px below each node (outside its Cytoscape
-    // box), so widen the in-rank gap to fit them when they are shown.
-    const captionRoom = showMachineNames ? 18 : 0;
     const spacing = fieldsMode ? LAYOUT_SPACING.fields : LAYOUT_SPACING.overview;
     shown(cy.elements())
       .layout({
         name: 'dagre',
         rankDir: rankDir,
         ranker: 'network-simplex',
-        nodeSep: spacing.nodeSep + captionRoom,
+        nodeSep: spacing.nodeSep,
         edgeSep: 6,
         rankSep: spacing.rankSep,
         nodeDimensionsIncludeLabels: true,
@@ -741,29 +881,18 @@ function buildController(model, options = {}) {
     cy.elements().removeClass('faded trace trace-source');
   }
 
-  function machineNameOf(node) {
-    const group = node.data('group');
-    if (group === 'entity') {
-      return node.data('bundle');
-    }
-    if (group === 'field') {
-      return node.data('name') || '';
-    }
-    return '';
-  }
-
   // Under each node: the entity type (always, de-emphasised) then, when
   // showMachineNames is set, the machine name. Cytoscape labels take a single
   // style, so the differently styled type line is in the HTML caption layer.
   function captionLinesFor(node) {
     const lines = [];
     if (node.data('group') === 'entity') {
-      lines.push({ text: typeLabel(node.data('entityType')), cls: 'caption caption--type' });
+      lines.push({ text: typeLabel(node.data('entityType')), cls: TYPE_CAPTION });
     }
     if (showMachineNames) {
       const name = machineNameOf(node);
       if (name) {
-        lines.push({ text: name, cls: 'caption' });
+        lines.push({ text: name, cls: NAME_CAPTION });
       }
     }
     return lines;
@@ -798,6 +927,9 @@ function buildController(model, options = {}) {
   function rebuildCaptions() {
     captionsEl.innerHTML = '';
     captionMap = {};
+    // captionFootprint() reads showMachineNames, which isn't element data, so
+    // Cytoscape restyles only when asked.
+    cy.style().update();
     cy.nodes().forEach((node) => addCaptions(node));
     positionCaptions();
     // No Cytoscape frame is drawn here, so no 'render' event fires.
@@ -809,12 +941,17 @@ function buildController(model, options = {}) {
     return node.nonempty() && !node.hasClass('hidden') && !node.hasClass('faded') && cy.zoom() >= 0.35;
   }
 
-  // Rendered y of a node's box bottom and of the top of the first
-  // machine-name line below it. Each line below takes 1 step.
+  // Rendered y of a node's box bottom, of the top of its type caption and of
+  // the top of the first machine-name line below it. Each line below takes 1
+  // step.
   function captionStack(node) {
     const zoom = cy.zoom();
     const boxBottom = node.renderedPosition('y') + node.renderedOuterHeight() / 2;
-    return { boxBottom: boxBottom, top: boxBottom + 3 * zoom, step: (CAPTION_SIZE + 2) * zoom };
+    // The type caption centres on the blank last line of the entity label,
+    // which ends half the border plus the padding above the box bottom.
+    const typeCentre = boxBottom - (ENTITY_BOX.border / 2 + ENTITY_BOX.padding + ENTITY_BOX.fontSize / 2) * zoom;
+
+    return { boxBottom: boxBottom, typeTop: typeCentre - (CAPTION_LINE / 2) * zoom, top: boxBottom + CAPTION_GAP * zoom, step: CAPTION_LINE * zoom };
   }
 
   function positionCaptions() {
@@ -833,15 +970,16 @@ function buildController(model, options = {}) {
       }
       const pos = node.renderedPosition();
       const stack = captionStack(node);
-      // Machine-name lines stack just below the node. The entity type sits over
-      // the reserved blank line inside the box, so it reads as a sub-label.
+      // Machine-name lines stack below the node. The entity type sits inside
+      // the box, so it reads as a sub-label.
       let below = stack.top;
       divs.forEach((div) => {
         div.style.display = 'block';
         div.style.left = pos.x + 'px';
         div.style.fontSize = size + 'px';
+        div.style.lineHeight = stack.step + 'px';
         if (div.classList.contains('caption--type')) {
-          div.style.top = stack.boxBottom - size - 5 * zoom + 'px';
+          div.style.top = stack.typeTop + 'px';
         } else {
           div.style.top = below + 'px';
           below += stack.step;
@@ -918,12 +1056,14 @@ function buildController(model, options = {}) {
         badge.style.display = 'none';
         return;
       }
-      const bb = node.renderedBoundingBox();
+      // The bounding box also covers the machine-name caption, so the corner
+      // comes from the box itself.
+      const pos = node.renderedPosition();
       badge.style.display = 'flex';
       badge.style.width = size + 'px';
       badge.style.height = size + 'px';
-      badge.style.left = bb.x2 - size * 0.55 + 'px';
-      badge.style.top = bb.y1 - size * 0.45 + 'px';
+      badge.style.left = pos.x + node.renderedOuterWidth() / 2 - size * 0.55 + 'px';
+      badge.style.top = pos.y - node.renderedOuterHeight() / 2 - size * 0.45 + 'px';
     });
   }
 
@@ -959,7 +1099,9 @@ function buildController(model, options = {}) {
 
   function applySymbol(type, key) {
     activeSymbols[type] = key;
-    cy.nodes('[entityType="' + type + '"]').style('shape', (SYMBOLS[key] || SYMBOLS[FALLBACK_SYMBOL]).shape);
+    // The shape and entity width functions read activeSymbols, which isn't
+    // element data, so Cytoscape restyles only when asked.
+    cy.style().update();
     settings.symbols = settings.symbols || {};
     settings.symbols[type] = key;
     saveSettings();
@@ -971,9 +1113,9 @@ function buildController(model, options = {}) {
     delete settings.symbols;
     saveSettings();
     initColors();
-    // applyColor/applySymbol set inline overrides on the nodes; clear them so the
+    // applyColor sets inline overrides on the nodes; clear them so the
     // stylesheet's default-reading functions take effect again.
-    cy.nodes().removeStyle('background-color shape');
+    cy.nodes().removeStyle('background-color');
     cy.style(style());
     positionCaptions();
     positionNotes();
