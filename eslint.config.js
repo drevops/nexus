@@ -18,7 +18,7 @@ export default [
     },
   },
   {
-    files: ['tests/**/*.{js,mjs}', 'eslint.config.js', 'playwright.config.js'],
+    files: ['scripts/**/*.mjs', 'tests/**/*.{js,mjs}', 'eslint.config.js', 'playwright.config.js'],
     ...js.configs.recommended,
     languageOptions: {
       ecmaVersion: 2022,

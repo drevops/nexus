@@ -1,0 +1,7 @@
+langcode: en
+status: true
+field_name: body
+entity_type: node
+bundle: page
+label: Body
+field_type: text_with_summary
