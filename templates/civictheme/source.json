@@ -1,0 +1,16 @@
+{
+  "template": "civictheme",
+  "version": "1.13.0",
+  "sources": [
+    {
+      "name": "CivicTheme",
+      "repo": "https://git.drupalcode.org/project/civictheme.git",
+      "ref": "1.13.0",
+      "paths": [
+        "config/install",
+        "config/optional"
+      ],
+      "commit": "e079dbb0a036cf1ccf61331de166e5f7f7397994"
+    }
+  ]
+}

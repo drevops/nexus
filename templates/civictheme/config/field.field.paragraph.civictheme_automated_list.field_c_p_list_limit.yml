@@ -1,0 +1,24 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_c_p_list_limit
+    - paragraphs.paragraphs_type.civictheme_automated_list
+id: paragraph.civictheme_automated_list.field_c_p_list_limit
+field_name: field_c_p_list_limit
+entity_type: paragraph
+bundle: civictheme_automated_list
+label: Limit
+description: 'Select the number of items you want to display in the list if the Limit type is <em>Limited</em>, or the number of items per page if the Limit type is <em>Unlimited</em>. Using 0 will default to 12 items if the Limit type is <em>Unlimited</em>.'
+required: true
+translatable: false
+default_value:
+  -
+    value: 12
+default_value_callback: ''
+settings:
+  min: 0
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

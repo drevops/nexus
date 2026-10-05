@@ -1,0 +1,16 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - focal_point
+name: civictheme_medium
+label: Medium
+effects:
+  057ded4a-e764-4232-91d2-79c07a5da33b:
+    uuid: 057ded4a-e764-4232-91d2-79c07a5da33b
+    id: focal_point_scale_and_crop
+    weight: 2
+    data:
+      width: 220
+      height: 220
+      crop_type: focal_point

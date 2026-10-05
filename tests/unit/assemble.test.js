@@ -3,10 +3,10 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, sep } from 'node:path';
+import { TEMPLATES, templatePath } from '../../src/templates.js';
 
 const ROOT = join(import.meta.dirname, '..', '..');
 const SITE = join(ROOT, '_site');
-const EXAMPLE = join(SITE, 'templates', 'radio-station');
 
 // Local paths an HTML page loads: src and href values, plus the './' strings
 // in its import map and inline module imports.
@@ -58,13 +58,16 @@ test('ships every file index.html loads', () => {
   assert.ok(shipped.has(join(SITE, 'src', 'parser.js')));
 });
 
-test('ships the bundled example', () => {
-  const manifest = JSON.parse(readFileSync(join(EXAMPLE, 'manifest.json'), 'utf8'));
+test('ships every template', () => {
+  for (const template of TEMPLATES) {
+    const folder = join(SITE, templatePath(template));
+    const manifest = JSON.parse(readFileSync(join(folder, 'manifest.json'), 'utf8'));
 
-  assert.ok(manifest.length > 0);
-  assert.ok(existsSync(join(EXAMPLE, 'annotations.yml')));
+    assert.ok(manifest.length > 0, template.id + ' lists no config');
+    assert.equal(existsSync(join(folder, 'annotations.yml')), template.annotations, template.id + ' ships the wrong annotations');
 
-  for (const name of manifest) {
-    assert.ok(existsSync(join(EXAMPLE, 'config', name)), name + ' is missing from _site');
+    for (const name of manifest) {
+      assert.ok(existsSync(join(folder, 'config', name)), template.id + ': ' + name + ' is missing from _site');
+    }
   }
 });

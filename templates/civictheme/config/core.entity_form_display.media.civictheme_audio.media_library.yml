@@ -1,0 +1,29 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_form_mode.media.media_library
+    - field.field.media.civictheme_audio.field_c_m_audio_file
+    - field.field.media.civictheme_audio.field_c_m_media_tags
+    - media.type.civictheme_audio
+id: media.civictheme_audio.media_library
+targetEntityType: media
+bundle: civictheme_audio
+mode: media_library
+content:
+  name:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+hidden:
+  created: true
+  field_c_m_audio_file: true
+  field_c_m_media_tags: true
+  moderation_state: true
+  path: true
+  status: true
+  uid: true

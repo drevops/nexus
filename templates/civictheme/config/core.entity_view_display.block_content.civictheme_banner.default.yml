@@ -1,0 +1,34 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - block_content.type.civictheme_banner
+    - field.field.block_content.civictheme_banner.field_c_b_background_image
+    - field.field.block_content.civictheme_banner.field_c_b_banner_blend_mode
+    - field.field.block_content.civictheme_banner.field_c_b_banner_type
+    - field.field.block_content.civictheme_banner.field_c_b_featured_image
+    - field.field.block_content.civictheme_banner.field_c_b_theme
+id: block_content.civictheme_banner.default
+targetEntityType: block_content
+bundle: civictheme_banner
+mode: default
+content:
+  content_moderation_control:
+    settings: {  }
+    third_party_settings: {  }
+    weight: -20
+    region: content
+  field_c_b_background_image:
+    type: entity_reference_entity_view
+    label: hidden
+    settings:
+      view_mode: default
+      link: false
+    third_party_settings: {  }
+    weight: 0
+    region: content
+hidden:
+  field_c_b_banner_blend_mode: true
+  field_c_b_banner_type: true
+  field_c_b_featured_image: true
+  field_c_b_theme: true

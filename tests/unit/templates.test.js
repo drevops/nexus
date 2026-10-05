@@ -46,9 +46,11 @@ test('describes every template completely', () => {
   }
 });
 
-test('versions every upstream template by the tag of its first source', () => {
+test('versions every upstream template by the tag of the source named after it', () => {
   for (const template of UPSTREAM) {
-    assert.equal(template.version, template.sources[0].ref, template.id);
+    const own = template.sources.find((source) => source.name === template.label);
+
+    assert.equal(own ? own.ref : null, template.version, template.id);
     assert.match(template.project, /^https:\/\//, template.id + ' has no project page');
     assert.ok(template.licence, template.id + ' has no licence');
 

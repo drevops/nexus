@@ -1,0 +1,67 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.paragraph.civictheme_iframe.field_c_p_background
+    - field.field.paragraph.civictheme_iframe.field_c_p_height
+    - field.field.paragraph.civictheme_iframe.field_c_p_theme
+    - field.field.paragraph.civictheme_iframe.field_c_p_url
+    - field.field.paragraph.civictheme_iframe.field_c_p_vertical_spacing
+    - field.field.paragraph.civictheme_iframe.field_c_p_width
+    - paragraphs.paragraphs_type.civictheme_iframe
+  module:
+    - options
+id: paragraph.civictheme_iframe.default
+targetEntityType: paragraph
+bundle: civictheme_iframe
+mode: default
+content:
+  field_c_p_background:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 7
+    region: content
+  field_c_p_height:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 3
+    region: content
+  field_c_p_theme:
+    type: list_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 5
+    region: content
+  field_c_p_url:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  field_c_p_vertical_spacing:
+    type: list_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 6
+    region: content
+  field_c_p_width:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 2
+    region: content
+hidden: {  }
