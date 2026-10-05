@@ -18,6 +18,39 @@ const BUNDLE_PREFIXES = {
   'block_content.type.': 'block_content',
 };
 
+const STORAGE_PREFIX = 'field.storage.';
+const FIELD_PREFIX = 'field.field.';
+const MODEL_PREFIXES = [...Object.keys(BUNDLE_PREFIXES), STORAGE_PREFIX, FIELD_PREFIX];
+
+/**
+ * Returns whether parseConfig() reads the config file with the given name.
+ */
+export function isModelConfig(filename) {
+  const name = String(filename);
+
+  return MODEL_PREFIXES.some((prefix) => name.startsWith(prefix));
+}
+
+/**
+ * Counts the bundles that the given config file names define, by entity type.
+ *
+ * A name that parseConfig() skips, such as 'node.type.a.b.yml', is not
+ * counted.
+ */
+export function bundleCounts(filenames) {
+  const counts = {};
+
+  for (const filename of filenames) {
+    const match = bundleOf(String(filename));
+
+    if (match) {
+      counts[match.entityType] = (counts[match.entityType] || 0) + 1;
+    }
+  }
+
+  return counts;
+}
+
 export function parseConfig(files, options = {}) {
   if (!files || typeof files !== 'object') {
     throw new Error('No configuration provided.');
@@ -38,7 +71,7 @@ export function parseConfig(files, options = {}) {
   const storages = collectStorages(files, filenames);
 
   for (const filename of filenames) {
-    if (filename.startsWith('field.field.')) {
+    if (filename.startsWith(FIELD_PREFIX)) {
       addFieldInstance(model, files[filename], storages);
     }
   }
@@ -54,7 +87,7 @@ export function parseConfig(files, options = {}) {
   return model;
 }
 
-function matchBundle(filename, data) {
+function bundleOf(filename) {
   for (const [prefix, entityType] of Object.entries(BUNDLE_PREFIXES)) {
     if (!filename.startsWith(prefix)) {
       continue;
@@ -62,23 +95,29 @@ function matchBundle(filename, data) {
 
     const bundle = filename.slice(prefix.length, filename.length - '.yml'.length);
 
-    if (bundle.includes('.')) {
-      return null;
-    }
-
-    const label = data?.name ?? data?.label ?? humanize(bundle);
-
-    return new Entity(entityType, bundle, String(label));
+    return bundle.includes('.') ? null : { entityType, bundle };
   }
 
   return null;
+}
+
+function matchBundle(filename, data) {
+  const match = bundleOf(filename);
+
+  if (!match) {
+    return null;
+  }
+
+  const label = data?.name ?? data?.label ?? humanize(match.bundle);
+
+  return new Entity(match.entityType, match.bundle, String(label));
 }
 
 function collectStorages(files, filenames) {
   const storages = {};
 
   for (const filename of filenames) {
-    if (!filename.startsWith('field.storage.')) {
+    if (!filename.startsWith(STORAGE_PREFIX)) {
       continue;
     }
 
