@@ -52,7 +52,11 @@ function buildFromSources(template) {
     }
   });
 
-  const merged = mergeConfig(origins);
+  const { files: merged, shadowed } = mergeConfig(origins);
+
+  for (const { name, kept, skipped } of shadowed) {
+    console.log('Kept ' + name + ' from ' + kept + ' over ' + skipped);
+  }
 
   for (const [name, { content }] of merged) {
     try {

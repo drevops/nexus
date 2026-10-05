@@ -46,15 +46,19 @@ function dataProviderUnreadableFolder() {
 }
 
 test('merges config folders, keeping a file 2 folders ship identically once', () => {
-  const merged = mergeConfig([origin('install'), origin('optional')]);
+  const { files, shadowed } = mergeConfig([origin('install'), origin('optional')]);
 
-  assert.deepEqual([...merged.keys()], ['field.field.node.page.body.yml', 'node.type.page.yml', 'views.view.content.yml']);
-  assert.equal(merged.get('node.type.page.yml').origin, 'install');
-  assert.equal(merged.get('views.view.content.yml').origin, 'optional');
+  assert.deepEqual([...files.keys()], ['field.field.node.page.body.yml', 'node.type.page.yml', 'views.view.content.yml']);
+  assert.equal(files.get('node.type.page.yml').origin, 'install');
+  assert.equal(files.get('views.view.content.yml').origin, 'optional');
+  assert.deepEqual(shadowed, []);
 });
 
-test('refuses to merge a file whose content differs between folders, naming both', () => {
-  assert.throws(() => mergeConfig([origin('install'), origin('conflict')]), /^Error: node\.type\.page\.yml differs between install and conflict$/);
+test('keeps the first copy of a file that differs between folders and reports the copy it skipped', () => {
+  const { files, shadowed } = mergeConfig([origin('install'), origin('conflict')]);
+
+  assert.match(files.get('node.type.page.yml').content, /^name: Page$/m);
+  assert.deepEqual(shadowed, [{ name: 'node.type.page.yml', kept: 'install', skipped: 'conflict' }]);
 });
 
 test('renders a manifest of sorted config file names', () => {
@@ -77,6 +81,7 @@ test('renders a README naming the version, each source and the licence', () => {
   assert.ok(readme.includes('[CivicTheme](https://www.drupal.org/project/civictheme) 1.13.0'));
   assert.ok(readme.includes('`npm run update-templates -- civictheme`'));
   assert.ok(readme.includes('| CivicTheme | `1.13.0` | `e079dbb0a036` | `config/install`, `config/optional` |'));
+  assert.ok(readme.includes('the first copy wins'));
   assert.ok(readme.includes('released under GPL-2.0-or-later'));
   assert.ok(readme.endsWith('.\n'));
 });

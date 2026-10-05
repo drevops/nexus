@@ -28,31 +28,33 @@ export function readConfigFolder(dir) {
 }
 
 /**
- * Merges the config files of several origins into a map of file name to
- * { origin, content }.
+ * Merges the config files of several origins, in order, into 'files': a map
+ * of file name to { origin, content }.
  *
- * A file that 2 origins ship with the same content is kept once, under the
- * first origin. A file whose content differs between origins throws.
+ * The first origin to ship a file keeps it, as Drupal keeps config that
+ * exists when a later recipe ships it again. 'shadowed' lists each later copy
+ * that differs as { name, kept, skipped }, naming both origins.
  */
 export function mergeConfig(origins) {
-  const merged = new Map();
+  const files = new Map();
+  const shadowed = [];
 
-  for (const { origin, files } of origins) {
-    for (const { name, content } of files) {
-      const existing = merged.get(name);
+  for (const { origin, files: originFiles } of origins) {
+    for (const { name, content } of originFiles) {
+      const existing = files.get(name);
 
       if (!existing) {
-        merged.set(name, { origin, content });
+        files.set(name, { origin, content });
         continue;
       }
 
       if (existing.content !== content) {
-        throw new Error(name + ' differs between ' + existing.origin + ' and ' + origin);
+        shadowed.push({ name, kept: existing.origin, skipped: origin });
       }
     }
   }
 
-  return merged;
+  return { files, shadowed };
 }
 
 /**
@@ -95,7 +97,7 @@ export function renderReadme(template, commits) {
     '|---|---|---|---|',
     ...rows,
     '',
-    'The YAML files of every folder listed are merged into `config/`, and `manifest.json` lists them.',
+    'The YAML files of every folder listed are merged into `config/` in the order shown, and `manifest.json` lists them. When 2 folders ship the same file, the first copy wins, as it does when Drupal installs them in that order.',
     '',
     '## Licence',
     '',
