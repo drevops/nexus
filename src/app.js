@@ -3,10 +3,10 @@
  *
  * Loads a Drupal config folder entirely in the browser (nothing is uploaded),
  * parses it, and renders the content-model diagram. Also handles the bundled
- * example, PNG/SVG exports and the loading overlay.
+ * templates, PNG/SVG exports and the loading overlay.
  */
 
-import { parseConfig } from './parser.js';
+import { isModelConfig, parseConfig } from './parser.js';
 import { applyAnnotations } from './annotations.js';
 import { render } from './render.js';
 import { exportPng, exportSvg, exportCsv, exportDocument } from './export.js';
@@ -17,9 +17,10 @@ import { initIcons, icon } from './icons.js';
 import { VERSION } from './version.js';
 import { DEFAULT_TITLE } from './model.js';
 import { exportLayout, importLayout, getController } from './store.js';
+import { TEMPLATES, templatePath, templateTitle } from './templates.js';
 import { $ } from './dom.js';
 
-const EXAMPLE_BASE = 'templates/radio-station/';
+const ANNOTATION_FILES = ['annotations.yml', 'nexus.annotations.yml'];
 
 function basename(path) {
   const parts = String(path).split('/');
@@ -58,13 +59,13 @@ function showDiagram(modelData, options) {
   $('landing').hidden = true;
 }
 
-function buildAndShow(map, annotations) {
-  if (!Object.keys(map).length) {
-    showError('No YAML configuration files were found in that folder.');
-    return;
+function buildAndShow(map, annotations, title) {
+  const model = parseConfig(map);
+
+  if (title) {
+    model.setTitle(title);
   }
 
-  const model = parseConfig(map);
   if (annotations) {
     applyAnnotations(model, annotations);
   }
@@ -85,10 +86,19 @@ async function loadFromFiles(fileList) {
   try {
     const map = {};
     let annotations = null;
+    let foundYaml = false;
 
     for (const file of fileList) {
       const name = basename(file.webkitRelativePath || file.name);
+      const isAnnotations = ANNOTATION_FILES.includes(name);
+
       if (!isYaml(name)) {
+        continue;
+      }
+
+      foundYaml = true;
+
+      if (!isAnnotations && !isModelConfig(name)) {
         continue;
       }
 
@@ -99,11 +109,16 @@ async function loadFromFiles(fileList) {
         continue;
       }
 
-      if (name === 'annotations.yml' || name === 'nexus.annotations.yml') {
+      if (isAnnotations) {
         annotations = data;
       } else if (data && typeof data === 'object') {
         map[name] = data;
       }
+    }
+
+    if (!foundYaml) {
+      showError('No YAML configuration files were found in that folder.');
+      return;
     }
 
     buildAndShow(map, annotations);
@@ -112,34 +127,46 @@ async function loadFromFiles(fileList) {
   }
 }
 
-async function loadExample() {
-  showError('');
-  showLoader('Loading the example…');
+async function fetchText(url) {
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(basename(url) + ' returned ' + response.status);
+  }
+
+  return response.text();
+}
+
+function parseYaml(text, name) {
   try {
-    const manifest = await fetch(EXAMPLE_BASE + 'manifest.json').then((r) => r.json());
+    return window.jsyaml.load(text);
+  } catch {
+    throw new Error(name + ' is not valid YAML');
+  }
+}
+
+// Unlike a chosen folder, a template stops at the first file that fails to
+// load or parse, so it never draws a partial model.
+async function loadTemplate(template) {
+  const title = templateTitle(template);
+
+  showError('');
+  showLoader('Loading ' + title + '…');
+  try {
+    const manifest = JSON.parse(await fetchText(templatePath(template, 'manifest.json')));
     const map = {};
 
     await Promise.all(
-      manifest.map(async (name) => {
-        const text = await fetch(EXAMPLE_BASE + 'config/' + name).then((r) => r.text());
-        try {
-          map[name] = window.jsyaml.load(text);
-        } catch {
-          // Skip files that fail to parse.
-        }
+      manifest.filter(isModelConfig).map(async (name) => {
+        map[name] = parseYaml(await fetchText(templatePath(template, 'config/' + name)), name);
       }),
     );
 
-    let annotations = null;
-    try {
-      annotations = window.jsyaml.load(await fetch(EXAMPLE_BASE + 'annotations.yml').then((r) => r.text()));
-    } catch {
-      // Example annotations are optional.
-    }
+    const annotations = template.annotations ? parseYaml(await fetchText(templatePath(template, 'annotations.yml')), 'annotations.yml') : null;
 
-    buildAndShow(map, annotations);
+    buildAndShow(map, annotations, title);
   } catch (e) {
-    showError('Could not load the example: ' + e.message);
+    showError('Could not load ' + title + ': ' + e.message);
   } finally {
     hideLoader();
   }
@@ -219,7 +246,7 @@ function wireLanding() {
   $('folder-btn').addEventListener('click', () => $('folder-input').click());
   $('folder-input').addEventListener('change', (evt) => loadFromFiles(evt.target.files));
   $('landing-open').addEventListener('click', () => $('doc-open').click());
-  $('example-btn').addEventListener('click', loadExample);
+  $('example-btn').addEventListener('click', () => loadTemplate(TEMPLATES[0]));
   $('new-btn').addEventListener('click', newDocument);
   $('doc-import').addEventListener('click', showLanding);
   $('landing-cancel').addEventListener('click', () => {
