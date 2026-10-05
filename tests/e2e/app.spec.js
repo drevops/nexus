@@ -2832,48 +2832,67 @@ test('undoes and redoes an edit from the toolbar', async ({ page }) => {
   await expect(page.locator('#redo')).toHaveAttribute('title', 'Nothing to redo');
 });
 
-test('undoes with Ctrl+Z and redoes with Ctrl+Shift+Z or Ctrl+Y', async ({ page }) => {
+// The shortcuts take Cmd or Ctrl on every platform, so each case runs with
+// both.
+for (const [name, modifier] of dataProviderShortcutModifiers()) {
+  test(`undoes with ${name}+Z and redoes with ${name}+Shift+Z`, async ({ page }) => {
+    await buildStoryWithField(page);
+    const field = 'field:node.story:field_1';
+    await page.evaluate(() => document.activeElement.blur());
+
+    await page.keyboard.press(modifier + '+z');
+    expect(await hasNode(page, field)).toBe(false);
+    expect(await hasNode(page, 'node.story')).toBe(true);
+
+    await page.keyboard.press(modifier + '+Shift+z');
+    expect(await hasNode(page, field)).toBe(true);
+  });
+
+  test(`leaves ${name}+Z to a text field that has the focus`, async ({ page }) => {
+    await buildEntities(page, ['story']);
+
+    await page.locator('#search').click();
+    await page.keyboard.press(modifier + '+z');
+    expect(await hasNode(page, 'node.story')).toBe(true);
+
+    await page.evaluate(() => document.activeElement.blur());
+    await page.keyboard.press(modifier + '+z');
+    expect(await hasNode(page, 'node.story')).toBe(false);
+  });
+
+  // A Shoelace select shows its value in a read-only text input, which keeps
+  // the focus once an option is picked.
+  test(`undoes with ${name}+Z while a dropdown has the focus`, async ({ page }) => {
+    await selectTrackField(page);
+    const cardinality = page.locator('#inspector sl-select[data-cardinality]');
+    await cardinality.click();
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Enter');
+    await expect(cardinality).toHaveJSProperty('value', '2');
+
+    await page.keyboard.press(modifier + '+z');
+
+    await expect(cardinality).toHaveJSProperty('value', '1');
+  });
+}
+
+function dataProviderShortcutModifiers() {
+  return [
+    ['Ctrl', 'Control'],
+    ['Cmd', 'Meta'],
+  ];
+}
+
+test('redoes with Ctrl+Y', async ({ page }) => {
   await buildStoryWithField(page);
   const field = 'field:node.story:field_1';
   await page.evaluate(() => document.activeElement.blur());
 
   await page.keyboard.press('Control+z');
   expect(await hasNode(page, field)).toBe(false);
-  expect(await hasNode(page, 'node.story')).toBe(true);
 
-  await page.keyboard.press('Control+Shift+z');
-  expect(await hasNode(page, field)).toBe(true);
-
-  await page.keyboard.press('Control+z');
   await page.keyboard.press('Control+y');
   expect(await hasNode(page, field)).toBe(true);
-});
-
-test('leaves the undo shortcut to a text field that has the focus', async ({ page }) => {
-  await buildEntities(page, ['story']);
-
-  await page.locator('#search').click();
-  await page.keyboard.press('Control+z');
-  expect(await hasNode(page, 'node.story')).toBe(true);
-
-  await page.evaluate(() => document.activeElement.blur());
-  await page.keyboard.press('Control+z');
-  expect(await hasNode(page, 'node.story')).toBe(false);
-});
-
-// A Shoelace select shows its value in a read-only text input, which keeps
-// the focus once an option is picked.
-test('undoes with the shortcut while a dropdown has the focus', async ({ page }) => {
-  await selectTrackField(page);
-  const cardinality = page.locator('#inspector sl-select[data-cardinality]');
-  await cardinality.click();
-  await page.keyboard.press('ArrowDown');
-  await page.keyboard.press('Enter');
-  await expect(cardinality).toHaveJSProperty('value', '2');
-
-  await page.keyboard.press('Control+z');
-
-  await expect(cardinality).toHaveJSProperty('value', '1');
 });
 
 test('restores a deleted entity with its fields, references and proxies where they were', async ({ page }) => {

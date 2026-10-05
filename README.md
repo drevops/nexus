@@ -34,7 +34,7 @@ Nexus is a static web app. Drop a Drupal **exported configuration folder** onto 
 - **Faithful visual language.** Each entity type has its own colour and shape, and single / multi / system / calculated fields and Event / API / Callback annotations each have their own symbol (see the [legend](#the-visual-language)).
 - **Browsable.** Opens with every field and machine name on show, with tools to collapse it to an entity-only overview, filter by entity type, find and focus an entity, and read a searchable field table.
 - **Editable.** Add entities, fields, references, events, APIs and callbacks in Edit mode, rename machine names and attach notes - or build a model from scratch.
-- **Undo and history.** Undo and redo any edit, and step back to any earlier version of the diagram from the History panel.
+- **Undo and history.** Undo and redo your edits, and step back to an earlier version of the diagram from the History panel.
 - **Saved as a document.** Save the diagram, layout and all, as a `.nexus.json` file and open it again later.
 - **Customisable & remembered.** Switch between light and dark themes, recolour entity types, swap their symbols or add types of your own; the choices persist in your browser and apply to every diagram you open.
 - **Export.** Export the whole canvas as **PNG** or **SVG**, or the field table as **CSV** - all client-side. The Export button remembers the last format you picked, so the next export takes 1 click.
@@ -94,7 +94,7 @@ The diagram opens laid out left to right, with every field, proxy and machine na
 - **Entities** - an index with per-type filters and field counts; click a bundle to focus it or open its fields.
 - **Table** - a searchable table of all fields (or a single entity's) with type, cardinality, requiredness and references.
 - **Legend** - what each symbol means.
-- **History** - every version of the diagram since you opened it (see [Undo and history](#undo-and-history)).
+- **History** - the versions of the diagram since you opened it, up to your last 200 changes (see [Undo and history](#undo-and-history)).
 - **Undo / Redo** - step back and forward through your changes.
 - **Export** - export the whole canvas as PNG or SVG, or the field table as CSV. Pick a format from the arrow beside it and the button keeps that format, so the next press exports it straight away.
 
@@ -117,7 +117,7 @@ Select a node to edit or delete it in the **Inspector**: an entity's label and m
 
 **Undo** and **Redo** in the toolbar step back and forward through your changes, and so do `Ctrl+Z` and `Ctrl+Shift+Z` or `Ctrl+Y` (`⌘Z` and `⇧⌘Z` on a Mac). Every change to the diagram counts: adding, renaming and deleting entities, fields, references and annotations, editing them in the Inspector, dragging nodes, **Tidy** and renaming the diagram. Typing into a field is 1 step, however many characters it takes. While a text box has the focus, the shortcuts undo your typing there instead.
 
-**History** opens a panel listing every version of the diagram since you opened it, newest first, with the time of each change. Click a version to go back to it. The versions after it stay in the list, greyed out, so you can jump forward again until your next edit replaces them.
+**History** opens a panel listing the versions of the diagram since you opened it, newest first, with the time of each change. It keeps your last 200 changes, so in a longer session the oldest ones leave the list. Click a version to go back to it. The versions after it stay in the list, greyed out, so you can jump forward again until your next edit replaces them.
 
 Undo covers what the diagram holds, not how it's shown, so it leaves the **Fields**, **Proxies** and layout direction toggles and the entity type filters alone, along with your colours, symbols and custom types. The history lives in memory only: it isn't saved with the document, and it starts over when you open, import or start another diagram.
 
