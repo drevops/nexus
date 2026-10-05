@@ -301,6 +301,13 @@ function wireLanding() {
   $('doc-import').addEventListener('click', showLanding);
   $('landing-cancel').addEventListener('click', () => setLandingOpen(false));
 
+  // Ignored while loading, as a failed load reports its error on the landing.
+  document.addEventListener('keydown', (evt) => {
+    if (evt.key === 'Escape' && !$('landing').hidden && !$('landing-cancel').hidden && $('loader').hidden) {
+      setLandingOpen(false);
+    }
+  });
+
   setLandingOpen(!$('landing').hidden);
 }
 

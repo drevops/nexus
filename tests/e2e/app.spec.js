@@ -777,6 +777,20 @@ test('keeps keyboard focus on the landing screen while it is open', async ({ pag
   expect(await page.locator('.toolbar').evaluate((toolbar) => toolbar.inert)).toBe(false);
 });
 
+test('closes the landing screen with Escape only while a diagram is open', async ({ page }) => {
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#landing')).toBeVisible();
+
+  await page.click(EXAMPLE);
+  await waitForGraph(page);
+  await page.click('#doc-import');
+  await expect(page.locator('#landing')).toBeVisible();
+
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#landing')).toBeHidden();
+  expect(await entityCount(page)).toBe(30);
+});
+
 test('lists every template with its badge, its counts and a drawn mark', async ({ page }) => {
   const rows = page.locator('.template-row');
 
