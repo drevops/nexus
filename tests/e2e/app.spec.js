@@ -1808,6 +1808,233 @@ test('captions a new entity with its type alone while machine names are hidden',
   expect(await captionsOf(page, 'node.story')).toEqual([{ text: 'Content type', shown: true }]);
 });
 
+// Opens a diagram from the conference fixture or a template.
+async function openDiagram(page, source) {
+  if (source === 'example') {
+    await loadExample(page);
+    return;
+  }
+
+  await page.click('#template-' + source);
+  await waitForGraph(page);
+}
+
+// Captions are repositioned 1 frame after a Cytoscape redraw, so this
+// resolves 2 frames after the zoom.
+function zoomTo(page, zoom) {
+  return page.evaluate(
+    (z) =>
+      new Promise((resolve) => {
+        window.__nexus.cy.zoom(z);
+        requestAnimationFrame(() => requestAnimationFrame(resolve));
+      }),
+    zoom,
+  );
+}
+
+// Viewport rectangles of every shown node's box and label, and of its shown
+// type and machine-name captions. Cytoscape draws boxes and labels on the
+// canvas, so theirs come from its rendered geometry.
+function captionLayout(page) {
+  return page.evaluate(() => {
+    const cy = window.__nexus.cy;
+    const origin = cy.container().getBoundingClientRect();
+    const shift = (box) => ({ left: origin.left + box.x1, right: origin.left + box.x2, top: origin.top + box.y1, bottom: origin.top + box.y2 });
+    const rect = (div) => {
+      const box = div.getBoundingClientRect();
+      return { left: box.left, right: box.right, top: box.top, bottom: box.bottom };
+    };
+    const captions = [...document.querySelectorAll('#captions .caption')].filter((div) => div.style.display === 'block');
+
+    return cy.nodes(':visible').map((node) => {
+      const position = node.renderedPosition();
+      const halfWidth = node.renderedOuterWidth() / 2;
+      const halfHeight = node.renderedOuterHeight() / 2;
+      const own = captions.filter((div) => div.dataset.nodeId === node.id());
+      const type = own.find((div) => div.classList.contains('caption--type'));
+      const name = own.find((div) => !div.classList.contains('caption--type'));
+
+      return {
+        id: node.id(),
+        zoom: cy.zoom(),
+        fontSize: node.pstyle('font-size').pfValue * cy.zoom(),
+        box: shift({ x1: position.x - halfWidth, x2: position.x + halfWidth, y1: position.y - halfHeight, y2: position.y + halfHeight }),
+        label: shift(node.renderedBoundingBox({ includeNodes: false, includeEdges: false, includeOverlays: false })),
+        type: type ? rect(type) : null,
+        name: name ? rect(name) : null,
+      };
+    });
+  });
+}
+
+function overlaps(a, b) {
+  return a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+}
+
+// Each machine-name caption that overlaps another node's box or another
+// node's machine-name caption, as 'caption owner > other node'.
+function captionCollisions(layout) {
+  const collisions = [];
+
+  for (const owner of layout.filter((node) => node.name)) {
+    for (const other of layout) {
+      if (other.id !== owner.id && (overlaps(owner.name, other.box) || (other.name && overlaps(owner.name, other.name)))) {
+        collisions.push(owner.id + ' > ' + other.id);
+      }
+    }
+  }
+
+  return collisions;
+}
+
+for (const source of dataProviderCaptionDiagrams()) {
+  test(`fits each entity's type caption inside its box below its name in the ${source} diagram`, async ({ page }) => {
+    await openDiagram(page, source);
+
+    const entities = (await captionLayout(page)).filter((node) => node.type);
+    expect(entities.length).toBeGreaterThan(0);
+
+    // The label's rectangle starts at the top of the name's first line, and
+    // every name in these diagrams fits on 1 line.
+    const misplaced = entities.filter(({ box, label, type, fontSize }) => {
+      const inside = type.left >= box.left && type.right <= box.right && type.bottom <= box.bottom;
+
+      return !inside || type.top < label.top + fontSize;
+    });
+    expect(misplaced.map((node) => node.id)).toEqual([]);
+  });
+}
+
+function dataProviderCaptionDiagrams() {
+  return ['example', 'civictheme'];
+}
+
+test('keeps the type caption of each vocabulary inside its tag', async ({ page }) => {
+  await openDiagram(page, 'civictheme');
+
+  const outside = await page.evaluate(() => {
+    const cy = window.__nexus.cy;
+    const origin = cy.container().getBoundingClientRect();
+    const captions = [...document.querySelectorAll('#captions .caption--type')];
+    const vocabularies = cy.nodes('[group="entity"][entityType="taxonomy_term"]');
+
+    return vocabularies
+      .filter((node) => {
+        const caption = captions.find((div) => div.dataset.nodeId === node.id()).getBoundingClientRect();
+        const x = origin.left + node.renderedPosition('x');
+        const y = origin.top + node.renderedPosition('y');
+        const halfWidth = (node.width() / 2 + node.padding()) * cy.zoom();
+        const halfHeight = (node.height() / 2 + node.padding()) * cy.zoom();
+        // The tag's right edge runs from a quarter of its half-width at the
+        // top and bottom out to its point at mid-height.
+        const edge = (at) => x + halfWidth * (1 - (3 * Math.abs(at - y)) / (4 * halfHeight));
+
+        return caption.right > edge(caption.top) || caption.right > edge(caption.bottom);
+      })
+      .map((node) => node.id());
+  });
+
+  expect(outside).toEqual([]);
+});
+
+test('refits entity boxes to their text when their symbol changes', async ({ page }) => {
+  await openDiagram(page, 'example');
+  const width = () => page.evaluate(() => window.__nexus.cy.getElementById('node.event').outerWidth());
+  const rounded = await width();
+
+  await page.click('#settings-toggle');
+  await slSelect(page, '#settings sl-select[data-symbol="node"]', 'diamond');
+
+  await expect.poll(width).toBeGreaterThan(rounded * 1.5);
+});
+
+for (const zoom of dataProviderCaptionZooms()) {
+  test(`hangs each machine name a clear gap below its node at ${zoom * 100}% zoom`, async ({ page }) => {
+    await openDiagram(page, 'example');
+    await zoomTo(page, zoom);
+
+    const named = (await captionLayout(page)).filter((node) => node.name);
+    expect(named.length).toBeGreaterThan(0);
+
+    const tight = named.filter(({ box, name }) => name.top - box.bottom < 5 * zoom);
+    expect(tight.map((node) => node.id)).toEqual([]);
+  });
+}
+
+function dataProviderCaptionZooms() {
+  return [1, 2];
+}
+
+for (const [source, direction, view] of dataProviderCaptionLayouts()) {
+  test(`keeps machine names clear of other nodes in the ${direction} ${view} of the ${source} diagram`, async ({ page }) => {
+    await openDiagram(page, source);
+
+    if (view === 'overview') {
+      await page.click('#fields-toggle');
+    }
+
+    if (direction === 'TB') {
+      await page.click('#layout-toggle');
+    }
+
+    expect(captionCollisions(await captionLayout(page))).toEqual([]);
+  });
+}
+
+function dataProviderCaptionLayouts() {
+  return [
+    ['example', 'LR', 'field view'],
+    ['example', 'TB', 'field view'],
+    ['example', 'LR', 'overview'],
+    ['example', 'TB', 'overview'],
+    ['civictheme', 'TB', 'field view'],
+    ['civictheme', 'TB', 'overview'],
+  ];
+}
+
+test('reserves room below an entity for its machine name only while machine names are shown', async ({ page }) => {
+  await openDiagram(page, 'example');
+
+  // Model-space distance from the bottom of Event's box to the bottom of the
+  // room Cytoscape gives it in layouts.
+  const room = () =>
+    page.evaluate(() => {
+      const entity = window.__nexus.cy.getElementById('node.event');
+      return entity.boundingBox().y2 - (entity.position('y') + entity.outerHeight() / 2);
+    });
+
+  expect(await room()).toBeGreaterThan(15);
+
+  await page.click('#machine-names');
+  expect(await room()).toBeLessThan(3);
+
+  await page.click('#machine-names');
+  expect(await room()).toBeGreaterThan(15);
+});
+
+test("keeps an entity's note badge on its box corner while its machine name is wider than the box", async ({ page }) => {
+  await page.click('#new-btn');
+  await page.click('#mode-build');
+  await createEntity(page, 'node', 'story_with_a_long_machine_name', 'Story');
+  await slFill(page, '#inspector sl-textarea[data-note]', 'Entity note');
+  await expect(page.locator('#notes .note-badge')).toHaveCount(1);
+
+  const offset = await page.evaluate(() => {
+    const cy = window.__nexus.cy;
+    const entity = cy.getElementById('node.story_with_a_long_machine_name');
+    const origin = cy.container().getBoundingClientRect();
+    const badge = document.querySelector('#notes .note-badge').getBoundingClientRect();
+    const corner = {
+      x: origin.left + entity.renderedPosition('x') + entity.renderedOuterWidth() / 2,
+      y: origin.top + entity.renderedPosition('y') - entity.renderedOuterHeight() / 2,
+    };
+    return { x: badge.left + badge.width / 2 - corner.x, y: badge.top + badge.height / 2 - corner.y };
+  });
+
+  expect(Math.abs(offset.x)).toBeLessThan(3);
+  expect(Math.abs(offset.y)).toBeLessThan(3);
+});
+
 test('adds an entity note that badges the canvas and reveals on hover', async ({ page }) => {
   await loadExample(page);
   await page.click('#mode-build');
