@@ -493,10 +493,14 @@ function initStatusbar() {
   const observer = new MutationObserver(() => echo(hovered));
 
   document.querySelectorAll('.toolbar, .statusbar').forEach((zone) => {
-    zone.addEventListener('mouseover', (evt) => {
+    const echoTarget = (evt) => {
       const el = evt.target.closest('[title]');
       echo(el && zone.contains(el) ? el : null);
-    });
+    };
+
+    // Captured, because a Shoelace menu item stops its mouseover from
+    // bubbling.
+    zone.addEventListener('mouseover', echoTarget, true);
     zone.addEventListener('mouseleave', () => echo(null));
     observer.observe(zone, { attributes: true, attributeFilter: ['title'], subtree: true });
   });

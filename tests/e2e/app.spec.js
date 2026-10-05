@@ -1848,6 +1848,17 @@ test('describes the Export button in the status bar', async ({ page }) => {
   await expect(page.locator('#statusbar-hint')).toHaveText('Export the fields table as CSV');
 });
 
+test('describes a hovered export menu item in the status bar', async ({ page }) => {
+  await loadExample(page);
+
+  await page.click('#export-choose');
+  await page.hover('#export-menu sl-menu-item[value="png"]');
+  await expect(page.locator('#statusbar-hint')).toHaveText('Export the diagram as a PNG image');
+
+  await page.hover('#export-menu sl-menu-item[value="csv"]');
+  await expect(page.locator('#statusbar-hint')).toHaveText('Export the fields table as CSV');
+});
+
 test('enables proxy declutter by default on render', async ({ page }) => {
   await loadExample(page);
   await expect(page.locator('#proxy-toggle')).toHaveClass(/is-active/);
