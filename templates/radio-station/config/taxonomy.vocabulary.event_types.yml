@@ -1,9 +1,0 @@
-uuid: 64d9d7ae-b63e-4996-9715-773219b4afda
-langcode: en
-status: true
-dependencies: {  }
-name: 'Event Types'
-vid: event_types
-description: 'Use Event Types to group Gig Entities into categories.'
-weight: 0
-new_revision: false

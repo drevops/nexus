@@ -12,7 +12,7 @@ test('knows which icons it can draw', async (t) => {
 
 function dataProviderHasIcon() {
   return [
-    ['a stroked icon', 'radio', true],
+    ['a stroked icon', 'landmark', true],
     ['the GitHub mark', 'github', true],
     ['the Nexus mark', 'nexus', true],
     ['an unknown icon', 'rocket', false],
@@ -22,7 +22,7 @@ function dataProviderHasIcon() {
 }
 
 test('draws the shapes of every template icon', () => {
-  for (const name of ['radio', 'landmark', 'droplet', 'chevron-right']) {
+  for (const name of ['landmark', 'droplet', 'chevron-right']) {
     assert.match(icon(name), /<(?:path|line|polygon|circle) /, name);
   }
 });

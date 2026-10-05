@@ -1,8 +1,0 @@
-uuid: 970b2f0b-8e45-46dc-9d8d-e25e5d67b24c
-langcode: en
-status: true
-dependencies: {  }
-id: default
-label: Default
-threshold: 0.5
-challenge: default

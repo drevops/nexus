@@ -24,13 +24,13 @@ Nexus is a static web app. Drop a Drupal **exported configuration folder** onto 
 
 **[Open the app →](https://nexus.drevops.com/)**
 
-![The bundled example content model drawn in Nexus as an overview of its entity types and the references between them](screenshot.png)
+![A conference site's content model drawn in Nexus as an overview of its entity types, the references between them and its annotations](screenshot.png)
 
 ## Features
 
 - **100% client-side.** Parsing and rendering happen in the browser; no backend, no upload, no install.
 - **Drop a folder.** Choose or drag a config sync directory (or a module's `config/install`). Nexus reads only its YAML files, locally.
-- **Start from a template.** Load the content model of CivicTheme, Drupal CMS or a real radio-station site in 1 click, each pinned to a release (see [Templates](#templates)).
+- **Start from a template.** Load the content model of CivicTheme or Drupal CMS in 1 click, each pinned to a release (see [Templates](#templates)).
 - **Faithful visual language.** Each entity type has its own colour and shape, and single / multi / system / calculated fields and Event / API / Callback annotations each have their own symbol (see the [legend](#the-visual-language)).
 - **Browsable.** Opens with every field and machine name on show, with tools to collapse it to an entity-only overview, filter by entity type, find and focus an entity, and read a searchable field table.
 - **Editable.** Add entities, fields, references, events, APIs and callbacks in Edit mode, rename machine names and attach notes - or build a model from scratch.
@@ -54,11 +54,10 @@ Add an `annotations.yml` file to the folder to overlay [events, APIs and callbac
 
 ## Templates
 
-No config export to hand? The landing screen offers 3 ready-made content models:
+No config export to hand? The landing screen offers 2 ready-made content models:
 
 | Template | Version | What it draws |
 |----------|---------|---------------|
-| Radio station | Example | A real radio-station site - programs, episodes, events and news - with an [annotation overlay](#annotation-overlay) of events, APIs and callbacks |
 | [CivicTheme](https://www.drupal.org/project/civictheme) | 1.13.0 | The government design system: 3 content types built from 31 paragraph types, plus its media types, vocabularies and blocks |
 | [Drupal CMS](https://www.drupal.org/project/cms) | 2.2.2 | Drupal CMS with its Byte site template: a utility page, a blog post, tags and 5 media types |
 
@@ -117,28 +116,28 @@ Select a node to edit or delete it in the **Inspector**: an entity's label and m
 
 ## Annotation overlay
 
-Some architecture is not expressed in Drupal configuration - integration callbacks, external APIs and domain events. Include a YAML overlay named `annotations.yml` (or `nexus.annotations.yml`) in the folder. This excerpt comes from the one the radio station template ships:
+Some architecture is not expressed in Drupal configuration - integration callbacks, external APIs and domain events. Include a YAML overlay named `annotations.yml` (or `nexus.annotations.yml`) in the folder. This one describes a conference site:
 
 ```yaml
 title: 'Example content model'
 nodes:
-  - id: omny_api
+  - id: ticketing_api
     kind: api
-    label: 'Omny Studio API'
-  - id: create_episodes
+    label: 'Ticketing API'
+  - id: sync_registrations
     kind: callback
-    label: 'Create future episodes'
+    label: 'Sync registrations'
     method: POST
-    attach: node.program
-  - id: episode_published
+    attach: node.event
+  - id: session_published
     kind: event
-    label: EpisodePublished
-    attach: node.episode
+    label: SessionPublished
+    attach: node.session
 edges:
-  - { from: episode_published, to: omny_api, label: notifies }
+  - { from: session_published, to: ticketing_api, label: notifies }
 computed_fields:
-  node.episode:
-    - { name: audio_url, label: 'Audio URL' }
+  node.session:
+    - { name: duration, label: 'Duration' }
 ```
 
 - `title` names the diagram.

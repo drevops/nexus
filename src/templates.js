@@ -18,19 +18,6 @@ import { ENTITY_TYPE_ORDER } from './entity-types.js';
 
 export const TEMPLATES = [
   {
-    id: 'radio-station',
-    label: 'Radio station',
-    version: null,
-    summary: 'Programs, episodes, events and news',
-    icon: 'radio',
-    color: '#d9480f',
-    annotations: true,
-    counts: { node: 7, taxonomy_term: 9, media: 6, paragraph: 4, block_content: 1 },
-    project: null,
-    licence: null,
-    sources: [],
-  },
-  {
     id: 'civictheme',
     label: 'CivicTheme',
     version: '1.13.0',
@@ -103,15 +90,7 @@ export function templatePath(template, file = '') {
  * 'CivicTheme 1.13.0'.
  */
 export function templateTitle(template) {
-  return template.version ? template.label + ' ' + template.version : template.label;
-}
-
-/**
- * Returns the badge shown beside a template's label: its version, or
- * 'Example' for a template without one.
- */
-export function templateBadge(template) {
-  return template.version || 'Example';
+  return template.label + ' ' + template.version;
 }
 
 /**

@@ -1,9 +1,0 @@
-uuid: f2f511c5-9ef5-4533-88b0-902c635b1590
-langcode: en
-status: true
-dependencies: {  }
-name: Venues
-vid: venues
-description: null
-weight: 0
-new_revision: false

@@ -34,7 +34,7 @@ The app's own code lives in `src/`. The third-party builds it loads live in `ass
 - `src/icons.js` - inline SVG icons, including the Nexus mark.
 - `src/version.js` - the version string, `dev` until a release stamps it.
 - `src/styles.css` - the page's styles.
-- `templates/` - 1 folder per template, holding its exported `config/`, the `manifest.json` that lists it and, for the radio station, an `annotations.yml`.
+- `templates/` - 1 folder per template, holding its exported `config/` and the `manifest.json` that lists it.
 - `scripts/update-templates.mjs` - rebuilds the template folders, with its helpers in `scripts/lib/`.
 
 Each built-in entity type, annotation kind and name conversion is defined once: the entity types in `src/entity-types.js`, the annotation kinds in `src/annotations.js` and the conversions in `src/names.js`. Import them from there rather than copying them into another module, so the copies can't drift apart. Adding an entity type also means adding its button to the edit palette in `index.html`, and `npm run test-unit` fails until you do.
@@ -50,7 +50,7 @@ The landing screen's templates are listed in `src/templates.js`, and each has a 
     npm run update-templates
     npm run update-templates -- civictheme
 
-With no argument it rebuilds every template. For each upstream source it clones only the listed config folders at the pinned tag, merges them into the template's `config/`, and writes `manifest.json`, a `source.json` recording the commit each tag resolved to, and a README. The radio station has no upstream, so the command only rebuilds its `manifest.json` from `config/`.
+With no argument it rebuilds every template. For each upstream source it clones only the listed config folders at the pinned tag, merges them into the template's `config/`, and writes `manifest.json`, a `source.json` recording the commit each tag resolved to, and a README.
 
 To move a template to a new release, change the source's `ref` and the template's `version` in `src/templates.js`, run the command and commit the template's folder with the change. A release that adds or removes bundles makes the command print the counts to put in `src/templates.js`, and `npm run test-unit` fails until they match. The same tests fail if `source.json` and `src/templates.js` disagree, so a version can't be bumped without rebuilding the files.
 

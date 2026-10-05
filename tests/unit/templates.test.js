@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { TEMPLATES, summaryCounts, templateBadge, templatePath, templateTitle } from '../../src/templates.js';
+import { TEMPLATES, summaryCounts, templatePath, templateTitle } from '../../src/templates.js';
 import { bundleCounts, isModelConfig, parseConfig } from '../../src/parser.js';
 import { ENTITY_TYPE_ORDER } from '../../src/entity-types.js';
 import { hasIcon } from '../../src/icons.js';
@@ -128,21 +128,9 @@ test('locates a file in a template folder from the site root', () => {
   assert.equal(templatePath({ id: 'civictheme' }), 'templates/civictheme/');
 });
 
-test('names a template by its label and version', async (t) => {
-  for (const [name, template, title, badge] of dataProviderTemplateName()) {
-    await t.test(name, () => {
-      assert.equal(templateTitle(template), title);
-      assert.equal(templateBadge(template), badge);
-    });
-  }
+test('names a template by its label and version', () => {
+  assert.equal(templateTitle({ label: 'CivicTheme', version: '1.13.0' }), 'CivicTheme 1.13.0');
 });
-
-function dataProviderTemplateName() {
-  return [
-    ['a versioned template', { label: 'CivicTheme', version: '1.13.0' }, 'CivicTheme 1.13.0', '1.13.0'],
-    ['a template without a version', { label: 'Radio station', version: null }, 'Radio station', 'Example'],
-  ];
-}
 
 test('summarises a template by its content types and its 2 largest other bundle types', async (t) => {
   for (const [name, counts, expected] of dataProviderSummaryCounts()) {

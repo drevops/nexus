@@ -1,8 +1,0 @@
-uuid: ee958e3f-2838-4ebc-a6b6-c8b47d1d6e75
-langcode: en
-status: true
-dependencies: {  }
-id: pbs_medium_date
-label: 'PBS medium date'
-locked: false
-pattern: "D j F 'y"

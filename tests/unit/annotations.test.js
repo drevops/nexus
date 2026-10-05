@@ -6,11 +6,11 @@ import { ANNOTATION_KINDS, applyAnnotations } from '../../src/annotations.js';
 const OVERLAY = {
   title: 'Annotated model',
   nodes: [
-    { id: 'create_program', kind: 'callback', label: 'Create program', method: 'POST', attach: 'node.article' },
-    { id: 'omny_api', kind: 'api', label: 'Omny Studio API' },
-    { id: 'clip_created', kind: 'event', label: 'ClipCreated' },
+    { id: 'create_invoice', kind: 'callback', label: 'Create invoice', method: 'POST', attach: 'node.article' },
+    { id: 'payments_api', kind: 'api', label: 'Payments API' },
+    { id: 'invoice_paid', kind: 'event', label: 'InvoicePaid' },
   ],
-  edges: [{ from: 'omny_api', to: 'clip_created', label: 'emits' }],
+  edges: [{ from: 'payments_api', to: 'invoice_paid', label: 'emits' }],
   computed_fields: { 'node.article': [{ name: 'computed_url', label: 'Computed URL' }] },
 };
 
@@ -36,15 +36,15 @@ test('applies overlay nodes, edges and title', () => {
 
   const data = m.toArray();
   const nodes = nodesById(data);
-  assert.equal(nodes.create_program.kind, 'callback');
-  assert.equal(nodes.create_program.method, 'POST');
-  assert.equal(nodes.omny_api.kind, 'api');
-  assert.equal(nodes.clip_created.kind, 'event');
+  assert.equal(nodes.create_invoice.kind, 'callback');
+  assert.equal(nodes.create_invoice.method, 'POST');
+  assert.equal(nodes.payments_api.kind, 'api');
+  assert.equal(nodes.invoice_paid.kind, 'event');
 
-  const attach = data.edges.filter((e) => e.data.source === 'node.article' && e.data.target === 'create_program');
+  const attach = data.edges.filter((e) => e.data.source === 'node.article' && e.data.target === 'create_invoice');
   assert.equal(attach.length, 1);
 
-  const emits = data.edges.filter((e) => e.data.source === 'omny_api' && e.data.target === 'clip_created');
+  const emits = data.edges.filter((e) => e.data.source === 'payments_api' && e.data.target === 'invoice_paid');
   assert.equal(emits.length, 1);
 });
 

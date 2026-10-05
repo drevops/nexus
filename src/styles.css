@@ -1272,12 +1272,6 @@ sl-button#zoom-level::part(base) {
   line-height: 1.5;
 }
 
-.template-row__badge--example {
-  border-color: var(--sl-color-amber-200);
-  background: var(--sl-color-amber-50);
-  color: var(--sl-color-amber-800);
-}
-
 .template-row__summary {
   color: var(--muted);
   font-size: 0.78rem;

@@ -17,7 +17,7 @@ import { initIcons, icon } from './icons.js';
 import { VERSION } from './version.js';
 import { DEFAULT_TITLE } from './model.js';
 import { exportLayout, importLayout, getController } from './store.js';
-import { TEMPLATES, summaryCounts, templateBadge, templatePath, templateTitle } from './templates.js';
+import { TEMPLATES, summaryCounts, templatePath, templateTitle } from './templates.js';
 import { formatCount } from './entity-types.js';
 import { $ } from './dom.js';
 
@@ -264,9 +264,8 @@ function templateRow(template) {
   mark.style.setProperty('--template-color', template.color);
   mark.innerHTML = icon(template.icon);
 
-  const badge = element('span', template.version ? 'template-row__badge' : 'template-row__badge template-row__badge--example', templateBadge(template));
   const head = element('span', 'template-row__head');
-  head.append(element('span', 'template-row__name', template.label), badge);
+  head.append(element('span', 'template-row__name', template.label), element('span', 'template-row__badge', template.version));
 
   const counts = summaryCounts(template).map(({ type, count }) => formatCount(type, count));
   const body = element('span', 'template-row__body');

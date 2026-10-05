@@ -786,10 +786,10 @@ test('heads the landing screen with the app name above its 2 sections', async ({
 test('lists every template with its badge, its counts and a drawn mark', async ({ page }) => {
   const rows = page.locator('.template-row');
 
-  await expect(rows).toHaveCount(3);
+  await expect(rows).toHaveCount(2);
   const ids = await rows.evaluateAll((elements) => elements.map((element) => element.id));
 
-  expect(ids).toEqual(['template-radio-station', 'template-civictheme', 'template-drupal-cms']);
+  expect(ids).toEqual(['template-civictheme', 'template-drupal-cms']);
 
   for (const [id, label, badge, counts] of dataProviderTemplateRows()) {
     const row = page.locator('#template-' + id);
@@ -803,7 +803,6 @@ test('lists every template with its badge, its counts and a drawn mark', async (
 
 function dataProviderTemplateRows() {
   return [
-    ['radio-station', 'Radio station', 'Example', '7 content types · 9 vocabularies · 6 media types'],
     ['civictheme', 'CivicTheme', '1.13.0', '3 content types · 31 paragraph types · 6 media types'],
     ['drupal-cms', 'Drupal CMS', '2.2.2', '2 content types · 5 media types · 1 vocabulary'],
   ];
