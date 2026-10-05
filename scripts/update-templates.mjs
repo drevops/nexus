@@ -11,7 +11,7 @@
  */
 
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { TEMPLATES, templatePath, templateTitle } from '../src/templates.js';
@@ -23,7 +23,7 @@ import { mergeConfig, readConfigFolder, renderCounts, renderManifest, renderRead
 await import('../assets/vendor/js-yaml.min.js');
 
 const ROOT = join(import.meta.dirname, '..');
-const CLONES = join(ROOT, '.artifacts', 'tmp', 'update-templates');
+const TMP = join(ROOT, '.artifacts', 'tmp');
 
 function git(args, cwd) {
   return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
@@ -37,12 +37,12 @@ function fetchSource(source, dir) {
   return git(['rev-parse', 'HEAD'], dir);
 }
 
-function buildFromSources(template) {
+function buildFromSources(template, clones) {
   const commits = [];
   const origins = [];
 
   template.sources.forEach((source, index) => {
-    const dir = join(CLONES, template.id, String(index));
+    const dir = join(clones, template.id, String(index));
 
     console.log('Fetching ' + source.name + ' ' + source.ref + '…');
     commits.push(fetchSource(source, dir));
@@ -102,11 +102,13 @@ function main(ids) {
   const selected = ids.length > 0 ? TEMPLATES.filter((template) => ids.includes(template.id)) : TEMPLATES;
   let stale = false;
 
-  rmSync(CLONES, { recursive: true, force: true });
+  mkdirSync(TMP, { recursive: true });
+
+  const clones = mkdtempSync(join(TMP, 'update-templates-'));
 
   try {
     for (const template of selected) {
-      const names = template.sources.length > 0 ? buildFromSources(template) : buildManifest(template);
+      const names = template.sources.length > 0 ? buildFromSources(template, clones) : buildManifest(template);
       const counts = bundleCounts(names);
 
       console.log(templateTitle(template) + ': ' + names.length + ' config files, ' + renderCounts(counts));
@@ -117,7 +119,7 @@ function main(ids) {
       }
     }
   } finally {
-    rmSync(CLONES, { recursive: true, force: true });
+    rmSync(clones, { recursive: true, force: true });
   }
 
   return stale ? 1 : 0;
