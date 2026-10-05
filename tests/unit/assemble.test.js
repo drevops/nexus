@@ -60,14 +60,8 @@ test('ships every file index.html loads', () => {
 
 test('ships every template', () => {
   for (const template of TEMPLATES) {
-    const folder = join(SITE, templatePath(template));
-    const manifest = JSON.parse(readFileSync(join(folder, 'manifest.json'), 'utf8'));
+    const doc = JSON.parse(readFileSync(join(SITE, templatePath(template)), 'utf8'));
 
-    assert.ok(manifest.length > 0, template.id + ' lists no config');
-    assert.equal(existsSync(join(folder, 'annotations.yml')), template.annotations, template.id + ' ships the wrong annotations');
-
-    for (const name of manifest) {
-      assert.ok(existsSync(join(folder, 'config', name)), template.id + ': ' + name + ' is missing from _site');
-    }
+    assert.ok(doc.entities.length > 0, template.id + ' ships an empty diagram');
   }
 });

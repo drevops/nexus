@@ -61,7 +61,7 @@ No config export to hand? The landing screen offers 2 ready-made content models:
 | [CivicTheme](https://www.drupal.org/project/civictheme) | 1.13.0 | The government design system: 3 content types built from 31 paragraph types, plus its media types, vocabularies and blocks |
 | [Drupal CMS](https://www.drupal.org/project/cms) | 2.2.2 | Drupal CMS with its Byte site template: a utility page, a blog post, tags and 5 media types |
 
-Each upstream template is pinned to an exact release, and the README in its folder under `templates/` records the source it was built from. Drupal CMS builds its landing pages with Canvas rather than a content type, so those pages don't appear in its diagram. CivicTheme and Drupal CMS are released under GPL-2.0-or-later, like Nexus.
+Each template is drawn from the configuration of an exact release and ships as a saved diagram in `templates/`, so it opens just like a diagram you've saved yourself. Drupal CMS builds its landing pages with Canvas rather than a content type, so those pages don't appear in its diagram. CivicTheme and Drupal CMS are released under GPL-2.0-or-later, like Nexus.
 
 ## The visual language
 

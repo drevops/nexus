@@ -429,7 +429,7 @@ test('draws the canvas tooltip over a panel nobody has raised', async ({ page })
 });
 
 test('shows a loading screen while a template loads', async ({ page }) => {
-  await page.route('**/manifest.json', async (route) => {
+  await page.route('**/templates/civictheme.nexus.json', async (route) => {
     await new Promise((resolve) => setTimeout(resolve, 500));
     route.continue();
   });
@@ -816,6 +816,11 @@ for (const [id, title, entities, entityId] of dataProviderTemplates()) {
     expect(await entityCount(page)).toBe(entities);
     expect(await page.evaluate((target) => window.__nexus.cy.getElementById(target).length, entityId)).toBe(1);
     await expect(page.locator('#diagram-title')).toHaveJSProperty('value', title);
+
+    // The document holds no layout, so the app lays the entities out on open.
+    const positions = await page.evaluate(() => window.__nexus.cy.nodes('[group="entity"]').map((node) => JSON.stringify(node.position())));
+
+    expect(new Set(positions).size).toBe(entities);
   });
 }
 
@@ -826,38 +831,46 @@ function dataProviderTemplates() {
   ];
 }
 
-test('fetches only the config files the parser reads', async ({ page }) => {
+test('loads a template as 1 saved diagram', async ({ page }) => {
   const fetched = [];
 
   page.on('request', (request) => {
-    if (request.url().includes('/templates/civictheme/config/')) {
-      fetched.push(request.url());
+    if (request.url().includes('/templates/')) {
+      fetched.push(new URL(request.url()).pathname);
     }
   });
 
   await page.click('#template-civictheme');
   await waitForGraph(page);
 
-  expect(fetched).toHaveLength(383);
-  expect(fetched.filter((url) => url.includes('/views.view.'))).toEqual([]);
+  expect(fetched).toEqual(['/templates/civictheme.nexus.json']);
 });
 
-test('names the file that stops a template from loading', async ({ page }) => {
-  await page.route('**/templates/civictheme/config/node.type.civictheme_page.yml', (route) => route.fulfill({ status: 404, body: 'Not found' }));
-  await page.click('#template-civictheme');
+for (const [name, response, message] of dataProviderBrokenTemplates()) {
+  test(`reports ${name} on the landing screen`, async ({ page }) => {
+    await page.route('**/templates/civictheme.nexus.json', (route) => route.fulfill(response));
+    await page.click('#template-civictheme');
 
-  await expect(page.locator('#landing-error')).toHaveAttribute('open', '');
-  await expect(page.locator('#landing-error-text')).toHaveText('Could not load CivicTheme 1.13.0: node.type.civictheme_page.yml returned 404');
-  await expect(page.locator('#landing')).toBeVisible();
-  await expect(page.locator('#loader')).toBeHidden();
-});
+    await expect(page.locator('#landing-error')).toHaveAttribute('open', '');
+    await expect(page.locator('#landing-error-text')).toHaveText('Could not load CivicTheme 1.13.0: ' + message);
+    await expect(page.locator('#landing')).toBeVisible();
+    await expect(page.locator('#loader')).toBeHidden();
+  });
+}
+
+function dataProviderBrokenTemplates() {
+  return [
+    ['a template diagram the server cannot find', { status: 404, body: 'Not found' }, 'civictheme.nexus.json returned 404'],
+    ['a template file that is not a diagram', { status: 200, contentType: 'application/json', body: '{ "nexus": 1 }' }, 'Not a valid Nexus document.'],
+  ];
+}
 
 test('asks to check the connection when a template cannot be downloaded', async ({ page }) => {
-  await page.route('**/templates/civictheme/manifest.json', (route) => route.abort());
+  await page.route('**/templates/civictheme.nexus.json', (route) => route.abort());
   await page.click('#template-civictheme');
 
   await expect(page.locator('#landing-error-text')).toHaveText(
-    'Could not load CivicTheme 1.13.0: manifest.json could not be downloaded. Check your connection and try again.',
+    'Could not load CivicTheme 1.13.0: civictheme.nexus.json could not be downloaded. Check your connection and try again.',
   );
   await expect(page.locator('#landing')).toBeVisible();
 });

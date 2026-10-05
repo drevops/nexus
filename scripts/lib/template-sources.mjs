@@ -1,13 +1,16 @@
 /**
- * Reads, merges and renders the files of a content-model template.
- *
- * scripts/update-templates.mjs clones each upstream source of a template and
- * uses these helpers to build templates/<id>/ from the sources' config
- * folders.
+ * Reads and merges the config folders of a content-model template and builds
+ * the saved-diagram document the template ships as.
  */
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { parseConfig } from '../../src/parser.js';
+import { documentFromGraph } from '../../src/document.js';
+
+// The vendored UMD build exports nothing to an ES module import and sets
+// globalThis.cytoscape instead.
+await import('../../assets/vendor/cytoscape.min.js');
 
 /**
  * Reads the YAML files of a config folder, without its subfolders, as
@@ -58,52 +61,29 @@ export function mergeConfig(origins) {
 }
 
 /**
- * Renders a template's manifest.json: its config file names, sorted.
+ * Builds the saved-diagram document of a template from its parsed config,
+ * keyed by file name.
+ *
+ * documentFromGraph() serializes the model on a headless graph, so the
+ * document has the shape of a saved diagram. The headless graph places every
+ * node at the origin, so the layout is left empty.
  */
-export function renderManifest(names) {
-  return JSON.stringify([...names].sort(), null, 2) + '\n';
+export function buildDocument(files, title) {
+  const data = parseConfig(files).toArray();
+  const cy = globalThis.cytoscape({ headless: true, elements: [...data.nodes, ...data.edges] });
+
+  try {
+    return { ...documentFromGraph(cy, { title }), layout: {} };
+  } finally {
+    cy.destroy();
+  }
 }
 
 /**
- * Renders a template's source.json, recording the commit each source's tag
- * resolved to.
+ * Renders a document as the JSON a template ships.
  */
-export function renderSource(template, commits) {
-  const sources = template.sources.map((source, index) => ({ ...source, commit: commits[index] }));
-
-  return JSON.stringify({ template: template.id, version: template.version, sources }, null, 2) + '\n';
-}
-
-/**
- * Renders the README.md of a template built from upstream sources.
- */
-export function renderReadme(template, commits) {
-  const rows = template.sources.map((source, index) => {
-    const paths = source.paths.map((path) => '`' + path + '`').join(', ');
-
-    return '| ' + source.name + ' | `' + source.ref + '` | `' + commits[index].slice(0, 12) + '` | ' + paths + ' |';
-  });
-
-  return [
-    `# ${template.label} ${template.version}`,
-    '',
-    `The content model of [${template.label}](${template.project}) ${template.version}, offered as a template on the Nexus landing screen.`,
-    '',
-    `\`npm run update-templates -- ${template.id}\` builds this folder from the sources below. To change it, edit the template in \`src/templates.js\` and run the command again rather than editing these files.`,
-    '',
-    '## Sources',
-    '',
-    '| Source | Tag | Commit | Config folders |',
-    '|---|---|---|---|',
-    ...rows,
-    '',
-    'The YAML files of every folder listed are merged into `config/` in the order shown, and `manifest.json` lists them. When 2 folders ship the same file, the first copy wins, as it does when Drupal installs them in that order.',
-    '',
-    '## Licence',
-    '',
-    'These sources are released under ' + template.licence + ', the licence Nexus uses too.',
-    '',
-  ].join('\n');
+export function renderDocument(doc) {
+  return JSON.stringify(doc, null, 2) + '\n';
 }
 
 /**

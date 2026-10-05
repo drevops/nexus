@@ -1,20 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
-import { mergeConfig, readConfigFolder, renderCounts, renderManifest, renderReadme, renderSource } from '../../scripts/lib/template-sources.mjs';
+import { buildDocument, mergeConfig, readConfigFolder, renderCounts, renderDocument } from '../../scripts/lib/template-sources.mjs';
+import { parseConfig } from '../../src/parser.js';
+import { documentToModel } from '../../src/document.js';
+import { configMin } from '../fixtures/config-min.js';
 
 const FIXTURES = join(import.meta.dirname, '..', 'fixtures', 'template-sources');
-
-const TEMPLATE = {
-  id: 'civictheme',
-  label: 'CivicTheme',
-  version: '1.13.0',
-  project: 'https://www.drupal.org/project/civictheme',
-  licence: 'GPL-2.0-or-later',
-  sources: [{ name: 'CivicTheme', repo: 'https://git.drupalcode.org/project/civictheme.git', ref: '1.13.0', paths: ['config/install', 'config/optional'] }],
-};
-
-const COMMITS = ['e079dbb0a036cf1ccf61331de166e5f7f7397994'];
 
 function origin(name) {
   return { origin: name, files: readConfigFolder(join(FIXTURES, name)) };
@@ -61,29 +53,19 @@ test('keeps the first copy of a file that differs between folders and reports th
   assert.deepEqual(shadowed, [{ name: 'node.type.page.yml', kept: 'install', skipped: 'conflict' }]);
 });
 
-test('renders a manifest of sorted config file names', () => {
-  assert.equal(renderManifest(['node.type.page.yml', 'field.field.node.page.body.yml']), '[\n  "field.field.node.page.body.yml",\n  "node.type.page.yml"\n]\n');
+test('builds a titled saved diagram without a layout that opens as the model the config draws', () => {
+  const doc = buildDocument(configMin, 'Minimal 1.0.0');
+  const model = parseConfig(configMin);
+
+  model.setTitle('Minimal 1.0.0');
+
+  assert.equal(doc.title, 'Minimal 1.0.0');
+  assert.deepEqual(doc.layout, {});
+  assert.deepEqual(documentToModel(doc).modelData, model.toArray());
 });
 
-test('renders the source record with the commit each tag resolved to', () => {
-  assert.deepEqual(JSON.parse(renderSource(TEMPLATE, COMMITS)), {
-    template: 'civictheme',
-    version: '1.13.0',
-    sources: [{ ...TEMPLATE.sources[0], commit: COMMITS[0] }],
-  });
-  assert.ok(renderSource(TEMPLATE, COMMITS).endsWith('}\n'));
-});
-
-test('renders a README naming the version, each source and the licence', () => {
-  const readme = renderReadme(TEMPLATE, COMMITS);
-
-  assert.ok(readme.startsWith('# CivicTheme 1.13.0\n'));
-  assert.ok(readme.includes('[CivicTheme](https://www.drupal.org/project/civictheme) 1.13.0'));
-  assert.ok(readme.includes('`npm run update-templates -- civictheme`'));
-  assert.ok(readme.includes('| CivicTheme | `1.13.0` | `e079dbb0a036` | `config/install`, `config/optional` |'));
-  assert.ok(readme.includes('the first copy wins'));
-  assert.ok(readme.includes('released under GPL-2.0-or-later'));
-  assert.ok(readme.endsWith('.\n'));
+test('renders a document as indented JSON ending in a newline', () => {
+  assert.equal(renderDocument({ nexus: 1, entities: [] }), '{\n  "nexus": 1,\n  "entities": []\n}\n');
 });
 
 test('renders bundle counts as an object literal', async (t) => {

@@ -1,0 +1,3536 @@
+{
+  "nexus": 1,
+  "title": "CivicTheme 1.13.0",
+  "colors": {},
+  "symbols": {},
+  "customTypes": [],
+  "entities": [
+    {
+      "entityType": "node",
+      "bundle": "civictheme_alert",
+      "label": "Alert",
+      "note": "",
+      "fields": [
+        {
+          "name": "title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "uid",
+          "label": "Author",
+          "fieldType": "entity_reference",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "created",
+          "label": "Authored on",
+          "fieldType": "created",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_n_alert_page_visibility",
+          "label": "Page visibility",
+          "fieldType": "string_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_n_alert_type",
+          "label": "Type",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_n_body",
+          "label": "Message",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_n_date_range",
+          "label": "Date range",
+          "fieldType": "daterange",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "node",
+      "bundle": "civictheme_event",
+      "label": "Event",
+      "note": "",
+      "fields": [
+        {
+          "name": "title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "uid",
+          "label": "Author",
+          "fieldType": "entity_reference",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "created",
+          "label": "Authored on",
+          "fieldType": "created",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_n_attachments",
+          "label": "Attachments",
+          "fieldType": "entity_reference_revisions",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "paragraph",
+          "targetBundles": [
+            "civictheme_attachment"
+          ]
+        },
+        {
+          "name": "field_c_n_body",
+          "label": "Body",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_n_custom_last_updated",
+          "label": "Custom Last updated date",
+          "fieldType": "datetime",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_n_date_range",
+          "label": "Date",
+          "fieldType": "daterange",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_n_hide_sidebar",
+          "label": "Hide sidebar",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_n_location",
+          "label": "Locations",
+          "fieldType": "entity_reference_revisions",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": true,
+          "note": "",
+          "targetType": "paragraph",
+          "targetBundles": [
+            "civictheme_map",
+            "civictheme_content",
+            "civictheme_iframe"
+          ]
+        },
+        {
+          "name": "field_c_n_show_last_updated",
+          "label": "Show Last updated date",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_n_show_toc",
+          "label": "Show Table of Contents",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_n_site_section",
+          "label": "Site section",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": "taxonomy_term",
+          "targetBundles": [
+            "civictheme_site_sections"
+          ]
+        },
+        {
+          "name": "field_c_n_summary",
+          "label": "Summary",
+          "fieldType": "string_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_n_thumbnail",
+          "label": "Thumbnail",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": "media",
+          "targetBundles": [
+            "civictheme_image"
+          ]
+        },
+        {
+          "name": "field_c_n_topics",
+          "label": "Topics",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "taxonomy_term",
+          "targetBundles": [
+            "civictheme_topics"
+          ]
+        },
+        {
+          "name": "field_c_n_vertical_spacing",
+          "label": "Vertical spacing",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "node",
+      "bundle": "civictheme_page",
+      "label": "Page",
+      "note": "",
+      "fields": [
+        {
+          "name": "title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "uid",
+          "label": "Author",
+          "fieldType": "entity_reference",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "created",
+          "label": "Authored on",
+          "fieldType": "created",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_n_banner_background",
+          "label": "Banner background",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": "media",
+          "targetBundles": [
+            "civictheme_image"
+          ]
+        },
+        {
+          "name": "field_c_n_banner_blend_mode",
+          "label": "Banner background blend  mode",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_n_banner_components",
+          "label": "Banner components",
+          "fieldType": "entity_reference_revisions",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "paragraph",
+          "targetBundles": [
+            "civictheme_content",
+            "civictheme_manual_list",
+            "civictheme_iframe",
+            "civictheme_map",
+            "civictheme_slider"
+          ]
+        },
+        {
+          "name": "field_c_n_banner_components_bott",
+          "label": "Banner bottom components",
+          "fieldType": "entity_reference_revisions",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "paragraph",
+          "targetBundles": [
+            "civictheme_content",
+            "civictheme_accordion",
+            "civictheme_automated_list",
+            "civictheme_callout",
+            "civictheme_campaign",
+            "civictheme_iframe",
+            "civictheme_manual_list",
+            "civictheme_map",
+            "civictheme_promo",
+            "civictheme_slider",
+            "civictheme_webform"
+          ]
+        },
+        {
+          "name": "field_c_n_banner_featured_image",
+          "label": "Banner featured image",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": "media",
+          "targetBundles": [
+            "civictheme_image"
+          ]
+        },
+        {
+          "name": "field_c_n_banner_hide_breadcrumb",
+          "label": "Hide breadcrumb",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_n_banner_theme",
+          "label": "Banner theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_n_banner_title",
+          "label": "Banner title",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_n_banner_type",
+          "label": "Banner type",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_n_components",
+          "label": "Components",
+          "fieldType": "entity_reference_revisions",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "paragraph",
+          "targetBundles": [
+            "civictheme_content",
+            "civictheme_accordion",
+            "civictheme_attachment",
+            "civictheme_automated_list",
+            "civictheme_callout",
+            "civictheme_campaign",
+            "civictheme_message",
+            "civictheme_iframe",
+            "civictheme_manual_list",
+            "civictheme_map",
+            "civictheme_next_step",
+            "civictheme_promo",
+            "civictheme_slider",
+            "civictheme_webform"
+          ]
+        },
+        {
+          "name": "field_c_n_custom_last_updated",
+          "label": "Custom Last updated date",
+          "fieldType": "datetime",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_n_hide_sidebar",
+          "label": "Hide sidebar",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_n_hide_tags",
+          "label": "Hide tags",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_n_show_last_updated",
+          "label": "Show Last updated date",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_n_show_toc",
+          "label": "Show Table of Contents",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_n_site_section",
+          "label": "Site section",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": "taxonomy_term",
+          "targetBundles": [
+            "civictheme_site_sections"
+          ]
+        },
+        {
+          "name": "field_c_n_summary",
+          "label": "Summary",
+          "fieldType": "string_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_n_thumbnail",
+          "label": "Thumbnail",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": "media",
+          "targetBundles": [
+            "civictheme_image"
+          ]
+        },
+        {
+          "name": "field_c_n_topics",
+          "label": "Topics",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "taxonomy_term",
+          "targetBundles": [
+            "civictheme_topics"
+          ]
+        },
+        {
+          "name": "field_c_n_vertical_spacing",
+          "label": "Vertical spacing",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "taxonomy_term",
+      "bundle": "civictheme_media_tags",
+      "label": "Media tags",
+      "note": "",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "description",
+          "label": "Description",
+          "fieldType": "text_long",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "taxonomy_term",
+      "bundle": "civictheme_site_sections",
+      "label": "Site sections",
+      "note": "",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "description",
+          "label": "Description",
+          "fieldType": "text_long",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "taxonomy_term",
+      "bundle": "civictheme_topics",
+      "label": "Topics",
+      "note": "",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "description",
+          "label": "Description",
+          "fieldType": "text_long",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "media",
+      "bundle": "civictheme_audio",
+      "label": "Audio",
+      "note": "",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_m_audio_file",
+          "label": "File",
+          "fieldType": "file",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_m_media_tags",
+          "label": "Media tags",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "taxonomy_term",
+          "targetBundles": [
+            "civictheme_media_tags"
+          ]
+        }
+      ]
+    },
+    {
+      "entityType": "media",
+      "bundle": "civictheme_document",
+      "label": "Document",
+      "note": "",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_m_document",
+          "label": "File",
+          "fieldType": "file",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_m_media_tags",
+          "label": "Media tags",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "taxonomy_term",
+          "targetBundles": [
+            "civictheme_media_tags"
+          ]
+        }
+      ]
+    },
+    {
+      "entityType": "media",
+      "bundle": "civictheme_icon",
+      "label": "Icon",
+      "note": "",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_m_icon",
+          "label": "File",
+          "fieldType": "file",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_m_media_tags",
+          "label": "Media tags",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "taxonomy_term",
+          "targetBundles": [
+            "civictheme_media_tags"
+          ]
+        }
+      ]
+    },
+    {
+      "entityType": "media",
+      "bundle": "civictheme_image",
+      "label": "Image",
+      "note": "",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_m_caption",
+          "label": "Caption",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_m_image",
+          "label": "Image",
+          "fieldType": "image",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_m_media_tags",
+          "label": "Media tags",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "taxonomy_term",
+          "targetBundles": [
+            "civictheme_media_tags"
+          ]
+        }
+      ]
+    },
+    {
+      "entityType": "media",
+      "bundle": "civictheme_remote_video",
+      "label": "Remote video",
+      "note": "",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_m_media_tags",
+          "label": "Media tags",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "taxonomy_term",
+          "targetBundles": [
+            "civictheme_media_tags"
+          ]
+        },
+        {
+          "name": "field_c_m_oembed_video",
+          "label": "Remote video URL",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_m_transcript",
+          "label": "Transcript",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_m_transcript_link",
+          "label": "Transcript link",
+          "fieldType": "link",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "media",
+      "bundle": "civictheme_video",
+      "label": "Video",
+      "note": "",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_m_media_tags",
+          "label": "Media tags",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "taxonomy_term",
+          "targetBundles": [
+            "civictheme_media_tags"
+          ]
+        },
+        {
+          "name": "field_c_m_transcript",
+          "label": "Transcript",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_m_transcript_link",
+          "label": "Transcript link",
+          "fieldType": "link",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_m_video_file",
+          "label": "Video file",
+          "fieldType": "file",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "civictheme_accordion",
+      "label": "Accordion",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_c_p_background",
+          "label": "Background",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_expand",
+          "label": "Expand all",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_panels",
+          "label": "Panels",
+          "fieldType": "entity_reference_revisions",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": true,
+          "note": "",
+          "targetType": "paragraph",
+          "targetBundles": [
+            "civictheme_accordion_panel"
+          ]
+        },
+        {
+          "name": "field_c_p_theme",
+          "label": "Theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_vertical_spacing",
+          "label": "Vertical spacing",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "civictheme_accordion_panel",
+      "label": "Accordion panel",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_c_p_content",
+          "label": "Content",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_expand",
+          "label": "Expanded",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "civictheme_attachment",
+      "label": "Attachment",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_c_p_attachments",
+          "label": "Attachments",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": true,
+          "note": "",
+          "targetType": "media",
+          "targetBundles": [
+            "civictheme_document"
+          ]
+        },
+        {
+          "name": "field_c_p_background",
+          "label": "Background",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_content",
+          "label": "Content",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_theme",
+          "label": "Theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_vertical_spacing",
+          "label": "Vertical spacing",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "civictheme_automated_list",
+      "label": "Automated list",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_c_p_background",
+          "label": "Background",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_content",
+          "label": "Content",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_list_column_count",
+          "label": "Column count",
+          "fieldType": "list_integer",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_list_content_type",
+          "label": "Content type",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_list_fill_width",
+          "label": "Fill width in the last row",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_list_filters_exp",
+          "label": "Exposed filters",
+          "fieldType": "list_string",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_list_item_theme",
+          "label": "Item theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_list_item_view_as",
+          "label": "Display items as",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_list_limit",
+          "label": "Limit",
+          "fieldType": "integer",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_list_limit_type",
+          "label": "Limit type",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_list_link_above",
+          "label": "Link above",
+          "fieldType": "link",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_list_link_below",
+          "label": "Link below",
+          "fieldType": "link",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_list_site_sections",
+          "label": "Site sections",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "taxonomy_term",
+          "targetBundles": [
+            "civictheme_site_sections"
+          ]
+        },
+        {
+          "name": "field_c_p_list_topics",
+          "label": "Topics",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "taxonomy_term",
+          "targetBundles": [
+            "civictheme_topics"
+          ]
+        },
+        {
+          "name": "field_c_p_list_type",
+          "label": "List type",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_theme",
+          "label": "Theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_vertical_spacing",
+          "label": "Vertical spacing",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "civictheme_callout",
+      "label": "Callout",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_c_p_content",
+          "label": "Content",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_links",
+          "label": "Links",
+          "fieldType": "link",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_theme",
+          "label": "Theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_vertical_spacing",
+          "label": "Vertical spacing",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "civictheme_campaign",
+      "label": "Campaign",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_c_p_content",
+          "label": "Content",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_date",
+          "label": "Date",
+          "fieldType": "datetime",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_image",
+          "label": "Image",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": "media",
+          "targetBundles": [
+            "civictheme_image"
+          ]
+        },
+        {
+          "name": "field_c_p_image_position",
+          "label": "Image position",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_links",
+          "label": "Links",
+          "fieldType": "link",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_theme",
+          "label": "Theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_topics",
+          "label": "Topics",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "taxonomy_term",
+          "targetBundles": [
+            "civictheme_topics"
+          ]
+        },
+        {
+          "name": "field_c_p_vertical_spacing",
+          "label": "Vertical spacing",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "civictheme_content",
+      "label": "Content",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_c_p_background",
+          "label": "Background",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_content",
+          "label": "Content",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_theme",
+          "label": "Theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_vertical_spacing",
+          "label": "Vertical spacing",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "civictheme_event_card",
+      "label": "Event card",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_c_p_date_range",
+          "label": "Date",
+          "fieldType": "daterange",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_image",
+          "label": "Image",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": "media",
+          "targetBundles": [
+            "civictheme_image"
+          ]
+        },
+        {
+          "name": "field_c_p_link",
+          "label": "Link",
+          "fieldType": "link",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_location",
+          "label": "Location",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_summary",
+          "label": "Summary",
+          "fieldType": "string_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_theme",
+          "label": "Theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_topics",
+          "label": "Topics",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "taxonomy_term",
+          "targetBundles": [
+            "civictheme_topics"
+          ]
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "civictheme_event_card_ref",
+      "label": "Event reference card",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_c_p_reference",
+          "label": "Reference",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": "node",
+          "targetBundles": [
+            "civictheme_event"
+          ]
+        },
+        {
+          "name": "field_c_p_theme",
+          "label": "Theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "civictheme_fast_fact_card",
+      "label": "Fast fact card",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_c_p_icon",
+          "label": "Icon",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": "media",
+          "targetBundles": [
+            "civictheme_icon"
+          ]
+        },
+        {
+          "name": "field_c_p_link",
+          "label": "Link",
+          "fieldType": "link",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_summary",
+          "label": "Summary",
+          "fieldType": "string_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_theme",
+          "label": "Theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "civictheme_iframe",
+      "label": "iFrame",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_c_p_background",
+          "label": "Background",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_height",
+          "label": "Height",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_theme",
+          "label": "Theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_url",
+          "label": "URL",
+          "fieldType": "string_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_vertical_spacing",
+          "label": "Vertical spacing",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_width",
+          "label": "Width",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "civictheme_manual_list",
+      "label": "Manual list",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_c_p_background",
+          "label": "Background",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_content",
+          "label": "Content",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_list_column_count",
+          "label": "Column count",
+          "fieldType": "list_integer",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_list_fill_width",
+          "label": "Fill width in the last row",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_list_items",
+          "label": "List items",
+          "fieldType": "entity_reference_revisions",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": true,
+          "note": "",
+          "targetType": "paragraph",
+          "targetBundles": [
+            "civictheme_event_card",
+            "civictheme_event_card_ref",
+            "civictheme_fast_fact_card",
+            "civictheme_navigation_card",
+            "civictheme_navigation_card_ref",
+            "civictheme_promo_card",
+            "civictheme_promo_card_ref",
+            "civictheme_publication_card",
+            "civictheme_service_card",
+            "civictheme_snippet",
+            "civictheme_snippet_ref",
+            "civictheme_subject_card",
+            "civictheme_subject_card_ref"
+          ]
+        },
+        {
+          "name": "field_c_p_list_link_above",
+          "label": "Link above",
+          "fieldType": "link",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_list_link_below",
+          "label": "Link below",
+          "fieldType": "link",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_theme",
+          "label": "Theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_vertical_spacing",
+          "label": "Vertical spacing",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "civictheme_map",
+      "label": "Map",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_c_p_address",
+          "label": "Address",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_background",
+          "label": "Background",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_embed_url",
+          "label": "Embed URL",
+          "fieldType": "link",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_theme",
+          "label": "Theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_vertical_spacing",
+          "label": "Vertical spacing",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_view_link",
+          "label": "View link",
+          "fieldType": "link",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "civictheme_message",
+      "label": "Message",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_c_p_background",
+          "label": "Background",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_content",
+          "label": "Content",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_message_type",
+          "label": "Type",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_theme",
+          "label": "Theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_vertical_spacing",
+          "label": "Vertical spacing",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "civictheme_navigation_card",
+      "label": "Navigation card",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_c_p_image",
+          "label": "Image",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": "media",
+          "targetBundles": [
+            "civictheme_icon",
+            "civictheme_image"
+          ]
+        },
+        {
+          "name": "field_c_p_link",
+          "label": "Link",
+          "fieldType": "link",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_show_image_as_icon",
+          "label": "Show image as icon",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_summary",
+          "label": "Summary",
+          "fieldType": "string_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_theme",
+          "label": "Theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "civictheme_navigation_card_ref",
+      "label": "Navigation reference card",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_c_p_reference",
+          "label": "Reference",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": "node",
+          "targetBundles": [
+            "civictheme_event",
+            "civictheme_page"
+          ]
+        },
+        {
+          "name": "field_c_p_theme",
+          "label": "Theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "civictheme_next_step",
+      "label": "Next step",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_c_p_content",
+          "label": "Content",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_link",
+          "label": "Link",
+          "fieldType": "link",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_theme",
+          "label": "Theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_vertical_spacing",
+          "label": "Vertical spacing",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "civictheme_promo",
+      "label": "Promo",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_c_p_background",
+          "label": "Background",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_content",
+          "label": "Content",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_link",
+          "label": "Link",
+          "fieldType": "link",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_theme",
+          "label": "Theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_vertical_spacing",
+          "label": "Vertical spacing",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "civictheme_promo_card",
+      "label": "Promo card",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_c_p_image",
+          "label": "Image",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": "media",
+          "targetBundles": [
+            "civictheme_image"
+          ]
+        },
+        {
+          "name": "field_c_p_link",
+          "label": "Link",
+          "fieldType": "link",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_subtitle",
+          "label": "Subtitle",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_summary",
+          "label": "Summary",
+          "fieldType": "string_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_theme",
+          "label": "Theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_topics",
+          "label": "Topics",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "taxonomy_term",
+          "targetBundles": [
+            "civictheme_topics"
+          ]
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "civictheme_promo_card_ref",
+      "label": "Promo reference card",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_c_p_reference",
+          "label": "Reference",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": "node",
+          "targetBundles": [
+            "civictheme_event",
+            "civictheme_page"
+          ]
+        },
+        {
+          "name": "field_c_p_theme",
+          "label": "Theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "civictheme_publication_card",
+      "label": "Publication card",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_c_p_document",
+          "label": "Document",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": true,
+          "note": "",
+          "targetType": "media",
+          "targetBundles": [
+            "civictheme_document"
+          ]
+        },
+        {
+          "name": "field_c_p_image",
+          "label": "Image",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": "media",
+          "targetBundles": [
+            "civictheme_image"
+          ]
+        },
+        {
+          "name": "field_c_p_summary",
+          "label": "Summary",
+          "fieldType": "string_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_theme",
+          "label": "Theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "civictheme_service_card",
+      "label": "Service card",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_c_p_links",
+          "label": "Links",
+          "fieldType": "link",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_theme",
+          "label": "Theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "civictheme_slider",
+      "label": "Slider",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_c_p_background",
+          "label": "Background",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_slides",
+          "label": "Slides",
+          "fieldType": "entity_reference_revisions",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": true,
+          "note": "",
+          "targetType": "paragraph",
+          "targetBundles": [
+            "civictheme_slider_slide",
+            "civictheme_slider_slide_ref"
+          ]
+        },
+        {
+          "name": "field_c_p_theme",
+          "label": "Theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_vertical_spacing",
+          "label": "Vertical spacing",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "civictheme_slider_slide",
+      "label": "Slider slide",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_c_p_content",
+          "label": "Content",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_date",
+          "label": "Date",
+          "fieldType": "datetime",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_image",
+          "label": "Image",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": "media",
+          "targetBundles": [
+            "civictheme_image"
+          ]
+        },
+        {
+          "name": "field_c_p_image_position",
+          "label": "Image position",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_links",
+          "label": "Links",
+          "fieldType": "link",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_theme",
+          "label": "Theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_topics",
+          "label": "Topics",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "taxonomy_term",
+          "targetBundles": [
+            "civictheme_topics"
+          ]
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "civictheme_slider_slide_ref",
+      "label": "Slider reference slide",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_c_p_image_position",
+          "label": "Image position",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_link_text",
+          "label": "Link text",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_reference",
+          "label": "Reference",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": "node",
+          "targetBundles": [
+            "civictheme_event",
+            "civictheme_page"
+          ]
+        },
+        {
+          "name": "field_c_p_theme",
+          "label": "Theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "civictheme_snippet",
+      "label": "Snippet",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_c_p_link",
+          "label": "Link",
+          "fieldType": "link",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_summary",
+          "label": "Summary",
+          "fieldType": "string_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_theme",
+          "label": "Theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_topics",
+          "label": "Topics",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "taxonomy_term",
+          "targetBundles": [
+            "civictheme_topics"
+          ]
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "civictheme_snippet_ref",
+      "label": "Snippet reference",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_c_p_reference",
+          "label": "Reference",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": "node",
+          "targetBundles": [
+            "civictheme_event",
+            "civictheme_page"
+          ]
+        },
+        {
+          "name": "field_c_p_theme",
+          "label": "Theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "civictheme_social_icon",
+      "label": "Social icon",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_c_p_icon",
+          "label": "Icon",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": "media",
+          "targetBundles": [
+            "civictheme_icon"
+          ]
+        },
+        {
+          "name": "field_c_p_link",
+          "label": "Link",
+          "fieldType": "link",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "civictheme_subject_card",
+      "label": "Subject card",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_c_p_image",
+          "label": "Image",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": "media",
+          "targetBundles": [
+            "civictheme_image"
+          ]
+        },
+        {
+          "name": "field_c_p_link",
+          "label": "Link",
+          "fieldType": "link",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_theme",
+          "label": "Theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "civictheme_subject_card_ref",
+      "label": "Subject reference card",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_c_p_reference",
+          "label": "Reference",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": "node",
+          "targetBundles": [
+            "civictheme_event",
+            "civictheme_page"
+          ]
+        },
+        {
+          "name": "field_c_p_theme",
+          "label": "Theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "civictheme_webform",
+      "label": "Webform",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_c_p_background",
+          "label": "Background",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_theme",
+          "label": "Theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_vertical_spacing",
+          "label": "Vertical spacing",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_p_webform",
+          "label": "Webform",
+          "fieldType": "webform",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "block_content",
+      "bundle": "civictheme_banner",
+      "label": "Banner",
+      "note": "",
+      "fields": [
+        {
+          "name": "info",
+          "label": "Block description",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_b_background_image",
+          "label": "Background image",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": "media",
+          "targetBundles": [
+            "civictheme_image"
+          ]
+        },
+        {
+          "name": "field_c_b_banner_blend_mode",
+          "label": "Blend mode",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_b_banner_type",
+          "label": "Type",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_b_featured_image",
+          "label": "Featured image",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": "media",
+          "targetBundles": [
+            "civictheme_image"
+          ]
+        },
+        {
+          "name": "field_c_b_theme",
+          "label": "Theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "block_content",
+      "bundle": "civictheme_component_block",
+      "label": "Component",
+      "note": "",
+      "fields": [
+        {
+          "name": "info",
+          "label": "Block description",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_b_components",
+          "label": "Components",
+          "fieldType": "entity_reference_revisions",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": true,
+          "note": "",
+          "targetType": "paragraph",
+          "targetBundles": [
+            "civictheme_content",
+            "civictheme_accordion",
+            "civictheme_attachment",
+            "civictheme_automated_list",
+            "civictheme_callout",
+            "civictheme_campaign",
+            "civictheme_iframe",
+            "civictheme_manual_list",
+            "civictheme_map",
+            "civictheme_next_step",
+            "civictheme_promo",
+            "civictheme_slider",
+            "civictheme_webform"
+          ]
+        }
+      ]
+    },
+    {
+      "entityType": "block_content",
+      "bundle": "civictheme_mobile_navigation",
+      "label": "Mobile Navigation",
+      "note": "",
+      "fields": [
+        {
+          "name": "info",
+          "label": "Block description",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_b_bottom",
+          "label": "Bottom block",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": "block",
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_b_theme",
+          "label": "Theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_b_top",
+          "label": "Top block",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": "block",
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_b_trigger_text",
+          "label": "Trigger text",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_b_trigger_theme",
+          "label": "Trigger theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "block_content",
+      "bundle": "civictheme_search",
+      "label": "Search",
+      "note": "",
+      "fields": [
+        {
+          "name": "info",
+          "label": "Block description",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_b_link",
+          "label": "Link",
+          "fieldType": "link",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_b_link_in_mobile_menu",
+          "label": "Show link in mobile menu",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "block_content",
+      "bundle": "civictheme_social_links",
+      "label": "Social Links",
+      "note": "",
+      "fields": [
+        {
+          "name": "info",
+          "label": "Block description",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_b_social_icons",
+          "label": "Social links",
+          "fieldType": "entity_reference_revisions",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": true,
+          "note": "",
+          "targetType": "paragraph",
+          "targetBundles": [
+            "civictheme_social_icon"
+          ]
+        },
+        {
+          "name": "field_c_b_theme",
+          "label": "Theme",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        },
+        {
+          "name": "field_c_b_with_border",
+          "label": "With border",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": []
+        }
+      ]
+    },
+    {
+      "entityType": "block",
+      "bundle": "*",
+      "label": "Any Block",
+      "note": "",
+      "fields": []
+    }
+  ],
+  "annotations": {
+    "nodes": [],
+    "edges": []
+  },
+  "layout": {},
+  "ui": null
+}

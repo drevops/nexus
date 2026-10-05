@@ -1,13 +1,14 @@
 /**
- * Rebuilds the folder of each content-model template in templates/.
+ * Rebuilds the saved-diagram document of each content-model template.
  *
  * Usage: npm run update-templates [-- <id> ...]
  *
- * A template with upstream sources gets each source cloned at its tag, and
- * its config/, manifest.json, source.json and README.md written again from
- * them. A template without sources gets only its manifest.json rebuilt from
- * its config/ folder. The command fails when a template's bundles no longer
- * match the counts in src/templates.js, and prints the counts to use.
+ * Each source of a template is cloned at its tag into a temporary folder. The
+ * config files the parser reads are merged and drawn into
+ * templates/<id>.nexus.json, and the clones are deleted.
+ *
+ * The command fails when a template's bundles no longer match the counts in
+ * src/templates.js, and prints the counts to use.
  */
 
 import { execFileSync } from 'node:child_process';
@@ -15,8 +16,8 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { TEMPLATES, templatePath, templateTitle } from '../src/templates.js';
-import { bundleCounts } from '../src/parser.js';
-import { mergeConfig, readConfigFolder, renderCounts, renderManifest, renderReadme, renderSource } from './lib/template-sources.mjs';
+import { bundleCounts, isModelConfig } from '../src/parser.js';
+import { buildDocument, mergeConfig, readConfigFolder, renderCounts, renderDocument } from './lib/template-sources.mjs';
 
 // The vendored UMD build exports nothing to an ES module import and sets
 // globalThis.jsyaml instead.
@@ -37,59 +38,45 @@ function fetchSource(source, dir) {
   return git(['rev-parse', 'HEAD'], dir);
 }
 
-function buildFromSources(template, clones) {
-  const commits = [];
+function buildTemplate(template, clones) {
+  if (template.sources.length === 0) {
+    throw new Error(template.id + ' has no sources to build from');
+  }
+
   const origins = [];
 
   template.sources.forEach((source, index) => {
     const dir = join(clones, template.id, String(index));
+    const commit = fetchSource(source, dir);
 
-    console.log('Fetching ' + source.name + ' ' + source.ref + '…');
-    commits.push(fetchSource(source, dir));
+    console.log('Fetched ' + source.name + ' ' + source.ref + ' at ' + commit.slice(0, 12));
 
     for (const path of source.paths) {
-      origins.push({ origin: source.name + ' ' + source.ref + ' ' + path, files: readConfigFolder(join(dir, path)) });
+      const files = readConfigFolder(join(dir, path)).filter((file) => isModelConfig(file.name));
+
+      origins.push({ origin: source.name + ' ' + source.ref + ' ' + path, files });
     }
   });
 
-  const { files: merged, shadowed } = mergeConfig(origins);
+  const { files, shadowed } = mergeConfig(origins);
 
   for (const { name, kept, skipped } of shadowed) {
     console.log('Kept ' + name + ' from ' + kept + ' over ' + skipped);
   }
 
-  for (const [name, { content }] of merged) {
+  const parsed = {};
+
+  for (const [name, { content }] of files) {
     try {
-      globalThis.jsyaml.load(content);
+      parsed[name] = globalThis.jsyaml.load(content);
     } catch (e) {
       throw new Error(name + ' is not valid YAML: ' + e.message);
     }
   }
 
-  const folder = join(ROOT, templatePath(template));
-  const config = join(folder, 'config');
+  writeFileSync(join(ROOT, templatePath(template)), renderDocument(buildDocument(parsed, templateTitle(template))));
 
-  rmSync(config, { recursive: true, force: true });
-  mkdirSync(config, { recursive: true });
-
-  for (const [name, { content }] of merged) {
-    writeFileSync(join(config, name), content);
-  }
-
-  writeFileSync(join(folder, 'manifest.json'), renderManifest(merged.keys()));
-  writeFileSync(join(folder, 'source.json'), renderSource(template, commits));
-  writeFileSync(join(folder, 'README.md'), renderReadme(template, commits));
-
-  return [...merged.keys()];
-}
-
-function buildManifest(template) {
-  const folder = join(ROOT, templatePath(template));
-  const names = readConfigFolder(join(folder, 'config')).map((file) => file.name);
-
-  writeFileSync(join(folder, 'manifest.json'), renderManifest(names));
-
-  return names;
+  return Object.keys(parsed);
 }
 
 function main(ids) {
@@ -108,10 +95,10 @@ function main(ids) {
 
   try {
     for (const template of selected) {
-      const names = template.sources.length > 0 ? buildFromSources(template, clones) : buildManifest(template);
+      const names = buildTemplate(template, clones);
       const counts = bundleCounts(names);
 
-      console.log(templateTitle(template) + ': ' + names.length + ' config files, ' + renderCounts(counts));
+      console.log(templateTitle(template) + ': ' + names.length + ' model files, ' + renderCounts(counts));
 
       if (!isDeepStrictEqual(counts, template.counts)) {
         stale = true;

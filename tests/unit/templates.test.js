@@ -1,35 +1,23 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { readdirSync, readFileSync } from 'node:fs';
+import { basename, join } from 'node:path';
 import { TEMPLATES, summaryCounts, templatePath, templateTitle } from '../../src/templates.js';
-import { bundleCounts, isModelConfig, parseConfig } from '../../src/parser.js';
+import { documentToModel } from '../../src/document.js';
 import { ENTITY_TYPE_ORDER } from '../../src/entity-types.js';
 import { hasIcon } from '../../src/icons.js';
 
-// The vendored UMD build exports nothing to an ES module import and sets
-// globalThis.jsyaml instead.
-await import('../../assets/vendor/js-yaml.min.js');
-
 const ROOT = join(import.meta.dirname, '..', '..');
-const UPSTREAM = TEMPLATES.filter((template) => template.sources.length > 0);
 
-function templateFile(template, file) {
-  return join(ROOT, templatePath(template, file));
+function documentOf(template) {
+  return JSON.parse(readFileSync(join(ROOT, templatePath(template)), 'utf8'));
 }
 
-function manifestOf(template) {
-  return JSON.parse(readFileSync(templateFile(template, 'manifest.json'), 'utf8'));
-}
-
-test('gives every template a unique id that names its folder', () => {
+test('ships a saved diagram for every template and nothing else', () => {
   const ids = TEMPLATES.map((template) => template.id);
 
   assert.equal(new Set(ids).size, ids.length);
-
-  for (const template of TEMPLATES) {
-    assert.ok(existsSync(templateFile(template, 'config')), template.id + ' has no config folder');
-  }
+  assert.deepEqual(readdirSync(join(ROOT, 'templates')).sort(), TEMPLATES.map((template) => basename(templatePath(template))).sort());
 });
 
 test('describes every template completely', () => {
@@ -38,7 +26,6 @@ test('describes every template completely', () => {
     assert.ok(template.summary, template.id + ' has no summary');
     assert.ok(hasIcon(template.icon), template.id + ' has an icon that does not exist');
     assert.match(template.color, /^#[0-9a-f]{6}$/, template.id + ' has no hex colour');
-    assert.equal(typeof template.annotations, 'boolean', template.id + ' does not say whether it has annotations');
 
     for (const type of Object.keys(template.counts)) {
       assert.ok(ENTITY_TYPE_ORDER.includes(type), template.id + ' counts an unknown entity type ' + type);
@@ -46,13 +33,11 @@ test('describes every template completely', () => {
   }
 });
 
-test('versions every upstream template by the tag of the source named after it', () => {
-  for (const template of UPSTREAM) {
+test('versions every template by the tag of the source named after it', () => {
+  for (const template of TEMPLATES) {
     const own = template.sources.find((source) => source.name === template.label);
 
     assert.equal(own ? own.ref : null, template.version, template.id);
-    assert.match(template.project, /^https:\/\//, template.id + ' has no project page');
-    assert.ok(template.licence, template.id + ' has no licence');
 
     for (const source of template.sources) {
       assert.ok(source.name && source.repo && source.ref && source.paths.length > 0, template.id + ' has an incomplete source');
@@ -60,45 +45,29 @@ test('versions every upstream template by the tag of the source named after it',
   }
 });
 
-test('lists exactly the YAML files of each template config folder in its manifest', () => {
+test('titles each template diagram by its label and version and leaves the layout and type settings to the app', () => {
   for (const template of TEMPLATES) {
-    const files = readdirSync(templateFile(template, 'config')).filter((name) => name.endsWith('.yml'));
+    const doc = documentOf(template);
 
-    assert.deepEqual(manifestOf(template), files.sort(), template.id);
+    assert.equal(doc.nexus, 1, template.id);
+    assert.equal(doc.title, templateTitle(template), template.id);
+    assert.deepEqual(
+      { layout: doc.layout, colors: doc.colors, symbols: doc.symbols, customTypes: doc.customTypes, ui: doc.ui },
+      { layout: {}, colors: {}, symbols: {}, customTypes: [], ui: null },
+      template.id,
+    );
   }
 });
 
-test('ships an annotation overlay exactly when a template declares one', () => {
+test('draws exactly the advertised bundles from each template diagram', () => {
   for (const template of TEMPLATES) {
-    const file = templateFile(template, 'annotations.yml');
-
-    assert.equal(existsSync(file), template.annotations, template.id);
-
-    if (template.annotations) {
-      assert.equal(typeof globalThis.jsyaml.load(readFileSync(file, 'utf8')), 'object', template.id);
-    }
-  }
-});
-
-test('advertises the bundles each template config defines', () => {
-  for (const template of TEMPLATES) {
-    assert.deepEqual(bundleCounts(manifestOf(template)), template.counts, template.id);
-  }
-});
-
-test('draws exactly the advertised bundles from each template config', () => {
-  for (const template of TEMPLATES) {
-    const files = {};
-
-    for (const name of manifestOf(template).filter(isModelConfig)) {
-      files[name] = globalThis.jsyaml.load(readFileSync(templateFile(template, 'config/' + name), 'utf8'));
-    }
-
     const drawn = {};
 
-    for (const entity of parseConfig(files).getEntities()) {
-      if (entity.bundle !== '*' && Object.hasOwn(template.counts, entity.entityType)) {
-        drawn[entity.entityType] = (drawn[entity.entityType] || 0) + 1;
+    for (const node of documentToModel(documentOf(template)).modelData.nodes) {
+      const { group, entityType, bundle } = node.data;
+
+      if (group === 'entity' && bundle !== '*' && Object.hasOwn(template.counts, entityType)) {
+        drawn[entityType] = (drawn[entityType] || 0) + 1;
       }
     }
 
@@ -106,26 +75,8 @@ test('draws exactly the advertised bundles from each template config', () => {
   }
 });
 
-test('records the upstream sources each template was built from', () => {
-  for (const template of UPSTREAM) {
-    const recorded = JSON.parse(readFileSync(templateFile(template, 'source.json'), 'utf8'));
-
-    assert.equal(recorded.version, template.version, template.id);
-    assert.deepEqual(
-      recorded.sources.map(({ name, repo, ref, paths }) => ({ name, repo, ref, paths })),
-      template.sources,
-      template.id,
-    );
-
-    for (const source of recorded.sources) {
-      assert.match(source.commit, /^[0-9a-f]{40}$/, template.id + ' records no commit for ' + source.name);
-    }
-  }
-});
-
-test('locates a file in a template folder from the site root', () => {
-  assert.equal(templatePath({ id: 'civictheme' }, 'manifest.json'), 'templates/civictheme/manifest.json');
-  assert.equal(templatePath({ id: 'civictheme' }), 'templates/civictheme/');
+test('locates a template diagram from the site root', () => {
+  assert.equal(templatePath({ id: 'civictheme' }), 'templates/civictheme.nexus.json');
 });
 
 test('names a template by its label and version', () => {

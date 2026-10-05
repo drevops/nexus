@@ -70,12 +70,8 @@ function showDiagram(modelData, options) {
   setLandingOpen(false);
 }
 
-function buildAndShow(map, annotations, title) {
+function buildAndShow(map, annotations) {
   const model = parseConfig(map);
-
-  if (title) {
-    model.setTitle(title);
-  }
 
   if (annotations) {
     applyAnnotations(model, annotations);
@@ -156,34 +152,13 @@ async function fetchText(url) {
   return text;
 }
 
-function parseYaml(text, name) {
-  try {
-    return window.jsyaml.load(text);
-  } catch {
-    throw new Error(name + ' is not valid YAML');
-  }
-}
-
-// Unlike a chosen folder, a template stops at the first file that fails to
-// load or parse, so it never draws a partial model.
 async function loadTemplate(template) {
   const title = templateTitle(template);
 
   showError('');
   showLoader('Loading ' + title + '…');
   try {
-    const manifest = JSON.parse(await fetchText(templatePath(template, 'manifest.json')));
-    const map = {};
-
-    await Promise.all(
-      manifest.filter(isModelConfig).map(async (name) => {
-        map[name] = parseYaml(await fetchText(templatePath(template, 'config/' + name)), name);
-      }),
-    );
-
-    const annotations = template.annotations ? parseYaml(await fetchText(templatePath(template, 'annotations.yml')), 'annotations.yml') : null;
-
-    buildAndShow(map, annotations, title);
+    showDocument(await fetchText(templatePath(template)));
   } catch (e) {
     showError('Could not load ' + title + ': ' + e.message);
   } finally {
@@ -370,15 +345,19 @@ function saveDocument() {
   exportDocument(doc, title);
 }
 
+function showDocument(text) {
+  const doc = documentToModel(JSON.parse(text));
+  showDiagram(doc.modelData, { layout: doc.layout, colors: doc.colors, symbols: doc.symbols, customTypes: doc.customTypes });
+  if (doc.ui) {
+    importLayout(doc.ui);
+  }
+}
+
 async function openDocument(file) {
   showError('');
   showLoader('Opening diagram…');
   try {
-    const doc = documentToModel(JSON.parse(await file.text()));
-    showDiagram(doc.modelData, { layout: doc.layout, colors: doc.colors, symbols: doc.symbols, customTypes: doc.customTypes });
-    if (doc.ui) {
-      importLayout(doc.ui);
-    }
+    showDocument(await file.text());
   } catch (e) {
     showLanding();
     showError('Could not open that diagram: ' + e.message);

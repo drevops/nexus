@@ -18,7 +18,7 @@ Set `PORT` to serve on another port, for example `PORT=8001 npm start`.
 
 `npm run lint` checks the code with ESLint and Prettier, and `npm run lint-fix` fixes what it can. `npm run test` runs both suites, which you can also run on their own:
 
-- `npm run test-unit` - Node's built-in test runner over the pure model modules (the parser, model, annotations, document, reference elements, entity types, templates and name conversions), the analytics loader and the template update helpers, plus checks that `npm run assemble` ships every file the app loads, that each template's manifest, bundle counts and recorded sources match its files, that the release workflow stamps only constants the source exports and rejects a malformed measurement ID, that the page's Nexus mark matches `logo.svg`, and that the edit palette offers every built-in entity type.
+- `npm run test-unit` - Node's built-in test runner over the pure model modules (the parser, model, annotations, document, reference elements, entity types, templates and name conversions), the analytics loader and the template update helpers, plus checks that `npm run assemble` ships every file the app loads, that each template's saved diagram carries its version and the bundles its landing row advertises, that the release workflow stamps only constants the source exports and rejects a malformed measurement ID, that the page's Nexus mark matches `logo.svg`, and that the edit palette offers every built-in entity type.
 - `npm run test-e2e` - Playwright drives the app end to end in Chromium: importing, rendering, editing, saving and exporting. It needs its browser installed once with `npx playwright install chromium`. The suite starts the dev server on port 8000, or reuses one already listening there - so if another checkout is serving that port, stop it first or the tests run against that checkout's code.
 - `npm run test-coverage` - the unit tests with c8 coverage, written to `.logs/`.
 
@@ -34,8 +34,8 @@ The app's own code lives in `src/`. The third-party builds it loads live in `ass
 - `src/icons.js` - inline SVG icons, including the Nexus mark.
 - `src/version.js` - the version string, `dev` until a release stamps it.
 - `src/styles.css` - the page's styles.
-- `templates/` - 1 folder per template, holding its exported `config/` and the `manifest.json` that lists it.
-- `scripts/update-templates.mjs` - rebuilds the template folders, with its helpers in `scripts/lib/`.
+- `templates/` - 1 saved `.nexus.json` diagram per template.
+- `scripts/update-templates.mjs` - rebuilds the template diagrams, with its helpers in `scripts/lib/`.
 
 Each built-in entity type, annotation kind and name conversion is defined once: the entity types in `src/entity-types.js`, the annotation kinds in `src/annotations.js` and the conversions in `src/names.js`. Import them from there rather than copying them into another module, so the copies can't drift apart. Adding an entity type also means adding its button to the edit palette in `index.html`, and `npm run test-unit` fails until you do.
 
@@ -45,14 +45,14 @@ The schema in the `src/document.js` docblock describes the saved `.nexus.json` f
 
 ## Updating the templates
 
-The landing screen's templates are listed in `src/templates.js`, and each has a folder under `templates/`. CivicTheme and Drupal CMS are pinned to exact upstream tags and rebuilt from them by 1 command:
+The landing screen's templates are listed in `src/templates.js`, and each ships as a saved diagram, `templates/<id>.nexus.json`. CivicTheme and Drupal CMS are pinned to exact upstream tags and rebuilt from them by 1 command:
 
     npm run update-templates
     npm run update-templates -- civictheme
 
-With no argument it rebuilds every template. For each upstream source it clones only the listed config folders at the pinned tag, merges them into the template's `config/`, and writes `manifest.json`, a `source.json` recording the commit each tag resolved to, and a README.
+With no argument it rebuilds every template. For each upstream source it clones only the listed config folders at the pinned tag into a temporary folder under `.artifacts/tmp/`, then draws the files the parser reads into the template's diagram with the same parser the app uses. The diagram carries no layout, so the app lays it out when it opens, the same as a dropped config folder. The clones are deleted afterwards, so no upstream config ends up in the repository.
 
-To move a template to a new release, change the source's `ref` and the template's `version` in `src/templates.js`, run the command and commit the template's folder with the change. A release that adds or removes bundles makes the command print the counts to put in `src/templates.js`, and `npm run test-unit` fails until they match. The same tests fail if `source.json` and `src/templates.js` disagree, so a version can't be bumped without rebuilding the files.
+To move a template to a new release, change the source's `ref` and the template's `version` in `src/templates.js`, run the command and commit the rebuilt diagram with the change. A release that adds or removes bundles makes the command print the counts to put in `src/templates.js`, and `npm run test-unit` fails until they match. The same tests fail while a diagram's title names another version, so the version can't be bumped without rebuilding the diagram.
 
 A template's sources are listed in the order Drupal installs them. A recipe never overwrites config that an earlier one created, so when 2 folders ship the same file the first copy wins, and the command reports each copy it skips. Drupal CMS keeps its content model in recipes rather than 1 config folder, so its template merges Drupal core's media type and user picture recipes, then the Drupal CMS base, forms and search recipes, then the Byte site template that installs them. The rest of its recipe tree adds roles, settings and email config but no bundles or fields, so it's left out.
 
