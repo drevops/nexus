@@ -11,13 +11,18 @@
  *
  * The graph is the source of truth. This module holds the graph mutations and
  * the on-canvas controls: drag-to-connect and the 4 "+" field handles.
+ *
+ * Each user action records 1 history step once it is done, so the helpers it
+ * calls record nothing themselves.
  */
 
 import { cardinalityLabel, kindForCardinality, entityNodeId, fieldNodeId, hasEdgeId, refEdgeId } from './model.js';
 import { ANNOTATION_KINDS } from './annotations.js';
 import { findEntityType } from './entity-types.js';
+import { describeNode } from './history.js';
 import { humanize, machineName } from './names.js';
-import { openInspector, closeInspector, setBuilder, bump, getController, subscribe } from './store.js';
+import { checkpoint } from './undo.js';
+import { openInspector, closeInspector, setBuilder, bump, getController, getState, subscribe } from './store.js';
 import { $ } from './dom.js';
 
 let cy = null;
@@ -28,6 +33,7 @@ let counter = 0;
 let handleEntityId = null;
 let handleRaf = false;
 let placeKind = null;
+let isolatedEntity = null;
 let isolatedIds = new Set();
 let dragLast = null;
 
@@ -97,8 +103,7 @@ function onCanvasDrop(evt) {
     const bundle = uniqueBundle(entityType);
     const id = addEntity(entityType, bundle, humanize(bundle), position);
     if (id) {
-      selectNode(id);
-      bump();
+      selectCreated(id);
     }
   } else if (data === 'field') {
     const entityId = entityAt(position) || nearestEntity(position);
@@ -106,14 +111,12 @@ function onCanvasDrop(evt) {
       const name = uniqueFieldName(entityId);
       const id = addField(entityId, name, humanize(name), 'string', 1, null, position);
       if (id) {
-        selectNode(id);
-        bump();
+        selectCreated(id);
       }
     }
   } else if (data.indexOf('note:') === 0) {
     const kind = data.slice(5);
-    selectNode(addAnnotation(kind, noteLabel(kind), '', position));
-    bump();
+    selectCreated(addAnnotation(kind, noteLabel(kind), '', position));
   }
 }
 
@@ -178,8 +181,7 @@ export function initBuilder() {
     const id = addField(handleEntityId, name, humanize(name), 'string', 1, btn.getAttribute('data-side'));
 
     if (id) {
-      selectNode(id);
-      bump();
+      selectCreated(id);
     }
   });
 
@@ -193,9 +195,7 @@ export function attachBuilder(instance) {
     if (evt.target === cy && placeKind) {
       const kind = placeKind;
       cancelPlace();
-      const id = addAnnotation(kind, noteLabel(kind), '', evt.position);
-      selectNode(id);
-      bump();
+      selectCreated(addAnnotation(kind, noteLabel(kind), '', evt.position));
     }
   });
   cy.on('tap', 'node', (evt) => {
@@ -245,6 +245,7 @@ export function attachBuilder(instance) {
   cy.on('free', 'node', () => {
     dragLast = null;
   });
+  cy.on('dragfree', 'node', (evt) => checkpoint('Moved ' + describeMove(evt.target)));
 
   cy.on('tapstart', 'node[group="field"]', (evt) => startConnect(evt.target, evt.position));
   cy.on('tapdrag', (evt) => moveGhost(evt.position));
@@ -260,7 +261,7 @@ export function attachBuilder(instance) {
     });
   });
   cy.on('captions', positionHandles);
-  setBuilder({ createEntity, createField, createAnnotation, addReference, removeReference, deleteNode, renameEntity, renameField });
+  setBuilder({ createEntity, createField, createAnnotation, createReference, removeReference, deleteNode, renameEntity, renameField, refreshSelection });
   applyMode();
 }
 
@@ -340,6 +341,7 @@ function isolateEntity(entityId) {
   cy.autoungrabify(false);
   cy.nodes().ungrabify();
   group.grabify();
+  isolatedEntity = entityId;
   isolatedIds = new Set(group.map((node) => node.id()));
 }
 
@@ -348,10 +350,20 @@ function clearIsolation() {
     return;
   }
   cy.elements().removeClass('faded');
+  isolatedEntity = null;
   isolatedIds = new Set();
   dragLast = null;
   cy.nodes().grabify();
   updateInteraction();
+}
+
+// Names what a drag moved: a node of an isolated group moves the whole group.
+function describeMove(node) {
+  if (!isolatedIds.has(node.id()) || isolatedIds.size === 1) {
+    return describeNode(node);
+  }
+
+  return describeNode(cy.getElementById(isolatedEntity)) + ' with its fields';
 }
 
 /* Drag-to-connect ------------------------------------------------------- */
@@ -395,6 +407,7 @@ function endConnect(target) {
   if (target && target !== cy && typeof target.isNode === 'function' && target.isNode() && target.data('group') === 'entity') {
     addReference(source, target.id());
     selectNode(source);
+    checkpoint('Added a ' + describeReference(source, target.id()));
   }
 }
 
@@ -470,6 +483,30 @@ function selectNode(id) {
   if (group === 'entity') {
     showHandles(id);
   } else {
+    hideHandles();
+  }
+}
+
+// Selects a node the user just created and records its creation.
+function selectCreated(id) {
+  selectNode(id);
+  bump();
+  checkpoint('Added ' + describeNode(cy.getElementById(id)));
+}
+
+// Brings the edit state in line with a graph the history changed: releases an
+// isolation, drops a connection being dragged and closes the inspector when
+// the node it shows is gone.
+function refreshSelection() {
+  clearIsolation();
+  connectSource = null;
+  cleanupGhost();
+
+  const selected = getState().selected;
+  const id = selected && (selected.kind === 'new-field' ? selected.entityId : selected.id);
+
+  if (id && cy.getElementById(id).empty()) {
+    closeInspector();
     hideHandles();
   }
 }
@@ -552,6 +589,7 @@ function renameEntity(oldId, newBundleRaw) {
     return;
   }
 
+  const change = 'Renamed entity “' + node.data('bundle') + '” to “' + newBundle + '”';
   cy.add({ group: 'nodes', data: { ...node.data(), id: newId, bundle: newBundle }, position: { ...node.position() } });
   moveAnnotationEdges(oldId, newId);
   cy.edges('[group="ref"]').forEach((edge) => {
@@ -569,6 +607,7 @@ function renameEntity(oldId, newBundleRaw) {
   getController().syncReferences(renames);
   selectNode(newId);
   bump();
+  checkpoint(change);
 }
 
 function renameField(oldId, newNameRaw) {
@@ -584,10 +623,12 @@ function renameField(oldId, newNameRaw) {
     return;
   }
 
+  const change = 'Renamed field “' + field.data('name') + '” to “' + newName + '”';
   reidField(field, entityId, newName);
   getController().syncReferences({ [oldId]: newId });
   selectNode(newId);
   bump();
+  checkpoint(change);
 }
 
 /* Mutations ------------------------------------------------------------- */
@@ -663,13 +704,22 @@ function addReference(fieldId, targetId) {
   getController().syncReferences();
 }
 
+// Names a reference for a history label, such as
+// 'reference from field “Tags” to entity “Tags”'.
+function describeReference(fieldId, targetId) {
+  return 'reference from ' + describeNode(cy.getElementById(fieldId)) + ' to ' + describeNode(cy.getElementById(targetId));
+}
+
 function removeReference(fieldId, targetId) {
+  const change = 'Removed the ' + describeReference(fieldId, targetId);
   cy.getElementById(refEdgeId(fieldId, targetId)).remove();
   getController().syncReferences();
+  checkpoint(change);
 }
 
 function deleteNode(id) {
   const node = cy.getElementById(id);
+  const change = 'Deleted ' + describeNode(node);
   if (node.data('group') === 'entity') {
     cy.nodes('[group="field"][entity="' + id + '"]').remove();
   }
@@ -678,6 +728,7 @@ function deleteNode(id) {
   closeInspector();
   hideHandles();
   bump();
+  checkpoint(change);
 }
 
 /* Builder controller ---------------------------------------------------- */
@@ -690,14 +741,14 @@ function createEntity(form) {
   const label = (form.label || '').trim() || bundle;
   const id = addEntity(form.entityType, bundle, label);
   if (id) {
-    selectNode(id);
-    bump();
+    selectCreated(id);
   }
 }
 
 function createField(entityId, form, side) {
   const name = machineName(form.name);
-  if (!entityId || !name) {
+  // An open form can name an entity that an undo has removed.
+  if (!entityId || !name || cy.getElementById(entityId).empty()) {
     return;
   }
   const label = (form.label || '').trim() || name;
@@ -706,14 +757,16 @@ function createField(entityId, form, side) {
     if (form.target) {
       addReference(id, form.target);
     }
-    selectNode(id);
-    bump();
+    selectCreated(id);
   }
 }
 
 function createAnnotation(form) {
   const label = (form.label || '').trim() || 'Note';
-  const id = addAnnotation(form.kind, label, (form.method || '').trim());
-  selectNode(id);
-  bump();
+  selectCreated(addAnnotation(form.kind, label, (form.method || '').trim()));
+}
+
+function createReference(fieldId, targetId) {
+  addReference(fieldId, targetId);
+  checkpoint('Added a ' + describeReference(fieldId, targetId));
 }

@@ -19,6 +19,7 @@ import htmBase from 'htm';
 import { icon } from './icons.js';
 import { cardinalityLabel, identifierSegments, fitFontSize } from './model.js';
 import { InspectorBody } from './inspector.js';
+import { goToVersion, historyState } from './undo.js';
 import {
   getState,
   subscribe,
@@ -38,13 +39,14 @@ import { $ } from './dom.js';
 
 const html = htmBase.bind(h);
 
-const PANEL_ORDER = ['entities', 'table', 'settings', 'legend', 'inspector'];
-const TITLES = { entities: 'Entities', table: 'Fields', settings: 'Settings', legend: 'Legend', inspector: 'Inspector' };
+const PANEL_ORDER = ['entities', 'table', 'settings', 'legend', 'history', 'inspector'];
+const TITLES = { entities: 'Entities', table: 'Fields', settings: 'Settings', legend: 'Legend', history: 'History', inspector: 'Inspector' };
 const WIDE = { table: true };
 const PANEL_TOGGLES = [
   ['entities-toggle', 'entities'],
   ['table-toggle', 'table'],
   ['legend-toggle', 'legend'],
+  ['history-toggle', 'history'],
   ['settings-toggle', 'settings'],
 ];
 
@@ -291,10 +293,13 @@ function StageApp() {
 function body(id, s) {
   const controller = getController();
   if (id === 'inspector') {
-    return html`<${InspectorBody} selected=${s.selected} />`;
+    return html`<${InspectorBody} selected=${s.selected} revision=${s.revision} />`;
   }
   if (!controller) {
     return null;
+  }
+  if (id === 'history') {
+    return html`<${HistoryBody} />`;
   }
   if (id === 'legend') {
     return html`<div class="legend-body">
@@ -346,6 +351,48 @@ function EntitiesBody({ controller }) {
           </div>`,
       )}
     </div>`;
+}
+
+const TIME_FORMAT = { hour: '2-digit', minute: '2-digit' };
+
+// The versions of the open diagram, newest first. Versions after the current
+// one were undone and stay listed until the next edit drops them.
+function HistoryBody() {
+  const { versions, index } = historyState();
+  const listRef = useRef(null);
+
+  // Undo and redo move the current version, which can scroll out of view.
+  useLayoutEffect(() => {
+    const current = listRef.current.querySelector('[aria-current]');
+
+    if (current) {
+      current.scrollIntoView({ block: 'nearest' });
+    }
+  }, [index, versions.length]);
+
+  const rows = versions.map((version, i) => {
+    const time = new Date(version.time);
+    const state = i === index ? ' is-current' : i > index ? ' is-undone' : '';
+
+    return html`<li>
+      <button
+        type="button"
+        class=${'history__version' + state}
+        data-history-index=${i}
+        aria-current=${i === index ? 'step' : null}
+        title=${'Return to this version, made ' + time.toLocaleString()}
+        onClick=${() => goToVersion(i)}
+      >
+        <span class="history__label">${version.label}</span>
+        <time class="history__time" datetime=${time.toISOString()}>${time.toLocaleTimeString([], TIME_FORMAT)}</time>
+      </button>
+    </li>`;
+  });
+
+  return html`<ol class="history-list" ref=${listRef}>
+      ${rows.reverse()}
+    </ol>
+    <p class="panel__note history-note">Click a version to return to it. The versions after it stay until your next edit.</p>`;
 }
 
 // Base and computed fields carry a category badge; everything else shows its

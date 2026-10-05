@@ -890,6 +890,69 @@ sl-button#zoom-level::part(base) {
   line-height: 1.2;
 }
 
+/* History panel: 1 row per version, newest first. */
+.history-list {
+  margin: 0;
+  padding: 0.4rem;
+  list-style: none;
+}
+
+.history__version {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.4rem 0.55rem;
+  font: inherit;
+  font-size: 0.82rem;
+  color: var(--text);
+  text-align: left;
+  background: none;
+  border: 0;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.history__version:hover {
+  background: var(--surface-2);
+}
+
+/* The list rows sit flush in the panel, so the focus ring is drawn inside. */
+.history__version:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.history__version.is-current {
+  font-weight: 600;
+  background: var(--surface-2);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.history__version.is-undone {
+  font-style: italic;
+  color: var(--muted);
+}
+
+.history__label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.history__time {
+  flex: 0 0 auto;
+  font-size: 0.72rem;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.history-note {
+  margin: 0;
+  padding: 0 0.95rem 0.75rem;
+}
+
 .tooltip {
   position: absolute;
   z-index: 6;

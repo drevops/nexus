@@ -48,6 +48,10 @@
       <sl-button id="doc-open-btn" class="toolbar__button" size="small" data-icon="folder-open" title="Open a saved Nexus diagram (.nexus.json)">Open</sl-button>
       <sl-button id="doc-save" class="toolbar__button" size="small" data-icon="download" title="Save this diagram as a Nexus document (.nexus.json)">Save</sl-button>
     </sl-button-group>
+    <sl-button-group class="toolbar__group" label="Undo">
+      <sl-button id="undo" class="toolbar__button toolbar__button--icon" size="small" data-icon="undo-2" title="Nothing to undo" aria-label="Undo" disabled></sl-button>
+      <sl-button id="redo" class="toolbar__button toolbar__button--icon" size="small" data-icon="redo-2" title="Nothing to redo" aria-label="Redo" disabled></sl-button>
+    </sl-button-group>
     <sl-button-group id="export-group" class="toolbar__group" label="Export">
       <sl-button id="export-run" class="toolbar__button" size="small" data-icon="share" title="Export the diagram or its fields table"><span class="export-label">Export</span></sl-button>
       <sl-dropdown id="export-dropdown" placement="bottom-end" hoist>
@@ -74,6 +78,7 @@
       <sl-button id="entities-toggle" class="toolbar__button" size="small" data-icon="box" title="Toggle the entities panel">Entities</sl-button>
       <sl-button id="table-toggle" class="toolbar__button" size="small" data-icon="table" title="Toggle the fields table panel">Table</sl-button>
       <sl-button id="legend-toggle" class="toolbar__button" size="small" data-icon="info" title="Toggle the legend panel">Legend</sl-button>
+      <sl-button id="history-toggle" class="toolbar__button" size="small" data-icon="history" title="Toggle the history panel: every version of this diagram">History</sl-button>
     </sl-button-group>
   </div>
   <div id="build-tools" class="toolbar__palette" hidden>

@@ -222,7 +222,10 @@ test('snapshots the model elements and the positions of model nodes and proxies'
     group: 'nodes',
     data: { id: ARTICLE, group: 'entity', entityType: 'node', bundle: 'article', label: 'Article', note: '' },
   });
-  assert.deepEqual(snapshot.elements[TAGS_REF], { group: 'edges', data: { id: TAGS_REF, source: TAGS_FIELD, target: TAGS, group: 'ref', cardinality: '1..n' } });
+  assert.deepEqual(snapshot.elements[TAGS_REF], {
+    group: 'edges',
+    data: { id: TAGS_REF, source: TAGS_FIELD, target: TAGS, group: 'ref', cardinality: '1..n' },
+  });
   assert.deepEqual(snapshot.positions, { ...POSITIONS, [TAGS_PROXY]: PROXY_POSITION });
 });
 

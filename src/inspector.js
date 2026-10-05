@@ -3,7 +3,8 @@
  *
  * Shoelace controls follow the light and dark themes automatically. Edits
  * are written straight to the live Cytoscape node; structural changes go
- * through the builder controller on the store.
+ * through the builder controller on the store. Each edit records a history
+ * step, and typing into 1 text field makes 1 step.
  *
  * The new-field "machine name" stays a native input because it needs a
  * datalist for the reuse autocomplete, which Shoelace 2.x has no equivalent
@@ -17,6 +18,8 @@ import htmBase from 'htm';
 import { icon } from './icons.js';
 import { cardinalityLabel, kindForCardinality, REFERENCE_FIELD_TYPES } from './model.js';
 import { ANNOTATION_KINDS } from './annotations.js';
+import { describeNode } from './history.js';
+import { checkpoint } from './undo.js';
 import { getController, getBuilder, openInspector, bump } from './store.js';
 
 const html = htmBase.bind(h);
@@ -90,6 +93,7 @@ function NoteField({ node }) {
         node.data('note', e.target.value);
         getController().rebuildNotes();
         bump();
+        checkpoint('Edited the note on ' + describeNode(node), 'note:' + node.id());
       }}
     ></sl-textarea>
   </div>`;
@@ -151,6 +155,7 @@ export function EntityForm({ id }) {
           // Each proxy holds a copy of its target's label.
           getController().syncReferences();
           bump();
+          checkpoint('Relabelled ' + describeNode(node), 'label:' + id);
         }}
       ></sl-input>
     <//>
@@ -204,6 +209,7 @@ export function FieldForm({ id }) {
     getController().syncReferences();
     setS((prev) => ({ ...prev, cardinality: cardinality }));
     bump();
+    checkpoint('Changed the cardinality of ' + describeNode(node));
   }
 
   const isRef = REFERENCE_FIELD_TYPES.includes(s.fieldType);
@@ -214,7 +220,16 @@ export function FieldForm({ id }) {
 
   return html` <div class="insp">
     <p class="insp__title">Field</p>
-    <${Row} label="Label"><sl-input size="small" value=${s.label} onsl-input=${(e) => set('label', e.target.value)}></sl-input><//>
+    <${Row} label="Label"
+      ><sl-input
+        size="small"
+        value=${s.label}
+        onsl-input=${(e) => {
+          set('label', e.target.value);
+          checkpoint('Relabelled ' + describeNode(node), 'label:' + id);
+        }}
+      ></sl-input
+    ><//>
     <${Row} label="Machine name"
       ><sl-input
         size="small"
@@ -225,14 +240,31 @@ export function FieldForm({ id }) {
       ></sl-input
     ><//>
     <${Row} label="Type"
-      ><sl-select size="small" value=${s.fieldType} onsl-change=${(e) => set('fieldType', e.target.value)}>${slOptions(FIELD_TYPES)}</sl-select><//
+      ><sl-select
+        size="small"
+        value=${s.fieldType}
+        onsl-change=${(e) => {
+          set('fieldType', e.target.value);
+          checkpoint('Changed the type of ' + describeNode(node));
+        }}
+        >${slOptions(FIELD_TYPES)}</sl-select
+      ><//
     >
     <${Row} label="Cardinality"
       ><sl-select size="small" data-cardinality value=${String(s.cardinality)} onsl-change=${(e) => setCardinality(e.target.value)}
         >${slOptions(CARDINALITY_OPTIONS)}</sl-select
       ><//
     >
-    <${Row} label="Required"><sl-switch size="small" checked=${s.required} onsl-change=${(e) => set('required', e.target.checked)}></sl-switch><//>
+    <${Row} label="Required"
+      ><sl-switch
+        size="small"
+        checked=${s.required}
+        onsl-change=${(e) => {
+          set('required', e.target.checked);
+          checkpoint('Made ' + describeNode(node) + (e.target.checked ? ' required' : ' optional'));
+        }}
+      ></sl-switch
+    ><//>
     ${
       isRef &&
       html` <div class="insp__section">
@@ -260,7 +292,7 @@ export function FieldForm({ id }) {
           value=""
           onsl-change=${(e) => {
             if (e.target.value) {
-              getBuilder().addReference(id, e.target.value);
+              getBuilder().createReference(id, e.target.value);
               e.target.value = '';
               bump();
             }
@@ -288,11 +320,38 @@ export function AnnotationForm({ id }) {
 
   return html` <div class="insp">
     <p class="insp__title">Annotation</p>
-    <${Row} label="Label"><sl-input size="small" value=${s.label} onsl-input=${(e) => set('label', e.target.value)}></sl-input><//>
+    <${Row} label="Label"
+      ><sl-input
+        size="small"
+        value=${s.label}
+        onsl-input=${(e) => {
+          set('label', e.target.value);
+          checkpoint('Relabelled ' + describeNode(node), 'label:' + id);
+        }}
+      ></sl-input
+    ><//>
     <${Row} label="Kind"
-      ><sl-select size="small" value=${s.kind} onsl-change=${(e) => set('kind', e.target.value)}>${slOptions(ANNOTATION_OPTIONS)}</sl-select><//
+      ><sl-select
+        size="small"
+        value=${s.kind}
+        onsl-change=${(e) => {
+          set('kind', e.target.value);
+          checkpoint('Changed the kind of ' + describeNode(node));
+        }}
+        >${slOptions(ANNOTATION_OPTIONS)}</sl-select
+      ><//
     >
-    <${Row} label="Method"><sl-input size="small" value=${s.method} placeholder="POST, GET…" onsl-input=${(e) => set('method', e.target.value)}></sl-input><//>
+    <${Row} label="Method"
+      ><sl-input
+        size="small"
+        value=${s.method}
+        placeholder="POST, GET…"
+        onsl-input=${(e) => {
+          set('method', e.target.value);
+          checkpoint('Changed the method of ' + describeNode(node), 'method:' + id);
+        }}
+      ></sl-input
+    ><//>
     <${NoteField} node=${node} />
     <sl-button size="small" variant="danger" outline class="insp__delete" title="Delete this annotation" onClick=${() => getBuilder().deleteNode(id)}
       >${rawIcon('trash')}Delete</sl-button
@@ -445,18 +504,20 @@ export function NewAnnotationForm() {
   </div>`;
 }
 
-export function InspectorBody({ selected }) {
+// The forms read the graph when they mount, so they are keyed by the store's
+// revision and remount after the history changes the graph.
+export function InspectorBody({ selected, revision }) {
   if (!selected) {
     return html`<p class="insp__empty">Select a node in build mode to inspect it.</p>`;
   }
   if (selected.kind === 'entity') {
-    return html`<${EntityForm} key=${selected.id} id=${selected.id} />`;
+    return html`<${EntityForm} key=${selected.id + '@' + revision} id=${selected.id} />`;
   }
   if (selected.kind === 'field') {
-    return html`<${FieldForm} key=${selected.id} id=${selected.id} />`;
+    return html`<${FieldForm} key=${selected.id + '@' + revision} id=${selected.id} />`;
   }
   if (selected.kind === 'annotation') {
-    return html`<${AnnotationForm} key=${selected.id} id=${selected.id} />`;
+    return html`<${AnnotationForm} key=${selected.id + '@' + revision} id=${selected.id} />`;
   }
   if (selected.kind === 'new-entity') {
     return html`<${NewEntityForm} entityType=${selected.entityType} />`;
@@ -464,5 +525,5 @@ export function InspectorBody({ selected }) {
   if (selected.kind === 'new-annotation') {
     return html`<${NewAnnotationForm} />`;
   }
-  return html`<${NewFieldForm} key=${'new:' + selected.entityId} entityId=${selected.entityId} side=${selected.side} />`;
+  return html`<${NewFieldForm} key=${'new:' + selected.entityId + '@' + revision} entityId=${selected.entityId} side=${selected.side} />`;
 }
