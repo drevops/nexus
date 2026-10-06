@@ -30,7 +30,7 @@ Nexus is a static web app. Drop a Drupal **exported configuration folder** onto 
 
 - **100% client-side.** Parsing and rendering happen in the browser; no backend, no upload, no install.
 - **Drop a folder.** Choose or drag a config sync directory (or a module's `config/install`). Nexus reads only its YAML files, locally.
-- **Start from a template.** Load the content model of CivicTheme or Drupal CMS in 1 click, each pinned to a release (see [Templates](#templates)).
+- **Start from a template.** Load the content model of Drupal CMS or CivicTheme in 1 click, each pinned to a release (see [Templates](#templates)).
 - **Faithful visual language.** Each entity type has its own colour and shape, and single / multi / system / calculated fields and Event / API / Callback annotations each have their own symbol (see the [legend](#the-visual-language)).
 - **Browsable.** Opens with every field and machine name on show, with tools to collapse it to an entity-only overview, filter by entity type, find and focus an entity, and read a searchable field table.
 - **Editable.** Add entities, fields, references, events, APIs and callbacks in Edit mode, rename machine names and attach notes - or build a model from scratch.
@@ -59,8 +59,8 @@ No config export to hand? The landing screen offers 2 ready-made content models:
 
 | Template | Version | What it draws |
 |----------|---------|---------------|
-| [CivicTheme](https://www.drupal.org/project/civictheme) | 1.13.0 | The government design system: 3 content types built from 31 paragraph types, plus its media types, vocabularies and blocks |
 | [Drupal CMS](https://www.drupal.org/project/cms) | 2.2.2 | Drupal CMS with its Byte site template: a utility page, a blog post, tags and 5 media types |
+| [CivicTheme](https://www.drupal.org/project/civictheme) | 1.13.0 | The government design system: 3 content types built from 31 paragraph types, plus its media types, vocabularies and blocks |
 
 Each template is drawn from the configuration of an exact release and ships as a saved diagram in `templates/`, so it opens just like a diagram you've saved yourself. Drupal CMS builds its landing pages with Canvas rather than a content type, so those pages don't appear in its diagram. CivicTheme and Drupal CMS are released under GPL-2.0-or-later, like Nexus.
 
