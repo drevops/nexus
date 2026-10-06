@@ -973,8 +973,8 @@ test('loads a template from the keyboard', async ({ page }) => {
 test('renders toolbar icons from the icon set', async ({ page }) => {
   await expect(page.locator('#doc-import svg.icon')).toBeVisible();
   await expect(page.locator('#doc-save svg.icon')).toBeVisible();
-  await expect(page.locator('#layout-toggle svg.icon')).toBeVisible();
-  await expect(page.locator('#layout-toggle .layout-label')).toHaveText('Layout: LR');
+  await expect(page.locator('#layout-run svg.icon')).toBeVisible();
+  await expect(page.locator('#layout-run .layout-label')).toHaveText('Layout: Columns');
   await expect(page.locator('#folder-btn svg.icon')).toBeVisible();
 });
 
@@ -1278,10 +1278,10 @@ test('lists a reference added in edit mode in the tooltip of its field', async (
 });
 
 for (const [name, toggle] of dataProviderLayoutToggles()) {
-  test(`lays the diagram out as Tidy does after turning ${name} off and on`, async ({ page }) => {
+  test(`lays the diagram out as the layout button does after turning ${name} off and on`, async ({ page }) => {
     await loadExample(page);
     await page.click('#entities-toggle');
-    await page.click('#tidy');
+    await page.click('#layout-run');
     const tidied = await nodePositions(page);
 
     await toggle(page);
@@ -1309,7 +1309,7 @@ test('lays out the proxy of a reference added while its target type was filtered
   await media.check();
   const shown = await nodePositions(page);
 
-  await page.click('#tidy');
+  await page.click('#layout-run');
 
   expect(await nodePositions(page)).toEqual(shown);
 });
@@ -2286,17 +2286,15 @@ function dataProviderCaptionZooms() {
   return [1, 2];
 }
 
-for (const [source, direction, view] of dataProviderCaptionLayouts()) {
-  test(`keeps machine names clear of other nodes in the ${direction} ${view} of the ${source} diagram`, async ({ page }) => {
+for (const [source, layout, view] of dataProviderCaptionLayouts()) {
+  test(`keeps machine names clear of other nodes in the ${layout} ${view} of the ${source} diagram`, async ({ page }) => {
     await openDiagram(page, source);
 
     if (view === 'overview') {
       await page.click('#fields-toggle');
     }
 
-    if (direction === 'TB') {
-      await page.click('#layout-toggle');
-    }
+    await pickLayout(page, layout.toLowerCase());
 
     expect(captionCollisions(await captionLayout(page))).toEqual([]);
   });
@@ -2306,10 +2304,13 @@ function dataProviderCaptionLayouts() {
   return [
     ['example', 'LR', 'field view'],
     ['example', 'TB', 'field view'],
+    ['example', 'Columns', 'field view'],
     ['example', 'LR', 'overview'],
     ['example', 'TB', 'overview'],
+    ['example', 'Columns', 'overview'],
     ['civictheme', 'TB', 'field view'],
     ['civictheme', 'TB', 'overview'],
+    ['civictheme', 'Columns', 'field view'],
   ];
 }
 
@@ -2438,14 +2439,253 @@ test('resets the singled-out focus when switching modes', async ({ page }) => {
   expect(await page.evaluate(() => window.__nexus.cy.elements('.faded, .trace, .trace-source').length)).toBe(0);
 });
 
-test('opens and tidies the diagram at 100% zoom', async ({ page }) => {
+test('opens and re-runs the layout at 100% zoom', async ({ page }) => {
   await loadExample(page);
   expect(await page.evaluate(() => window.__nexus.cy.zoom())).toBeCloseTo(1, 2);
   await expect(page.locator('#zoom-level')).toHaveText('100%');
 
-  await page.evaluate(() => window.__nexus.cy.zoom(0.5));
-  await page.click('#tidy');
+  await page.evaluate(() => {
+    window.__nexus.cy.zoom(0.5);
+  });
+  await page.click('#layout-run');
   expect(await page.evaluate(() => window.__nexus.cy.zoom())).toBeCloseTo(1, 2);
+});
+
+async function pickLayout(page, value) {
+  await page.click('#layout-choose');
+  await page.click('#layout-menu sl-menu-item[value="' + value + '"]');
+}
+
+// The zoom at which the visible diagram fits the canvas.
+function fitZoom(page) {
+  return page.evaluate(() => {
+    const cy = window.__nexus.cy;
+    const box = cy.elements(':visible').boundingBox();
+
+    return Math.min(cy.width() / box.w, cy.height() / box.h);
+  });
+}
+
+// How the fields of the Event content type sit around it, and the direction
+// its field edges turn.
+function eventLayout(page) {
+  return page.evaluate(() => {
+    const cy = window.__nexus.cy;
+    const event = cy.getElementById('node.event');
+    const fields = cy.nodes('[group="field"][entity="node.event"]');
+
+    return {
+      right: fields.every((field) => field.position('x') > event.position('x')),
+      below: fields.every((field) => field.position('y') > event.position('y')),
+      turn: event.connectedEdges('[group="has"]').first().pstyle('taxi-direction').strValue,
+    };
+  });
+}
+
+test('stacks the entities in columns that fit the canvas better than 1 left-to-right flow', async ({ page }) => {
+  await loadExample(page);
+  await expect(page.locator('#layout-run .layout-label')).toHaveText('Layout: Columns');
+  const columns = await fitZoom(page);
+
+  await pickLayout(page, 'lr');
+
+  expect(columns).toBeGreaterThan(await fitZoom(page));
+});
+
+test('stacks the entities in columns in the order of their types, then of their labels', async ({ page }) => {
+  await loadExample(page);
+
+  // Column by column, left to right, then top to bottom within a column.
+  const order = await page.evaluate(() => {
+    const entities = window.__nexus.cy.nodes('[group="entity"]').map((node) => ({ id: node.id(), x: node.boundingBox().x1, y: node.position('y') }));
+
+    return entities.sort((a, b) => (Math.abs(a.x - b.x) < 50 ? a.y - b.y : a.x - b.x)).map((entity) => entity.id);
+  });
+
+  expect(order).toEqual([
+    'node.event',
+    'node.news',
+    'node.page',
+    'node.session',
+    'node.speaker',
+    'taxonomy_term.sponsors',
+    'taxonomy_term.topics',
+    'taxonomy_term.tracks',
+    'taxonomy_term.venues',
+    'media.document',
+    'media.image',
+    'media.remote_video',
+    'paragraph.gallery',
+    'paragraph.quote',
+    'paragraph.text',
+    'block_content.basic',
+  ]);
+});
+
+for (const [value, label, expected] of dataProviderLayouts()) {
+  test(`lays the diagram out ${label} when it is picked from the layout menu`, async ({ page }) => {
+    await loadExample(page);
+
+    await pickLayout(page, value);
+
+    await expect(page.locator('#layout-run .layout-label')).toHaveText('Layout: ' + label);
+    await expect(page.locator('#layout-menu sl-menu-item[checked]')).toHaveAttribute('value', value);
+    expect(await eventLayout(page)).toEqual(expected);
+  });
+}
+
+function dataProviderLayouts() {
+  return [
+    ['lr', 'LR', { right: true, below: false, turn: 'horizontal' }],
+    ['tb', 'TB', { right: false, below: true, turn: 'vertical' }],
+    ['columns', 'Columns', { right: true, below: false, turn: 'horizontal' }],
+  ];
+}
+
+test('re-runs the picked layout when the layout button is pressed', async ({ page }) => {
+  await loadExample(page);
+  await pickLayout(page, 'tb');
+  const laidOut = await nodePositions(page);
+
+  await page.evaluate(() => {
+    window.__nexus.cy.getElementById('node.event').shift({ x: 300, y: 300 });
+  });
+  await page.click('#layout-run');
+
+  expect(await nodePositions(page)).toEqual(laidOut);
+  await expect(page.locator('#layout-run .layout-label')).toHaveText('Layout: TB');
+});
+
+test('keeps the picked layout ticked when it is picked again', async ({ page }) => {
+  await loadExample(page);
+
+  await pickLayout(page, 'columns');
+
+  await expect(page.locator('#layout-menu sl-menu-item[checked]')).toHaveCount(1);
+  await expect(page.locator('#layout-menu sl-menu-item[checked]')).toHaveAttribute('value', 'columns');
+});
+
+test('remembers the picked layout across reloads', async ({ page }) => {
+  await loadExample(page);
+  await pickLayout(page, 'lr');
+
+  await page.reload();
+  await loadExample(page);
+
+  await expect(page.locator('#layout-run .layout-label')).toHaveText('Layout: LR');
+  expect(await eventLayout(page)).toEqual({ right: true, below: false, turn: 'horizontal' });
+});
+
+for (const [name, button, trigger] of dataProviderDropdownTriggers()) {
+  test(`lines the ${name} up with the button beside it`, async ({ page }) => {
+    await loadExample(page);
+
+    const [buttonBox, triggerBox] = await page.evaluate(
+      (selectors) =>
+        selectors.map((selector) => {
+          const box = document.querySelector(selector).shadowRoot.querySelector('[part~="base"]').getBoundingClientRect();
+
+          return { top: Math.round(box.top * 10) / 10, bottom: Math.round(box.bottom * 10) / 10 };
+        }),
+      [button, trigger],
+    );
+
+    expect(triggerBox).toEqual(buttonBox);
+  });
+}
+
+function dataProviderDropdownTriggers() {
+  return [
+    ['layout menu caret', '#layout-run', '#layout-choose'],
+    ['export menu caret', '#export-run', '#export-choose'],
+    ['zoom level menu', '#zoom-in', '#zoom-level'],
+  ];
+}
+
+// The position of every node, rounded to 0.01, so the rounding error of
+// moving an island away and back doesn't count.
+function roundedPositions(page) {
+  return page.evaluate(() => {
+    const positions = {};
+    window.__nexus.cy.nodes().forEach((node) => {
+      positions[node.id()] = { x: Math.round(node.position('x') * 100) / 100, y: Math.round(node.position('y') * 100) / 100 };
+    });
+    return positions;
+  });
+}
+
+// Moves the island of shown elements that holds each entity by its offset.
+function dragIslands(page, moves) {
+  return page.evaluate((list) => {
+    const cy = window.__nexus.cy;
+    const islands = cy.elements().not('.hidden').components();
+
+    list.forEach(([id, dx, dy]) => {
+      const island = islands.find((candidate) => candidate.contains(cy.getElementById(id)));
+      island.nodes().shift({ x: dx, y: dy });
+    });
+  }, moves);
+}
+
+test('leaves a fresh layout and the view as they are when tidied', async ({ page }) => {
+  await loadExample(page);
+  await page.evaluate(() => {
+    window.__nexus.cy.zoom(0.5);
+  });
+  const laidOut = await roundedPositions(page);
+
+  await page.click('#tidy');
+
+  expect(await roundedPositions(page)).toEqual(laidOut);
+  expect(await page.evaluate(() => window.__nexus.cy.zoom())).toBeCloseTo(0.5, 2);
+});
+
+test('slots an entity dragged a little out of its column back in when tidied', async ({ page }) => {
+  await loadExample(page);
+  const laidOut = await roundedPositions(page);
+
+  await dragIslands(page, [['node.news', 40, 15]]);
+  await page.click('#tidy');
+
+  expect(await roundedPositions(page)).toEqual(laidOut);
+});
+
+test('lines dragged entities up in columns that tidying again leaves alone', async ({ page }) => {
+  await loadExample(page);
+  await dragIslands(page, [
+    ['node.event', 900, 400],
+    ['media.image', -300, 1200],
+    ['paragraph.quote', 150, -200],
+  ]);
+
+  await page.click('#tidy');
+  const tidied = await roundedPositions(page);
+  const overlaps = await page.evaluate(() => {
+    const boxes = window.__nexus.cy
+      .elements()
+      .not('.hidden')
+      .components()
+      .map((island) => island.boundingBox());
+    const overlap = (a, b) => a.x1 < b.x2 && b.x1 < a.x2 && a.y1 < b.y2 && b.y1 < a.y2;
+
+    return boxes.filter((box, index) => boxes.some((other, otherIndex) => otherIndex !== index && overlap(box, other))).length;
+  });
+  await page.click('#tidy');
+
+  expect(overlaps).toBe(0);
+  expect(await roundedPositions(page)).toEqual(tidied);
+});
+
+test('lines a field added below an entity up with its other fields when tidied', async ({ page }) => {
+  await selectEvent(page, 1);
+  const count = await page.evaluate(() => window.__nexus.cy.nodes('[group="field"][entity="node.event"]').length);
+  await page.click('.handle--bottom');
+  await page.waitForFunction((before) => window.__nexus.cy.nodes('[group="field"][entity="node.event"]').length === before + 1, count);
+
+  await page.click('#tidy');
+
+  const xs = await page.evaluate(() => window.__nexus.cy.nodes('[group="field"][entity="node.event"]').map((field) => Math.round(field.position('x'))));
+  expect(new Set(xs).size).toBe(1);
 });
 
 test('isolates an entity on right-click and moves it with its fields', async ({ page }) => {
@@ -2610,19 +2850,40 @@ test('keeps the multi-value cardinality badge legible in both themes', async ({ 
   expect(await textContrast(badge)).toBeGreaterThanOrEqual(4.5);
 });
 
+const LAYOUT_HINT = 'Stack the entities in columns that fill the screen';
+
 test('echoes a hovered control description into the status bar', async ({ page }) => {
   await loadExample(page);
 
-  await page.locator('#tidy').hover();
-  await expect(page.locator('#statusbar-hint')).toHaveText('Tidy up: re-run the layout to arrange everything neatly');
+  await page.locator('#layout-run').hover();
+  await expect(page.locator('#statusbar-hint')).toHaveText(LAYOUT_HINT);
+});
+
+test('describes the picked layout when the layout button is hovered', async ({ page }) => {
+  await loadExample(page);
+  await pickLayout(page, 'tb');
+
+  await page.locator('#layout-run').hover();
+  await expect(page.locator('#statusbar-hint')).toHaveText('Lay the diagram out top to bottom');
+});
+
+test('describes a hovered layout menu item in the status bar', async ({ page }) => {
+  await loadExample(page);
+
+  await page.click('#layout-choose');
+  await page.hover('#layout-menu sl-menu-item[value="lr"]');
+  await expect(page.locator('#statusbar-hint')).toHaveText('Lay the diagram out left to right');
+
+  await page.hover('#layout-menu sl-menu-item[value="columns"]');
+  await expect(page.locator('#statusbar-hint')).toHaveText(LAYOUT_HINT);
 });
 
 test('describes the switched theme when the theme toggle is hovered again', async ({ page }) => {
   await loadExample(page);
 
   await page.click('#theme-toggle');
-  await page.locator('#tidy').hover();
-  await expect(page.locator('#statusbar-hint')).toHaveText('Tidy up: re-run the layout to arrange everything neatly');
+  await page.locator('#layout-run').hover();
+  await expect(page.locator('#statusbar-hint')).toHaveText(LAYOUT_HINT);
 
   await page.locator('#theme-toggle').hover();
   await expect(page.locator('#statusbar-hint')).toHaveText('Switch to light theme');
@@ -2650,10 +2911,10 @@ test('refreshes the status bar hint when the hovered theme toggle is clicked', a
 test('keeps the status bar hint on the hovered control when another control is retitled', async ({ page }) => {
   await loadExample(page);
 
-  await page.locator('#tidy').hover();
+  await page.locator('#layout-run').hover();
   await page.locator('#theme-toggle').evaluate((el) => el.click());
   await expect(page.locator('#theme-toggle')).toHaveAttribute('title', 'Switch to light theme');
-  await expect(page.locator('#statusbar-hint')).toHaveText('Tidy up: re-run the layout to arrange everything neatly');
+  await expect(page.locator('#statusbar-hint')).toHaveText(LAYOUT_HINT);
 
   await page.locator('#cy').hover();
   await page.locator('#theme-toggle').evaluate((el) => el.click());
@@ -3090,17 +3351,26 @@ test('undoes moving an isolated entity with its fields', async ({ page }) => {
   expect(await page.evaluate(() => window.__nexus.cy.elements('.faded').length)).toBe(0);
 });
 
-test('undoes Tidy back to the saved layout', async ({ page }) => {
-  await openDocument(page, SCATTERED_DOC);
-  const saved = await nodePositions(page);
+for (const [name, button, label] of dataProviderLayoutSteps()) {
+  test(`undoes ${name} back to the saved layout`, async ({ page }) => {
+    await openDocument(page, SCATTERED_DOC);
+    const saved = await nodePositions(page);
 
-  await page.click('#tidy');
-  expect(await nodePositions(page)).not.toEqual(saved);
-  await expect(page.locator('#undo')).toHaveAttribute('title', /^Undo: Tidied the layout \(/);
+    await page.click(button);
+    expect(await nodePositions(page)).not.toEqual(saved);
+    await expect(page.locator('#undo')).toHaveAttribute('title', new RegExp('^Undo: ' + label + ' \\('));
 
-  await page.click('#undo');
-  expect(await nodePositions(page)).toEqual(saved);
-});
+    await page.click('#undo');
+    expect(await nodePositions(page)).toEqual(saved);
+  });
+}
+
+function dataProviderLayoutSteps() {
+  return [
+    ['Tidy', '#tidy', 'Tidied the layout'],
+    ['re-running the layout', '#layout-run', 'Re-ran the Columns layout'],
+  ];
+}
 
 test('records typing into an inspector field as 1 version and shows the field as it was on undo', async ({ page }) => {
   await buildEntities(page, ['story']);
@@ -3176,20 +3446,21 @@ test('returns to a version picked in the History panel and drops the undone vers
   await expect(page.locator('#redo')).toHaveAttribute('disabled', '');
 });
 
-test('leaves display toggles out of the history and their layout out of later undos', async ({ page }) => {
+test('leaves display toggles and layout picks out of the history and their layout out of later undos', async ({ page }) => {
   await editExample(page);
   await page.click('#entities-toggle');
 
-  for (const toggle of ['#fields-toggle', '#fields-toggle', '#proxy-toggle', '#proxy-toggle', '#machine-names', '#layout-toggle']) {
+  for (const toggle of ['#fields-toggle', '#fields-toggle', '#proxy-toggle', '#proxy-toggle', '#machine-names']) {
     await page.click(toggle);
   }
 
+  await pickLayout(page, 'tb');
   await page.locator('#type-filters input').first().uncheck();
   await page.locator('#type-filters input').first().check();
   await expect(page.locator('#undo')).toHaveAttribute('disabled', '');
 
   await createEntity(page, 'node', 'campaign', 'Campaign');
-  await page.click('#layout-toggle');
+  await pickLayout(page, 'lr');
   const laidOut = await nodePositions(page);
   delete laidOut['node.campaign'];
 

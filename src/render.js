@@ -13,6 +13,9 @@
  * edges (see src/references.js). The controller's syncReferences() brings
  * them in line with a changed graph.
  *
+ * The toolbar's layout menu picks the layout that each layout run uses (see
+ * LAYOUTS), and localStorage keeps the pick for later diagrams.
+ *
  * The controller that render() returns sets entity type colours and symbols
  * and adds or removes custom entity types, saving each change to
  * localStorage.
@@ -27,6 +30,7 @@ import { humanize, machineName } from './names.js';
 import { REFERENCE_ELEMENTS, syncReferenceElements } from './references.js';
 import { fitWidth, wrapLabel } from './label-fit.js';
 import { checkpoint, untracked } from './undo.js';
+import { packColumns, tidyColumns } from './packing.js';
 import { $ } from './dom.js';
 
 // A small library of UML-ish node shapes, keyed for settings/persistence; the
@@ -50,10 +54,24 @@ const FALLBACK_SYMBOL = 'rounded';
 
 const SETTINGS_KEY = 'nexusSettings';
 
+// columnSep and islandSep space the islands that a packed layout stacks in
+// columns.
 const LAYOUT_SPACING = {
-  fields: { nodeSep: 10, rankSep: 62 },
-  overview: { nodeSep: 34, rankSep: 120 },
+  fields: { nodeSep: 10, rankSep: 62, columnSep: 96, islandSep: 40 },
+  overview: { nodeSep: 34, rankSep: 120, columnSep: 160, islandSep: 60 },
 };
+
+// The layouts the toolbar's layout menu offers, in menu order and keyed by
+// menu item value. The label names the layout on the button and the name in
+// the menu. A packed layout runs Dagre on each island of connected nodes on
+// its own and then stacks the islands in columns that fill the canvas.
+const LAYOUTS = {
+  lr: { label: 'LR', name: 'Left to right (LR)', title: 'Lay the diagram out left to right', rankDir: 'LR', packed: false },
+  tb: { label: 'TB', name: 'Top to bottom (TB)', title: 'Lay the diagram out top to bottom', rankDir: 'TB', packed: false },
+  columns: { label: 'Columns', name: 'Columns', title: 'Stack the entities in columns that fill the screen', rankDir: 'LR', packed: true },
+};
+
+const DEFAULT_LAYOUT = 'columns';
 
 // Cytoscape's default label font, pinned so canvas measurement matches the
 // labels Cytoscape draws.
@@ -85,7 +103,7 @@ const captionStyles = {};
 
 let fieldsMode = false;
 let proxyMode = false;
-let rankDir = 'LR';
+let layoutName = Object.hasOwn(LAYOUTS, settings.layout) ? settings.layout : DEFAULT_LAYOUT;
 let showMachineNames = false;
 let typeVisible = {};
 
@@ -569,7 +587,7 @@ function style() {
       selector: 'edge',
       style: {
         'curve-style': 'taxi',
-        'taxi-direction': () => (rankDir === 'TB' ? 'vertical' : 'horizontal'),
+        'taxi-direction': () => (LAYOUTS[layoutName].rankDir === 'TB' ? 'vertical' : 'horizontal'),
         'taxi-turn': '50%',
         'taxi-turn-min-distance': '8px',
         width: 1.2,
@@ -651,7 +669,6 @@ function buildController(model, options = {}) {
   typeVisible = {};
   fieldsMode = true;
   proxyMode = true;
-  rankDir = 'LR';
   showMachineNames = true;
   initColors();
   if (Array.isArray(options.customTypes) && options.customTypes.length) {
@@ -749,23 +766,96 @@ function buildController(model, options = {}) {
     cy.center();
   }
 
-  function runLayout() {
+  // The Dagre options for the picked layout, and the gap between the islands
+  // that packIslands() and tidy() line up.
+  function layoutSettings() {
     const spacing = fieldsMode ? LAYOUT_SPACING.fields : LAYOUT_SPACING.overview;
-    shown(cy.elements())
-      .layout({
-        name: 'dagre',
-        rankDir: rankDir,
-        ranker: 'network-simplex',
-        nodeSep: spacing.nodeSep,
-        edgeSep: 6,
-        rankSep: spacing.rankSep,
-        nodeDimensionsIncludeLabels: true,
-        animate: false,
-      })
-      .run();
+    const options = {
+      name: 'dagre',
+      rankDir: LAYOUTS[layoutName].rankDir,
+      ranker: 'network-simplex',
+      nodeSep: spacing.nodeSep,
+      edgeSep: 6,
+      rankSep: spacing.rankSep,
+      nodeDimensionsIncludeLabels: true,
+      animate: false,
+    };
+
+    return { options: options, gap: { x: spacing.columnSep, y: spacing.islandSep } };
+  }
+
+  function runLayout() {
+    const { options, gap } = layoutSettings();
+    const elements = shown(cy.elements());
+
+    if (LAYOUTS[layoutName].packed) {
+      packIslands(elements, options, gap);
+    } else {
+      elements.layout(options).run();
+    }
+
     resetView();
     positionCaptions();
     positionNotes();
+  }
+
+  // Lays each island out on its own again and lines the islands up in
+  // columns near where they were (see tidyColumns()). The view stays put.
+  function tidy() {
+    const { options, gap } = layoutSettings();
+    const islands = layIslandsOut(shown(cy.elements()), options);
+    const boxes = islands.map((entry) => ({ x: entry.before.x1, y: entry.before.y1, w: entry.box.w, h: entry.box.h }));
+
+    placeIslands(islands, tidyColumns(boxes, gap).positions);
+    positionCaptions();
+    positionNotes();
+  }
+
+  // A comparator that orders entities by the place of their type in the
+  // diagram's type list, then by label.
+  function entityOrder() {
+    const types = allTypeKeys();
+    const rank = (entity) => {
+      const index = types.indexOf(entity.data('entityType'));
+
+      return index === -1 ? types.length : index;
+    };
+
+    return (a, b) => rank(a) - rank(b) || String(a.data('label')).localeCompare(String(b.data('label')));
+  }
+
+  // Runs Dagre on each island of connected elements on its own. Each entry
+  // holds the island and its box before and after the run.
+  function layIslandsOut(elements, options) {
+    return elements.components().map((island) => {
+      const before = island.boundingBox();
+      island.layout({ ...options, fit: false }).run();
+
+      return { island: island, before: before, box: island.boundingBox() };
+    });
+  }
+
+  // Moves each island so its box starts at the matching position.
+  function placeIslands(islands, positions) {
+    islands.forEach((entry, index) => {
+      const { x, y } = positions[index];
+      entry.island.nodes().shift({ x: x - entry.box.x1, y: y - entry.box.y1 });
+    });
+  }
+
+  // Lays each island out on its own, then stacks the islands in columns
+  // shaped like the canvas. An island takes the place of its first entity in
+  // entityOrder().
+  function packIslands(elements, options, gap) {
+    const compare = entityOrder();
+    const lead = (island) => island.nodes('[group="entity"]').sort(compare).first();
+    const islands = layIslandsOut(elements, options).map((entry) => ({ ...entry, lead: lead(entry.island) }));
+
+    // An island with no entity, such as a lone note, goes last.
+    islands.sort((a, b) => (a.lead.empty() || b.lead.empty() ? b.lead.length - a.lead.length : compare(a.lead, b.lead)));
+
+    const boxes = islands.map((entry) => entry.box);
+    placeIslands(islands, packColumns(boxes, { w: cy.width(), h: cy.height() }, gap).positions);
   }
 
   function applyLayout(layout) {
@@ -1223,7 +1313,6 @@ function buildController(model, options = {}) {
 
   $('fields-toggle').classList.add('is-active');
   $('proxy-toggle').classList.add('is-active');
-  $('layout-toggle').querySelector('.layout-label').textContent = 'Layout: LR';
   $('machine-names').classList.add('is-active');
   $('search').value = '';
 
@@ -1231,6 +1320,7 @@ function buildController(model, options = {}) {
     cy,
     refresh,
     runLayout,
+    tidy,
     applyLayout,
     syncReferences,
     resetView,
@@ -1300,6 +1390,36 @@ function buildController(model, options = {}) {
   };
 }
 
+// Fills the layout menu with an item for each layout, in LAYOUTS order.
+function fillLayoutMenu() {
+  const items = Object.entries(LAYOUTS).map(([value, layout]) => {
+    const item = document.createElement('sl-menu-item');
+
+    item.setAttribute('type', 'checkbox');
+    item.setAttribute('value', value);
+    item.setAttribute('title', layout.title);
+    item.textContent = layout.name;
+
+    return item;
+  });
+
+  $('layout-menu').append(...items);
+}
+
+// Names the picked layout on the layout button and ticks it in the menu.
+function showLayout() {
+  const layout = LAYOUTS[layoutName];
+  const button = $('layout-run');
+  const items = $('layout-menu').querySelectorAll('sl-menu-item');
+
+  button.querySelector('.layout-label').textContent = 'Layout: ' + layout.label;
+  // SlButton does not reflect its title property, so set the attribute.
+  button.setAttribute('title', layout.title);
+  items.forEach((item) => {
+    item.checked = item.getAttribute('value') === layoutName;
+  });
+}
+
 function wire() {
   $('zoom-in').addEventListener('click', () =>
     controller.cy.zoom({ level: controller.cy.zoom() * 1.25, renderedPosition: { x: controller.cy.width() / 2, y: controller.cy.height() / 2 } }),
@@ -1312,9 +1432,29 @@ function wire() {
     controller.clearFocus();
     controller.resetView();
   });
-  $('tidy').addEventListener('click', () => {
+  $('layout-run').addEventListener('click', () => {
     controller.runLayout();
+    checkpoint('Re-ran the ' + LAYOUTS[layoutName].label + ' layout');
+  });
+  $('tidy').addEventListener('click', () => {
+    controller.tidy();
     checkpoint('Tidied the layout');
+  });
+
+  fillLayoutMenu();
+
+  // The menu flips a checkbox item on every select, so showLayout() ticks
+  // the picked item again even when it was already ticked. Cytoscape caches
+  // the edges' taxi direction from style(), so the stylesheet is reapplied
+  // before the run. A pick changes the display, so its layout is not a history
+  // step, as for the display toggles below.
+  $('layout-menu').addEventListener('sl-select', (evt) => {
+    layoutName = evt.detail.item.value;
+    settings.layout = layoutName;
+    saveSettings();
+    showLayout();
+    controller.cy.style().update();
+    untracked(() => controller.runLayout());
   });
 
   $('zoom-menu').addEventListener('sl-select', (evt) => {
@@ -1344,12 +1484,6 @@ function wire() {
     }
     controller.clearFocus();
     untracked(() => controller.refresh(true));
-  });
-
-  $('layout-toggle').addEventListener('click', () => {
-    rankDir = rankDir === 'LR' ? 'TB' : 'LR';
-    $('layout-toggle').querySelector('.layout-label').textContent = 'Layout: ' + rankDir;
-    untracked(() => controller.runLayout());
   });
 
   $('machine-names').addEventListener('click', (evt) => {
@@ -1388,6 +1522,8 @@ export function render(model, options = {}) {
     wire();
     wired = true;
   }
+
+  showLayout();
 
   if (options.layout && Object.keys(options.layout).length) {
     controller.applyLayout(options.layout);

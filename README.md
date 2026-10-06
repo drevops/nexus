@@ -84,13 +84,14 @@ By default, content types are rounded rectangles, vocabularies are tags, media a
 
 ## Navigating the diagram
 
-The diagram opens laid out left to right, with every field, proxy and machine name on show. The toolbar offers:
+The diagram opens with its entities stacked in columns that fill the screen, with every field, proxy and machine name on show. The toolbar offers:
 
 - **Find entity** - type a name, then press Enter or the search button to fade everything else and zoom to the matches.
 - **Fields** - hide the fields to collapse the diagram to an entity-only overview, or show them again.
 - **Proxies** - draw each reference as a faded copy of its target beside the field, or as an edge to the entity itself.
 - **Machine names** - show each bundle/field machine name in monospace beneath its symbol.
-- **Layout: LR / TB** - switch the flow direction; **Tidy** re-runs the layout.
+- **Layout** - re-run the current layout, or pick another from the arrow beside it: **Columns** stacks each entity and its fields in columns that fill the screen, grouped by entity type, while **LR** and **TB** lay the whole diagram out as 1 flow, left to right or top to bottom. Your pick is remembered.
+- **Tidy** - straighten each entity's fields and line the entities up in columns near where they already are, so a diagram you've dragged around or edited gets neat without being rearranged. Drag an entity roughly into place and Tidy slots it in.
 - **Entities** - an index with per-type filters and field counts; click a bundle to focus it or open its fields.
 - **Table** - a searchable table of all fields (or a single entity's) with type, cardinality, requiredness and references.
 - **Legend** - what each symbol means.
@@ -115,11 +116,11 @@ Select a node to edit or delete it in the **Inspector**: an entity's label and m
 
 ## Undo and history
 
-**Undo** and **Redo** in the toolbar step back and forward through your changes, and so do `Ctrl+Z` and `Ctrl+Shift+Z` or `Ctrl+Y` (`⌘Z` and `⇧⌘Z` on a Mac). Every change to the diagram counts: adding, renaming and deleting entities, fields, references and annotations, editing them in the Inspector, dragging nodes, **Tidy** and renaming the diagram. Typing into a field is 1 step, however many characters it takes. While a text box has the focus, the shortcuts undo your typing there instead.
+**Undo** and **Redo** in the toolbar step back and forward through your changes, and so do `Ctrl+Z` and `Ctrl+Shift+Z` or `Ctrl+Y` (`⌘Z` and `⇧⌘Z` on a Mac). Every change to the diagram counts: adding, renaming and deleting entities, fields, references and annotations, editing them in the Inspector, dragging nodes, **Tidy**, re-running the layout with the **Layout** button and renaming the diagram. Typing into a field is 1 step, however many characters it takes. While a text box has the focus, the shortcuts undo your typing there instead.
 
 **History** opens a panel listing the versions of the diagram since you opened it, newest first, with the time of each change. It keeps your last 200 changes, so in a longer session the oldest ones leave the list. Click a version to go back to it. The versions after it stay in the list, greyed out, so you can jump forward again until your next edit replaces them.
 
-Undo covers what the diagram holds, not how it's shown, so it leaves the **Fields**, **Proxies** and layout direction toggles and the entity type filters alone, along with your colours, symbols and custom types. The history lives in memory only: it isn't saved with the document, and it starts over when you open, import or start another diagram.
+Undo covers what the diagram holds, not how it's shown, so it leaves the **Fields** and **Proxies** toggles, the layout you pick from the **Layout** menu and the entity type filters alone, along with your colours, symbols and custom types. The history lives in memory only: it isn't saved with the document, and it starts over when you open, import or start another diagram.
 
 ## Saving diagrams
 
@@ -162,7 +163,7 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for local development setup, the lintin
 
 ## Privacy
 
-Nexus has no backend. The configuration you import and the diagrams you build stay in your browser's memory and leave it only when you save or export a file; nothing is uploaded to or processed by any server. Your preferences - theme, panel layout, entity colours and symbols, custom entity types and the last export format - are kept in the browser's `localStorage`.
+Nexus has no backend. The configuration you import and the diagrams you build stay in your browser's memory and leave it only when you save or export a file; nothing is uploaded to or processed by any server. Your preferences - theme, panel layout, diagram layout, entity colours and symbols, custom entity types and the last export format - are kept in the browser's `localStorage`.
 
 Nexus is provided as is, without warranty of any kind, and the authors accept no responsibility or liability for any data you load into it or create with it.
 
