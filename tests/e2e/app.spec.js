@@ -2924,7 +2924,12 @@ test('keeps the status bar hint on the hovered control when another control is r
 
 test('shows interaction tips in the middle of the status bar', async ({ page }) => {
   await expect(page.locator('#statusbar .statusbar__tips')).toContainText('Right-click');
-  await expect(page.locator('#statusbar .statusbar__tips')).toContainText('F1 shows keyboard shortcuts');
+});
+
+// The tips are cut off at the end in a narrow window, so the pointer to the
+// shortcuts comes first.
+test('leads the status bar tips with the F1 shortcut view', async ({ page }) => {
+  await expect(page.locator('#statusbar .statusbar__tips')).toHaveText(/^F1 shows keyboard shortcuts · /);
 });
 
 test('renders a non-empty glyph for every toolbar, status bar and landing icon', async ({ page }) => {
