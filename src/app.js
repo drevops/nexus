@@ -520,6 +520,28 @@ function initStatusbar() {
   });
 }
 
+// Marks each tool section that ends a wrapped line, so its separator hides.
+function initToolbarSeparators() {
+  const row = document.querySelector('.toolbar__tools');
+  const sections = [...row.children];
+
+  const markLineEnds = () => {
+    sections.forEach((section, i) => {
+      const next = sections[i + 1];
+
+      // Sections on 1 line differ in height, so a new line starts at or below
+      // the bottom of the section before it.
+      section.classList.toggle('is-line-end', !next || next.offsetTop >= section.offsetTop + section.offsetHeight);
+    });
+  };
+
+  const observer = new ResizeObserver(markLineEnds);
+
+  // A label change can move a line break without resizing the row, so each
+  // section is observed too.
+  [row, ...sections].forEach((el) => observer.observe(el));
+}
+
 function initAbout() {
   const dialog = $('about-dialog');
   $('about-toggle').addEventListener('click', () => dialog.show());
@@ -542,5 +564,6 @@ initShortcuts();
 initIcons();
 initTheme();
 initStatusbar();
+initToolbarSeparators();
 initAbout();
 initVersion();
