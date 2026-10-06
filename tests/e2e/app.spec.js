@@ -2724,6 +2724,99 @@ test('isolates an entity on right-click and moves it with its fields', async ({ 
   expect(await page.evaluate(() => window.__nexus.cy.elements('.faded').length)).toBe(0);
 });
 
+// A diagram that fits the canvas at 100%: entity A with 1 field, beside
+// entity B.
+const MOVE_DOC = {
+  nexus: 1,
+  title: 'Move',
+  entities: [
+    { entityType: 'node', bundle: 'a', label: 'A', fields: [{ name: 'field_text', label: 'Text', fieldType: 'string', kind: 'single' }] },
+    { entityType: 'node', bundle: 'b', label: 'B', fields: [] },
+  ],
+  layout: { 'node.a': { x: 0, y: 0 }, 'field:node.a:field_text': { x: 0, y: 150 }, 'node.b': { x: 300, y: 0 } },
+};
+
+// Presses the right mouse button on a node, drags by the offset in page
+// pixels and releases it.
+async function rightDrag(page, id, dx, dy) {
+  const from = await pagePosition(page, id);
+
+  await page.mouse.move(from.x, from.y);
+  await page.mouse.down({ button: 'right' });
+  await page.mouse.move(from.x + dx, from.y + dy, { steps: 6 });
+  await page.mouse.up({ button: 'right' });
+}
+
+// How far each node moved from 1 set of positions to another, rounded to
+// whole pixels.
+function offsets(before, after) {
+  const offset = (id) => ({ x: Math.round(after[id].x - before[id].x), y: Math.round(after[id].y - before[id].y) });
+
+  return Object.fromEntries(Object.keys(before).map((id) => [id, offset(id)]));
+}
+
+function fadedNodes(page) {
+  return page.evaluate(() =>
+    window.__nexus.cy
+      .nodes('.faded')
+      .map((node) => node.id())
+      .sort(),
+  );
+}
+
+for (const [mode, button] of dataProviderRightDragModes()) {
+  test(`moves a node dragged with the right mouse button in ${mode} mode`, async ({ page }) => {
+    await openDocument(page, MOVE_DOC);
+    await page.click(button);
+    const before = await nodePositions(page);
+
+    // The diagram opens at 100%, so the node moves as far as the pointer.
+    await rightDrag(page, 'node.a', 90, 60);
+
+    expect(offsets(before, await nodePositions(page))).toEqual({
+      'node.a': { x: 90, y: 60 },
+      'field:node.a:field_text': { x: 0, y: 0 },
+      'node.b': { x: 0, y: 0 },
+    });
+    expect(await fadedNodes(page)).toEqual([]);
+    await expect(page.locator('#undo')).toHaveAttribute('title', /^Undo: Moved entity “A” \(/);
+
+    await page.click('#undo');
+    expect(await nodePositions(page)).toEqual(before);
+  });
+}
+
+function dataProviderRightDragModes() {
+  return [
+    ['View', '#mode-view'],
+    ['Edit', '#mode-build'],
+  ];
+}
+
+test('isolates an entity on a right-click and moves the group dragged with the right mouse button', async ({ page }) => {
+  await openDocument(page, MOVE_DOC);
+  const before = await nodePositions(page);
+  const entity = await pagePosition(page, 'node.a');
+
+  await page.mouse.click(entity.x, entity.y, { button: 'right' });
+  expect(await fadedNodes(page)).toEqual(['node.b']);
+  expect(await nodePositions(page)).toEqual(before);
+
+  await rightDrag(page, 'field:node.a:field_text', 90, 60);
+  const grouped = await nodePositions(page);
+  expect(offsets(before, grouped)).toEqual({
+    'node.a': { x: 90, y: 60 },
+    'field:node.a:field_text': { x: 90, y: 60 },
+    'node.b': { x: 0, y: 0 },
+  });
+  await expect(page.locator('#undo')).toHaveAttribute('title', /^Undo: Moved entity “A” with its fields \(/);
+
+  // A node the isolation fades stays where it is, and the isolation holds.
+  await rightDrag(page, 'node.b', 90, 60);
+  expect(await nodePositions(page)).toEqual(grouped);
+  expect(await fadedNodes(page)).toEqual(['node.b']);
+});
+
 test('links to the project on GitHub from the toolbar', async ({ page }) => {
   await expect(page.locator('#github-link')).toHaveAttribute('href', 'https://github.com/drevops/nexus');
   await expect(page.locator('#github-link')).toHaveAttribute('target', '_blank');

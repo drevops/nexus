@@ -36,6 +36,7 @@ let placeKind = null;
 let isolatedEntity = null;
 let isolatedIds = new Set();
 let dragLast = null;
+let rightDrag = null;
 
 function startPlaceNote(kind) {
   connectMode = false;
@@ -229,23 +230,36 @@ export function attachBuilder(instance) {
       return;
     }
     const pos = evt.target.position();
-    const dx = pos.x - dragLast.x;
-    const dy = pos.y - dragLast.y;
-    cy.batch(() => {
-      isolatedIds.forEach((id) => {
-        if (id === evt.target.id()) {
-          return;
-        }
-        const other = cy.getElementById(id);
-        other.position({ x: other.position('x') + dx, y: other.position('y') + dy });
-      });
-    });
+    const others = dragGroup(evt.target).not(evt.target);
+    others.shift({ x: pos.x - dragLast.x, y: pos.y - dragLast.y });
     dragLast = { x: pos.x, y: pos.y };
   });
   cy.on('free', 'node', () => {
     dragLast = null;
   });
   cy.on('dragfree', 'node', (evt) => checkpoint('Moved ' + describeMove(evt.target)));
+
+  // Cytoscape grabs nodes with the left button only, so a right-drag moves its
+  // node here, in either mode. Cytoscape fires no cxttap after a right-drag,
+  // so the drag does not also isolate.
+  cy.on('cxttapstart', 'node', (evt) => {
+    rightDrag = { last: { ...evt.position }, dragged: false };
+  });
+  cy.on('cxtdrag', 'node', (evt) => {
+    if (rightDrag) {
+      followRightDrag(evt.target, evt.position);
+    }
+  });
+  // The button can be released past the last cxtdrag position, so the release
+  // applies the remaining offset.
+  cy.on('cxttapend', 'node', (evt) => {
+    if (rightDrag && rightDrag.dragged) {
+      followRightDrag(evt.target, evt.position);
+      checkpoint('Moved ' + describeMove(evt.target));
+    }
+
+    rightDrag = null;
+  });
 
   cy.on('tapstart', 'node[group="field"]', (evt) => startConnect(evt.target, evt.position));
   cy.on('tapdrag', (evt) => moveGhost(evt.position));
@@ -324,7 +338,7 @@ function updateInteraction() {
 
 // Isolates an entity, its fields and their proxies as a movable unit.
 // Everything else is faded and only the group is grabbable, so dragging any
-// member moves the whole group (see the grab and drag handlers).
+// member moves the whole group (see dragGroup()).
 function isolateEntity(entityId) {
   const entity = cy.getElementById(entityId);
   if (entity.empty() || entity.data('group') !== 'entity') {
@@ -355,6 +369,23 @@ function clearIsolation() {
   dragLast = null;
   cy.nodes().grabify();
   updateInteraction();
+}
+
+// The nodes a drag of the node moves: its isolated group, nothing when an
+// isolation leaves the node out, or otherwise the node alone.
+function dragGroup(node) {
+  if (!isolatedIds.size) {
+    return node;
+  }
+
+  return isolatedIds.has(node.id()) ? cy.nodes().filter((other) => isolatedIds.has(other.id())) : cy.collection();
+}
+
+// Shifts the dragGroup() of the node by the pointer's travel since the last
+// right-drag event.
+function followRightDrag(node, position) {
+  dragGroup(node).shift({ x: position.x - rightDrag.last.x, y: position.y - rightDrag.last.y });
+  rightDrag = { last: { ...position }, dragged: true };
 }
 
 // Names what a drag moved: a node of an isolated group moves the whole group.
