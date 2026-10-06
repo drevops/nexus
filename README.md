@@ -87,10 +87,10 @@ By default, content types are rounded rectangles, vocabularies are tags, media a
 
 The diagram opens with its entities stacked in columns that fill the screen, with every field, proxy and machine name on show. The toolbar offers:
 
-- **Find entity** - type a name, then press Enter or the search button to fade everything else and zoom to the matches.
 - **Fields** - hide the fields to collapse the diagram to an entity-only overview, or show them again.
 - **Proxies** - draw each reference as a faded copy of its target beside the field, or as an edge to the entity itself.
 - **Machine names** - show each bundle/field machine name in monospace beneath its symbol.
+- **Find entity** - type a name, then press Enter or the search button to fade everything else and zoom to the matches.
 - **Layout** - re-run the current layout, or pick another from the arrow beside it: **Columns** stacks each entity and its fields in columns that fill the screen, grouped by entity type, while **LR** and **TB** lay the whole diagram out as 1 flow, left to right or top to bottom. Your pick is remembered.
 - **Tidy** - straighten each entity's fields and line the entities up in columns near where they already are, so a diagram you've dragged around or edited gets neat without being rearranged. Drag an entity roughly into place and Tidy slots it in.
 - **Entities** - an index with per-type filters and field counts; click a bundle to focus it or open its fields.

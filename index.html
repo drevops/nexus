@@ -42,48 +42,62 @@
     </div>
   </div>
   <div class="toolbar__tools">
-    <sl-button-group class="toolbar__group" label="Document">
-      <sl-button id="doc-new" class="toolbar__button" size="small" data-icon="file-plus" data-shortcut="Alt+N" title="Start a new empty content model">New</sl-button>
-      <sl-button id="doc-import" class="toolbar__button" size="small" data-icon="folder-input" data-shortcut="Alt+I" title="Import a Drupal config folder">Import</sl-button>
-      <sl-button id="doc-open-btn" class="toolbar__button" size="small" data-icon="folder-open" data-shortcut="Mod+O" title="Open a saved Nexus diagram (.nexus.json)">Open</sl-button>
-      <sl-button id="doc-save" class="toolbar__button" size="small" data-icon="download" data-shortcut="Mod+S" title="Save this diagram as a Nexus document (.nexus.json)">Save</sl-button>
-    </sl-button-group>
-    <sl-button-group class="toolbar__group" label="Undo">
-      <sl-button id="undo" class="toolbar__button toolbar__button--icon" size="small" data-icon="undo-2" data-shortcut="Mod+Z" data-shortcut-repeat title="Nothing to undo" aria-label="Undo" disabled></sl-button>
-      <sl-button id="redo" class="toolbar__button toolbar__button--icon" size="small" data-icon="redo-2" data-shortcut="Mod+Shift+Z Ctrl+Y" data-shortcut-repeat title="Nothing to redo" aria-label="Redo" disabled></sl-button>
-    </sl-button-group>
-    <sl-button-group id="export-group" class="toolbar__group" label="Export">
-      <sl-button id="export-run" class="toolbar__button" size="small" data-icon="share" data-shortcut="Mod+E" title="Export the diagram or its fields table"><span class="export-label">Export</span></sl-button>
-      <sl-dropdown id="export-dropdown" placement="bottom-end" hoist>
-        <sl-button id="export-choose" slot="trigger" class="toolbar__button" size="small" caret data-shortcut="Mod+Shift+E" title="Choose the export format" aria-label="Choose the export format"></sl-button>
-        <sl-menu id="export-menu"></sl-menu>
-      </sl-dropdown>
-    </sl-button-group>
-    <sl-button-group class="toolbar__group" label="Mode">
-      <sl-button id="mode-view" class="toolbar__button is-active" size="small" data-icon="eye" data-shortcut="V" title="View mode: explore the diagram">View</sl-button>
-      <sl-button id="mode-build" class="toolbar__button" size="small" data-icon="pencil" data-shortcut="E" title="Edit mode: add and change entities and fields">Edit</sl-button>
-    </sl-button-group>
-    <sl-input id="search" class="toolbar__search" size="small" type="search" placeholder="Find entity…" autocomplete="off" clearable data-shortcut="/" title="Type an entity name and press Enter or the search button"></sl-input>
-    <sl-button id="search-btn" class="toolbar__button toolbar__button--icon" size="small" data-icon="search" title="Find the entity and zoom to it" aria-label="Search"></sl-button>
-    <sl-button-group class="toolbar__group" label="Display">
-      <sl-button id="fields-toggle" class="toolbar__button" size="small" data-icon="list" data-shortcut="F" title="Show or hide entity fields">Fields</sl-button>
-      <sl-button id="proxy-toggle" class="toolbar__button" size="small" data-icon="layers" data-shortcut="P" title="Show references as semi-opaque proxies instead of long edges">Proxies</sl-button>
-      <sl-button id="machine-names" class="toolbar__button" size="small" data-icon="code" data-shortcut="M" title="Show or hide machine names under each symbol">Machine names</sl-button>
-    </sl-button-group>
-    <sl-button-group class="toolbar__group" label="Layout">
-      <sl-button id="layout-run" class="toolbar__button" size="small" data-icon="layout" data-shortcut="L" title="Stack the entities in columns that fill the screen"><span class="layout-label">Layout: Columns</span></sl-button>
-      <sl-dropdown placement="bottom-end" hoist>
-        <sl-button id="layout-choose" slot="trigger" class="toolbar__button" size="small" caret data-shortcut="Shift+L" title="Choose a layout" aria-label="Choose a layout"></sl-button>
-        <sl-menu id="layout-menu"></sl-menu>
-      </sl-dropdown>
-      <sl-button id="tidy" class="toolbar__button" size="small" data-icon="tidy" data-shortcut="T" title="Tidy up: straighten each entity and line the entities up in columns near where they are">Tidy</sl-button>
-    </sl-button-group>
-    <sl-button-group class="toolbar__group" label="Panels">
-      <sl-button id="entities-toggle" class="toolbar__button" size="small" data-icon="box" data-shortcut="1" title="Toggle the entities panel">Entities</sl-button>
-      <sl-button id="table-toggle" class="toolbar__button" size="small" data-icon="table" data-shortcut="2" title="Toggle the fields table panel">Table</sl-button>
-      <sl-button id="legend-toggle" class="toolbar__button" size="small" data-icon="info" data-shortcut="3" title="Toggle the legend panel">Legend</sl-button>
-      <sl-button id="history-toggle" class="toolbar__button" size="small" data-icon="history" data-shortcut="4" title="Toggle the history panel: every version of this diagram">History</sl-button>
-    </sl-button-group>
+    <div class="toolbar__section">
+      <sl-button-group class="toolbar__group" label="Document">
+        <sl-button id="doc-new" class="toolbar__button" size="small" data-icon="file-plus" data-shortcut="Alt+N" title="Start a new empty content model">New</sl-button>
+        <sl-button id="doc-import" class="toolbar__button" size="small" data-icon="folder-input" data-shortcut="Alt+I" title="Import a Drupal config folder">Import</sl-button>
+        <sl-button id="doc-open-btn" class="toolbar__button" size="small" data-icon="folder-open" data-shortcut="Mod+O" title="Open a saved Nexus diagram (.nexus.json)">Open</sl-button>
+        <sl-button id="doc-save" class="toolbar__button" size="small" data-icon="download" data-shortcut="Mod+S" title="Save this diagram as a Nexus document (.nexus.json)">Save</sl-button>
+      </sl-button-group>
+      <sl-button-group id="export-group" class="toolbar__group" label="Export">
+        <sl-button id="export-run" class="toolbar__button" size="small" data-icon="share" data-shortcut="Mod+E" title="Export the diagram or its fields table"><span class="export-label">Export</span></sl-button>
+        <sl-dropdown id="export-dropdown" placement="bottom-end" hoist>
+          <sl-button id="export-choose" slot="trigger" class="toolbar__button" size="small" caret data-shortcut="Mod+Shift+E" title="Choose the export format" aria-label="Choose the export format"></sl-button>
+          <sl-menu id="export-menu"></sl-menu>
+        </sl-dropdown>
+      </sl-button-group>
+    </div>
+    <div class="toolbar__section">
+      <sl-button-group class="toolbar__group" label="Undo">
+        <sl-button id="undo" class="toolbar__button toolbar__button--icon" size="small" data-icon="undo-2" data-shortcut="Mod+Z" data-shortcut-repeat title="Nothing to undo" aria-label="Undo" disabled></sl-button>
+        <sl-button id="redo" class="toolbar__button toolbar__button--icon" size="small" data-icon="redo-2" data-shortcut="Mod+Shift+Z Ctrl+Y" data-shortcut-repeat title="Nothing to redo" aria-label="Redo" disabled></sl-button>
+      </sl-button-group>
+    </div>
+    <div class="toolbar__section">
+      <sl-button-group class="toolbar__group" label="Mode">
+        <sl-button id="mode-view" class="toolbar__button is-active" size="small" data-icon="eye" data-shortcut="V" title="View mode: explore the diagram">View</sl-button>
+        <sl-button id="mode-build" class="toolbar__button" size="small" data-icon="pencil" data-shortcut="E" title="Edit mode: add and change entities and fields">Edit</sl-button>
+      </sl-button-group>
+    </div>
+    <div class="toolbar__section">
+      <sl-button-group class="toolbar__group" label="Display">
+        <sl-button id="fields-toggle" class="toolbar__button" size="small" data-icon="list" data-shortcut="F" title="Show or hide entity fields">Fields</sl-button>
+        <sl-button id="proxy-toggle" class="toolbar__button" size="small" data-icon="layers" data-shortcut="P" title="Show references as semi-opaque proxies instead of long edges">Proxies</sl-button>
+        <sl-button id="machine-names" class="toolbar__button" size="small" data-icon="code" data-shortcut="M" title="Show or hide machine names under each symbol">Machine names</sl-button>
+      </sl-button-group>
+    </div>
+    <div class="toolbar__section">
+      <sl-input id="search" class="toolbar__search" size="small" type="search" placeholder="Find entity…" autocomplete="off" clearable data-shortcut="/" title="Type an entity name and press Enter or the search button"></sl-input>
+      <sl-button id="search-btn" class="toolbar__button toolbar__button--icon" size="small" data-icon="search" title="Find the entity and zoom to it" aria-label="Search"></sl-button>
+    </div>
+    <div class="toolbar__section">
+      <sl-button-group class="toolbar__group" label="Layout">
+        <sl-button id="layout-run" class="toolbar__button" size="small" data-icon="layout" data-shortcut="L" title="Stack the entities in columns that fill the screen"><span class="layout-label">Layout: Columns</span></sl-button>
+        <sl-dropdown placement="bottom-end" hoist>
+          <sl-button id="layout-choose" slot="trigger" class="toolbar__button" size="small" caret data-shortcut="Shift+L" title="Choose a layout" aria-label="Choose a layout"></sl-button>
+          <sl-menu id="layout-menu"></sl-menu>
+        </sl-dropdown>
+        <sl-button id="tidy" class="toolbar__button" size="small" data-icon="tidy" data-shortcut="T" title="Tidy up: straighten each entity and line the entities up in columns near where they are">Tidy</sl-button>
+      </sl-button-group>
+    </div>
+    <div class="toolbar__section">
+      <sl-button-group class="toolbar__group" label="Panels">
+        <sl-button id="entities-toggle" class="toolbar__button" size="small" data-icon="box" data-shortcut="1" title="Toggle the entities panel">Entities</sl-button>
+        <sl-button id="table-toggle" class="toolbar__button" size="small" data-icon="table" data-shortcut="2" title="Toggle the fields table panel">Table</sl-button>
+        <sl-button id="legend-toggle" class="toolbar__button" size="small" data-icon="info" data-shortcut="3" title="Toggle the legend panel">Legend</sl-button>
+        <sl-button id="history-toggle" class="toolbar__button" size="small" data-icon="history" data-shortcut="4" title="Toggle the history panel: every version of this diagram">History</sl-button>
+      </sl-button-group>
+    </div>
   </div>
   <div id="build-tools" class="toolbar__palette" hidden>
     <span class="toolbar__palette-label">Add:</span>

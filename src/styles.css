@@ -53,7 +53,8 @@ body {
   gap: 1rem;
 }
 
-/* Row 2: the tool groups, always shown, wrapping if they do not fit. */
+/* Row 2: the tool sections, always shown, wrapping between sections if they
+   do not fit. */
 .toolbar__tools {
   display: flex;
   align-items: center;
@@ -61,6 +62,21 @@ body {
   flex-wrap: wrap;
   padding-top: 0.5rem;
   border-top: 1px solid var(--border);
+}
+
+.toolbar__section {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+/* The separator sits in this end padding, out of the controls' flex flow, so
+   it never wraps onto a line of its own. The padding holds the gap, the
+   separator's 2 margins and its 1px line. */
+.toolbar__section:not(:last-child) {
+  position: relative;
+  padding-inline-end: calc(0.45rem + 0.25rem + 1px + 0.25rem);
 }
 
 /* Row 2: the edit palette - a single, non-wrapping row shown only in edit
@@ -92,12 +108,27 @@ body {
   color: var(--muted);
 }
 
-.toolbar__palette-sep {
+.toolbar__palette-sep,
+.toolbar__section:not(:last-child)::after {
   flex: 0 0 auto;
   width: 1px;
   height: 20px;
   margin: 0 0.25rem;
   background: var(--border);
+}
+
+.toolbar__section:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  inset-inline-end: 0;
+  transform: translateY(-50%);
+}
+
+/* The section keeps its end padding, so hiding the separator can't move the
+   line break. */
+.toolbar__section.is-line-end::after {
+  visibility: hidden;
 }
 
 sl-input.toolbar__title {
