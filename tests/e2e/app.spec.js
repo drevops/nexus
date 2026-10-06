@@ -3036,6 +3036,20 @@ async function firstLineEnd(page) {
   return sections.findIndex((section) => section.lineEnd);
 }
 
+// The space below the lowest control of each section of the tools row, in
+// whole pixels.
+function toolbarSectionSlack(page) {
+  return page.evaluate(() => {
+    const sections = [...document.querySelectorAll('.toolbar__tools > .toolbar__section')];
+
+    return sections.map((section) => {
+      const bottom = Math.max(...[...section.children].map((control) => control.getBoundingClientRect().bottom));
+
+      return Math.round(section.getBoundingClientRect().bottom - bottom);
+    });
+  });
+}
+
 test('groups the toolbar tools into sections in order', async ({ page }) => {
   await expect(page.locator('.toolbar__tools > :not(.toolbar__section)')).toHaveCount(0);
 
@@ -3103,6 +3117,24 @@ test('moves the hidden toolbar separator when a section grows past the end of it
 
   await expect.poll(() => firstLineEnd(page)).toBe(lineEnd - 1);
   await expect.poll(async () => misplacedSeparators(await toolbarSeparators(page))).toEqual([]);
+});
+
+test('keeps each toolbar section as tall as its controls when its separator no longer fits beside them', async ({ page }) => {
+  await page.setViewportSize({ width: 3000, height: 800 });
+  await loadExample(page);
+
+  // A window that leaves the row 8px wider than the first section's controls,
+  // too narrow for the separator after them.
+  const width = await page.evaluate(() => {
+    const row = document.querySelector('.toolbar__tools').getBoundingClientRect();
+    const section = document.querySelector('.toolbar__tools > .toolbar__section');
+    const controls = section.lastElementChild.getBoundingClientRect().right - section.getBoundingClientRect().left;
+
+    return Math.ceil(controls + 8 + window.innerWidth - row.width);
+  });
+
+  await page.setViewportSize({ width: width, height: 800 });
+  await expect.poll(() => toolbarSectionSlack(page)).toEqual([0, 0, 0, 0, 0, 0, 0]);
 });
 
 test('opens an about dialog explaining browser-only storage and the licence', async ({ page }) => {

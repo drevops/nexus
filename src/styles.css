@@ -71,6 +71,14 @@ body {
   flex-wrap: wrap;
 }
 
+/* The separator sits in this end padding, out of the controls' flex flow, so
+   it never wraps onto a line of its own. The padding holds the gap, the
+   separator's 2 margins and its 1px line. */
+.toolbar__section:not(:last-child) {
+  position: relative;
+  padding-inline-end: calc(0.45rem + 0.25rem + 1px + 0.25rem);
+}
+
 /* Row 2: the edit palette - a single, non-wrapping row shown only in edit
    mode, scrolling horizontally if it overflows (ribbon-style). */
 .toolbar__palette {
@@ -111,10 +119,14 @@ body {
 
 .toolbar__section:not(:last-child)::after {
   content: '';
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
 }
 
-/* 'visibility' keeps the separator's space, so hiding it can't move the line
-   break. */
+/* The section keeps its end padding, so hiding the separator can't move the
+   line break. */
 .toolbar__section.is-line-end::after {
   visibility: hidden;
 }
