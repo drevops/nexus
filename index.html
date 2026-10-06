@@ -73,12 +73,8 @@
     <sl-button-group class="toolbar__group" label="Layout">
       <sl-button id="layout-run" class="toolbar__button" size="small" data-icon="layout" title="Stack the entities in columns that fill the screen"><span class="layout-label">Layout: Columns</span></sl-button>
       <sl-dropdown placement="bottom-end" hoist>
-        <sl-button id="layout-pick" slot="trigger" class="toolbar__button" size="small" caret title="Choose a layout" aria-label="Choose a layout"></sl-button>
-        <sl-menu id="layout-menu">
-          <sl-menu-item type="checkbox" value="lr">Left to right (LR)</sl-menu-item>
-          <sl-menu-item type="checkbox" value="tb">Top to bottom (TB)</sl-menu-item>
-          <sl-menu-item type="checkbox" value="columns" checked>Columns</sl-menu-item>
-        </sl-menu>
+        <sl-button id="layout-choose" slot="trigger" class="toolbar__button" size="small" caret title="Choose a layout" aria-label="Choose a layout"></sl-button>
+        <sl-menu id="layout-menu"></sl-menu>
       </sl-dropdown>
       <sl-button id="tidy" class="toolbar__button" size="small" data-icon="tidy" title="Tidy up: straighten each entity and line the entities up in columns near where they are">Tidy</sl-button>
     </sl-button-group>

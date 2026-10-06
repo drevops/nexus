@@ -2286,17 +2286,15 @@ function dataProviderCaptionZooms() {
   return [1, 2];
 }
 
-for (const [source, direction, view] of dataProviderCaptionLayouts()) {
-  test(`keeps machine names clear of other nodes in the ${direction} ${view} of the ${source} diagram`, async ({ page }) => {
+for (const [source, layout, view] of dataProviderCaptionLayouts()) {
+  test(`keeps machine names clear of other nodes in the ${layout} ${view} of the ${source} diagram`, async ({ page }) => {
     await openDiagram(page, source);
 
     if (view === 'overview') {
       await page.click('#fields-toggle');
     }
 
-    if (direction === 'TB') {
-      await page.click('#layout-toggle');
-    }
+    await pickLayout(page, layout.toLowerCase());
 
     expect(captionCollisions(await captionLayout(page))).toEqual([]);
   });
@@ -2306,10 +2304,13 @@ function dataProviderCaptionLayouts() {
   return [
     ['example', 'LR', 'field view'],
     ['example', 'TB', 'field view'],
+    ['example', 'Columns', 'field view'],
     ['example', 'LR', 'overview'],
     ['example', 'TB', 'overview'],
+    ['example', 'Columns', 'overview'],
     ['civictheme', 'TB', 'field view'],
     ['civictheme', 'TB', 'overview'],
+    ['civictheme', 'Columns', 'field view'],
   ];
 }
 
@@ -2451,7 +2452,7 @@ test('opens and re-runs the layout at 100% zoom', async ({ page }) => {
 });
 
 async function pickLayout(page, value) {
-  await page.click('#layout-pick');
+  await page.click('#layout-choose');
   await page.click('#layout-menu sl-menu-item[value="' + value + '"]');
 }
 
@@ -2595,7 +2596,8 @@ for (const [name, button, trigger] of dataProviderDropdownTriggers()) {
 
 function dataProviderDropdownTriggers() {
   return [
-    ['layout menu caret', '#layout-run', '#layout-pick'],
+    ['layout menu caret', '#layout-run', '#layout-choose'],
+    ['export menu caret', '#export-run', '#export-choose'],
     ['zoom level menu', '#zoom-in', '#zoom-level'],
   ];
 }
@@ -2863,6 +2865,17 @@ test('describes the picked layout when the layout button is hovered', async ({ p
 
   await page.locator('#layout-run').hover();
   await expect(page.locator('#statusbar-hint')).toHaveText('Lay the diagram out top to bottom');
+});
+
+test('describes a hovered layout menu item in the status bar', async ({ page }) => {
+  await loadExample(page);
+
+  await page.click('#layout-choose');
+  await page.hover('#layout-menu sl-menu-item[value="lr"]');
+  await expect(page.locator('#statusbar-hint')).toHaveText('Lay the diagram out left to right');
+
+  await page.hover('#layout-menu sl-menu-item[value="columns"]');
+  await expect(page.locator('#statusbar-hint')).toHaveText(LAYOUT_HINT);
 });
 
 test('describes the switched theme when the theme toggle is hovered again', async ({ page }) => {
@@ -3338,17 +3351,26 @@ test('undoes moving an isolated entity with its fields', async ({ page }) => {
   expect(await page.evaluate(() => window.__nexus.cy.elements('.faded').length)).toBe(0);
 });
 
-test('undoes Tidy back to the saved layout', async ({ page }) => {
-  await openDocument(page, SCATTERED_DOC);
-  const saved = await nodePositions(page);
+for (const [name, button, label] of dataProviderLayoutSteps()) {
+  test(`undoes ${name} back to the saved layout`, async ({ page }) => {
+    await openDocument(page, SCATTERED_DOC);
+    const saved = await nodePositions(page);
 
-  await page.click('#tidy');
-  expect(await nodePositions(page)).not.toEqual(saved);
-  await expect(page.locator('#undo')).toHaveAttribute('title', /^Undo: Tidied the layout \(/);
+    await page.click(button);
+    expect(await nodePositions(page)).not.toEqual(saved);
+    await expect(page.locator('#undo')).toHaveAttribute('title', new RegExp('^Undo: ' + label + ' \\('));
 
-  await page.click('#undo');
-  expect(await nodePositions(page)).toEqual(saved);
-});
+    await page.click('#undo');
+    expect(await nodePositions(page)).toEqual(saved);
+  });
+}
+
+function dataProviderLayoutSteps() {
+  return [
+    ['Tidy', '#tidy', 'Tidied the layout'],
+    ['re-running the layout', '#layout-run', 'Re-ran the Columns layout'],
+  ];
+}
 
 test('records typing into an inspector field as 1 version and shows the field as it was on undo', async ({ page }) => {
   await buildEntities(page, ['story']);
@@ -3424,20 +3446,21 @@ test('returns to a version picked in the History panel and drops the undone vers
   await expect(page.locator('#redo')).toHaveAttribute('disabled', '');
 });
 
-test('leaves display toggles out of the history and their layout out of later undos', async ({ page }) => {
+test('leaves display toggles and layout picks out of the history and their layout out of later undos', async ({ page }) => {
   await editExample(page);
   await page.click('#entities-toggle');
 
-  for (const toggle of ['#fields-toggle', '#fields-toggle', '#proxy-toggle', '#proxy-toggle', '#machine-names', '#layout-toggle']) {
+  for (const toggle of ['#fields-toggle', '#fields-toggle', '#proxy-toggle', '#proxy-toggle', '#machine-names']) {
     await page.click(toggle);
   }
 
+  await pickLayout(page, 'tb');
   await page.locator('#type-filters input').first().uncheck();
   await page.locator('#type-filters input').first().check();
   await expect(page.locator('#undo')).toHaveAttribute('disabled', '');
 
   await createEntity(page, 'node', 'campaign', 'Campaign');
-  await page.click('#layout-toggle');
+  await pickLayout(page, 'lr');
   const laidOut = await nodePositions(page);
   delete laidOut['node.campaign'];
 

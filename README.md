@@ -116,11 +116,11 @@ Select a node to edit or delete it in the **Inspector**: an entity's label and m
 
 ## Undo and history
 
-**Undo** and **Redo** in the toolbar step back and forward through your changes, and so do `Ctrl+Z` and `Ctrl+Shift+Z` or `Ctrl+Y` (`⌘Z` and `⇧⌘Z` on a Mac). Every change to the diagram counts: adding, renaming and deleting entities, fields, references and annotations, editing them in the Inspector, dragging nodes, **Tidy** and renaming the diagram. Typing into a field is 1 step, however many characters it takes. While a text box has the focus, the shortcuts undo your typing there instead.
+**Undo** and **Redo** in the toolbar step back and forward through your changes, and so do `Ctrl+Z` and `Ctrl+Shift+Z` or `Ctrl+Y` (`⌘Z` and `⇧⌘Z` on a Mac). Every change to the diagram counts: adding, renaming and deleting entities, fields, references and annotations, editing them in the Inspector, dragging nodes, **Tidy**, re-running the layout with the **Layout** button and renaming the diagram. Typing into a field is 1 step, however many characters it takes. While a text box has the focus, the shortcuts undo your typing there instead.
 
 **History** opens a panel listing the versions of the diagram since you opened it, newest first, with the time of each change. It keeps your last 200 changes, so in a longer session the oldest ones leave the list. Click a version to go back to it. The versions after it stay in the list, greyed out, so you can jump forward again until your next edit replaces them.
 
-Undo covers what the diagram holds, not how it's shown, so it leaves the **Fields**, **Proxies** and layout direction toggles and the entity type filters alone, along with your colours, symbols and custom types. The history lives in memory only: it isn't saved with the document, and it starts over when you open, import or start another diagram.
+Undo covers what the diagram holds, not how it's shown, so it leaves the **Fields** and **Proxies** toggles, the layout you pick from the **Layout** menu and the entity type filters alone, along with your colours, symbols and custom types. The history lives in memory only: it isn't saved with the document, and it starts over when you open, import or start another diagram.
 
 ## Saving diagrams
 

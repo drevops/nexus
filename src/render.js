@@ -61,13 +61,14 @@ const LAYOUT_SPACING = {
   overview: { nodeSep: 34, rankSep: 120, columnSep: 160, islandSep: 60 },
 };
 
-// The layouts the toolbar's layout menu offers, keyed by menu item value. A
-// packed layout runs Dagre on each island of connected nodes on its own and
-// then stacks the islands in columns that fill the canvas.
+// The layouts the toolbar's layout menu offers, in menu order and keyed by
+// menu item value. The label names the layout on the button and the name in
+// the menu. A packed layout runs Dagre on each island of connected nodes on
+// its own and then stacks the islands in columns that fill the canvas.
 const LAYOUTS = {
-  lr: { label: 'LR', title: 'Lay the diagram out left to right', rankDir: 'LR', packed: false },
-  tb: { label: 'TB', title: 'Lay the diagram out top to bottom', rankDir: 'TB', packed: false },
-  columns: { label: 'Columns', title: 'Stack the entities in columns that fill the screen', rankDir: 'LR', packed: true },
+  lr: { label: 'LR', name: 'Left to right (LR)', title: 'Lay the diagram out left to right', rankDir: 'LR', packed: false },
+  tb: { label: 'TB', name: 'Top to bottom (TB)', title: 'Lay the diagram out top to bottom', rankDir: 'TB', packed: false },
+  columns: { label: 'Columns', name: 'Columns', title: 'Stack the entities in columns that fill the screen', rankDir: 'LR', packed: true },
 };
 
 const DEFAULT_LAYOUT = 'columns';
@@ -1312,7 +1313,6 @@ function buildController(model, options = {}) {
 
   $('fields-toggle').classList.add('is-active');
   $('proxy-toggle').classList.add('is-active');
-  showLayout();
   $('machine-names').classList.add('is-active');
   $('search').value = '';
 
@@ -1390,6 +1390,22 @@ function buildController(model, options = {}) {
   };
 }
 
+// Fills the layout menu with an item for each layout, in LAYOUTS order.
+function fillLayoutMenu() {
+  const items = Object.entries(LAYOUTS).map(([value, layout]) => {
+    const item = document.createElement('sl-menu-item');
+
+    item.setAttribute('type', 'checkbox');
+    item.setAttribute('value', value);
+    item.setAttribute('title', layout.title);
+    item.textContent = layout.name;
+
+    return item;
+  });
+
+  $('layout-menu').append(...items);
+}
+
 // Names the picked layout on the layout button and ticks it in the menu.
 function showLayout() {
   const layout = LAYOUTS[layoutName];
@@ -1424,6 +1440,8 @@ function wire() {
     controller.tidy();
     checkpoint('Tidied the layout');
   });
+
+  fillLayoutMenu();
 
   // The menu flips a checkbox item on every select, so showLayout() ticks
   // the picked item again even when it was already ticked. Cytoscape caches
@@ -1504,6 +1522,8 @@ export function render(model, options = {}) {
     wire();
     wired = true;
   }
+
+  showLayout();
 
   if (options.layout && Object.keys(options.layout).length) {
     controller.applyLayout(options.layout);
