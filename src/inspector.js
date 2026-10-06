@@ -13,7 +13,7 @@
  */
 
 import { h } from 'preact';
-import { useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import htmBase from 'htm';
 import { icon } from './icons.js';
 import { cardinalityLabel, kindForCardinality, REFERENCE_FIELD_TYPES } from './model.js';
@@ -55,6 +55,10 @@ const FIELD_TYPES = [
 ];
 const ANNOTATION_OPTIONS = ANNOTATION_KINDS.map((entry) => [entry.kind, entry.label]);
 
+// The selection whose form last took the focus. A form the history remounts
+// keeps its selection, so the focus stays where it was.
+let focusedSelection = null;
+
 function cy() {
   return getController().cy;
 }
@@ -73,6 +77,22 @@ function slOptions(list) {
     const label = Array.isArray(item) ? item[1] : item;
     return html`<sl-option value=${value}>${label}</sl-option>`;
   });
+}
+
+// Focuses the field in `ref` each time `selection` opens the form, so typing
+// fills the form rather than running the keyboard shortcuts. A Shoelace
+// field takes the focus only once it has rendered.
+function useFocusOnOpen(ref, selection) {
+  useEffect(() => {
+    if (selection === focusedSelection) {
+      return;
+    }
+
+    const field = ref.current;
+
+    focusedSelection = selection;
+    Promise.resolve(field.updateComplete).then(() => field.focus());
+  }, [selection]);
 }
 
 // A note on any node; writing to it live rebuilds the canvas badge. Forms are
@@ -359,10 +379,13 @@ export function AnnotationForm({ id }) {
   </div>`;
 }
 
-export function NewEntityForm({ entityType }) {
+export function NewEntityForm({ entityType, selection }) {
   const [form, setForm] = useState({ entityType: entityType || 'node', bundle: '', label: '' });
+  const bundleRef = useRef(null);
   const controller = getController();
   const typeOptions = controller.allTypes().map((type) => [type, controller.typeLabel(type)]);
+
+  useFocusOnOpen(bundleRef, selection);
 
   return html` <div class="insp" data-new="entity">
     <p class="insp__title">New ${controller.typeLabel(form.entityType) || 'entity'}</p>
@@ -375,6 +398,7 @@ export function NewEntityForm({ entityType }) {
       ><sl-input
         size="small"
         data-new-bundle
+        ref=${bundleRef}
         value=${form.bundle}
         placeholder="e.g. article"
         onsl-input=${(e) => setForm((p) => ({ ...p, bundle: e.target.value }))}
@@ -395,7 +419,7 @@ export function NewEntityForm({ entityType }) {
   </div>`;
 }
 
-export function NewFieldForm({ entityId, side }) {
+export function NewFieldForm({ entityId, side, selection }) {
   const entities = cy().nodes('[group="entity"]');
   const [form, setForm] = useState({
     entity: entityId || (entities.length ? entities[0].id() : ''),
@@ -405,7 +429,10 @@ export function NewFieldForm({ entityId, side }) {
     cardinality: 1,
     target: '',
   });
+  const nameRef = useRef(null);
   const existing = existingFields();
+
+  useFocusOnOpen(nameRef, selection);
 
   function onName(value) {
     const match = existing.find((f) => f.name === value);
@@ -425,6 +452,7 @@ export function NewFieldForm({ entityId, side }) {
       <input
         class="insp__input"
         data-new-name
+        ref=${nameRef}
         list="existing-field-list"
         value=${form.name}
         placeholder="e.g. field_body"
@@ -520,10 +548,10 @@ export function InspectorBody({ selected, revision }) {
     return html`<${AnnotationForm} key=${selected.id + '@' + revision} id=${selected.id} />`;
   }
   if (selected.kind === 'new-entity') {
-    return html`<${NewEntityForm} entityType=${selected.entityType} />`;
+    return html`<${NewEntityForm} key=${'new:' + selected.entityType} entityType=${selected.entityType} selection=${selected} />`;
   }
   if (selected.kind === 'new-annotation') {
     return html`<${NewAnnotationForm} />`;
   }
-  return html`<${NewFieldForm} key=${'new:' + selected.entityId + '@' + revision} entityId=${selected.entityId} side=${selected.side} />`;
+  return html`<${NewFieldForm} key=${'new:' + selected.entityId + '@' + revision} entityId=${selected.entityId} side=${selected.side} selection=${selected} />`;
 }

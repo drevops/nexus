@@ -35,6 +35,7 @@ Nexus is a static web app. Drop a Drupal **exported configuration folder** onto 
 - **Browsable.** Opens with every field and machine name on show, with tools to collapse it to an entity-only overview, filter by entity type, find and focus an entity, and read a searchable field table.
 - **Editable.** Add entities, fields, references, events, APIs and callbacks in Edit mode, rename machine names and attach notes - or build a model from scratch.
 - **Undo and history.** Undo and redo your edits, and step back to an earlier version of the diagram from the History panel.
+- **Keyboard shortcuts.** Most buttons have a keyboard shortcut, and pressing **F1** labels every button on screen with its shortcut at once (see [Keyboard shortcuts](#keyboard-shortcuts)).
 - **Saved as a document.** Save the diagram, layout and all, as a `.nexus.json` file and open it again later.
 - **Customisable & remembered.** Switch between light and dark themes, recolour entity types, swap their symbols or add types of your own; the choices persist in your browser and apply to every diagram you open.
 - **Export.** Export the whole canvas as **PNG** or **SVG**, or the field table as **CSV** - all client-side. The Export button remembers the last format you picked, so the next export takes 1 click.
@@ -125,6 +126,48 @@ Undo covers what the diagram holds, not how it's shown, so it leaves the **Field
 ## Saving diagrams
 
 **Save** downloads the diagram as a `.nexus.json` document holding the model, its layout, the entity colours and symbols, any custom types and the panel arrangement, and **Open** brings it back with every node where you left it. The title box at the top left names the diagram and the files it saves and exports. **New** starts an empty model, and **Import** returns to the import screen to load another config folder or template.
+
+## Keyboard shortcuts
+
+Press **F1** and every button on screen shows its keyboard shortcut in a small label. Press F1 again or **Esc** to hide the labels. They also go as soon as you use a shortcut, click, scroll or resize the window, since any of those can move the buttons. On a Mac keyboard whose top row sets the brightness and volume, hold **Fn** as you press F1.
+
+The table uses the Windows and Linux names. A Mac labels the same keys with **⌘** for Ctrl, **⌥** for Alt and **⇧** for Shift, so **Save** reads `⌘S` there.
+
+| Button | Shortcut |
+|--------|----------|
+| About | `?` |
+| Light / dark theme | `D` |
+| Settings | `,` |
+| New | `Alt+N` |
+| Import | `Alt+I` |
+| Open | `Ctrl+O` |
+| Save | `Ctrl+S` |
+| Undo | `Ctrl+Z` |
+| Redo | `Ctrl+Shift+Z` or `Ctrl+Y` |
+| Export | `Ctrl+E` |
+| The arrow beside Export | `Ctrl+Shift+E` |
+| View / Edit | `V` / `E` |
+| Find entity | `/` |
+| Fields | `F` |
+| Proxies | `P` |
+| Machine names | `M` |
+| Layout | `L` |
+| The arrow beside Layout | `Shift+L` |
+| Tidy | `T` |
+| Entities | `1` |
+| Table | `2` |
+| Legend | `3` |
+| History | `4` |
+| Content, Vocab, Media, Para, Block, User, External | `Shift+C`, `Shift+V`, `Shift+M`, `Shift+P`, `Shift+B`, `Shift+U`, `Shift+X` |
+| Field, Event, API, Callback | `Shift+F`, `Shift+E`, `Shift+A`, `Shift+K` |
+| Connect | `C` |
+| Reset / Fit | `0` / `Shift+1` |
+| Zoom out / zoom in | `-` / `+` or `=` |
+| Zoom level | `Z` |
+
+The palette shortcuts work in Edit mode, where the palette is on screen. One that opens a form puts the cursor in its machine name, so you can type the name straight away. On the landing screen, **Choose a config folder**, **Open a saved diagram** and **Start from scratch** take the shortcuts of **Import**, **Open** and **New**, `D` switches the theme, `1` and `2` load the templates in the order they're listed, and **Esc** closes the screen when there's a diagram behind it.
+
+The shortcuts stay out of your way while you type. A text box, a dropdown or an open menu keeps the plain keys for itself, so typing an `f` into **Find entity** doesn't hide the fields. In a text box only the **Ctrl** shortcuts work, apart from undo and redo, which undo your typing there - so **Ctrl+S** saves the diagram while you're renaming it. Hold a key down and only undo, redo and the zoom keys repeat.
 
 ## Annotation overlay
 

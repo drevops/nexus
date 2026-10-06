@@ -8,13 +8,9 @@
  */
 
 import { History, applyPartial, snapshotGraph } from './history.js';
+import { shortcutLabel } from './keyboard.js';
 import { getBuilder, getController, bump, revise } from './store.js';
 import { $ } from './dom.js';
-
-const SHORTCUTS = /Mac|iPhone|iPad/.test(navigator.platform) ? { undo: '⌘Z', redo: '⇧⌘Z' } : { undo: 'Ctrl+Z', redo: 'Ctrl+Y' };
-
-// Input types that hold no text, so the shortcuts work while 1 has focus.
-const TEXTLESS_INPUTS = ['button', 'checkbox', 'color', 'file', 'image', 'radio', 'range', 'reset', 'submit'];
 
 let diagramHistory = null;
 let showTitle = () => {};
@@ -43,19 +39,19 @@ function restore(partial) {
   getBuilder().refreshSelection();
 }
 
-function syncButton(id, verb, label, shortcut) {
+function syncButton(id, verb, label) {
   const button = $(id);
 
   button.disabled = !label;
   // SlButton does not reflect its title property, so set the attribute.
-  button.setAttribute('title', label ? verb + ': ' + label + ' (' + shortcut + ')' : 'Nothing to ' + verb.toLowerCase());
+  button.setAttribute('title', label ? verb + ': ' + label + ' (' + shortcutLabel(button) + ')' : 'Nothing to ' + verb.toLowerCase());
 }
 
 function update() {
   const { versions, index } = historyState();
 
-  syncButton('undo', 'Undo', index > 0 ? versions[index].label : null, SHORTCUTS.undo);
-  syncButton('redo', 'Redo', index < versions.length - 1 ? versions[index + 1].label : null, SHORTCUTS.redo);
+  syncButton('undo', 'Undo', index > 0 ? versions[index].label : null);
+  syncButton('redo', 'Redo', index < versions.length - 1 ? versions[index + 1].label : null);
   bump();
 }
 
@@ -123,76 +119,13 @@ export function redo() {
   goToVersion(historyState().index + 1);
 }
 
-// Whether the event comes from a field that edits text, which keeps its own
-// undo. Shoelace controls hold their native input in a shadow root.
-function fromTextField(evt) {
-  const target = evt.composedPath()[0];
-
-  if (!(target instanceof HTMLElement)) {
-    return false;
-  }
-
-  if (target.isContentEditable) {
-    return true;
-  }
-
-  // A Shoelace select shows its value in a read-only text input, which has
-  // no typing to undo.
-  if (target.readOnly) {
-    return false;
-  }
-
-  return target.tagName === 'TEXTAREA' || (target.tagName === 'INPUT' && !TEXTLESS_INPUTS.includes(target.type));
-}
-
-// Whether a diagram is open with no landing screen, loader or dialog over it.
-function diagramInFront() {
-  return !!diagramHistory && $('landing').hidden && $('loader').hidden && !document.querySelector('sl-dialog[open]');
-}
-
-// The command a key press asks for, or null. Cmd or Ctrl with Z undoes and
-// adds Shift to redo; Ctrl+Y redoes too, while Cmd+Y stays the browser's.
-function commandFor(evt) {
-  if (evt.altKey || !(evt.ctrlKey || evt.metaKey)) {
-    return null;
-  }
-
-  // A non-Latin layout reports another letter in `key`, so the physical key
-  // decides there.
-  const letter = /^[a-z]$/i.test(evt.key) ? evt.key.toLowerCase() : evt.code.replace(/^Key/, '').toLowerCase();
-
-  if (letter === 'z') {
-    return evt.shiftKey ? redo : undo;
-  }
-
-  if (letter === 'y' && evt.ctrlKey && !evt.metaKey && !evt.shiftKey) {
-    return redo;
-  }
-
-  return null;
-}
-
-function onKeydown(evt) {
-  const command = commandFor(evt);
-
-  if (!command || evt.defaultPrevented || fromTextField(evt) || !diagramInFront()) {
-    return;
-  }
-
-  evt.preventDefault();
-  command();
-}
-
 /**
- * Wires the undo and redo buttons and shortcuts. `onTitle(title)` shows the
- * diagram title a version restores.
+ * Wires the undo and redo buttons. `onTitle(title)` shows the diagram title a
+ * version restores.
  */
 export function initUndo(onTitle) {
   showTitle = onTitle;
   $('undo').addEventListener('click', undo);
   $('redo').addEventListener('click', redo);
-  // A Shoelace select stops the key presses it gets from propagating, so the
-  // shortcuts are read in the capture phase.
-  document.addEventListener('keydown', onKeydown, true);
   update();
 }

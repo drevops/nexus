@@ -2926,6 +2926,12 @@ test('shows interaction tips in the middle of the status bar', async ({ page }) 
   await expect(page.locator('#statusbar .statusbar__tips')).toContainText('Right-click');
 });
 
+// The tips are cut off at the end in a narrow window, so the pointer to the
+// shortcuts comes first.
+test('leads the status bar tips with the F1 shortcut view', async ({ page }) => {
+  await expect(page.locator('#statusbar .statusbar__tips')).toHaveText(/^F1 shows keyboard shortcuts · /);
+});
+
 test('renders a non-empty glyph for every toolbar, status bar and landing icon', async ({ page }) => {
   const empty = await page.evaluate(() =>
     [...document.querySelectorAll('.toolbar [data-icon], .statusbar [data-icon], .landing [data-icon]')]
@@ -2992,6 +2998,7 @@ test('opens an about dialog explaining browser-only storage and the licence', as
   await page.click('#about-toggle');
   await expect(page.locator('#about-dialog')).toBeVisible();
   await expect(page.locator('#about-dialog')).toContainText('content-model visual builder');
+  await expect(page.locator('#about-dialog')).toContainText('Press F1 to label every button with its keyboard shortcut');
   await expect(page.locator('#about-dialog')).toContainText('there is no backend');
   await expect(page.locator('#about-dialog')).toContainText('without warranty');
   await expect(page.locator('#about-repo')).toHaveAttribute('href', 'https://github.com/drevops/nexus');
@@ -3507,4 +3514,606 @@ test('starts a new history when another diagram is opened', async ({ page }) => 
 
   expect(await historyVersions(page)).toEqual([['Started a new content model', 'current']]);
   await expect(page.locator('#undo')).toHaveAttribute('disabled', '');
+});
+
+const MAC_LABELS = {
+  'doc-save': '⌘S',
+  'doc-new': '⌥N',
+  redo: '⇧⌘Z',
+  'export-choose': '⇧⌘E',
+  fit: '⇧1',
+  'zoom-in': '+',
+  search: '/',
+  'fields-toggle': 'F',
+};
+
+const PC_LABELS = {
+  'doc-save': 'Ctrl+S',
+  'doc-new': 'Alt+N',
+  redo: 'Ctrl+Shift+Z',
+  'export-choose': 'Ctrl+Shift+E',
+  fit: 'Shift+1',
+  'zoom-in': '+',
+  search: '/',
+  'fields-toggle': 'F',
+};
+
+// Reloads the page as a browser on the given platform, which decides how the
+// shortcut labels are written.
+async function onPlatform(page, platform) {
+  await page.addInitScript((value) => Object.defineProperty(navigator, 'platform', { get: () => value }), platform);
+  await page.reload();
+}
+
+// The badges the shortcut view draws, each as the id of the control it
+// labels and its label.
+function shortcutHints(page) {
+  return page.locator('#shortcut-hints .shortcut-hint').evaluateAll((badges) => badges.map((badge) => [badge.dataset.for, badge.textContent]));
+}
+
+// The ids of the controls with a shortcut that are drawn outside the inert
+// regions.
+function availableShortcuts(page) {
+  return page.evaluate(() => {
+    const available = [...document.querySelectorAll('[data-shortcut]')].filter((el) => el.getClientRects().length > 0 && !el.closest('[inert]'));
+
+    return available.map((el) => el.id);
+  });
+}
+
+// Each badge of the shortcut view with its box and the box of its control.
+function hintLayout(page) {
+  return page.locator('#shortcut-hints .shortcut-hint').evaluateAll((badges) =>
+    badges.map((badge) => {
+      const control = document.getElementById(badge.dataset.for);
+
+      return { id: badge.dataset.for, badge: badge.getBoundingClientRect().toJSON(), control: control.getBoundingClientRect().toJSON() };
+    }),
+  );
+}
+
+function zoomLevel(page) {
+  return page.evaluate(() => window.__nexus.cy.zoom());
+}
+
+// Expects the inspector to offer a new entity of the type with this label.
+function offersNewEntity(label) {
+  return (page) => expect(page.locator('#inspector .insp__title')).toHaveText('New ' + label);
+}
+
+// Expects a click on the empty canvas to place a note of this kind.
+function placesNote(kind) {
+  return async (page) => {
+    const box = await page.locator('#cy').boundingBox();
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+
+    expect(await page.evaluate(() => window.__nexus.cy.nodes('[group="annotation"]').map((node) => node.data('kind')))).toEqual([kind]);
+  };
+}
+
+test('labels every control on screen with its shortcut on F1 and hides the labels on F1 again', async ({ page }) => {
+  await loadExample(page);
+  await expect(page.locator('#shortcut-hints')).toBeHidden();
+
+  await page.keyboard.press('F1');
+
+  await expect(page.locator('#shortcut-hints')).toBeVisible();
+  const labelled = (await shortcutHints(page)).map(([id]) => id);
+  expect(labelled).toEqual(await availableShortcuts(page));
+  expect(labelled).toEqual(expect.arrayContaining(['about-toggle', 'doc-save', 'undo', 'search', 'history-toggle', 'zoom-level']));
+  expect(labelled).not.toContain('add-node');
+
+  await page.keyboard.press('F1');
+
+  await expect(page.locator('#shortcut-hints')).toBeHidden();
+  await expect(page.locator('#shortcut-hints .shortcut-hint')).toHaveCount(0);
+});
+
+for (const [name, platform, labels, undoLabel] of dataProviderShortcutPlatforms()) {
+  test(`writes the shortcut labels the way ${name} does`, async ({ page }) => {
+    await onPlatform(page, platform);
+    await loadExample(page);
+
+    await page.keyboard.press('F1');
+    const hints = Object.fromEntries(await shortcutHints(page));
+
+    for (const [id, label] of Object.entries(labels)) {
+      expect(hints[id], id).toBe(label);
+    }
+
+    await slFill(page, '#diagram-title', 'Roadmap');
+    await expect(page.locator('#undo')).toHaveAttribute('title', 'Undo: Renamed the diagram (' + undoLabel + ')');
+  });
+}
+
+function dataProviderShortcutPlatforms() {
+  return [
+    ['a Mac', 'MacIntel', MAC_LABELS, '⌘Z'],
+    ['an iPad', 'iPad', MAC_LABELS, '⌘Z'],
+    ['Windows', 'Win32', PC_LABELS, 'Ctrl+Z'],
+    ['Linux', 'Linux x86_64', PC_LABELS, 'Ctrl+Z'],
+  ];
+}
+
+for (const [name, platform, edit] of dataProviderHintLayouts()) {
+  test(`keeps each shortcut label on its control and clear of the others on ${name}`, async ({ page }) => {
+    await onPlatform(page, platform);
+    await loadExample(page);
+
+    if (edit) {
+      await page.click('#mode-build');
+    }
+
+    await page.keyboard.press('F1');
+    const layout = await hintLayout(page);
+
+    expect(layout.length).toBeGreaterThan(edit ? 35 : 25);
+
+    for (const { id, badge, control } of layout) {
+      expect(Math.abs(badge.x + badge.width / 2 - (control.x + control.width / 2)), id).toBeLessThan(1);
+      expect(badge.y, id).toBeLessThan(control.y + control.height + 2 * badge.height);
+      expect(badge.y + badge.height, id).toBeGreaterThan(control.y - 2 * badge.height);
+    }
+
+    const overlapping = layout.filter((hint, i) => layout.slice(i + 1).some((other) => boxesOverlap(hint.badge, other.badge)));
+    expect(overlapping.map((hint) => hint.id)).toEqual([]);
+  });
+}
+
+function dataProviderHintLayouts() {
+  return [
+    ['a Mac in view mode', 'MacIntel', false],
+    ['a Mac in edit mode', 'MacIntel', true],
+    ['Windows in view mode', 'Win32', false],
+    ['Windows in edit mode', 'Win32', true],
+  ];
+}
+
+test('dims the label of a control that is disabled', async ({ page }) => {
+  await loadExample(page);
+
+  await page.keyboard.press('F1');
+
+  await expect(page.locator('#shortcut-hints [data-for="undo"]')).toHaveClass(/is-disabled/);
+  await expect(page.locator('#shortcut-hints [data-for="doc-save"]')).not.toHaveClass(/is-disabled/);
+});
+
+for (const [name, close] of dataProviderHintClosers()) {
+  test(`hides the shortcut labels on ${name}`, async ({ page }) => {
+    await loadExample(page);
+    await page.keyboard.press('F1');
+    await expect(page.locator('#shortcut-hints')).toBeVisible();
+
+    await close(page);
+
+    await expect(page.locator('#shortcut-hints')).toBeHidden();
+  });
+}
+
+function dataProviderHintClosers() {
+  return [
+    ['Escape', (page) => page.keyboard.press('Escape')],
+    ['a click', (page) => page.click('.statusbar__tips')],
+    ['a shortcut', (page) => page.keyboard.press('m')],
+    ['a resize', (page) => page.setViewportSize({ width: 1100, height: 700 })],
+    ['a scroll', (page) => page.locator('#legend .panel__body').dispatchEvent('scroll')],
+  ];
+}
+
+for (const [name, open] of dataProviderHelpKeyScreens()) {
+  test(`keeps the browser's help from opening on F1 on ${name}`, async ({ page }) => {
+    await open(page);
+    await page.evaluate(() => {
+      window.addEventListener('keydown', (evt) => {
+        window.helpPrevented = evt.defaultPrevented;
+      });
+    });
+
+    await page.keyboard.press('F1');
+
+    expect(await page.evaluate(() => window.helpPrevented)).toBe(true);
+  });
+}
+
+function dataProviderHelpKeyScreens() {
+  return [
+    ['the landing screen', () => {}],
+    ['a diagram', loadExample],
+    [
+      'the About box',
+      async (page) => {
+        await loadExample(page);
+        await page.click('#about-toggle');
+        await expect(page.locator('#about-dialog')).toBeVisible();
+      },
+    ],
+  ];
+}
+
+test('opens the About box with ? and leaves every shortcut off while it is open', async ({ page }) => {
+  await loadExample(page);
+
+  await page.keyboard.press('?');
+  await expect(page.locator('#about-dialog')).toBeVisible();
+
+  await page.keyboard.press('f');
+  await page.keyboard.press('F1');
+
+  await expect(page.locator('#fields-toggle')).toHaveClass(/is-active/);
+  await expect(page.locator('#shortcut-hints')).toBeHidden();
+});
+
+test("labels the landing screen's controls and none of the toolbar's behind it", async ({ page }) => {
+  await onPlatform(page, 'Win32');
+
+  await page.keyboard.press('F1');
+
+  expect(await shortcutHints(page)).toEqual([
+    ['landing-theme', 'D'],
+    ['folder-btn', 'Alt+I'],
+    ['landing-open', 'Ctrl+O'],
+    ['new-btn', 'Alt+N'],
+    ['template-drupal-cms', '1'],
+    ['template-civictheme', '2'],
+  ]);
+});
+
+test('closes the shortcut labels and then the import screen with Escape', async ({ page }) => {
+  await loadExample(page);
+  await page.click('#doc-import');
+
+  await page.keyboard.press('F1');
+  expect(Object.fromEntries(await shortcutHints(page))['landing-cancel']).toBe('Esc');
+
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#shortcut-hints')).toBeHidden();
+  await expect(page.locator('#landing')).toBeVisible();
+
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#landing')).toBeHidden();
+});
+
+for (const [name, key, ran] of dataProviderToolbarShortcuts()) {
+  test(`runs ${name} with ${key}`, async ({ page }) => {
+    await loadExample(page);
+
+    await page.keyboard.press(key);
+
+    await ran(page);
+  });
+}
+
+function dataProviderToolbarShortcuts() {
+  return [
+    ['the theme toggle', 'd', (page) => expect(page.locator('html')).toHaveClass(/sl-theme-dark/)],
+    ['Settings', ',', (page) => expect(page.locator('#settings')).toBeVisible()],
+    ['Import', 'Alt+i', (page) => expect(page.locator('#landing')).toBeVisible()],
+    ['Export before a format is chosen', 'Control+e', (page) => expect(page.locator('#export-menu')).toBeVisible()],
+    ['the export format menu', 'Control+Shift+E', (page) => expect(page.locator('#export-menu')).toBeVisible()],
+    ['Fields', 'f', (page) => expect(page.locator('#fields-toggle')).not.toHaveClass(/is-active/)],
+    ['Proxies', 'p', (page) => expect(page.locator('#proxy-toggle')).not.toHaveClass(/is-active/)],
+    ['Machine names', 'm', (page) => expect(page.locator('#machine-names')).not.toHaveClass(/is-active/)],
+    ['Entities', '1', (page) => expect(page.locator('#entities')).toBeVisible()],
+    ['Table', '2', (page) => expect(page.locator('#table')).toBeVisible()],
+    ['Legend', '3', (page) => expect(page.locator('#legend')).toHaveCount(0)],
+    ['History', '4', (page) => expect(page.locator('#history')).toBeVisible()],
+    ['the zoom menu', 'z', (page) => expect(page.locator('#zoom-menu')).toBeVisible()],
+  ];
+}
+
+test('tidies the layout with T', async ({ page }) => {
+  await openDocument(page, SCATTERED_DOC);
+  const saved = await nodePositions(page);
+
+  await page.keyboard.press('t');
+
+  expect(await nodePositions(page)).not.toEqual(saved);
+  await expect(page.locator('#undo')).toHaveAttribute('title', /^Undo: Tidied the layout \(/);
+});
+
+test('re-runs the picked layout with L', async ({ page }) => {
+  await loadExample(page);
+  const laidOut = await nodePositions(page);
+
+  await page.evaluate(() => {
+    window.__nexus.cy.getElementById('node.event').shift({ x: 300, y: 300 });
+  });
+  await page.keyboard.press('l');
+
+  expect(await nodePositions(page)).toEqual(laidOut);
+});
+
+test('picks a layout from the keyboard once Shift+L opens the layout menu', async ({ page }) => {
+  await loadExample(page);
+
+  await page.keyboard.press('Shift+L');
+  await expect(page.locator('#layout-menu')).toBeVisible();
+  await page.keyboard.press('ArrowDown');
+  await expect(page.locator('#layout-menu sl-menu-item[value="lr"]')).toBeFocused();
+  await page.keyboard.press('Enter');
+
+  await expect(page.locator('#layout-run .layout-label')).toHaveText('Layout: LR');
+});
+
+test('switches between view and edit modes with V and E', async ({ page }) => {
+  await loadExample(page);
+
+  await page.keyboard.press('e');
+  await expect(page.locator('#mode-build')).toHaveClass(/is-active/);
+  await expect(page.locator('#build-tools')).toBeVisible();
+
+  await page.keyboard.press('v');
+  await expect(page.locator('#mode-view')).toHaveClass(/is-active/);
+  await expect(page.locator('#build-tools')).toBeHidden();
+});
+
+test('focuses the search box with / and selects what it holds', async ({ page }) => {
+  await loadExample(page);
+  await slFill(page, '#search', 'news');
+
+  await page.keyboard.press('/');
+  await expect(page.locator('#search')).toBeFocused();
+  await page.keyboard.type('session');
+
+  await expect(page.locator('#search')).toHaveJSProperty('value', 'session');
+});
+
+test('zooms in with + and =, out with -, back to 100% with 0 and to fit with Shift+1', async ({ page }) => {
+  await loadExample(page);
+
+  await page.keyboard.press('0');
+  expect(await zoomLevel(page)).toBeCloseTo(1, 5);
+  await page.keyboard.press('+');
+  expect(await zoomLevel(page)).toBeCloseTo(1.25, 5);
+  await page.keyboard.press('=');
+  expect(await zoomLevel(page)).toBeCloseTo(1.5625, 5);
+  await page.keyboard.press('-');
+  expect(await zoomLevel(page)).toBeCloseTo(1.25, 5);
+
+  await page.keyboard.press('Shift+1');
+  const fitted = await zoomLevel(page);
+  await page.keyboard.press('0');
+  await page.click('#fit');
+  expect(await zoomLevel(page)).toBeCloseTo(fitted, 5);
+});
+
+for (const [name, modifier] of dataProviderShortcutModifiers()) {
+  test(`saves the diagram with ${name}+S, from the title box too`, async ({ page }) => {
+    await loadExample(page);
+
+    const [saved] = await Promise.all([page.waitForEvent('download'), page.keyboard.press(modifier + '+s')]);
+    expect(saved.suggestedFilename()).toBe('example-content-model.nexus.json');
+
+    await page.locator('#diagram-title').click();
+    const [renamed] = await Promise.all([page.waitForEvent('download'), page.keyboard.press(modifier + '+s')]);
+    expect(renamed.suggestedFilename()).toBe('example-content-model.nexus.json');
+  });
+}
+
+test('exports the chosen format again with Ctrl+E', async ({ page }) => {
+  await loadExample(page);
+  await exportFrom(page, 'svg');
+
+  const [download] = await Promise.all([page.waitForEvent('download'), page.keyboard.press('Control+e')]);
+
+  expect(download.suggestedFilename()).toBe('example-content-model.svg');
+});
+
+test('picks an export format from the keyboard once Ctrl+Shift+E opens the menu', async ({ page }) => {
+  await loadExample(page);
+
+  await page.keyboard.press('Control+Shift+E');
+  await expect(page.locator('#export-menu')).toBeVisible();
+  await page.keyboard.press('ArrowDown');
+  await expect(page.locator('#export-menu sl-menu-item[value="png"]')).toBeFocused();
+
+  const [download] = await Promise.all([page.waitForEvent('download'), page.keyboard.press('Enter')]);
+  expect(download.suggestedFilename()).toBe('example-content-model.png');
+});
+
+for (const [name, key, input, open] of dataProviderFilePickerShortcuts()) {
+  test(`opens the ${name} with ${key}`, async ({ page }) => {
+    await open(page);
+    const chooser = page.waitForEvent('filechooser');
+
+    // Waiting for a file chooser turns on its interception without waiting
+    // for it, and a key press can reach the page first, so a round trip to
+    // the page comes before the key.
+    await page.evaluate(() => {});
+    await page.keyboard.press(key);
+
+    expect(await (await chooser).element().evaluate((el) => el.id)).toBe(input);
+  });
+}
+
+function dataProviderFilePickerShortcuts() {
+  return [
+    ['saved diagram picker', 'Control+o', 'doc-open', loadExample],
+    ['saved diagram picker from the landing screen', 'Control+o', 'doc-open', () => {}],
+    ['config folder picker from the landing screen', 'Alt+i', 'folder-input', () => {}],
+  ];
+}
+
+for (const [name, open] of dataProviderNewShortcutScreens()) {
+  test(`starts a new content model with Alt+N from ${name}`, async ({ page }) => {
+    await open(page);
+
+    await page.keyboard.press('Alt+n');
+
+    await expect(page.locator('#landing')).toBeHidden();
+    await expect(page.locator('#diagram-title')).toHaveJSProperty('value', 'New content model');
+    expect(await entityCount(page)).toBe(0);
+  });
+}
+
+function dataProviderNewShortcutScreens() {
+  return [
+    ['a diagram', loadExample],
+    ['the landing screen', () => {}],
+  ];
+}
+
+for (const [key, title] of dataProviderTemplateNumbers()) {
+  test(`loads the template numbered ${key} on the landing screen`, async ({ page }) => {
+    await page.keyboard.press(key);
+    await waitForGraph(page);
+
+    expect(await page.locator('#diagram-title').evaluate((el) => el.value)).toMatch(title);
+  });
+}
+
+function dataProviderTemplateNumbers() {
+  return [
+    ['1', /^Drupal CMS /],
+    ['2', /^CivicTheme /],
+  ];
+}
+
+test('switches the theme with D on the landing screen', async ({ page }) => {
+  await page.keyboard.press('d');
+
+  await expect(page.locator('html')).toHaveClass(/sl-theme-dark/);
+  await expect(page.locator('#landing-theme')).toHaveAttribute('title', 'Switch to light theme');
+});
+
+for (const [name, key, ran] of dataProviderPaletteShortcuts()) {
+  test(`runs the ${name} button of the edit palette with ${key}`, async ({ page }) => {
+    await page.click('#new-btn');
+    await page.keyboard.press('e');
+
+    await page.keyboard.press(key);
+
+    await ran(page);
+  });
+}
+
+function dataProviderPaletteShortcuts() {
+  return [
+    ['Content', 'Shift+C', offersNewEntity('Content type')],
+    ['Vocab', 'Shift+V', offersNewEntity('Vocabulary')],
+    ['Media', 'Shift+M', offersNewEntity('Media')],
+    ['Para', 'Shift+P', offersNewEntity('Paragraph')],
+    ['Block', 'Shift+B', offersNewEntity('Block')],
+    ['User', 'Shift+U', offersNewEntity('User')],
+    ['External', 'Shift+X', offersNewEntity('External entity')],
+    ['Field', 'Shift+F', (page) => expect(page.locator('#inspector [data-new="field"]')).toBeVisible()],
+    ['Event', 'Shift+E', placesNote('event')],
+    ['API', 'Shift+A', placesNote('api')],
+    ['Callback', 'Shift+K', placesNote('callback')],
+    ['Connect', 'c', (page) => expect(page.locator('#connect-toggle')).toHaveClass(/is-active/)],
+  ];
+}
+
+for (const [name, key, field] of dataProviderNewItemForms()) {
+  test(`types the machine name of a new ${name} straight after ${key} opens its form`, async ({ page }) => {
+    await buildEntities(page, ['story']);
+    await page.evaluate(() => document.activeElement.blur());
+
+    await page.keyboard.press(key);
+    await expect(page.locator(field)).toBeFocused();
+    await page.keyboard.type('cf');
+
+    await expect(page.locator(field)).toHaveJSProperty('value', 'cf');
+    await expect(page.locator('#connect-toggle')).not.toHaveClass(/is-active/);
+    await expect(page.locator('#fields-toggle')).toHaveClass(/is-active/);
+  });
+}
+
+function dataProviderNewItemForms() {
+  return [
+    ['content type', 'Shift+C', '#inspector [data-new-bundle]'],
+    ['field', 'Shift+F', '#inspector [data-new-name]'],
+  ];
+}
+
+test('opens the form of the palette type picked last', async ({ page }) => {
+  await page.click('#new-btn');
+  await page.click('#mode-build');
+
+  await page.click('[data-add-entity="node"]');
+  await page.click('[data-add-entity="taxonomy_term"]');
+
+  await expect(page.locator('#inspector .insp__title')).toHaveText('New Vocabulary');
+  await expect(page.locator('#inspector [data-new-bundle]')).toBeFocused();
+});
+
+test('leaves the focus on the page when an undo redraws an open new field form', async ({ page }) => {
+  await buildEntities(page, ['a', 'b']);
+  await page.click('#add-field');
+  await expect(page.locator('#inspector [data-new-name]')).toBeFocused();
+  await page.evaluate(() => document.activeElement.blur());
+
+  await page.keyboard.press('Control+z');
+  await page.keyboard.press('Control+z');
+
+  expect(await entityIds(page)).toEqual([]);
+  await expect(page.locator('#inspector [data-new-name]')).not.toBeFocused();
+});
+
+test('types into a text box instead of running the shortcuts of the keys', async ({ page }) => {
+  await loadExample(page);
+  await page.locator('#search').click();
+
+  await page.keyboard.type('f1?');
+  await page.keyboard.press('Alt+n');
+
+  await expect(page.locator('#search')).toHaveJSProperty('value', 'f1?');
+  await expect(page.locator('#fields-toggle')).toHaveClass(/is-active/);
+  await expect(page.locator('#entities')).toHaveCount(0);
+  await expect(page.locator('#about-dialog')).not.toBeVisible();
+  expect(await entityCount(page)).toBeGreaterThan(0);
+});
+
+test('leaves letter keys to a focused select', async ({ page }) => {
+  await selectTrackField(page);
+  await page.locator('#inspector sl-select[data-cardinality]').click();
+
+  await page.keyboard.press('m');
+
+  await expect(page.locator('#machine-names')).toHaveClass(/is-active/);
+});
+
+test('leaves letter keys to an open menu', async ({ page }) => {
+  await loadExample(page);
+  await page.keyboard.press('Control+Shift+E');
+  await page.keyboard.press('ArrowDown');
+  await expect(page.locator('#export-menu sl-menu-item[value="png"]')).toBeFocused();
+
+  await page.keyboard.press('p');
+
+  await expect(page.locator('#proxy-toggle')).toHaveClass(/is-active/);
+  await expect(page.locator('#export-menu')).toBeVisible();
+});
+
+test('repeats a held zoom key, but not a held toggle or F1', async ({ page }) => {
+  await loadExample(page);
+  await page.keyboard.press('0');
+
+  await page.keyboard.down('-');
+  await page.keyboard.down('-');
+  await page.keyboard.up('-');
+  expect(await zoomLevel(page)).toBeCloseTo(0.64, 5);
+
+  await page.keyboard.down('f');
+  await page.keyboard.down('f');
+  await page.keyboard.up('f');
+  await expect(page.locator('#fields-toggle')).not.toHaveClass(/is-active/);
+
+  await page.keyboard.down('F1');
+  await page.keyboard.down('F1');
+  await page.keyboard.up('F1');
+  await expect(page.locator('#shortcut-hints')).toBeVisible();
+});
+
+test('undoes 1 step after another while Ctrl+Z is held', async ({ page }) => {
+  await buildEntities(page, ['a', 'b']);
+  await page.evaluate(() => document.activeElement.blur());
+
+  await page.keyboard.down('Control');
+  await page.keyboard.down('z');
+  await page.keyboard.down('z');
+  await page.keyboard.up('z');
+  await page.keyboard.up('Control');
+
+  expect(await entityIds(page)).toEqual([]);
 });
