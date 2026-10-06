@@ -165,7 +165,7 @@ The table uses the Windows and Linux names. A Mac labels the same keys with **‚å
 | Zoom out / zoom in | `-` / `+` or `=` |
 | Zoom level | `Z` |
 
-The palette shortcuts work in Edit mode, where the palette is on screen. On the landing screen, **Choose a config folder**, **Open a saved diagram** and **Start from scratch** take the shortcuts of **Import**, **Open** and **New**, `D` switches the theme, `1` and `2` load the templates in the order they're listed, and **Esc** closes the screen when there's a diagram behind it.
+The palette shortcuts work in Edit mode, where the palette is on screen. One that opens a form puts the cursor in its machine name, so you can type the name straight away. On the landing screen, **Choose a config folder**, **Open a saved diagram** and **Start from scratch** take the shortcuts of **Import**, **Open** and **New**, `D` switches the theme, `1` and `2` load the templates in the order they're listed, and **Esc** closes the screen when there's a diagram behind it.
 
 The shortcuts stay out of your way while you type. A text box, a dropdown or an open menu keeps the plain keys for itself, so typing an `f` into **Find entity** doesn't hide the fields. In a text box only the **Ctrl** shortcuts work, apart from undo and redo, which undo your typing there - so **Ctrl+S** saves the diagram while you're renaming it. Hold a key down and only undo, redo and the zoom keys repeat.
 

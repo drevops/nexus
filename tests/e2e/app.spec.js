@@ -3999,6 +3999,52 @@ function dataProviderPaletteShortcuts() {
   ];
 }
 
+for (const [name, key, field] of dataProviderNewItemForms()) {
+  test(`types the machine name of a new ${name} straight after ${key} opens its form`, async ({ page }) => {
+    await buildEntities(page, ['story']);
+    await page.evaluate(() => document.activeElement.blur());
+
+    await page.keyboard.press(key);
+    await expect(page.locator(field)).toBeFocused();
+    await page.keyboard.type('cl');
+
+    await expect(page.locator(field)).toHaveJSProperty('value', 'cl');
+    await expect(page.locator('#connect-toggle')).not.toHaveClass(/is-active/);
+    await expect(page.locator('#layout-toggle')).toHaveText('Layout: LR');
+  });
+}
+
+function dataProviderNewItemForms() {
+  return [
+    ['content type', 'Shift+C', '#inspector [data-new-bundle]'],
+    ['field', 'Shift+F', '#inspector [data-new-name]'],
+  ];
+}
+
+test('opens the form of the palette type picked last', async ({ page }) => {
+  await page.click('#new-btn');
+  await page.click('#mode-build');
+
+  await page.click('[data-add-entity="node"]');
+  await page.click('[data-add-entity="taxonomy_term"]');
+
+  await expect(page.locator('#inspector .insp__title')).toHaveText('New Vocabulary');
+  await expect(page.locator('#inspector [data-new-bundle]')).toBeFocused();
+});
+
+test('leaves the focus on the page when an undo redraws an open new field form', async ({ page }) => {
+  await buildEntities(page, ['a', 'b']);
+  await page.click('#add-field');
+  await expect(page.locator('#inspector [data-new-name]')).toBeFocused();
+  await page.evaluate(() => document.activeElement.blur());
+
+  await page.keyboard.press('Control+z');
+  await page.keyboard.press('Control+z');
+
+  expect(await entityIds(page)).toEqual([]);
+  await expect(page.locator('#inspector [data-new-name]')).not.toBeFocused();
+});
+
 test('types into a text box instead of running the shortcuts of the keys', async ({ page }) => {
   await loadExample(page);
   await page.locator('#search').click();
