@@ -16,6 +16,7 @@ import { documentFromGraph, documentToModel } from './document.js';
 import { initBuilder, attachBuilder } from './builder.js';
 import { initUI } from './ui.js';
 import { initUndo, resetHistory, checkpoint } from './undo.js';
+import { initShortcuts } from './keyboard.js';
 import { initIcons, icon } from './icons.js';
 import { VERSION } from './version.js';
 import { DEFAULT_TITLE } from './model.js';
@@ -251,12 +252,17 @@ function element(tag, className, text) {
   return node;
 }
 
-function templateRow(template) {
+function templateRow(template, index) {
   const row = element('button', 'template-row');
   row.type = 'button';
   row.id = 'template-' + template.id;
   row.title = 'Load the ' + templateTitle(template) + ' content model';
   row.addEventListener('click', () => loadTemplate(template));
+
+  // The digit keys 1 to 9 load the templates in order.
+  if (index < 9) {
+    row.dataset.shortcut = String(index + 1);
+  }
 
   const mark = element('span', 'template-row__mark');
   mark.style.setProperty('--template-color', template.color);
@@ -305,13 +311,6 @@ function wireLanding() {
   $('new-btn').addEventListener('click', newDocument);
   $('doc-import').addEventListener('click', showLanding);
   $('landing-cancel').addEventListener('click', () => setLandingOpen(false));
-
-  // Ignored while loading, as a failed load reports its error on the landing.
-  document.addEventListener('keydown', (evt) => {
-    if (evt.key === 'Escape' && !$('landing').hidden && !$('landing-cancel').hidden && $('loader').hidden) {
-      setLandingOpen(false);
-    }
-  });
 
   setLandingOpen(!$('landing').hidden);
 }
@@ -539,6 +538,7 @@ wireDocument();
 initUI();
 initBuilder();
 initUndo(showTitle);
+initShortcuts();
 initIcons();
 initTheme();
 initStatusbar();

@@ -35,72 +35,72 @@
       <sl-input id="diagram-title" class="toolbar__title" size="small" placeholder="Untitled content model" title="Rename this content model - used for the saved file names" aria-label="Content model name"></sl-input>
     </div>
     <div class="toolbar__actions">
-      <sl-button id="about-toggle" class="toolbar__button toolbar__button--icon" size="small" data-icon="help-circle" title="About Nexus" aria-label="About Nexus"></sl-button>
+      <sl-button id="about-toggle" class="toolbar__button toolbar__button--icon" size="small" data-icon="help-circle" data-shortcut="?" title="About Nexus" aria-label="About Nexus"></sl-button>
       <sl-button id="github-link" class="toolbar__button toolbar__button--icon" size="small" href="https://github.com/drevops/nexus" target="_blank" rel="noopener" data-icon="github" title="View Nexus on GitHub" aria-label="View Nexus on GitHub"></sl-button>
-      <sl-button id="theme-toggle" class="toolbar__button toolbar__button--icon" size="small" data-icon="moon" data-theme-toggle title="Toggle light / dark theme" aria-label="Toggle theme"></sl-button>
-      <sl-button id="settings-toggle" class="toolbar__button toolbar__button--icon" size="small" data-icon="sliders" title="Toggle the settings panel" aria-label="Settings"></sl-button>
+      <sl-button id="theme-toggle" class="toolbar__button toolbar__button--icon" size="small" data-icon="moon" data-theme-toggle data-shortcut="D" title="Toggle light / dark theme" aria-label="Toggle theme"></sl-button>
+      <sl-button id="settings-toggle" class="toolbar__button toolbar__button--icon" size="small" data-icon="sliders" data-shortcut="," title="Toggle the settings panel" aria-label="Settings"></sl-button>
     </div>
   </div>
   <div class="toolbar__tools">
     <sl-button-group class="toolbar__group" label="Document">
-      <sl-button id="doc-new" class="toolbar__button" size="small" data-icon="file-plus" title="Start a new empty content model">New</sl-button>
-      <sl-button id="doc-import" class="toolbar__button" size="small" data-icon="folder-input" title="Import a Drupal config folder">Import</sl-button>
-      <sl-button id="doc-open-btn" class="toolbar__button" size="small" data-icon="folder-open" title="Open a saved Nexus diagram (.nexus.json)">Open</sl-button>
-      <sl-button id="doc-save" class="toolbar__button" size="small" data-icon="download" title="Save this diagram as a Nexus document (.nexus.json)">Save</sl-button>
+      <sl-button id="doc-new" class="toolbar__button" size="small" data-icon="file-plus" data-shortcut="Alt+N" title="Start a new empty content model">New</sl-button>
+      <sl-button id="doc-import" class="toolbar__button" size="small" data-icon="folder-input" data-shortcut="Alt+I" title="Import a Drupal config folder">Import</sl-button>
+      <sl-button id="doc-open-btn" class="toolbar__button" size="small" data-icon="folder-open" data-shortcut="Mod+O" title="Open a saved Nexus diagram (.nexus.json)">Open</sl-button>
+      <sl-button id="doc-save" class="toolbar__button" size="small" data-icon="download" data-shortcut="Mod+S" title="Save this diagram as a Nexus document (.nexus.json)">Save</sl-button>
     </sl-button-group>
     <sl-button-group class="toolbar__group" label="Undo">
-      <sl-button id="undo" class="toolbar__button toolbar__button--icon" size="small" data-icon="undo-2" title="Nothing to undo" aria-label="Undo" disabled></sl-button>
-      <sl-button id="redo" class="toolbar__button toolbar__button--icon" size="small" data-icon="redo-2" title="Nothing to redo" aria-label="Redo" disabled></sl-button>
+      <sl-button id="undo" class="toolbar__button toolbar__button--icon" size="small" data-icon="undo-2" data-shortcut="Mod+Z" data-shortcut-repeat title="Nothing to undo" aria-label="Undo" disabled></sl-button>
+      <sl-button id="redo" class="toolbar__button toolbar__button--icon" size="small" data-icon="redo-2" data-shortcut="Mod+Shift+Z Ctrl+Y" data-shortcut-repeat title="Nothing to redo" aria-label="Redo" disabled></sl-button>
     </sl-button-group>
     <sl-button-group id="export-group" class="toolbar__group" label="Export">
-      <sl-button id="export-run" class="toolbar__button" size="small" data-icon="share" title="Export the diagram or its fields table"><span class="export-label">Export</span></sl-button>
+      <sl-button id="export-run" class="toolbar__button" size="small" data-icon="share" data-shortcut="Mod+E" title="Export the diagram or its fields table"><span class="export-label">Export</span></sl-button>
       <sl-dropdown id="export-dropdown" placement="bottom-end" hoist>
-        <sl-button id="export-choose" slot="trigger" class="toolbar__button" size="small" caret title="Choose the export format" aria-label="Choose the export format"></sl-button>
+        <sl-button id="export-choose" slot="trigger" class="toolbar__button" size="small" caret data-shortcut="Mod+Shift+E" title="Choose the export format" aria-label="Choose the export format"></sl-button>
         <sl-menu id="export-menu"></sl-menu>
       </sl-dropdown>
     </sl-button-group>
     <sl-button-group class="toolbar__group" label="Mode">
-      <sl-button id="mode-view" class="toolbar__button is-active" size="small" data-icon="eye" title="View mode: explore the diagram">View</sl-button>
-      <sl-button id="mode-build" class="toolbar__button" size="small" data-icon="pencil" title="Edit mode: add and change entities and fields">Edit</sl-button>
+      <sl-button id="mode-view" class="toolbar__button is-active" size="small" data-icon="eye" data-shortcut="V" title="View mode: explore the diagram">View</sl-button>
+      <sl-button id="mode-build" class="toolbar__button" size="small" data-icon="pencil" data-shortcut="E" title="Edit mode: add and change entities and fields">Edit</sl-button>
     </sl-button-group>
-    <sl-input id="search" class="toolbar__search" size="small" type="search" placeholder="Find entity…" autocomplete="off" clearable title="Type an entity name and press Enter or the search button"></sl-input>
+    <sl-input id="search" class="toolbar__search" size="small" type="search" placeholder="Find entity…" autocomplete="off" clearable data-shortcut="/" title="Type an entity name and press Enter or the search button"></sl-input>
     <sl-button id="search-btn" class="toolbar__button toolbar__button--icon" size="small" data-icon="search" title="Find the entity and zoom to it" aria-label="Search"></sl-button>
     <sl-button-group class="toolbar__group" label="Display">
-      <sl-button id="fields-toggle" class="toolbar__button" size="small" data-icon="list" title="Show or hide entity fields">Fields</sl-button>
-      <sl-button id="proxy-toggle" class="toolbar__button" size="small" data-icon="layers" title="Show references as semi-opaque proxies instead of long edges">Proxies</sl-button>
-      <sl-button id="machine-names" class="toolbar__button" size="small" data-icon="code" title="Show or hide machine names under each symbol">Machine names</sl-button>
+      <sl-button id="fields-toggle" class="toolbar__button" size="small" data-icon="list" data-shortcut="F" title="Show or hide entity fields">Fields</sl-button>
+      <sl-button id="proxy-toggle" class="toolbar__button" size="small" data-icon="layers" data-shortcut="P" title="Show references as semi-opaque proxies instead of long edges">Proxies</sl-button>
+      <sl-button id="machine-names" class="toolbar__button" size="small" data-icon="code" data-shortcut="M" title="Show or hide machine names under each symbol">Machine names</sl-button>
     </sl-button-group>
     <sl-button-group class="toolbar__group" label="Layout">
-      <sl-button id="layout-run" class="toolbar__button" size="small" data-icon="layout" title="Stack the entities in columns that fill the screen"><span class="layout-label">Layout: Columns</span></sl-button>
+      <sl-button id="layout-run" class="toolbar__button" size="small" data-icon="layout" data-shortcut="L" title="Stack the entities in columns that fill the screen"><span class="layout-label">Layout: Columns</span></sl-button>
       <sl-dropdown placement="bottom-end" hoist>
-        <sl-button id="layout-choose" slot="trigger" class="toolbar__button" size="small" caret title="Choose a layout" aria-label="Choose a layout"></sl-button>
+        <sl-button id="layout-choose" slot="trigger" class="toolbar__button" size="small" caret data-shortcut="Shift+L" title="Choose a layout" aria-label="Choose a layout"></sl-button>
         <sl-menu id="layout-menu"></sl-menu>
       </sl-dropdown>
-      <sl-button id="tidy" class="toolbar__button" size="small" data-icon="tidy" title="Tidy up: straighten each entity and line the entities up in columns near where they are">Tidy</sl-button>
+      <sl-button id="tidy" class="toolbar__button" size="small" data-icon="tidy" data-shortcut="T" title="Tidy up: straighten each entity and line the entities up in columns near where they are">Tidy</sl-button>
     </sl-button-group>
     <sl-button-group class="toolbar__group" label="Panels">
-      <sl-button id="entities-toggle" class="toolbar__button" size="small" data-icon="box" title="Toggle the entities panel">Entities</sl-button>
-      <sl-button id="table-toggle" class="toolbar__button" size="small" data-icon="table" title="Toggle the fields table panel">Table</sl-button>
-      <sl-button id="legend-toggle" class="toolbar__button" size="small" data-icon="info" title="Toggle the legend panel">Legend</sl-button>
-      <sl-button id="history-toggle" class="toolbar__button" size="small" data-icon="history" title="Toggle the history panel: every version of this diagram">History</sl-button>
+      <sl-button id="entities-toggle" class="toolbar__button" size="small" data-icon="box" data-shortcut="1" title="Toggle the entities panel">Entities</sl-button>
+      <sl-button id="table-toggle" class="toolbar__button" size="small" data-icon="table" data-shortcut="2" title="Toggle the fields table panel">Table</sl-button>
+      <sl-button id="legend-toggle" class="toolbar__button" size="small" data-icon="info" data-shortcut="3" title="Toggle the legend panel">Legend</sl-button>
+      <sl-button id="history-toggle" class="toolbar__button" size="small" data-icon="history" data-shortcut="4" title="Toggle the history panel: every version of this diagram">History</sl-button>
     </sl-button-group>
   </div>
   <div id="build-tools" class="toolbar__palette" hidden>
     <span class="toolbar__palette-label">Add:</span>
-    <button class="toolbar__button palette__btn" type="button" data-add-entity="node" title="Add a content type"><span class="palette__swatch"></span>Content</button>
-    <button class="toolbar__button palette__btn" type="button" data-add-entity="taxonomy_term" title="Add a vocabulary"><span class="palette__swatch"></span>Vocab</button>
-    <button class="toolbar__button palette__btn" type="button" data-add-entity="media" title="Add a media type"><span class="palette__swatch"></span>Media</button>
-    <button class="toolbar__button palette__btn" type="button" data-add-entity="paragraph" title="Add a paragraph type"><span class="palette__swatch"></span>Para</button>
-    <button class="toolbar__button palette__btn" type="button" data-add-entity="block_content" title="Add a block type"><span class="palette__swatch"></span>Block</button>
-    <button class="toolbar__button palette__btn" type="button" data-add-entity="user" title="Add a user reference"><span class="palette__swatch"></span>User</button>
-    <button class="toolbar__button palette__btn" type="button" data-add-entity="external" title="Add an external entity"><span class="palette__swatch"></span>External</button>
+    <button id="add-node" class="toolbar__button palette__btn" type="button" data-add-entity="node" data-shortcut="Shift+C" title="Add a content type"><span class="palette__swatch"></span>Content</button>
+    <button id="add-taxonomy_term" class="toolbar__button palette__btn" type="button" data-add-entity="taxonomy_term" data-shortcut="Shift+V" title="Add a vocabulary"><span class="palette__swatch"></span>Vocab</button>
+    <button id="add-media" class="toolbar__button palette__btn" type="button" data-add-entity="media" data-shortcut="Shift+M" title="Add a media type"><span class="palette__swatch"></span>Media</button>
+    <button id="add-paragraph" class="toolbar__button palette__btn" type="button" data-add-entity="paragraph" data-shortcut="Shift+P" title="Add a paragraph type"><span class="palette__swatch"></span>Para</button>
+    <button id="add-block_content" class="toolbar__button palette__btn" type="button" data-add-entity="block_content" data-shortcut="Shift+B" title="Add a block type"><span class="palette__swatch"></span>Block</button>
+    <button id="add-user" class="toolbar__button palette__btn" type="button" data-add-entity="user" data-shortcut="Shift+U" title="Add a user reference"><span class="palette__swatch"></span>User</button>
+    <button id="add-external" class="toolbar__button palette__btn" type="button" data-add-entity="external" data-shortcut="Shift+X" title="Add an external entity"><span class="palette__swatch"></span>External</button>
     <span class="toolbar__palette-sep"></span>
-    <button id="add-field" class="toolbar__button" type="button" data-icon="single" title="Add a field to an entity">Field</button>
-    <button class="toolbar__button" type="button" data-add-note="event" data-icon="diamond" title="Place an event note on the canvas">Event</button>
-    <button class="toolbar__button" type="button" data-add-note="api" title="Place an API note on the canvas">API</button>
-    <button class="toolbar__button" type="button" data-add-note="callback" title="Place a callback note on the canvas">Callback</button>
+    <button id="add-field" class="toolbar__button" type="button" data-icon="single" data-shortcut="Shift+F" title="Add a field to an entity">Field</button>
+    <button id="add-event" class="toolbar__button" type="button" data-add-note="event" data-icon="diamond" data-shortcut="Shift+E" title="Place an event note on the canvas">Event</button>
+    <button id="add-api" class="toolbar__button" type="button" data-add-note="api" data-shortcut="Shift+A" title="Place an API note on the canvas">API</button>
+    <button id="add-callback" class="toolbar__button" type="button" data-add-note="callback" data-shortcut="Shift+K" title="Place a callback note on the canvas">Callback</button>
     <span class="toolbar__palette-sep"></span>
-    <button id="connect-toggle" class="toolbar__button" type="button" data-icon="link" title="Drag from a field to a target entity to create a reference">Connect</button>
+    <button id="connect-toggle" class="toolbar__button" type="button" data-icon="link" data-shortcut="C" title="Drag from a field to a target entity to create a reference">Connect</button>
   </div>
 </header>
 
@@ -108,14 +108,14 @@
 
 <footer id="statusbar" class="statusbar">
   <span id="statusbar-hint" class="statusbar__hint"></span>
-  <span class="statusbar__tips">Click a node to focus · Right-click an entity to isolate &amp; move · Drag the canvas to pan</span>
+  <span class="statusbar__tips">Click a node to focus · Right-click an entity to isolate &amp; move · Drag the canvas to pan · F1 shows keyboard shortcuts</span>
   <div class="statusbar__zoom">
-    <sl-button id="reset" class="toolbar__button toolbar__button--icon" size="small" data-icon="rotate-ccw" title="Clear focus and reset the zoom to 100%" aria-label="Reset view"></sl-button>
-    <sl-button id="fit" class="toolbar__button toolbar__button--icon" size="small" data-icon="fit" title="Fit the whole diagram in view" aria-label="Fit to view"></sl-button>
-    <sl-button id="zoom-out" class="toolbar__button toolbar__button--icon" size="small" data-icon="zoom-out" title="Zoom out"></sl-button>
-    <sl-button id="zoom-in" class="toolbar__button toolbar__button--icon" size="small" data-icon="zoom-in" title="Zoom in"></sl-button>
+    <sl-button id="reset" class="toolbar__button toolbar__button--icon" size="small" data-icon="rotate-ccw" data-shortcut="0" title="Clear focus and reset the zoom to 100%" aria-label="Reset view"></sl-button>
+    <sl-button id="fit" class="toolbar__button toolbar__button--icon" size="small" data-icon="fit" data-shortcut="Shift+1" title="Fit the whole diagram in view" aria-label="Fit to view"></sl-button>
+    <sl-button id="zoom-out" class="toolbar__button toolbar__button--icon" size="small" data-icon="zoom-out" data-shortcut="-" data-shortcut-repeat title="Zoom out"></sl-button>
+    <sl-button id="zoom-in" class="toolbar__button toolbar__button--icon" size="small" data-icon="zoom-in" data-shortcut="Plus =" data-shortcut-repeat title="Zoom in"></sl-button>
     <sl-dropdown class="statusbar__zoomlevel" placement="top-end" hoist>
-      <sl-button id="zoom-level" slot="trigger" class="toolbar__button" size="small" caret title="Set the zoom level">100%</sl-button>
+      <sl-button id="zoom-level" slot="trigger" class="toolbar__button" size="small" caret data-shortcut="Z" title="Set the zoom level">100%</sl-button>
       <sl-menu id="zoom-menu">
         <sl-menu-item value="fit">Fit</sl-menu-item>
         <sl-menu-item value="0.25">25%</sl-menu-item>
@@ -136,8 +136,8 @@
 <div id="landing" class="landing">
   <sl-card class="landing__card">
     <div class="landing__corner">
-      <sl-button id="landing-theme" class="toolbar__button toolbar__button--icon" size="small" data-icon="moon" data-theme-toggle title="Toggle light / dark theme" aria-label="Toggle theme"></sl-button>
-      <sl-button id="landing-cancel" class="toolbar__button toolbar__button--icon" size="small" data-icon="x" title="Close this screen and keep the current diagram" aria-label="Close" hidden></sl-button>
+      <sl-button id="landing-theme" class="toolbar__button toolbar__button--icon" size="small" data-icon="moon" data-theme-toggle data-shortcut="D" title="Toggle light / dark theme" aria-label="Toggle theme"></sl-button>
+      <sl-button id="landing-cancel" class="toolbar__button toolbar__button--icon" size="small" data-icon="x" data-shortcut="Escape" title="Close this screen and keep the current diagram" aria-label="Close" hidden></sl-button>
     </div>
     <h1 class="landing__logo" data-icon="nexus">Nexus</h1>
     <p class="landing__version" id="landing-version" data-version>dev</p>
@@ -148,13 +148,13 @@
         <div id="dropzone" class="dropzone">
           <span class="dropzone__glyph" data-icon="folder-input"></span>
           <p class="dropzone__hint">Drop a Drupal <strong>config</strong> folder here, or choose one.</p>
-          <sl-button id="folder-btn" variant="primary" data-icon="folder-input" title="Import a Drupal config folder">Choose a config folder</sl-button>
+          <sl-button id="folder-btn" variant="primary" data-icon="folder-input" data-shortcut="Alt+I" title="Import a Drupal config folder">Choose a config folder</sl-button>
           <input id="folder-input" class="visually-hidden" type="file" webkitdirectory directory multiple tabindex="-1">
           <p class="dropzone__privacy">Your files never leave this page.</p>
         </div>
         <div class="landing__actions">
-          <sl-button id="landing-open" size="small" data-icon="folder-open" title="Open a saved Nexus diagram (.nexus.json)">Open a saved diagram</sl-button>
-          <sl-button id="new-btn" size="small" data-icon="file-plus" title="Start a new empty content model">Start from scratch</sl-button>
+          <sl-button id="landing-open" size="small" data-icon="folder-open" data-shortcut="Mod+O" title="Open a saved Nexus diagram (.nexus.json)">Open a saved diagram</sl-button>
+          <sl-button id="new-btn" size="small" data-icon="file-plus" data-shortcut="Alt+N" title="Start a new empty content model">Start from scratch</sl-button>
         </div>
       </section>
       <section aria-labelledby="landing-templates-heading">
@@ -173,9 +173,12 @@
   <p id="loader-text" class="loader__text">Loading…</p>
 </div>
 
+<div id="shortcut-hints" class="shortcut-hints" aria-hidden="true" hidden></div>
+
 <sl-dialog id="about-dialog" class="about-dialog" label="About Nexus">
   <div class="about">
     <p>Nexus is a content-model visual builder. It reconstructs a Drupal site's content model - its entities, fields and relationships - from exported configuration, and lets you explore and edit it as an interactive diagram.</p>
+    <p>Press F1 to label every button with its keyboard shortcut.</p>
     <p>Everything runs in your browser. Any configuration you import and every diagram you build are kept in this browser only - there is no backend, and nothing you provide is uploaded to or processed by any server.</p>
     <p>Nexus is provided as is, without warranty of any kind. The authors accept no responsibility or liability for any data you load into it or create with it - even though that data never leaves your browser.</p>
     <p>Nexus is open source - browse the code, report issues or contribute on <a id="about-repo" href="https://github.com/drevops/nexus" target="_blank" rel="noopener">GitHub</a>.</p>

@@ -18,7 +18,7 @@ Set `PORT` to serve on another port, for example `PORT=8001 npm start`.
 
 `npm run lint` checks the code with ESLint and Prettier, and `npm run lint-fix` fixes what it can. `npm run test` runs both suites, which you can also run on their own:
 
-- `npm run test-unit` - Node's built-in test runner over the pure model modules (the parser, model, annotations, document, reference elements, edit history, entity types, export formats, templates and name conversions), the label fitting that sizes entity boxes and the template update helpers, plus checks that `npm run assemble` ships every file the app loads, that each template's saved diagram carries its version and the bundles its landing row advertises, that the release workflow stamps only constants the source exports, that the page's Nexus mark matches `logo.svg`, that every icon the page names is drawn, and that the edit palette offers every built-in entity type.
+- `npm run test-unit` - Node's built-in test runner over the pure model modules (the parser, model, annotations, document, reference elements, edit history, entity types, export formats, keyboard shortcuts, templates and name conversions), the label fitting that sizes entity boxes and the template update helpers, plus checks that `npm run assemble` ships every file the app loads, that each template's saved diagram carries its version and the bundles its landing row advertises, that the release workflow stamps only constants the source exports, that the page's Nexus mark matches `logo.svg`, that every icon the page names is drawn, that every shortcut on the page parses and none clash, and that the edit palette offers every built-in entity type.
 - `npm run test-e2e` - Playwright drives the app end to end in Chromium: importing, rendering, editing, saving and exporting. It needs its browser installed once with `npx playwright install chromium`. The suite starts the dev server on port 8000, or reuses one already listening there - so if another checkout is serving that port, stop it first or the tests run against that checkout's code.
 - `npm run test-coverage` - the unit tests with c8 coverage, written to `.logs/`.
 
@@ -29,8 +29,9 @@ The app's own code lives in `src/`. The third-party builds it loads live in `ass
 - `src/{parser,model,base-fields,annotations,document,references,history,entity-types,names}.js` - the offline model builder, the built-in entity types, the name conversions, the saved `.nexus.json` format, the proxies and collapsed edges drawn for each reference and the edit history (pure, dependency-free).
 - `src/templates.js` - the content-model templates the landing screen offers, with the upstream sources each one is built from (pure).
 - `src/export-formats.js` - the formats the toolbar's Export button offers and the format it remembers (pure).
+- `src/shortcuts.js` - the keyboard shortcut syntax, the key presses each shortcut matches, its label and where the F1 view draws it (pure).
 - `src/render.js` - the Cytoscape renderer, with `src/label-fit.js` working out how wide each entity box must be for its name and type to fit inside its shape (pure).
-- `src/{builder,inspector,ui,store,undo,dom}.js` - edit mode, the Preact panels, the state they share, undo and redo, and the `$()` element lookup.
+- `src/{builder,inspector,ui,store,undo,keyboard,dom}.js` - edit mode, the Preact panels, the state they share, undo and redo, the keyboard shortcuts and their F1 view, and the `$()` element lookup.
 - `src/{app,export}.js` - the entry point (folder loading, saved documents, the Export button, the theme and the status bar) and every download: the PNG, SVG and CSV exports and the `.nexus.json` document.
 - `src/icons.js` - inline SVG icons, including the Nexus mark.
 - `src/version.js` - the version string, `dev` until a release stamps it.
@@ -39,6 +40,8 @@ The app's own code lives in `src/`. The third-party builds it loads live in `ass
 - `scripts/update-templates.mjs` - rebuilds the template diagrams, with its helpers in `scripts/lib/`.
 
 Each built-in entity type, annotation kind, export format and name conversion is defined once: the entity types in `src/entity-types.js`, the annotation kinds in `src/annotations.js`, the export formats in `src/export-formats.js` and the conversions in `src/names.js`. Import them from there rather than copying them into another module, so the copies can't drift apart. Adding an entity type also means adding its button to the edit palette in `index.html`, and `npm run test-unit` fails until you do.
+
+The buttons in the toolbar, the edit palette, the status bar and the landing screen have keyboard shortcuts, each named in its button's `data-shortcut` attribute in the syntax the `src/shortcuts.js` docblock describes. Give a new button a shortcut too, along with an `id`, which the F1 view labels it by. `npm run test-unit` fails while a shortcut doesn't parse, a control with a shortcut has no `id`, or 2 controls on the same screen share a key.
 
 The Nexus mark lives in 3 places: `logo.svg` for the README, `assets/favicon.svg` for the browser tab and the `nexus` icon in `src/icons.js` for the page. The 2 files switch to white ink in a dark colour scheme by themselves, while the page's copy takes its colours from `src/styles.css` so it follows the app's theme toggle. A change to the mark's shapes goes into all 3, and `npm run test-unit` fails while `src/icons.js` and `logo.svg` differ.
 
