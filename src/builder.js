@@ -230,7 +230,8 @@ export function attachBuilder(instance) {
       return;
     }
     const pos = evt.target.position();
-    dragGroup(evt.target).not(evt.target).shift({ x: pos.x - dragLast.x, y: pos.y - dragLast.y });
+    const others = dragGroup(evt.target).not(evt.target);
+    others.shift({ x: pos.x - dragLast.x, y: pos.y - dragLast.y });
     dragLast = { x: pos.x, y: pos.y };
   });
   cy.on('free', 'node', () => {
