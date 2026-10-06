@@ -4011,11 +4011,11 @@ for (const [name, key, field] of dataProviderNewItemForms()) {
 
     await page.keyboard.press(key);
     await expect(page.locator(field)).toBeFocused();
-    await page.keyboard.type('cl');
+    await page.keyboard.type('cf');
 
-    await expect(page.locator(field)).toHaveJSProperty('value', 'cl');
+    await expect(page.locator(field)).toHaveJSProperty('value', 'cf');
     await expect(page.locator('#connect-toggle')).not.toHaveClass(/is-active/);
-    await expect(page.locator('#layout-toggle')).toHaveText('Layout: LR');
+    await expect(page.locator('#fields-toggle')).toHaveClass(/is-active/);
   });
 }
 
