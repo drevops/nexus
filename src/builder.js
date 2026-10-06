@@ -245,15 +245,15 @@ export function attachBuilder(instance) {
     rightDrag = { last: { ...evt.position }, dragged: false };
   });
   cy.on('cxtdrag', 'node', (evt) => {
-    if (!rightDrag) {
-      return;
+    if (rightDrag) {
+      followRightDrag(evt.target, evt.position);
     }
-
-    dragGroup(evt.target).shift({ x: evt.position.x - rightDrag.last.x, y: evt.position.y - rightDrag.last.y });
-    rightDrag = { last: { ...evt.position }, dragged: true };
   });
+  // The button can be released past the last cxtdrag position, so the release
+  // applies the remaining offset.
   cy.on('cxttapend', 'node', (evt) => {
     if (rightDrag && rightDrag.dragged) {
+      followRightDrag(evt.target, evt.position);
       checkpoint('Moved ' + describeMove(evt.target));
     }
 
@@ -378,6 +378,13 @@ function dragGroup(node) {
   }
 
   return isolatedIds.has(node.id()) ? cy.nodes().filter((other) => isolatedIds.has(other.id())) : cy.collection();
+}
+
+// Shifts the dragGroup() of the node by the pointer's travel since the last
+// right-drag event.
+function followRightDrag(node, position) {
+  dragGroup(node).shift({ x: position.x - rightDrag.last.x, y: position.y - rightDrag.last.y });
+  rightDrag = { last: { ...position }, dragged: true };
 }
 
 // Names what a drag moved: a node of an isolated group moves the whole group.
