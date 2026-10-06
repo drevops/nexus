@@ -37,7 +37,7 @@
     <div class="toolbar__actions">
       <sl-button id="about-toggle" class="toolbar__button toolbar__button--icon" size="small" data-icon="help-circle" title="About Nexus" aria-label="About Nexus"></sl-button>
       <sl-button id="github-link" class="toolbar__button toolbar__button--icon" size="small" href="https://github.com/drevops/nexus" target="_blank" rel="noopener" data-icon="github" title="View Nexus on GitHub" aria-label="View Nexus on GitHub"></sl-button>
-      <sl-button id="theme-toggle" class="toolbar__button toolbar__button--icon" size="small" data-icon="moon" title="Toggle light / dark theme" aria-label="Toggle theme"></sl-button>
+      <sl-button id="theme-toggle" class="toolbar__button toolbar__button--icon" size="small" data-icon="moon" data-theme-toggle title="Toggle light / dark theme" aria-label="Toggle theme"></sl-button>
       <sl-button id="settings-toggle" class="toolbar__button toolbar__button--icon" size="small" data-icon="sliders" title="Toggle the settings panel" aria-label="Settings"></sl-button>
     </div>
   </div>
@@ -131,7 +131,10 @@
 
 <div id="landing" class="landing">
   <sl-card class="landing__card">
-    <sl-button id="landing-cancel" class="landing__close toolbar__button toolbar__button--icon" size="small" data-icon="x" title="Close this screen and keep the current diagram" aria-label="Close" hidden></sl-button>
+    <div class="landing__corner">
+      <sl-button id="landing-theme" class="toolbar__button toolbar__button--icon" size="small" data-icon="moon" data-theme-toggle title="Toggle light / dark theme" aria-label="Toggle theme"></sl-button>
+      <sl-button id="landing-cancel" class="toolbar__button toolbar__button--icon" size="small" data-icon="x" title="Close this screen and keep the current diagram" aria-label="Close" hidden></sl-button>
+    </div>
     <h1 class="landing__logo" data-icon="nexus">Nexus</h1>
     <p class="landing__version" id="landing-version" data-version>dev</p>
     <p class="landing__tag">Draw a Drupal site's content model from its exported configuration - entirely in your browser.</p>

@@ -25,6 +25,7 @@ import { formatCount } from './entity-types.js';
 import { $ } from './dom.js';
 
 const ANNOTATION_FILES = ['annotations.yml', 'nexus.annotations.yml'];
+const THEME_TOGGLES = '[data-theme-toggle]';
 
 const EXPORTERS = {
   png: (controller, title) => exportPng(controller.cy, title),
@@ -456,9 +457,8 @@ function wireDocument() {
 
 function applyTheme(dark) {
   document.documentElement.classList.toggle('sl-theme-dark', dark);
-  const btn = $('theme-toggle');
 
-  if (btn) {
+  for (const btn of document.querySelectorAll(THEME_TOGGLES)) {
     btn.innerHTML = icon(dark ? 'sun' : 'moon');
     // SlButton does not reflect its title property, so set the attribute.
     btn.setAttribute('title', dark ? 'Switch to light theme' : 'Switch to dark theme');
@@ -486,7 +486,10 @@ function initTheme() {
     dark = false;
   }
   applyTheme(dark);
-  $('theme-toggle').addEventListener('click', () => applyTheme(!document.documentElement.classList.contains('sl-theme-dark')));
+
+  for (const btn of document.querySelectorAll(THEME_TOGGLES)) {
+    btn.addEventListener('click', () => applyTheme(!document.documentElement.classList.contains('sl-theme-dark')));
+  }
 }
 
 // Echo a hovered control's title into the status bar immediately, so the
