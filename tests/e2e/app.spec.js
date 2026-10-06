@@ -876,7 +876,7 @@ test('lists every template with its badge, its counts and a drawn mark', async (
   await expect(rows).toHaveCount(2);
   const ids = await rows.evaluateAll((elements) => elements.map((element) => element.id));
 
-  expect(ids).toEqual(['template-civictheme', 'template-drupal-cms']);
+  expect(ids).toEqual(['template-drupal-cms', 'template-civictheme']);
 
   for (const [id, label, badge, counts] of dataProviderTemplateRows()) {
     const row = page.locator('#template-' + id);

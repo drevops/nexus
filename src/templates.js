@@ -14,23 +14,6 @@ import { ENTITY_TYPE_ORDER } from './entity-types.js';
 
 export const TEMPLATES = [
   {
-    id: 'civictheme',
-    label: 'CivicTheme',
-    version: '1.13.0',
-    summary: 'Government design system',
-    icon: 'landmark',
-    color: '#00698f',
-    counts: { node: 3, taxonomy_term: 3, media: 6, paragraph: 31, block_content: 5 },
-    sources: [
-      {
-        name: 'CivicTheme',
-        repo: 'https://git.drupalcode.org/project/civictheme.git',
-        ref: '1.13.0',
-        paths: ['config/install', 'config/optional'],
-      },
-    ],
-  },
-  {
     id: 'drupal-cms',
     label: 'Drupal CMS',
     version: '2.2.2',
@@ -62,6 +45,23 @@ export const TEMPLATES = [
         repo: 'https://git.drupalcode.org/project/byte.git',
         ref: '1.1.0',
         paths: ['config'],
+      },
+    ],
+  },
+  {
+    id: 'civictheme',
+    label: 'CivicTheme',
+    version: '1.13.0',
+    summary: 'Government design system',
+    icon: 'landmark',
+    color: '#00698f',
+    counts: { node: 3, taxonomy_term: 3, media: 6, paragraph: 31, block_content: 5 },
+    sources: [
+      {
+        name: 'CivicTheme',
+        repo: 'https://git.drupalcode.org/project/civictheme.git',
+        ref: '1.13.0',
+        paths: ['config/install', 'config/optional'],
       },
     ],
   },
