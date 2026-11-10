@@ -1615,6 +1615,15 @@ html.sl-theme-dark .icon--nexus .ink {
   white-space: pre;
 }
 
+.insp__bulktext::part(form-control-label) {
+  font-size: 0.78rem;
+}
+
+.insp__bulktext::part(form-control-help-text) {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
 .insp__bulk {
   margin: 0.5rem 0 0;
   padding: 0;

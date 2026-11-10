@@ -594,13 +594,14 @@ export function BulkFieldsForm({ entityId, selection }) {
       class="insp__bulktext"
       data-bulk-text
       ref=${textRef}
+      label="Fields, 1 per line"
+      help-text="A label or machine name, then any of a type, a cardinality, required and target entity ids, split by commas."
       rows="8"
       resize="auto"
       placeholder=${'Body\nfield_tags, entity_reference, unlimited, taxonomy_term.tags\nSummary (field_summary), text_long, required'}
       value=${text}
       onsl-input=${(e) => setText(e.target.value)}
     ></sl-textarea>
-    <p class="insp__hint">1 field per line: a label or machine name, then any of a type, a cardinality, required and target entity ids, split by commas.</p>
     ${
       entries.length
         ? html`<ul class="insp__bulk">

@@ -1043,7 +1043,7 @@ async function openBulkFields(page) {
 
 test('adds several fields to an entity in 1 step', async ({ page }) => {
   await openBulkFields(page);
-  await expect(page.locator('#inspector [data-bulk-text]')).toBeFocused();
+  await expect(page.getByRole('textbox', { name: 'Fields, 1 per line' })).toBeFocused();
   await expect(page.locator('#inspector [data-create-fields]')).toHaveAttribute('disabled', '');
 
   await slFill(
