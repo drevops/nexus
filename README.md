@@ -132,7 +132,7 @@ Start each line with a label, a machine name or both, as `Label (machine_name)`.
 
 A machine name that another entity already uses takes that field's label, type and cardinality. While any line has an error, the button counts the lines to fix and adds nothing. Undo removes a whole bulk add in 1 step.
 
-To copy fields from another entity, pick it from **Copy from**. Its fields land in the text box as lines you can edit before you add them, minus the fields this entity already has.
+To copy fields from another entity, pick it from **Copy from**. Its fields land in the text box as lines you can edit before you add them. Base fields such as `title` belong to their entity type, so they stay behind, and so do the fields this entity already has.
 
 ## Undo and history
 

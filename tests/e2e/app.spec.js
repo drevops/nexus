@@ -1143,6 +1143,31 @@ test('copies fields after the lines already in the bulk fields form', async ({ p
   await expect(page.locator('#inspector [data-copied]')).toHaveText('Copied 0 fields from Article, skipped 1 already listed or on this entity.');
 });
 
+test('leaves base fields out when copying fields from another entity', async ({ page }) => {
+  await loadExample(page);
+  await page.click('#mode-build');
+
+  const fields = await page.evaluate(() => {
+    const kinds = (kind) =>
+      window.__nexus.cy
+        .nodes('[group="field"][entity="node.session"]')
+        .filter((field) => (field.data('kind') === 'system') === (kind === 'system'))
+        .map((field) => field.data('name'));
+
+    return { base: kinds('system'), other: kinds('other') };
+  });
+  expect(fields.base.length).toBeGreaterThan(0);
+  expect(fields.other.length).toBeGreaterThan(0);
+
+  await tapNode(page, 'taxonomy_term.tracks');
+  await page.click('#inspector [data-bulk-fields]');
+  await expect(page.locator('#inspector [data-copy-from] sl-option[value="node.session"]')).toHaveText(new RegExp('\\(' + fields.other.length + '\\)$'));
+  await slSelect(page, '#inspector [data-copy-from]', 'node.session');
+
+  const copied = await page.locator('#inspector [data-bulk-text]').evaluate((el) => el.value.split('\n').map((line) => line.match(/\(([a-z0-9_]+)\),/)[1]));
+  expect(copied.sort()).toEqual([...fields.other].sort());
+});
+
 test('closes the bulk fields form when an undo removes its entity', async ({ page }) => {
   await openBulkFields(page);
 

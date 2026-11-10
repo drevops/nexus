@@ -16,7 +16,7 @@ import { h } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import htmBase from 'htm';
 import { icon } from './icons.js';
-import { cardinalityLabel, kindForCardinality, FIELD_TYPES, MAX_CARDINALITY, REFERENCE_FIELD_TYPES } from './model.js';
+import { cardinalityLabel, kindForCardinality, FIELD_TYPES, KIND_SYSTEM, MAX_CARDINALITY, REFERENCE_FIELD_TYPES } from './model.js';
 import { ANNOTATION_KINDS } from './annotations.js';
 import { formatFieldLine, parseFieldLines } from './bulk-fields.js';
 import { describeNode } from './history.js';
@@ -118,6 +118,12 @@ export function existingFields() {
 
 function fieldsOf(entityId) {
   return cy().nodes('[group="field"][entity="' + entityId + '"]');
+}
+
+// Base fields belong to their entity type, so another entity copies only the
+// rest.
+function copyableFields(entityId) {
+  return fieldsOf(entityId).filter((field) => field.data('kind') !== KIND_SYSTEM);
 }
 
 function refTargets(fieldId) {
@@ -531,7 +537,7 @@ export function BulkFieldsForm({ entityId, selection }) {
   const entries = parseFieldLines(text, { taken: taken, existing: existing, entityIds: entities.map((e) => e.id()), fieldTypes: fieldTypes });
   const fields = entries.filter((entry) => entry.field).map((entry) => entry.field);
   const errorCount = entries.length - fields.length;
-  const sources = entities.filter((e) => e.id() !== entityId && fieldsOf(e.id()).nonempty());
+  const sources = entities.filter((e) => e.id() !== entityId && copyableFields(e.id()).nonempty());
 
   useFocusOnOpen(textRef, selection);
 
@@ -539,7 +545,7 @@ export function BulkFieldsForm({ entityId, selection }) {
   // already has or the text already lists.
   function copyFrom(sourceId) {
     const listed = new Set([...taken, ...fields.map((field) => field.name)]);
-    const definitions = fieldsOf(sourceId).map(fieldDefinition);
+    const definitions = copyableFields(sourceId).map(fieldDefinition);
     const lines = definitions.filter((field) => !listed.has(field.name)).map(formatFieldLine);
     const skipped = definitions.length - lines.length;
 
@@ -577,7 +583,7 @@ export function BulkFieldsForm({ entityId, selection }) {
                   e.target.value = '';
                 }
               }}
-              >${sources.map((e) => html`<sl-option value=${e.id()}>${e.data('label')} (${fieldsOf(e.id()).length})</sl-option>`)}</sl-select
+              >${sources.map((e) => html`<sl-option value=${e.id()}>${e.data('label')} (${copyableFields(e.id()).length})</sl-option>`)}</sl-select
             ><//
           >`
         : null
