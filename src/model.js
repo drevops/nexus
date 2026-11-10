@@ -14,6 +14,28 @@ export const DEFAULT_TITLE = 'Content model';
 
 export const REFERENCE_FIELD_TYPES = ['entity_reference', 'entity_reference_revisions'];
 
+// The field types a field created in the builder can take.
+export const FIELD_TYPES = [
+  'string',
+  'string_long',
+  'text_long',
+  'text_with_summary',
+  'boolean',
+  'integer',
+  'decimal',
+  'datetime',
+  'link',
+  'email',
+  'list_string',
+  'image',
+  'file',
+  ...REFERENCE_FIELD_TYPES,
+];
+
+// The highest limited cardinality a field created in the builder can take;
+// -1 is unlimited.
+export const MAX_CARDINALITY = 10;
+
 export function kindForCardinality(cardinality) {
   return cardinality === 1 ? KIND_SINGLE : KIND_MULTI;
 }

@@ -38,6 +38,11 @@ let isolatedIds = new Set();
 let dragLast = null;
 let rightDrag = null;
 
+// How far a new field is placed from its entity, and how far apart fields
+// added together are stacked.
+const FIELD_DISTANCE = 200;
+const FIELD_SPACING = 56;
+
 function startPlaceNote(kind) {
   connectMode = false;
   applyConnect();
@@ -275,7 +280,18 @@ export function attachBuilder(instance) {
     });
   });
   cy.on('captions', positionHandles);
-  setBuilder({ createEntity, createField, createAnnotation, createReference, removeReference, deleteNode, renameEntity, renameField, refreshSelection });
+  setBuilder({
+    createEntity,
+    createField,
+    createFields,
+    createAnnotation,
+    createReference,
+    removeReference,
+    deleteNode,
+    renameEntity,
+    renameField,
+    refreshSelection,
+  });
   applyMode();
 }
 
@@ -534,7 +550,7 @@ function refreshSelection() {
   cleanupGhost();
 
   const selected = getState().selected;
-  const id = selected && (selected.kind === 'new-field' ? selected.entityId : selected.id);
+  const id = selected && (selected.kind === 'new-field' || selected.kind === 'bulk-fields' ? selected.entityId : selected.id);
 
   if (id && cy.getElementById(id).empty()) {
     closeInspector();
@@ -674,18 +690,17 @@ function addEntity(entityType, bundle, label, position) {
 }
 
 function fieldPlacement(anchor, side) {
-  const distance = 200;
   const spread = (counter++ % 6) * 44 - 110;
   if (side === 'left') {
-    return { x: anchor.x - distance, y: anchor.y + spread };
+    return { x: anchor.x - FIELD_DISTANCE, y: anchor.y + spread };
   }
   if (side === 'top') {
-    return { x: anchor.x + spread, y: anchor.y - distance };
+    return { x: anchor.x + spread, y: anchor.y - FIELD_DISTANCE };
   }
   if (side === 'bottom') {
-    return { x: anchor.x + spread, y: anchor.y + distance };
+    return { x: anchor.x + spread, y: anchor.y + FIELD_DISTANCE };
   }
-  return { x: anchor.x + distance, y: anchor.y + spread };
+  return { x: anchor.x + FIELD_DISTANCE, y: anchor.y + spread };
 }
 
 function addField(entityId, name, label, fieldType, cardinality, side, position) {
@@ -790,6 +805,40 @@ function createField(entityId, form, side) {
     }
     selectCreated(id);
   }
+}
+
+// Adds the field definitions in a column right of the entity, as 1 step.
+function createFields(entityId, fields) {
+  const entity = cy.getElementById(entityId);
+
+  // An open form can name an entity that an undo has removed.
+  if (entity.empty() || !fields.length) {
+    return;
+  }
+
+  const anchor = entity.position();
+  const added = [];
+
+  fields.forEach((field, index) => {
+    const position = { x: anchor.x + FIELD_DISTANCE, y: anchor.y + (index - (fields.length - 1) / 2) * FIELD_SPACING };
+    const id = addField(entityId, field.name, field.label, field.fieldType, field.cardinality, null, position);
+
+    if (!id) {
+      return;
+    }
+
+    cy.getElementById(id).data('required', !!field.required);
+    (field.targets || []).forEach((target) => addReference(id, target));
+    added.push(id);
+  });
+
+  if (!added.length) {
+    return;
+  }
+
+  selectNode(entityId);
+  bump();
+  checkpoint(added.length === 1 ? 'Added ' + describeNode(cy.getElementById(added[0])) : 'Added ' + added.length + ' fields to ' + describeNode(entity));
 }
 
 function createAnnotation(form) {

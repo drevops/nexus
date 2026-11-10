@@ -16,8 +16,9 @@ import { h } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import htmBase from 'htm';
 import { icon } from './icons.js';
-import { cardinalityLabel, kindForCardinality, REFERENCE_FIELD_TYPES } from './model.js';
+import { cardinalityLabel, kindForCardinality, FIELD_TYPES, MAX_CARDINALITY, REFERENCE_FIELD_TYPES } from './model.js';
 import { ANNOTATION_KINDS } from './annotations.js';
+import { formatFieldLine, parseFieldLines } from './bulk-fields.js';
 import { describeNode } from './history.js';
 import { checkpoint } from './undo.js';
 import { getController, getBuilder, openInspector, bump } from './store.js';
@@ -26,32 +27,8 @@ const html = htmBase.bind(h);
 
 const CARDINALITY_OPTIONS = [
   ['1', 'Single'],
-  ['2', '2'],
-  ['3', '3'],
-  ['4', '4'],
-  ['5', '5'],
-  ['6', '6'],
-  ['7', '7'],
-  ['8', '8'],
-  ['9', '9'],
-  ['10', '10'],
+  ...Array.from({ length: MAX_CARDINALITY - 1 }, (_, index) => [String(index + 2), String(index + 2)]),
   ['-1', 'Unlimited'],
-];
-const FIELD_TYPES = [
-  'string',
-  'string_long',
-  'text_long',
-  'text_with_summary',
-  'boolean',
-  'integer',
-  'decimal',
-  'datetime',
-  'link',
-  'email',
-  'list_string',
-  'image',
-  'file',
-  ...REFERENCE_FIELD_TYPES,
 ];
 const ANNOTATION_OPTIONS = ANNOTATION_KINDS.map((entry) => [entry.kind, entry.label]);
 
@@ -192,9 +169,17 @@ export function EntityForm({ id }) {
     <${NoteField} node=${node} />
     <div class="insp__section">
       <div class="insp__sectionhead">
-        <span>Fields</span
-        ><sl-button size="small" data-add-field title="Add a field to this entity" onClick=${() => openInspector({ kind: 'new-field', entityId: id })}
-          >${rawIcon('plus')}Field</sl-button
+        <span>Fields</span>
+        <span class="insp__actions"
+          ><sl-button
+            size="small"
+            data-bulk-fields
+            title="Add several fields at once, or copy them from another entity"
+            onClick=${() => openInspector({ kind: 'bulk-fields', entityId: id })}
+            >${rawIcon('list')}Bulk</sl-button
+          ><sl-button size="small" data-add-field title="Add a field to this entity" onClick=${() => openInspector({ kind: 'new-field', entityId: id })}
+            >${rawIcon('plus')}Field</sl-button
+          ></span
         >
       </div>
       ${fields.length ? fields : html`<p class="insp__empty">No fields yet.</p>`}
@@ -498,6 +483,142 @@ export function NewFieldForm({ entityId, side, selection }) {
   </div>`;
 }
 
+// A field node as the definition bulk-fields.js reads and writes.
+function fieldDefinition(field) {
+  return {
+    name: field.data('name'),
+    label: field.data('label'),
+    fieldType: field.data('fieldType'),
+    cardinality: field.data('cardinality') != null ? field.data('cardinality') : 1,
+    required: !!field.data('required'),
+    targets: refTargets(field.id()),
+  };
+}
+
+function countOf(count, noun) {
+  return count + ' ' + noun + (count === 1 ? '' : 's');
+}
+
+function BulkLine({ entry }) {
+  if (entry.error) {
+    return html`<li class="insp__bulkline is-error" data-bulk-line=${entry.line}>Line ${entry.line}: ${entry.error}</li>`;
+  }
+
+  const field = entry.field;
+  const targets = field.targets.map((target) => cy().getElementById(target).data('label') || target);
+  const details = [field.fieldType, cardinalityLabel(field.cardinality), field.required ? 'required' : null, targets.length ? '→ ' + targets.join(', ') : null];
+
+  return html`<li class="insp__bulkline" data-bulk-line=${entry.line}>
+    ${field.label} <code>${field.name}</code>
+    <span class="insp__bulkdetails">${details.filter(Boolean).join(' · ')}</span>
+  </li>`;
+}
+
+export function BulkFieldsForm({ entityId, selection }) {
+  const [text, setText] = useState('');
+  const [copied, setCopied] = useState('');
+  const textRef = useRef(null);
+  const entity = cy().getElementById(entityId);
+  const entities = cy().nodes('[group="entity"]');
+  const existing = existingFields();
+  const taken = fieldsOf(entityId).map((field) => field.data('name'));
+  const fieldTypes = [
+    ...FIELD_TYPES,
+    ...cy()
+      .nodes('[group="field"]')
+      .map((field) => field.data('fieldType')),
+  ];
+  const entries = parseFieldLines(text, { taken: taken, existing: existing, entityIds: entities.map((e) => e.id()), fieldTypes: fieldTypes });
+  const fields = entries.filter((entry) => entry.field).map((entry) => entry.field);
+  const errorCount = entries.length - fields.length;
+  const sources = entities.filter((e) => e.id() !== entityId && fieldsOf(e.id()).nonempty());
+
+  useFocusOnOpen(textRef, selection);
+
+  // Appends the source's fields as lines, leaving out the names the entity
+  // already has or the text already lists.
+  function copyFrom(sourceId) {
+    const listed = new Set([...taken, ...fields.map((field) => field.name)]);
+    const definitions = fieldsOf(sourceId).map(fieldDefinition);
+    const lines = definitions.filter((field) => !listed.has(field.name)).map(formatFieldLine);
+    const skipped = definitions.length - lines.length;
+
+    setText((prev) => [prev.trimEnd(), ...lines].filter(Boolean).join('\n'));
+    setCopied(
+      'Copied ' +
+        countOf(lines.length, 'field') +
+        ' from ' +
+        cy().getElementById(sourceId).data('label') +
+        (skipped ? ', skipped ' + skipped + ' already listed or on this entity.' : '.'),
+    );
+  }
+
+  let action = 'Add fields';
+
+  if (errorCount) {
+    action = 'Fix ' + countOf(errorCount, 'line');
+  } else if (fields.length) {
+    action = 'Add ' + countOf(fields.length, 'field');
+  }
+
+  return html` <div class="insp" data-new="bulk-fields">
+    <p class="insp__title">Add fields to ${entity.nonempty() ? entity.data('label') : 'entity'}</p>
+    ${
+      sources.length
+        ? html`<${Row} label="Copy from"
+            ><sl-select
+              size="small"
+              data-copy-from
+              placeholder="Pick an entity…"
+              value=""
+              onsl-change=${(e) => {
+                if (e.target.value) {
+                  copyFrom(e.target.value);
+                  e.target.value = '';
+                }
+              }}
+              >${sources.map((e) => html`<sl-option value=${e.id()}>${e.data('label')} (${fieldsOf(e.id()).length})</sl-option>`)}</sl-select
+            ><//
+          >`
+        : null
+    }
+    ${copied ? html`<p class="insp__hint" data-copied>${copied}</p>` : null}
+    <sl-textarea
+      size="small"
+      class="insp__bulktext"
+      data-bulk-text
+      ref=${textRef}
+      rows="8"
+      resize="auto"
+      placeholder=${'Body\nfield_tags, entity_reference, unlimited, taxonomy_term.tags\nSummary (field_summary), text_long, required'}
+      value=${text}
+      onsl-input=${(e) => setText(e.target.value)}
+    ></sl-textarea>
+    <p class="insp__hint">1 field per line: a label or machine name, then any of a type, a cardinality, required and target entity ids, split by commas.</p>
+    ${
+      entries.length
+        ? html`<ul class="insp__bulk">
+            ${entries.map((entry) => html`<${BulkLine} entry=${entry} />`)}
+          </ul>`
+        : null
+    }
+    <sl-button
+      size="small"
+      variant="primary"
+      class="insp__create"
+      data-create-fields
+      title="Add the listed fields to the entity"
+      disabled=${errorCount > 0 || !fields.length}
+      onClick=${() => {
+        if (!errorCount) {
+          getBuilder().createFields(entityId, fields);
+        }
+      }}
+      >${rawIcon('check')}${action}</sl-button
+    >
+  </div>`;
+}
+
 export function NewAnnotationForm() {
   const [form, setForm] = useState({ kind: 'event', label: '', method: '' });
 
@@ -552,6 +673,9 @@ export function InspectorBody({ selected, revision }) {
   }
   if (selected.kind === 'new-annotation') {
     return html`<${NewAnnotationForm} />`;
+  }
+  if (selected.kind === 'bulk-fields') {
+    return html`<${BulkFieldsForm} key=${'bulk:' + selected.entityId + '@' + revision} entityId=${selected.entityId} selection=${selected} />`;
   }
   return html`<${NewFieldForm} key=${'new:' + selected.entityId + '@' + revision} entityId=${selected.entityId} side=${selected.side} selection=${selected} />`;
 }

@@ -1600,6 +1600,48 @@ html.sl-theme-dark .icon--nexus .ink {
   font-weight: 600;
 }
 
+.insp__actions {
+  display: inline-flex;
+  gap: 0.3rem;
+}
+
+.insp__bulktext {
+  width: 100%;
+}
+
+.insp__bulktext::part(textarea) {
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  font-size: 0.75rem;
+  white-space: pre;
+}
+
+.insp__bulk {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.insp__bulkline {
+  padding: 0.25rem 0;
+  font-size: 0.8rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.insp__bulkline code {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.insp__bulkline.is-error {
+  color: var(--sl-color-danger-600);
+}
+
+.insp__bulkdetails {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
 .insp__btn {
   display: inline-flex;
   align-items: center;

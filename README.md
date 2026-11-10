@@ -115,6 +115,25 @@ Switch to **Edit** and a palette appears under the toolbar:
 
 Select a node to edit or delete it in the **Inspector**: an entity's label and machine name; a field's label, machine name, type, cardinality, required flag and references; or an annotation's label, kind and method. Any node can also carry a free-text note, shown as a badge on the canvas.
 
+To add several fields at once, select an entity and click **Bulk** in the **Inspector**. Type 1 field per line, and the **Inspector** previews each field under the text box:
+
+```text
+Body, text_with_summary, required
+field_tags, entity_reference, unlimited, taxonomy_term.tags
+Summary (field_summary), text_long
+```
+
+Start each line with a label, a machine name or both, as `Label (machine_name)`. A label alone gets a `field_` machine name. The rest of the line holds any of these, split by commas or tabs:
+
+- A field type, such as `string` or `entity_reference`.
+- A cardinality: `1` to `10`, or `unlimited`.
+- `required`.
+- The id of each entity a reference field targets, such as `taxonomy_term.tags`.
+
+A machine name that another entity already uses takes that field's label, type and cardinality. While any line has an error, the button counts the lines to fix and adds nothing. Undo removes a whole bulk add in 1 step.
+
+To copy fields from another entity, pick it from **Copy from**. Its fields land in the text box as lines you can edit before you add them, minus the fields this entity already has.
+
 ## Undo and history
 
 **Undo** and **Redo** in the toolbar step back and forward through your changes, and so do `Ctrl+Z` and `Ctrl+Shift+Z` or `Ctrl+Y` (`⌘Z` and `⇧⌘Z` on a Mac). Every change to the diagram counts: adding, renaming and deleting entities, fields, references and annotations, editing them in the Inspector, dragging nodes, **Tidy**, re-running the layout with the **Layout** button and renaming the diagram. Typing into a field is 1 step, however many characters it takes. While a text box has the focus, the shortcuts undo your typing there instead.
