@@ -36,8 +36,10 @@ let handleRaf = false;
 let placeKind = null;
 let isolatedEntity = null;
 let isolatedIds = new Set();
-let dragLast = null;
-let rightDrag = null;
+let drag = null;
+let pan = null;
+let taps = [null, null];
+let pressContainer = null;
 
 // How far a new field is placed from its entity, and how far apart fields
 // added together are stacked.
@@ -215,6 +217,7 @@ export function initBuilder() {
 export function attachBuilder(instance) {
   cy = instance;
   connectSource = null;
+  taps = [null, null];
   cy.on('tap', (evt) => {
     if (evt.target === cy && placeKind) {
       const kind = placeKind;
@@ -233,55 +236,98 @@ export function attachBuilder(instance) {
     selectNode(node.data('group') === 'proxy' ? node.data('target') : node.id());
   });
 
-  // A right-click on an entity isolates it and its fields to move as a unit;
-  // a tap on the empty canvas releases the isolation. The native context menu
-  // is suppressed, so a right-click only isolates.
+  // A right-click on an entity isolates it and its fields; a tap on the empty
+  // canvas releases the isolation. The native context menu is suppressed, so
+  // a right-click only isolates.
   cy.on('cxttap', 'node[group="entity"]', (evt) => isolateEntity(evt.target.id()));
   cy.container().addEventListener('contextmenu', (evt) => evt.preventDefault());
+
+  // Cytoscape zooms on the wheel only while user panning is on, so panning
+  // stays on and the left button turns it off for the length of a press. The
+  // capture listener runs before Cytoscape's own mousedown handler.
+  if (pressContainer !== cy.container()) {
+    pressContainer = cy.container();
+    pressContainer.addEventListener('mousedown', holdPanning, true);
+  }
   cy.on('tap', (evt) => {
     if (evt.target === cy) {
       clearIsolation();
     }
   });
-  cy.on('grab', 'node', (evt) => {
-    if (isolatedIds.has(evt.target.id())) {
-      dragLast = { x: evt.target.position('x'), y: evt.target.position('y') };
-    }
+
+  // Cytoscape drags every selected node when a selected node is grabbed, and
+  // fires drag on each of them, so the group drag follows only the node under
+  // the pointer and shifts the members Cytoscape leaves behind.
+  cy.on('grabon', 'node', (evt) => {
+    const node = evt.target;
+    const moving = node.selected() ? cy.nodes(':selected').filter((other) => other.grabbable()) : node;
+
+    drag = { node, moving, last: { ...node.position() } };
   });
   cy.on('drag', 'node', (evt) => {
-    if (!dragLast || !isolatedIds.has(evt.target.id())) {
+    if (!drag || evt.target !== drag.node) {
       return;
     }
-    const pos = evt.target.position();
-    const others = dragGroup(evt.target).not(evt.target);
-    others.shift({ x: pos.x - dragLast.x, y: pos.y - dragLast.y });
-    dragLast = { x: pos.x, y: pos.y };
-  });
-  cy.on('free', 'node', () => {
-    dragLast = null;
-  });
-  cy.on('dragfree', 'node', (evt) => checkpoint('Moved ' + describeMove(evt.target)));
 
-  // Cytoscape grabs nodes with the left button only, so a right-drag moves its
-  // node here, in either mode. Cytoscape fires no cxttap after a right-drag,
-  // so the drag does not also isolate.
-  cy.on('cxttapstart', 'node', (evt) => {
-    rightDrag = { last: { ...evt.position }, dragged: false };
+    const position = evt.target.position();
+
+    dragGroup(drag.node)
+      .difference(drag.moving)
+      .shift({ x: position.x - drag.last.x, y: position.y - drag.last.y });
+    drag.last = { ...position };
   });
-  cy.on('cxtdrag', 'node', (evt) => {
-    if (rightDrag) {
-      followRightDrag(evt.target, evt.position);
+  // Cytoscape fires freeon before dragfreeon, so the drag ends here.
+  cy.on('dragfreeon', 'node', () => {
+    if (drag) {
+      checkpoint('Moved ' + describeMove(drag.node, drag.moving.union(dragGroup(drag.node))));
+      drag = null;
     }
   });
-  // The button can be released past the last cxtdrag position, so the release
-  // applies the remaining offset.
-  cy.on('cxttapend', 'node', (evt) => {
-    if (rightDrag && rightDrag.dragged) {
-      followRightDrag(evt.target, evt.position);
-      checkpoint('Moved ' + describeMove(evt.target));
+
+  // Cytoscape pans with the left button only, and updateInteraction() turns
+  // that off, so a right-drag pans here. Cytoscape fires no cxttap once the
+  // pointer passes its tap threshold, so the drag does not also isolate.
+  cy.on('cxttapstart', (evt) => {
+    pan = { x: evt.originalEvent.clientX, y: evt.originalEvent.clientY };
+  });
+  cy.on('cxtdrag', (evt) => {
+    if (!pan) {
+      return;
     }
 
-    rightDrag = null;
+    const point = { x: evt.originalEvent.clientX, y: evt.originalEvent.clientY };
+
+    cy.panBy({ x: point.x - pan.x, y: point.y - pan.y });
+    cy.container().classList.add('is-panning');
+    pan = point;
+  });
+  cy.on('cxttapend', () => {
+    pan = null;
+    cy.container().classList.remove('is-panning');
+  });
+
+  // A tap on a node in View mode animates the view to it, so the second click
+  // of a double-click can land beside the node. Cytoscape fires dbltap on
+  // whatever the second click hits, so the double-click opens the node the
+  // first click hit.
+  cy.on('tap', (evt) => {
+    taps = [taps[1], evt.target];
+  });
+  cy.on('dbltap', () => {
+    const node = taps[0];
+
+    if (buildMode || !node || node === cy || !node.isNode()) {
+      return;
+    }
+
+    const id = node.data('group') === 'proxy' ? node.data('target') : node.id();
+
+    setMode(true);
+    selectNode(id);
+
+    // A second click on the canvas makes Cytoscape unselect everything after
+    // dbltap, so the node is selected once its handler has run.
+    setTimeout(() => cy.getElementById(id).select());
   });
 
   cy.on('tapstart', 'node[group="field"]', (evt) => startConnect(evt.target, evt.position));
@@ -362,18 +408,40 @@ function applyConnect() {
   updateInteraction();
 }
 
+// Turns Cytoscape's left-button panning off until the button is released.
+// Cytoscape reads the setting during the drag, so it comes back on after its
+// own mouseup handler has run.
+function holdPanning(evt) {
+  if (evt.button !== 0 || !cy) {
+    return;
+  }
+
+  cy.userPanningEnabled(false);
+  window.addEventListener('mouseup', () => setTimeout(() => cy.userPanningEnabled(true)), { once: true });
+}
+
+// The left button selects and moves nodes in Edit mode and does nothing else
+// on the canvas; a right-drag pans in every mode.
 function updateInteraction() {
   if (!cy) {
     return;
   }
-  cy.autoungrabify(!buildMode || connectMode);
-  cy.userPanningEnabled(!connectMode);
-  cy.boxSelectionEnabled(false);
+
+  const editing = buildMode && !connectMode;
+
+  if (!editing) {
+    cy.nodes(':selected').unselect();
+  }
+
+  cy.userPanningEnabled(true);
+  cy.autoungrabify(!editing);
+  cy.autounselectify(!editing);
+  cy.boxSelectionEnabled(editing);
 }
 
-// Isolates an entity, its fields and their proxies as a movable unit.
-// Everything else is faded and only the group is grabbable, so dragging any
-// member moves the whole group (see dragGroup()).
+// Isolates an entity, its fields and their proxies. Everything else is faded
+// and only the group is grabbable, so in Edit mode dragging any member moves
+// the whole group (see dragGroup()).
 function isolateEntity(entityId) {
   const entity = cy.getElementById(entityId);
   if (entity.empty() || entity.data('group') !== 'entity') {
@@ -387,7 +455,6 @@ function isolateEntity(entityId) {
   group.removeClass('faded');
   group.edgesWith(group).removeClass('faded');
 
-  cy.autoungrabify(false);
   cy.nodes().ungrabify();
   group.grabify();
   isolatedEntity = entityId;
@@ -401,9 +468,8 @@ function clearIsolation() {
   cy.elements().removeClass('faded');
   isolatedEntity = null;
   isolatedIds = new Set();
-  dragLast = null;
+  drag = null;
   cy.nodes().grabify();
-  updateInteraction();
 }
 
 // The nodes a drag of the node moves: its isolated group, nothing when an
@@ -416,20 +482,20 @@ function dragGroup(node) {
   return isolatedIds.has(node.id()) ? cy.nodes().filter((other) => isolatedIds.has(other.id())) : cy.collection();
 }
 
-// Shifts the dragGroup() of the node by the pointer's travel since the last
-// right-drag event.
-function followRightDrag(node, position) {
-  dragGroup(node).shift({ x: position.x - rightDrag.last.x, y: position.y - rightDrag.last.y });
-  rightDrag = { last: { ...position }, dragged: true };
-}
-
-// Names what a drag moved: a node of an isolated group moves the whole group.
-function describeMove(node) {
-  if (!isolatedIds.has(node.id()) || isolatedIds.size === 1) {
+// Names what a drag of the node moved: the node itself, an isolated entity
+// with its fields, or a count of the nodes.
+function describeMove(node, moved) {
+  if (moved.length === 1) {
     return describeNode(node);
   }
 
-  return describeNode(cy.getElementById(isolatedEntity)) + ' with its fields';
+  const group = cy.nodes().filter((other) => isolatedIds.has(other.id()));
+
+  if (group.length && moved.same(group)) {
+    return describeNode(cy.getElementById(isolatedEntity)) + ' with its fields';
+  }
+
+  return moved.length + ' nodes';
 }
 
 /* Drag-to-connect ------------------------------------------------------- */
