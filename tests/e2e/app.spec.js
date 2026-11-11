@@ -3137,6 +3137,76 @@ function dataProviderCaptionDiagrams() {
   return ['example', 'civictheme'];
 }
 
+// Draws the node canvas on the path Cytoscape takes for its first draw, then
+// again with each element drawn straight onto the canvas, which Cytoscape
+// falls back to when it has no layered textures. Returns the field labels
+// whose pixels differ by more than anti-aliasing between the 2 draws.
+function firstDrawDifferences(page) {
+  return page.evaluate(() => {
+    const cy = window.__nexus.cy;
+    const renderer = cy.renderer();
+    const context = renderer.data.contexts[renderer.NODE];
+    const { width, height } = context.canvas;
+    const ratio = renderer.getPixelRatio();
+    const draw = () => {
+      renderer.redrawHint('eles', true);
+      renderer.render();
+
+      return context.getImageData(0, 0, width, height).data;
+    };
+
+    const cache = renderer.data.lyrTxrCache;
+    const getLayers = cache.getLayers;
+
+    cache.firstGet = true;
+    const first = draw();
+    cache.getLayers = () => null;
+    const direct = draw();
+    cache.getLayers = getLayers;
+
+    return cy
+      .nodes('[group="field"]')
+      .filter((field) => {
+        const box = field.renderedBoundingBox({ includeLabels: false });
+        const x1 = Math.max(0, Math.floor(box.x1 * ratio));
+        const y1 = Math.max(0, Math.floor(box.y1 * ratio));
+        const x2 = Math.min(width, Math.ceil(box.x2 * ratio));
+        const y2 = Math.min(height, Math.ceil(box.y2 * ratio));
+
+        for (let y = y1; y < y2; y++) {
+          for (let x = x1; x < x2; x++) {
+            const i = (y * width + x) * 4;
+
+            if (Math.abs(first[i] - direct[i]) + Math.abs(first[i + 1] - direct[i + 1]) + Math.abs(first[i + 2] - direct[i + 2]) > 60) {
+              return true;
+            }
+          }
+        }
+
+        return false;
+      })
+      .map((field) => field.data('label'));
+  });
+}
+
+for (const ratio of dataProviderPixelRatios()) {
+  test.describe(`on a ${ratio}x display`, () => {
+    test.use({ deviceScaleFactor: ratio });
+
+    test('draws the field labels on the first draw as sharp as Cytoscape draws them one by one at 100%', async ({ page }) => {
+      await page.setViewportSize({ width: 1600, height: 1000 });
+      await openDiagram(page, 'civictheme');
+
+      expect(await page.evaluate(() => [window.devicePixelRatio, window.__nexus.cy.zoom()])).toEqual([ratio, 1]);
+      expect(await firstDrawDifferences(page)).toEqual([]);
+    });
+  });
+}
+
+function dataProviderPixelRatios() {
+  return [1, 2];
+}
+
 test('keeps the type caption of each vocabulary inside its tag', async ({ page }) => {
   await openDiagram(page, 'civictheme');
 

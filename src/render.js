@@ -767,6 +767,15 @@ function tooltipHtml(node) {
   return '<div class="tooltip__name">' + name + '</div><div class="tooltip__meta">' + esc(humanize(node.data('kind'))) + extra + '</div>';
 }
 
+// Cytoscape's layered texture cache copies each element's cached bitmap into a
+// layer with image smoothing off. The bitmap and the element's box differ by a
+// fraction of a pixel, so the copy drops pixel rows and some labels lose their
+// strokes. With no layers, Cytoscape draws each element's bitmap onto the
+// canvas with smoothing on.
+function drawWithoutLayers(cy) {
+  cy.renderer().data.lyrTxrCache.getLayers = () => null;
+}
+
 function buildController(model, options = {}) {
   const defaults = diagramDefaults();
 
@@ -802,6 +811,8 @@ function buildController(model, options = {}) {
     maxZoom: 3,
     layout: { name: 'grid' },
   });
+
+  drawWithoutLayers(cy);
 
   // The node a View-mode tap focused, as { kind, id }, or null.
   let focused = null;
