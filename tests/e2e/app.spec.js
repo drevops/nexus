@@ -4257,6 +4257,53 @@ test('keeps a field clicked in Edit mode selected while the Inspector shows it',
   expect(await selectedNodes(page)).toEqual([TRACK_FIELD]);
 });
 
+// Drags a selection box around a node from just outside its top left corner,
+// holding the given keys.
+async function boxSelect(page, id, modifiers = []) {
+  const box = await page.evaluate((nodeId) => {
+    const cy = window.__nexus.cy;
+    cy.center(cy.getElementById(nodeId));
+    const origin = cy.container().getBoundingClientRect();
+    const bounds = cy.getElementById(nodeId).renderedBoundingBox();
+
+    return { x1: origin.left + bounds.x1 - 12, y1: origin.top + bounds.y1 - 12, x2: origin.left + bounds.x2 + 12, y2: origin.top + bounds.y2 + 12 };
+  }, id);
+
+  await page.mouse.move(box.x1, box.y1);
+  for (const key of modifiers) {
+    await page.keyboard.down(key);
+  }
+  await page.mouse.down();
+  await page.mouse.move(box.x2, box.y2, { steps: 8 });
+  await page.mouse.up();
+  for (const key of modifiers) {
+    await page.keyboard.up(key);
+  }
+}
+
+test('closes the Inspector when a box selection leaves its node out', async ({ page }) => {
+  await editExample(page);
+  await clickNode(page, TRACK_FIELD);
+  await expect(page.locator('#inspector')).toBeVisible();
+
+  await boxSelect(page, 'node.speaker');
+
+  await expect(page.locator('#inspector')).toBeHidden();
+  await expect(page.locator('#handles .handle')).toHaveCount(0);
+  expect(await selectedNodes(page)).toEqual(['node.speaker']);
+});
+
+test('keeps the Inspector when a shift box selection adds to its node', async ({ page }) => {
+  await editExample(page);
+  await clickNode(page, TRACK_FIELD);
+
+  await boxSelect(page, 'node.speaker', ['Shift']);
+
+  await expect.poll(() => selectedNodes(page)).toEqual([TRACK_FIELD, 'node.speaker']);
+  await expect(page.locator('#inspector')).toBeVisible();
+  await expect(page.locator('#inspector .insp__title')).toHaveText('Field');
+});
+
 test('shows the + handles only around an entity the Inspector shows', async ({ page }) => {
   await editExample(page);
   await clickNode(page, TRACK_FIELD);

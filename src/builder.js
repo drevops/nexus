@@ -255,6 +255,18 @@ export function attachBuilder(instance, build = false) {
       setTimeout(() => syncSelection(true));
     }
   });
+  // A box selection without a modifier key replaces the selection after
+  // boxend. One that leaves the inspected node out is a new selection, which
+  // the Inspector can't show, so the Inspector closes.
+  cy.on('boxend', () => {
+    setTimeout(() => {
+      const id = inspectedNodeId(getState().selected);
+
+      if (buildMode && id && !cy.getElementById(id).selected()) {
+        closeInspector();
+      }
+    });
+  });
 
   // A right-click on an entity isolates it and its fields; a tap on the empty
   // canvas releases the isolation. The native context menu is suppressed, so
@@ -672,7 +684,9 @@ function followInspector() {
 }
 
 // Selects the node the Inspector shows. An exclusive sync also unselects
-// every other node. Nodes can be selected only in Edit mode outside Connect.
+// every other node. With no node inspected the selection stays as it is, so
+// closing the Inspector keeps a box selection. Nodes can be selected only in
+// Edit mode outside Connect.
 function syncSelection(exclusive) {
   if (!cy || !buildMode || connectMode) {
     return;
@@ -680,6 +694,10 @@ function syncSelection(exclusive) {
 
   const id = inspectedNodeId(getState().selected);
   const node = id ? cy.getElementById(id) : cy.collection();
+
+  if (node.empty()) {
+    return;
+  }
 
   if (exclusive) {
     cy.nodes(':selected').difference(node).unselect();
