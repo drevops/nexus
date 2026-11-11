@@ -1443,12 +1443,14 @@ sl-button#zoom-level::part(base) {
   font-size: 0.74rem;
 }
 
-.landing__more a {
+.landing__more a,
+.landing__note a {
   color: var(--accent);
   text-decoration: none;
 }
 
-.landing__more a:hover {
+.landing__more a:hover,
+.landing__note a:hover {
   text-decoration: underline;
 }
 
