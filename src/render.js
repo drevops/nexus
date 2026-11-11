@@ -483,6 +483,10 @@ function style() {
   const tc = themeColors();
   return [
     {
+      selector: 'core',
+      style: { 'selection-box-color': '#2f6db3', 'selection-box-opacity': 0.12, 'selection-box-border-color': '#2f6db3', 'selection-box-border-width': 1 },
+    },
+    {
       selector: 'node[group="entity"]',
       style: {
         shape: (ele) => entityShape(ele.data('entityType')),
@@ -628,6 +632,7 @@ function style() {
     { selector: 'node.trace', style: { opacity: 1, 'border-color': '#0f9d8f', 'border-width': 3 } },
     { selector: 'edge.trace', style: { opacity: 1, 'line-color': '#0f9d8f', 'target-arrow-color': '#0f9d8f', width: 2.6, 'z-index': 20 } },
     { selector: 'node.trace-source', style: { opacity: 1, 'border-color': '#0b7a70', 'border-width': 4, 'background-color': '#c3f0e8' } },
+    { selector: 'node:selected', style: { 'border-color': '#2f6db3', 'border-width': 3 } },
   ];
 }
 

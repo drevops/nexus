@@ -520,7 +520,6 @@ sl-button#zoom-level::part(base) {
 .cy {
   position: absolute;
   inset: 0;
-  cursor: grab;
   background-color: var(--bg);
   background-image:
     linear-gradient(var(--grid) 1px, transparent 1px),
@@ -528,7 +527,7 @@ sl-button#zoom-level::part(base) {
   background-size: 26px 26px;
 }
 
-.cy:active {
+.cy.is-panning {
   cursor: grabbing;
 }
 
