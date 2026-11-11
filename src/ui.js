@@ -779,17 +779,19 @@ function SettingsBody({ controller }) {
               onsl-input=${(e) => controller.applyColor(t, e.target.value)}
             ></sl-color-picker>
             ${symbolSelect(controller, t, controller.symbolFor(t), controller.colorFor(t), (e) => controller.applySymbol(t, e.target.value))}
-            ${controller.isCustomType(t)
-              ? html`<sl-button
-                  class="type-row__action"
-                  size="small"
-                  data-remove-type=${t}
-                  title="Remove this custom type"
-                  aria-label=${'Remove ' + controller.typeLabel(t)}
-                  onClick=${() => remove(t)}
-                  >${rawIcon('minus', 14)}</sl-button
-                >`
-              : null}
+            ${
+              controller.isCustomType(t)
+                ? html`<sl-button
+                    class="type-row__action"
+                    size="small"
+                    data-remove-type=${t}
+                    title="Remove this custom type"
+                    aria-label=${'Remove ' + controller.typeLabel(t)}
+                    onClick=${() => remove(t)}
+                    >${rawIcon('minus', 14)}</sl-button
+                  >`
+                : null
+            }
           </div>`,
       )}
     </div>
@@ -821,7 +823,14 @@ function SettingsBody({ controller }) {
         onsl-input=${(e) => setNt((p) => ({ ...p, color: e.target.value }))}
       ></sl-color-picker>
       ${symbolSelect(controller, null, nt.symbol, nt.color, (e) => setNt((p) => ({ ...p, symbol: e.target.value })))}
-      <sl-button class="type-row__action" size="small" variant="primary" data-add-type title="Add a custom entity type" aria-label="Add a custom entity type" onClick=${add}
+      <sl-button
+        class="type-row__action"
+        size="small"
+        variant="primary"
+        data-add-type
+        title="Add a custom entity type"
+        aria-label="Add a custom entity type"
+        onClick=${add}
         >${rawIcon('plus', 14)}</sl-button
       >
     </div>
