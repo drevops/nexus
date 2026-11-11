@@ -295,7 +295,8 @@ const FLOAT_DRAG_TITLE = 'Drag to move, drop at an edge to dock';
 
 // A docked panel is never taller than its content. The Inspector keeps its
 // content height and the other panels shrink, while a resized panel keeps the
-// height it was given as a maximum.
+// height it was given as a maximum. The rest share the free space equally,
+// and a panel that reaches its content height leaves the rest to the others.
 function dockStyle(id, panel) {
   if (id === 'inspector') {
     return { zIndex: panel.z, flex: '0 0 auto', maxHeight: '100%' };
@@ -305,7 +306,7 @@ function dockStyle(id, panel) {
     return { zIndex: panel.z, flex: '0 0 auto', maxHeight: panel.height + 'px' };
   }
 
-  return { zIndex: panel.z, flex: '0 1 auto' };
+  return { zIndex: panel.z, flex: '1 1 0', maxHeight: 'max-content' };
 }
 
 function Panel({ id, panel, dragging, header, children }) {
