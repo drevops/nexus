@@ -2772,6 +2772,72 @@ test('labels each entity with its type in the caption layer', async ({ page }) =
   expect(types).toContain('Content type');
 });
 
+// The outline boxes of the Find entity field and its search button, with
+// their border colours and their inner corner radii.
+function findControl(page) {
+  return page.evaluate(() => {
+    const part = (id) => document.getElementById(id).shadowRoot.querySelector('[part~="base"]');
+    const box = (element) => {
+      const rect = element.getBoundingClientRect();
+
+      return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom };
+    };
+    const field = getComputedStyle(part('search'));
+    const button = getComputedStyle(part('search-btn'));
+
+    return {
+      field: box(part('search')),
+      button: box(part('search-btn')),
+      fieldBorder: field.borderTopColor,
+      buttonBorder: button.borderTopColor,
+      innerRadii: [field.borderTopRightRadius, field.borderBottomRightRadius, button.borderTopLeftRadius, button.borderBottomLeftRadius],
+      group: document.getElementById('search').parentElement.getAttribute('role'),
+    };
+  });
+}
+
+for (const theme of dataProviderFindThemes()) {
+  test(`joins the Find entity field and its search button into 1 control in the ${theme} theme`, async ({ page }) => {
+    await loadExample(page);
+
+    if (theme === 'dark') {
+      await page.click('#theme-toggle');
+      await expect(page.locator('html')).toHaveClass(/sl-theme-dark/);
+    }
+
+    // Shoelace animates border colours, so they match only once the theme
+    // change has finished.
+    await expect
+      .poll(async () => {
+        const borders = await findControl(page);
+
+        return borders.buttonBorder === borders.fieldBorder;
+      })
+      .toBe(true);
+    const control = await findControl(page);
+
+    expect(control.group).toBe('search');
+    expect(control.button.left).toBeCloseTo(control.field.right - 1, 1);
+    expect(control.button.top).toBeCloseTo(control.field.top, 1);
+    expect(control.button.bottom).toBeCloseTo(control.field.bottom, 1);
+    expect(control.innerRadii).toEqual(['0px', '0px', '0px', '0px']);
+  });
+}
+
+function dataProviderFindThemes() {
+  return ['light', 'dark'];
+}
+
+test('keeps the Find entity field and its search button on 1 line when the toolbar wraps', async ({ page }) => {
+  await page.setViewportSize({ width: 600, height: 800 });
+  await loadExample(page);
+
+  const control = await findControl(page);
+
+  expect(control.button.top).toBeCloseTo(control.field.top, 1);
+  expect(control.button.left).toBeCloseTo(control.field.right - 1, 1);
+});
+
 test('searches on the button and zooms to the match at 100%', async ({ page }) => {
   await loadExample(page);
   await page.evaluate(() => window.__nexus.cy.zoom(0.2));
