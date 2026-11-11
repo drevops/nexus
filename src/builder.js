@@ -33,6 +33,8 @@ let connectSource = null;
 let counter = 0;
 let handleEntityId = null;
 let handleRaf = false;
+let shownSelection = null;
+let tapping = false;
 let placeKind = null;
 let isolatedEntity = null;
 let isolatedIds = new Set();
@@ -212,6 +214,7 @@ export function initBuilder() {
   });
 
   subscribe(paintPaletteSymbols);
+  subscribe(followInspector);
 }
 
 // Attaches the builder to a newly drawn diagram, which opens in Edit mode
@@ -234,9 +237,35 @@ export function attachBuilder(instance, build = false) {
     }
 
     // A proxy has no inspector form, so a tap on one selects the entity it
-    // stands in for.
+    // stands in for. A tap on any other node leaves its canvas selection to
+    // Cytoscape, which keeps a selection extended with a modifier key.
     const node = evt.target;
-    selectNode(node.data('group') === 'proxy' ? node.data('target') : node.id());
+    const proxy = node.data('group') === 'proxy';
+
+    tapping = !proxy;
+    selectNode(proxy ? node.data('target') : node.id());
+    tapping = false;
+  });
+  // Cytoscape unselects every node on a tap on the empty canvas or an edge,
+  // while the Inspector still shows its node.
+  cy.on('tap', (evt) => {
+    const onNode = evt.target !== cy && evt.target.isNode();
+
+    if (buildMode && !onNode) {
+      setTimeout(() => syncSelection(true));
+    }
+  });
+  // A box selection without a modifier key replaces the selection after
+  // boxend. One that leaves the inspected node out is a new selection, which
+  // the Inspector can't show, so the Inspector closes.
+  cy.on('boxend', () => {
+    setTimeout(() => {
+      const id = inspectedNodeId(getState().selected);
+
+      if (buildMode && id && !cy.getElementById(id).selected()) {
+        closeInspector();
+      }
+    });
   });
 
   // A right-click on an entity isolates it and its fields; a tap on the empty
@@ -327,10 +356,6 @@ export function attachBuilder(instance, build = false) {
 
     setMode(true);
     selectNode(id);
-
-    // A second click on the canvas makes Cytoscape unselect everything after
-    // dbltap, so the node is selected once its handler has run.
-    setTimeout(() => cy.getElementById(id).select());
   });
 
   cy.on('tapstart', 'node[group="field"]', (evt) => startConnect(evt.target, evt.position));
@@ -441,6 +466,7 @@ function updateInteraction() {
   cy.autoungrabify(!editing);
   cy.autounselectify(!editing);
   cy.boxSelectionEnabled(editing);
+  syncSelection(true);
 }
 
 // Isolates an entity, its fields and their proxies. Everything else is faded
@@ -614,13 +640,70 @@ function selectNode(id) {
   if (node.empty()) {
     return;
   }
-  const group = node.data('group');
-  openInspector({ kind: group, id: id });
-  if (group === 'entity') {
+  openInspector({ kind: node.data('group'), id: id });
+}
+
+// Returns the id of the node an Inspector selection shows: its own node, or
+// the entity a new field or bulk fields form belongs to. Returns null for a
+// form with no node, such as a new entity.
+function inspectedNodeId(selected) {
+  if (!selected) {
+    return null;
+  }
+
+  if (selected.kind === 'new-field' || selected.kind === 'bulk-fields') {
+    return selected.entityId || null;
+  }
+
+  return selected.id || null;
+}
+
+// Keeps the canvas on the node the Inspector shows: the "+" handles around an
+// inspected entity, and the node selected. Cytoscape applies its own tap
+// selection after the tap handlers, so the selection waits for it. A
+// selection made off the canvas, such as from the breadcrumb or by an undo,
+// leaves only the inspected node selected.
+function followInspector() {
+  const selected = getState().selected;
+
+  if (selected === shownSelection || !cy) {
+    return;
+  }
+
+  shownSelection = selected;
+  const id = inspectedNodeId(selected);
+
+  if (buildMode && id && cy.getElementById(id).data('group') === 'entity') {
     showHandles(id);
   } else {
     hideHandles();
   }
+
+  const exclusive = !tapping;
+  setTimeout(() => syncSelection(exclusive));
+}
+
+// Selects the node the Inspector shows. An exclusive sync also unselects
+// every other node. With no node inspected the selection stays as it is, so
+// closing the Inspector keeps a box selection. Nodes can be selected only in
+// Edit mode outside Connect.
+function syncSelection(exclusive) {
+  if (!cy || !buildMode || connectMode) {
+    return;
+  }
+
+  const id = inspectedNodeId(getState().selected);
+  const node = id ? cy.getElementById(id) : cy.collection();
+
+  if (node.empty()) {
+    return;
+  }
+
+  if (exclusive) {
+    cy.nodes(':selected').difference(node).unselect();
+  }
+
+  node.select();
 }
 
 // Selects a node the user just created and records its creation.
@@ -631,20 +714,22 @@ function selectCreated(id) {
 }
 
 // Brings the edit state in line with a graph the history changed: releases an
-// isolation, drops a connection being dragged and closes the inspector when
-// the node it shows is gone.
+// isolation, drops a connection being dragged, closes the inspector when the
+// node it shows is gone and selects the node it still shows.
 function refreshSelection() {
   clearIsolation();
   connectSource = null;
   cleanupGhost();
 
-  const selected = getState().selected;
-  const id = selected && (selected.kind === 'new-field' || selected.kind === 'bulk-fields' ? selected.entityId : selected.id);
+  const id = inspectedNodeId(getState().selected);
 
   if (id && cy.getElementById(id).empty()) {
     closeInspector();
     hideHandles();
   }
+
+  // The history re-adds the elements it restores, unselected.
+  syncSelection(true);
 }
 
 /* Auto-naming for items created directly on the canvas ------------------- */
