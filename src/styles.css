@@ -1600,6 +1600,57 @@ html.sl-theme-dark .icon--nexus .ink {
   font-weight: 600;
 }
 
+.insp:focus {
+  outline: none;
+}
+
+.insp__crumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 0 0 0.6rem;
+  padding: 0;
+  font-size: 0.78rem;
+  list-style: none;
+}
+
+.insp__crumbs li {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.insp__crumbs li + li::before {
+  content: '›';
+  margin: 0 0.35rem;
+  color: var(--muted);
+}
+
+.insp__crumbs li[aria-current='page'] {
+  color: var(--muted);
+}
+
+.insp__crumb {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+  padding: 0;
+  font: inherit;
+  color: var(--accent);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.insp__crumb:hover,
+.insp__crumb:focus-visible {
+  text-decoration: underline;
+}
+
 .insp__actions {
   display: inline-flex;
   gap: 0.3rem;

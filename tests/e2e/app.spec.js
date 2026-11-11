@@ -1161,7 +1161,7 @@ test('leaves base fields out when copying fields from another entity', async ({ 
 
   await tapNode(page, 'taxonomy_term.tracks');
   await page.click('#inspector [data-bulk-fields]');
-  await expect(page.locator('#inspector [data-copy-from] sl-option[value="node.session"]')).toHaveText(new RegExp('\\(' + fields.other.length + '\\)$'));
+  await expect(page.locator('#inspector [data-copy-from] sl-option[value="node.session"]')).toContainText('(' + fields.other.length + ')');
   await slSelect(page, '#inspector [data-copy-from]', 'node.session');
 
   const copied = await page.locator('#inspector [data-bulk-text]').evaluate((el) => el.value.split('\n').map((line) => line.match(/\(([a-z0-9_]+)\),/)[1]));
@@ -1176,6 +1176,68 @@ test('closes the bulk fields form when an undo removes its entity', async ({ pag
 
   expect(await hasNode(page, 'node.article')).toBe(false);
   await expect(page.locator('#inspector [data-new="bulk-fields"]')).toHaveCount(0);
+});
+
+function crumbs(page) {
+  return page.locator('#inspector .insp__crumbs li').allTextContents();
+}
+
+for (const [name, open, expected] of dataProviderEntityScreens()) {
+  test(`leads ${name} back to its entity`, async ({ page }) => {
+    await buildStoryWithField(page);
+    await open(page);
+    await expect(page.locator('#inspector .insp__crumbs li')).toHaveText(expected);
+    await expect(page.locator('#inspector .insp__crumbs li[aria-current="page"]')).toHaveText(expected[1]);
+
+    await page.click('#inspector [data-crumb="node.story"]');
+
+    await expect(page.locator('#inspector .insp__title')).toHaveText('Entity');
+    await expect(page.locator('#inspector [data-machine-name]')).toHaveJSProperty('value', 'story');
+    await expect(page.locator('#inspector .insp__crumbs')).toHaveCount(0);
+    await expect(page.locator('#handles .handle')).toHaveCount(4);
+  });
+}
+
+function dataProviderEntityScreens() {
+  return [
+    ['a field’s inspector', async () => {}, ['Story', 'Field 1']],
+    ['a new field opened from an entity', (page) => tapNode(page, 'node.story').then(() => page.click('#inspector [data-add-field]')), ['Story', 'New field']],
+    ['the bulk fields form', (page) => tapNode(page, 'node.story').then(() => page.click('#inspector [data-bulk-fields]')), ['Story', 'Add fields']],
+  ];
+}
+
+test('moves the focus into the entity form a crumb opens from the keyboard', async ({ page }) => {
+  await buildStoryWithField(page);
+  await page.locator('#inspector [data-crumb="node.story"]').focus();
+
+  await page.keyboard.press('Enter');
+
+  await expect(page.locator('#inspector .insp__title')).toHaveText('Entity');
+  await expect(page.locator('#inspector .insp')).toBeFocused();
+});
+
+test('shows no breadcrumb on a screen with nothing above it', async ({ page }) => {
+  await buildStoryWithField(page);
+
+  await tapNode(page, 'node.story');
+  await expect(page.locator('#inspector .insp__title')).toHaveText('Entity');
+  expect(await crumbs(page)).toEqual([]);
+
+  await page.click('#add-field');
+  await expect(page.locator('#inspector [data-new="field"]')).toBeVisible();
+  expect(await crumbs(page)).toEqual([]);
+
+  await page.click('[data-add-entity="node"]');
+  await expect(page.locator('#inspector [data-new="entity"]')).toBeVisible();
+  expect(await crumbs(page)).toEqual([]);
+});
+
+test('relabels the breadcrumb with the field it shows', async ({ page }) => {
+  await buildStoryWithField(page);
+
+  await slFill(page, '#inspector sl-input:not([data-machine-name])', 'Subtitle');
+
+  await expect(page.locator('#inspector .insp__crumbs li')).toHaveText(['Story', 'Subtitle']);
 });
 
 // Whether each element that draws the reference from the field to the target

@@ -115,6 +115,8 @@ Switch to **Edit** and a palette appears under the toolbar:
 
 Select a node to edit or delete it in the **Inspector**: an entity's label and machine name; a field's label, machine name, type, cardinality, required flag and references; or an annotation's label, kind and method. Any node can also carry a free-text note, shown as a badge on the canvas.
 
+A screen that belongs to an entity shows a breadcrumb at the top of the **Inspector**, such as **Blog post › Featured image**. That covers a field, a new field and the bulk form. Click the entity's name to go back to its form.
+
 To add several fields at once, select an entity and click **Bulk** in the **Inspector**. Type 1 field per line, and the **Inspector** previews each field under the text box:
 
 ```text
