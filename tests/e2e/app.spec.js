@@ -4578,10 +4578,10 @@ const AMBER = 'rgb(245, 158, 11)';
 
 test('frames the canvas in the colour of the mode', async ({ page }) => {
   await loadExample(page);
-  expect(await modeFrame(page)).toEqual({ display: 'block', width: '10px', color: TRANSPARENT, pointerEvents: 'none' });
+  expect(await modeFrame(page)).toEqual({ display: 'block', width: '5px', color: TRANSPARENT, pointerEvents: 'none' });
 
   await page.click('#mode-build');
-  expect(await modeFrame(page)).toEqual({ display: 'block', width: '10px', color: AMBER, pointerEvents: 'none' });
+  expect(await modeFrame(page)).toEqual({ display: 'block', width: '5px', color: AMBER, pointerEvents: 'none' });
 
   await page.click('#mode-view');
   expect((await modeFrame(page)).color).toBe(TRANSPARENT);
@@ -4600,7 +4600,7 @@ test('keeps the mode frame inside the canvas, off the docked panels and out of t
   expect(frame.x + frame.width).toBeLessThanOrEqual(rail.x);
 
   // A point in the frame's band reaches the canvas under it.
-  const hit = await page.evaluate(({ x, y }) => Boolean(document.elementFromPoint(x, y).closest('#cy')), { x: frame.x + 5, y: frame.y + frame.height / 2 });
+  const hit = await page.evaluate(({ x, y }) => Boolean(document.elementFromPoint(x, y).closest('#cy')), { x: frame.x + 2, y: frame.y + frame.height / 2 });
   expect(hit).toBe(true);
 });
 
@@ -4631,7 +4631,7 @@ test('sets the mode frame from Settings and keeps it across reloads', async ({ p
   // raised over the Legend.
   await page.click('#settings .panel__title');
   await page.click('#frame-toggle');
-  await expect.poll(() => modeFrame(page)).toEqual({ display: 'block', width: '10px', color: 'rgb(68, 85, 102)', pointerEvents: 'none' });
+  await expect.poll(() => modeFrame(page)).toEqual({ display: 'block', width: '5px', color: 'rgb(68, 85, 102)', pointerEvents: 'none' });
   await page.click('#mode-build');
   expect((await modeFrame(page)).color).toBe('rgb(17, 34, 51)');
 });
@@ -4659,7 +4659,7 @@ test('restores the mode frame with Reset to defaults', async ({ page }) => {
 
   await page.click('#settings-reset');
 
-  await expect.poll(() => modeFrame(page)).toEqual({ display: 'block', width: '10px', color: AMBER, pointerEvents: 'none' });
+  await expect.poll(() => modeFrame(page)).toEqual({ display: 'block', width: '5px', color: AMBER, pointerEvents: 'none' });
   await expect.poll(() => page.evaluate(() => document.getElementById('frame-toggle').checked)).toBe(true);
 });
 

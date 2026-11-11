@@ -580,7 +580,7 @@ sl-button#zoom-level::part(base) {
   inset: 0;
   z-index: 4;
   display: none;
-  border: 10px solid var(--frame-view, transparent);
+  border: 5px solid var(--frame-view, transparent);
   pointer-events: none;
 }
 
