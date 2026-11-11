@@ -87,11 +87,14 @@ By default, content types are rounded rectangles, vocabularies are tags, media a
 
 ## Navigating the diagram
 
-The diagram opens with its entities stacked in columns that fill the screen, with every field, proxy and machine name on show. The toolbar offers:
+The diagram opens with its entities stacked in columns that fill the screen, with every field, proxy and machine name on show. 3 switches at the left end of the status bar choose what the diagram shows:
 
-- **Fields** - hide the fields to collapse the diagram to an entity-only overview, or show them again.
+- **Fields** - turn it off to collapse the diagram to an entity-only overview.
 - **Proxies** - draw each reference as a faded copy of its target beside the field, or as an edge to the entity itself.
 - **Machine names** - show each bundle/field machine name in monospace beneath its symbol.
+
+The toolbar offers:
+
 - **Find entity** - type a name, then press Enter or the search button to fade everything else and zoom to the matches.
 - **Layout** - re-run the current layout, or pick another from the arrow beside it: **Columns** stacks each entity and its fields in columns that fill the screen, grouped by entity type, while **LR** and **TB** lay the whole diagram out as 1 flow, left to right or top to bottom. Your pick is remembered.
 - **Tidy** - straighten each entity's fields and line the entities up in columns near where they already are, so a diagram you've dragged around or edited gets neat without being rearranged. Drag an entity roughly into place and Tidy slots it in.
@@ -102,7 +105,7 @@ The diagram opens with its entities stacked in columns that fill the screen, wit
 - **Undo / Redo** - step back and forward through your changes.
 - **Export** - export the whole canvas as PNG or SVG, or the field table as CSV. Pick a format from the arrow beside it and the button keeps that format, so the next press exports it straight away.
 
-The top-right corner holds the About box, a link to this repository, the light/dark theme toggle and **Settings**, where you choose each entity type's color and symbol or add types of your own. The status bar holds the zoom controls: **Reset**, **Fit**, zoom out, zoom in and a zoom-level menu. The mouse wheel or a trackpad pinch zooms the diagram, and dragging the canvas pans it. The browser's zoom keys, <kbd>Ctrl</kbd> with <kbd>+</kbd>, <kbd>-</kbd> or <kbd>0</kbd>, zoom the diagram and leave the page at its size. A pinch over the toolbar or a panel does nothing. Click a node to focus it and its connections. Hold the right mouse button down on a node and drag to move it, in View mode as well as Edit, and right-click an entity to isolate it so it moves together with its fields.
+The top-right corner holds the About box, a link to this repository, the light/dark theme toggle and **Settings**, where you choose each entity type's color and symbol or add types of your own. The right end of the status bar holds the zoom controls: **Reset**, **Fit**, zoom out, zoom in and a zoom-level menu. The mouse wheel or a trackpad pinch zooms the diagram, and dragging the canvas pans it. The browser's zoom keys, <kbd>Ctrl</kbd> with <kbd>+</kbd>, <kbd>-</kbd> or <kbd>0</kbd>, zoom the diagram and leave the page at its size. A pinch over the toolbar or a panel does nothing. Click a node to focus it and its connections. Hold the right mouse button down on a node and drag to move it, in View mode as well as Edit, and right-click an entity to isolate it so it moves together with its fields.
 
 Panels float over the canvas. Drag one by its header, or drop it at the left or right edge (or click its pin) to dock it in a side rail that you can resize. The pin stands upright in blue on a docked panel and leans over on a floating one. To move a docked panel up or down its rail, or to the other rail, drag the grip at the left of its header. To move a docked panel out onto the canvas, drag the rest of its header.
 
@@ -144,7 +147,7 @@ To copy fields from another entity, pick it from **Copy from**. Its fields land 
 
 **History** opens a panel listing the versions of the diagram since you opened it, newest first, with the time of each change. It keeps your last 200 changes, so in a longer session the oldest ones leave the list. Click a version to go back to it. The versions after it stay in the list, greyed out, so you can jump forward again until your next edit replaces them.
 
-Undo covers what the diagram holds, not how it's shown, so it leaves the **Fields** and **Proxies** toggles, the layout you pick from the **Layout** menu and the entity type filters alone, along with your colours, symbols and custom types. The history lives in memory only: it isn't saved with the document, and it starts over when you open, import or start another diagram.
+Undo covers what the diagram holds, not how it's shown, so it leaves the **Fields** and **Proxies** switches, the layout you pick from the **Layout** menu and the entity type filters alone, along with your colors, symbols and custom types. The history lives in memory only: it isn't saved with the document, and it starts over when you open, import or start another diagram.
 
 ## Saving diagrams
 

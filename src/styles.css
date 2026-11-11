@@ -371,9 +371,10 @@ sl-button#zoom-level::part(base) {
   min-height: 0;
 }
 
-/* A short status bar: a live hover hint on the left, zoom controls on the right.
-   It sits above the floating panels so its upward-opening zoom menu is not
-   covered; the landing and loader overlays sit above it in turn. */
+/* A short status bar: the display switches and a live hover hint on the left,
+   zoom controls on the right. It sits above the floating panels so its
+   upward-opening zoom menu is not covered; the landing and loader overlays
+   sit above it in turn. */
 .statusbar {
   display: flex;
   align-items: center;
@@ -382,6 +383,26 @@ sl-button#zoom-level::part(base) {
   background: var(--panel-bg);
   border-top: 1px solid var(--border);
   z-index: 40;
+}
+
+.statusbar__display {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  flex: 0 0 auto;
+}
+
+.statusbar__display sl-switch {
+  --height: 0.85rem;
+  --width: 1.5rem;
+  --thumb-size: 0.65rem;
+  font-size: 0.77rem;
+  white-space: nowrap;
+}
+
+.statusbar__display sl-switch::part(label) {
+  font-size: 0.77rem;
+  color: var(--text);
 }
 
 .statusbar__hint,
@@ -409,6 +430,20 @@ sl-button#zoom-level::part(base) {
   justify-content: flex-end;
   gap: 0.1rem;
   flex: 1 1 0;
+}
+
+/* The switches and the zoom controls fill about 38rem between them, so a
+   narrower window drops the hint and tips and moves the zoom controls to a
+   second line. */
+@media (max-width: 40rem) {
+  .statusbar {
+    flex-wrap: wrap;
+  }
+
+  .statusbar__hint,
+  .statusbar__tips {
+    display: none;
+  }
 }
 
 .stage__canvas {
