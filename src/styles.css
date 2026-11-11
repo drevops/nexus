@@ -573,6 +573,25 @@ sl-button#zoom-level::part(base) {
   display: none;
 }
 
+/* The floating panels follow it in the canvas and share its z-index, so they
+   draw over it. */
+.mode-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: none;
+  border: 10px solid var(--frame-view, transparent);
+  pointer-events: none;
+}
+
+.stage.has-frame .mode-frame {
+  display: block;
+}
+
+.stage.has-frame[data-mode='edit'] .mode-frame {
+  border-color: var(--frame-edit, transparent);
+}
+
 /* Note badges: the layer sets pointer-events: none so the canvas stays
    draggable. Each badge sets pointer-events: auto so it can be hovered and
    clicked. */
@@ -1216,6 +1235,24 @@ body.is-dragging-panel * {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--muted);
+}
+
+.settings-section__title--spaced {
+  margin-top: 1.1rem;
+}
+
+.frame-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+
+.frame-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .color-settings {

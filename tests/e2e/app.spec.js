@@ -4563,6 +4563,103 @@ test('resets colours and symbols to defaults from settings', async ({ page }) =>
   await expect.poll(() => page.evaluate(() => document.querySelector('#settings sl-select[data-symbol="node"]').value)).toBe('rounded');
 });
 
+// How the mode frame draws: its display, border width and colour, and
+// whether it takes pointer events.
+function modeFrame(page) {
+  return page.locator('#mode-frame').evaluate((el) => {
+    const style = getComputedStyle(el);
+
+    return { display: style.display, width: style.borderTopWidth, color: style.borderTopColor, pointerEvents: style.pointerEvents };
+  });
+}
+
+const TRANSPARENT = 'rgba(0, 0, 0, 0)';
+const AMBER = 'rgb(245, 158, 11)';
+
+test('frames the canvas in the colour of the mode', async ({ page }) => {
+  await loadExample(page);
+  expect(await modeFrame(page)).toEqual({ display: 'block', width: '10px', color: TRANSPARENT, pointerEvents: 'none' });
+
+  await page.click('#mode-build');
+  expect(await modeFrame(page)).toEqual({ display: 'block', width: '10px', color: AMBER, pointerEvents: 'none' });
+
+  await page.click('#mode-view');
+  expect((await modeFrame(page)).color).toBe(TRANSPARENT);
+});
+
+test('keeps the mode frame inside the canvas, off the docked panels and out of the way of the pointer', async ({ page }) => {
+  await loadExample(page);
+  await page.click('#mode-build');
+  await page.click('#legend .panel__pin');
+  await expect(page.locator('#legend')).toHaveClass(/is-docked/);
+
+  const frame = await page.locator('#mode-frame').boundingBox();
+  const canvas = await page.locator('.stage__canvas').boundingBox();
+  const rail = await page.locator('#dock-right').boundingBox();
+  expect(frame).toEqual(canvas);
+  expect(frame.x + frame.width).toBeLessThanOrEqual(rail.x);
+
+  // A point in the frame's band reaches the canvas under it.
+  const hit = await page.evaluate(({ x, y }) => Boolean(document.elementFromPoint(x, y).closest('#cy')), { x: frame.x + 5, y: frame.y + frame.height / 2 });
+  expect(hit).toBe(true);
+});
+
+test('sets the mode frame from Settings and keeps it across reloads', async ({ page }) => {
+  await loadExample(page);
+  await page.click('#mode-build');
+  await page.click('#settings-toggle');
+
+  await slFill(page, '#settings sl-color-picker[data-frame-color="edit"]', '#112233');
+  await expect.poll(async () => (await modeFrame(page)).color).toBe('rgb(17, 34, 51)');
+
+  await slFill(page, '#settings sl-color-picker[data-frame-color="view"]', '#445566');
+  await page.click('#mode-view');
+  await expect.poll(async () => (await modeFrame(page)).color).toBe('rgb(68, 85, 102)');
+
+  await page.click('#frame-toggle');
+  await expect.poll(async () => (await modeFrame(page)).display).toBe('none');
+  await expect(page.locator('#settings sl-color-picker[data-frame-color="view"]')).toHaveAttribute('disabled', '');
+
+  await page.reload();
+  await loadExample(page);
+  expect((await modeFrame(page)).display).toBe('none');
+
+  // The panel layout survives the reload too, so Settings is still open, but
+  // not its place in the stack, so it's raised over the Legend.
+  await page.click('#settings .panel__title');
+  await page.click('#frame-toggle');
+  await expect.poll(() => modeFrame(page)).toEqual({ display: 'block', width: '10px', color: 'rgb(68, 85, 102)', pointerEvents: 'none' });
+  await page.click('#mode-build');
+  expect((await modeFrame(page)).color).toBe('rgb(17, 34, 51)');
+});
+
+test('leaves the mode frame out of an SVG export', async ({ page }) => {
+  await loadExample(page);
+  await page.click('#mode-build');
+  expect((await modeFrame(page)).color).toBe(AMBER);
+
+  const svg = readFileSync(await (await exportFrom(page, 'svg')).path(), 'utf8');
+
+  expect(svg).toContain('<svg');
+  expect(svg.toLowerCase()).not.toContain('#f59e0b');
+  expect(svg).not.toContain(AMBER);
+});
+
+test('restores the mode frame with Reset to defaults', async ({ page }) => {
+  await loadExample(page);
+  await page.click('#mode-build');
+  await page.click('#settings-toggle');
+
+  await slFill(page, '#settings sl-color-picker[data-frame-color="edit"]', '#112233');
+  await page.click('#frame-toggle');
+  await expect.poll(async () => (await modeFrame(page)).display).toBe('none');
+
+  await page.click('#settings-reset');
+
+  await expect.poll(() => modeFrame(page)).toEqual({ display: 'block', width: '10px', color: AMBER, pointerEvents: 'none' });
+  await expect.poll(() => page.evaluate(() => document.getElementById('frame-toggle').checked)).toBe(true);
+});
+
 test('round-trips custom types and symbols through a saved document', async ({ page }) => {
   await loadExample(page);
   await page.click('#settings-toggle');
