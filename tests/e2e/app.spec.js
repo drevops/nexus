@@ -3044,13 +3044,21 @@ for (const [symbol, centre] of dataProviderLabelCentres()) {
     await page.click('#settings-toggle');
     await slSelect(page, '#settings sl-select[data-symbol="node"]', symbol);
 
-    await expect.poll(async () => (await labelPlacement(page, 'node.event')).labelX).toBeCloseTo(centre.x, 2);
-    const placement = await labelPlacement(page, 'node.event');
+    // Captions follow the label 1 frame after Cytoscape redraws, so the
+    // label and caption are polled together. The type caption keeps its
+    // place in the label.
+    await expect
+      .poll(async () => {
+        const placement = await labelPlacement(page, 'node.event');
 
-    expect(placement.labelY).toBeCloseTo(centre.y, 2);
-    // The type caption keeps its place in the label.
-    expect(Math.abs(placement.captionX - rounded.captionX)).toBeLessThanOrEqual(1);
-    expect(Math.abs(placement.captionY - rounded.captionY)).toBeLessThanOrEqual(1);
+        return {
+          labelX: Math.abs(placement.labelX - centre.x) < 0.005,
+          labelY: Math.abs(placement.labelY - centre.y) < 0.005,
+          captionX: Math.abs(placement.captionX - rounded.captionX) <= 1,
+          captionY: Math.abs(placement.captionY - rounded.captionY) <= 1,
+        };
+      })
+      .toEqual({ labelX: true, labelY: true, captionX: true, captionY: true });
   });
 }
 
