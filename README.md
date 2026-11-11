@@ -127,7 +127,9 @@ The settings apply to every config folder you import, every template and **Start
 
 ## Editing
 
-Switch to **Edit** and a palette appears under the toolbar:
+Switch to **Edit** and an amber frame appears inside the canvas edge, so you can tell the modes apart at a glance. To change the frame's color for each mode or turn it off, use the **Mode frame** section of **Settings**. **Reset to defaults** restores it with the type colors and symbols.
+
+Edit mode also shows a palette under the toolbar:
 
 - **Content**, **Vocab**, **Media**, **Para**, **Block**, **User** and **External** add an entity. Each button shows its type's symbol and color from **Settings**. Click one to fill in a form, and the new entity lands in the clear spot nearest the middle of the view. Drag one onto the canvas to drop it in place.
 - **Field** adds a field to an entity and can reuse the definition of a field that already exists. The **+** handles around a selected entity add a field in a single click.

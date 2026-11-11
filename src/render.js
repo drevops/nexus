@@ -34,6 +34,7 @@ import { checkpoint, untracked } from './undo.js';
 import { describeNode } from './history.js';
 import { DIAGRAM_DEFAULTS, readDiagramDefaults } from './diagram-defaults.js';
 import { packColumns, tidyColumns } from './packing.js';
+import { frameSettings } from './mode-frame.js';
 import { $ } from './dom.js';
 
 // A small library of UML-ish node shapes, keyed for settings/persistence; the
@@ -143,6 +144,24 @@ function diagramDefaults() {
 function setDiagramDefault(key, value) {
   settings.newDiagrams = { ...diagramDefaults(), [key]: value };
   saveSettings();
+  bump();
+}
+
+// The stylesheet picks the frame colour from the stage's data-mode, which
+// the builder sets.
+function applyFrame() {
+  const frame = frameSettings(settings.frame);
+  const stage = $('stage-root');
+
+  stage.style.setProperty('--frame-view', frame.view);
+  stage.style.setProperty('--frame-edit', frame.edit);
+  stage.classList.toggle('has-frame', frame.enabled);
+}
+
+function setFrame(patch) {
+  settings.frame = frameSettings({ ...frameSettings(settings.frame), ...patch });
+  saveSettings();
+  applyFrame();
   bump();
 }
 
@@ -1354,7 +1373,9 @@ function buildController(model, options = {}) {
     delete settings.colors;
     delete settings.symbols;
     delete settings.newDiagrams;
+    delete settings.frame;
     saveSettings();
+    applyFrame();
     initColors();
     // applyColor sets inline overrides on the nodes; clear them so the
     // stylesheet's default-reading functions take effect again.
@@ -1492,6 +1513,8 @@ function buildController(model, options = {}) {
     layoutOptions: () => Object.entries(LAYOUTS).map(([value, layout]) => ({ value: value, name: layout.name })),
     addCustomType,
     removeCustomType,
+    frameSettings: () => frameSettings(settings.frame),
+    setFrame,
     applyTheme: () => {
       cy.style(style());
       positionCaptions();
@@ -1677,6 +1700,7 @@ export function render(model, options = {}) {
   controller = buildController(model, options);
   setController(controller);
   closeInspector();
+  applyFrame();
 
   if (!wired) {
     wire();

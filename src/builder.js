@@ -377,6 +377,7 @@ function applyMode() {
     return;
   }
   $('build-tools').hidden = !buildMode;
+  $('stage-root').dataset.mode = buildMode ? 'edit' : 'view';
   $('mode-view').classList.toggle('is-active', !buildMode);
   $('mode-build').classList.toggle('is-active', buildMode);
   $('connect-toggle').classList.toggle('is-active', connectMode);

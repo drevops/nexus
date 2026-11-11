@@ -385,6 +385,7 @@ class CanvasHost extends Component {
       <div id="captions" class="captions" aria-hidden="true"></div>
       <div id="notes" class="notes"></div>
       <div id="handles" class="handles" hidden></div>
+      <div id="mode-frame" class="mode-frame" aria-hidden="true"></div>
       <div id="tooltip" class="tooltip" role="tooltip" hidden></div>`;
   }
 }
@@ -961,16 +962,57 @@ function SettingsBody({ controller }) {
       >
     </div>
     <${DiagramDefaults} controller=${controller} />
+    <${FrameSettings} controller=${controller} />
     <sl-button
       id="settings-reset"
       class="settings-reset"
       size="small"
-      title="Restore the default colours, symbols and new diagram settings"
+      title="Restore the default colours, symbols, new diagram settings and mode frame"
       onClick=${() => controller.resetSettings()}
       >${rawIcon('rotate-ccw')}Reset to defaults</sl-button
     >
     <p class="panel__note">Saved to this browser and reused across diagrams.</p>
   </div>`;
+}
+
+const FRAME_MODES = [
+  ['view', 'View mode'],
+  ['edit', 'Edit mode'],
+];
+
+function FrameSettings({ controller }) {
+  const frame = controller.frameSettings();
+
+  return html`<h3 class="settings-section__title settings-section__title--spaced">Mode frame</h3>
+    <sl-switch
+      id="frame-toggle"
+      class="frame-toggle"
+      size="small"
+      checked=${frame.enabled}
+      title="Draw a frame inside the canvas edge in the colour of the mode"
+      onsl-change=${(e) => controller.setFrame({ enabled: e.target.checked })}
+      >Frame the canvas</sl-switch
+    >
+    <div class="frame-settings">
+      ${FRAME_MODES.map(
+        ([mode, label]) =>
+          html`<div class="frame-row" data-frame-row=${mode}>
+            <span class="type-row__label">${label}</span>
+            <sl-color-picker
+              data-frame-color=${mode}
+              value=${frame[mode]}
+              format="hex"
+              size="small"
+              opacity
+              no-format-toggle
+              hoist
+              disabled=${!frame.enabled}
+              title=${'Frame colour in ' + label}
+              onsl-input=${(e) => controller.setFrame({ [mode]: e.target.value })}
+            ></sl-color-picker>
+          </div>`,
+      )}
+    </div>`;
 }
 
 /* Boot -------------------------------------------------------------------- */
