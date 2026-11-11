@@ -3011,6 +3011,57 @@ test('refits entity boxes to their text when their symbol changes', async ({ pag
   await expect.poll(width).toBeGreaterThan(rounded * 1.5);
 });
 
+// The label of an entity, as its offset from the box centre in fractions of
+// the shape's half-size, and its type caption, as its offset in rendered
+// pixels from the centre of the label.
+function labelPlacement(page, id) {
+  return page.evaluate((nodeId) => {
+    const cy = window.__nexus.cy;
+    const node = cy.getElementById(nodeId);
+    const zoom = cy.zoom();
+    const origin = cy.container().getBoundingClientRect();
+    const position = node.renderedPosition();
+    const label = node.renderedBoundingBox({ includeNodes: false, includeEdges: false, includeOverlays: false });
+    const caption = document.querySelector(`#captions .caption--type[data-node-id="${nodeId}"]`).getBoundingClientRect();
+
+    return {
+      labelX: (label.x1 + label.x2 - 2 * position.x) / 2 / ((node.width() / 2 + node.padding()) * zoom),
+      labelY: (label.y1 + label.y2 - 2 * position.y) / 2 / ((node.height() / 2 + node.padding()) * zoom),
+      captionX: Math.round((caption.left + caption.right - label.x1 - label.x2) / 2 - origin.left),
+      captionY: Math.round((caption.top + caption.bottom - label.y1 - label.y2) / 2 - origin.top),
+    };
+  }, id);
+}
+
+for (const [symbol, centre] of dataProviderLabelCentres()) {
+  test(`centres an entity's label and type caption on the centre point of the ${symbol} symbol`, async ({ page }) => {
+    await openDiagram(page, 'example');
+    const rounded = await labelPlacement(page, 'node.event');
+
+    expect(rounded.labelX).toBeCloseTo(0, 2);
+    expect(rounded.labelY).toBeCloseTo(0, 2);
+
+    await page.click('#settings-toggle');
+    await slSelect(page, '#settings sl-select[data-symbol="node"]', symbol);
+
+    await expect.poll(async () => (await labelPlacement(page, 'node.event')).labelX).toBeCloseTo(centre.x, 2);
+    const placement = await labelPlacement(page, 'node.event');
+
+    expect(placement.labelY).toBeCloseTo(centre.y, 2);
+    // The type caption keeps its place in the label.
+    expect(Math.abs(placement.captionX - rounded.captionX)).toBeLessThanOrEqual(1);
+    expect(Math.abs(placement.captionY - rounded.captionY)).toBeLessThanOrEqual(1);
+  });
+}
+
+function dataProviderLabelCentres() {
+  return [
+    ['tag', { x: -9 / 52, y: 0 }],
+    ['pentagon', { x: 0, y: 1 - 2 / Math.sqrt(5) }],
+    ['diamond', { x: 0, y: 0 }],
+  ];
+}
+
 for (const zoom of dataProviderCaptionZooms()) {
   test(`hangs each machine name a clear gap below its node at ${zoom * 100}% zoom`, async ({ page }) => {
     await openDiagram(page, 'example');

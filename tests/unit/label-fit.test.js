@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { SHAPE_ROOM, fitWidth, wrapLabel } from '../../src/label-fit.js';
+import { SHAPE_EDGES, fitWidth, labelCentre, labelRoom, wrapLabel } from '../../src/label-fit.js';
 
 // Every character is 10 units wide.
 const measure = (text) => text.length * 10;
@@ -32,37 +32,140 @@ function dataProviderWrapLabel() {
   ];
 }
 
-test('leaves each shape its room for centred text at a height', async (t) => {
-  for (const [name, shape, y, expected] of dataProviderShapeRoom()) {
+test('finds the left and right edges of each shape at a height', async (t) => {
+  for (const [name, shape, y, left, right] of dataProviderShapeEdges()) {
     await t.test(name, () => {
-      assertClose(SHAPE_ROOM[shape](y), expected);
+      const edges = SHAPE_EDGES[shape](y);
+
+      assertClose(edges.left, left);
+      assertClose(edges.right, right);
     });
   }
 });
 
-function dataProviderShapeRoom() {
+function dataProviderShapeEdges() {
   return [
-    ['an ellipse at its middle', 'ellipse', 0, 1],
+    ['an ellipse at its middle', 'ellipse', 0, -1, 1],
+    ['an ellipse near its top', 'ellipse', -0.6, -0.8, 0.8],
+    ['an ellipse near its bottom', 'ellipse', 0.6, -0.8, 0.8],
+    ['a diamond at its middle', 'diamond', 0, -1, 1],
+    ['a diamond halfway to its top', 'diamond', -0.5, -0.5, 0.5],
+    ['a diamond halfway to its bottom', 'diamond', 0.5, -0.5, 0.5],
+    ['a hexagon at its middle', 'hexagon', 0, -1, 1],
+    ['a hexagon halfway to its top', 'hexagon', -0.5, -0.75, 0.75],
+    ['a hexagon at its bottom edge', 'hexagon', 1, -0.5, 0.5],
+    ['an octagon at its middle', 'octagon', 0, -1, 1],
+    ['an octagon at the end of its side', 'octagon', Math.SQRT2 - 1, -1, 1],
+    ['an octagon at its top edge', 'octagon', -1, 1 - Math.SQRT2, Math.SQRT2 - 1],
+    ['a tag at its point', 'tag', 0, -1, 1],
+    ['a tag halfway to its top', 'tag', -0.5, -1, 0.625],
+    ['a tag at its bottom edge', 'tag', 1, -1, 0.25],
+    ['a pentagon at its apex', 'pentagon', -1, 0, 0],
+    ['a pentagon at its shoulders', 'pentagon', 2 - Math.sqrt(5), -1, 1],
+    ['a pentagon at its base', 'pentagon', 1, (1 - Math.sqrt(5)) / 2, (Math.sqrt(5) - 1) / 2],
+    ['a rhomboid at its top edge', 'rhomboid', -1, -1, 0.333],
+    ['a rhomboid at its middle', 'rhomboid', 0, -(1 + 0.333) / 2, (1 + 0.333) / 2],
+    ['a rhomboid at its bottom edge', 'rhomboid', 1, -0.333, 1],
+  ];
+}
+
+test('centres the label of each shape on the centroid of the shape', async (t) => {
+  for (const [shape, expected] of dataProviderLabelCentre()) {
+    await t.test(shape, () => {
+      const centre = labelCentre(shape);
+
+      assertClose(centre.x, expected.x);
+      assertClose(centre.y, expected.y);
+    });
+  }
+});
+
+function dataProviderLabelCentre() {
+  const shoulder = 2 - Math.sqrt(5);
+  const foot = (Math.sqrt(5) - 1) / 2;
+
+  return [
+    ['round-rectangle', { x: 0, y: 0 }],
+    ['rectangle', { x: 0, y: 0 }],
+    ['ellipse', { x: 0, y: 0 }],
+    ['diamond', { x: 0, y: 0 }],
+    ['hexagon', { x: 0, y: 0 }],
+    [
+      'tag',
+      centroid([
+        [-1, -1],
+        [0.25, -1],
+        [1, 0],
+        [0.25, 1],
+        [-1, 1],
+      ]),
+    ],
+    ['barrel', { x: 0, y: 0 }],
+    ['cut-rectangle', { x: 0, y: 0 }],
+    [
+      'rhomboid',
+      centroid([
+        [-1, -1],
+        [0.333, -1],
+        [1, 1],
+        [-0.333, 1],
+      ]),
+    ],
+    [
+      'pentagon',
+      centroid([
+        [0, -1],
+        [1, shoulder],
+        [foot, 1],
+        [-foot, 1],
+        [-1, shoulder],
+      ]),
+    ],
+    ['octagon', { x: 0, y: 0 }],
+    ['an unknown shape', { x: 0, y: 0 }],
+    ['constructor', { x: 0, y: 0 }],
+  ];
+}
+
+// Returns the centroid of a polygon given as [x, y] points in order.
+function centroid(points) {
+  let area = 0;
+  let x = 0;
+  let y = 0;
+
+  points.forEach(([x0, y0], i) => {
+    const [x1, y1] = points[(i + 1) % points.length];
+    const cross = x0 * y1 - x1 * y0;
+    area += cross / 2;
+    x += (x0 + x1) * cross;
+    y += (y0 + y1) * cross;
+  });
+
+  return { x: x / (6 * area), y: y / (6 * area) };
+}
+
+test('leaves each shape its room for text on its label centre at a height', async (t) => {
+  for (const [name, shape, y, expected] of dataProviderLabelRoom()) {
+    await t.test(name, () => {
+      assertClose(labelRoom(shape, y), expected);
+    });
+  }
+});
+
+function dataProviderLabelRoom() {
+  const tagCentre = -9 / 52;
+
+  return [
+    ['a rectangle at its middle', 'rectangle', 0, 1],
+    ['a rectangle at its top edge', 'rectangle', -1, 1],
     ['an ellipse near its top', 'ellipse', -0.6, 0.8],
-    ['an ellipse near its bottom', 'ellipse', 0.6, 0.8],
-    ['a diamond at its middle', 'diamond', 0, 1],
-    ['a diamond halfway to its top', 'diamond', -0.5, 0.5],
     ['a diamond halfway to its bottom', 'diamond', 0.5, 0.5],
-    ['a hexagon at its middle', 'hexagon', 0, 1],
-    ['a hexagon halfway to its top', 'hexagon', -0.5, 0.75],
-    ['a hexagon at its bottom edge', 'hexagon', 1, 0.5],
-    ['an octagon at its middle', 'octagon', 0, 1],
-    ['an octagon at the end of its side', 'octagon', Math.SQRT2 - 1, 1],
-    ['an octagon at its top edge', 'octagon', -1, Math.SQRT2 - 1],
-    ['a tag at its point', 'tag', 0, 1],
-    ['a tag halfway to its top', 'tag', -0.5, 0.625],
-    ['a tag at its bottom edge', 'tag', 1, 0.25],
-    ['a pentagon at its apex', 'pentagon', -1, 0],
+    ['a tag at its point, up to its left edge', 'tag', 0, 1 + tagCentre],
+    ['a tag halfway to its top, up to its slanted edge', 'tag', -0.5, 0.625 - tagCentre],
+    ['a tag at its bottom edge, up to its body', 'tag', 1, 0.25 - tagCentre],
     ['a pentagon at its shoulders', 'pentagon', 2 - Math.sqrt(5), 1],
-    ['a pentagon at its base', 'pentagon', 1, (Math.sqrt(5) - 1) / 2],
-    ['a rhomboid at its top edge', 'rhomboid', -1, 0.333],
     ['a rhomboid at its middle', 'rhomboid', 0, (1 + 0.333) / 2],
-    ['a rhomboid at its bottom edge', 'rhomboid', 1, 0.333],
+    ['an unknown shape', 'blob', 0.5, 1],
   ];
 }
 
@@ -83,21 +186,42 @@ test('sizes a box with no lines to nothing', () => {
   assert.equal(fitWidth([], 'tag', 24, 10, 3), 0);
 });
 
-test('widens a box until every line clears its shape by the inset', async (t) => {
+test('widens a box until every line on the label centre clears its shape by the inset and its box by the padding', async (t) => {
   const lines = [
     { width: 80, top: -14, bottom: -2 },
     { width: 60, top: 2, bottom: 14 },
   ];
 
-  for (const shape of Object.keys(SHAPE_ROOM)) {
+  for (const shape of Object.keys(SHAPE_EDGES)) {
     await t.test(shape, () => {
       const half = fitWidth(lines, shape, 24, 10, 3) / 2 + 10;
-      const spare = lines.flatMap((line) => [line.top, line.bottom].map((y) => half * SHAPE_ROOM[shape](y / 24) - (line.width / 2 + 3)));
+      const centre = labelCentre(shape);
+      const spare = lines.flatMap((line) => {
+        const left = centre.x * half - line.width / 2;
+        const right = centre.x * half + line.width / 2;
+
+        return [line.top, line.bottom].flatMap((y) => {
+          const edges = SHAPE_EDGES[shape]((y + centre.y * 24) / 24);
+
+          return [left - half * edges.left - 3, half * edges.right - right - 3, left + half - 10, half - right - 10];
+        });
+      });
 
       assert.ok(Math.min(...spare) > -1e-9, shape + ' leaves a line outside its edge');
       assertClose(Math.min(...spare), 0);
     });
   }
+});
+
+test('narrows a tag around a label moved into its body', () => {
+  const lines = [
+    { width: 80, top: -14, bottom: -2 },
+    { width: 60, top: 2, bottom: 14 },
+  ];
+  // A centred label meets the slanted edges at the top of its first line.
+  const centred = 2 * ((40 + 3) / (1 - (3 * 14) / 4 / 24) - 10);
+
+  assert.ok(fitWidth(lines, 'tag', 24, 10, 3) < centred);
 });
 
 test('keeps the width finite for a line with no room in its shape', async (t) => {

@@ -28,7 +28,7 @@ import { icon } from './icons.js';
 import { ENTITY_TYPE_ORDER, findEntityType } from './entity-types.js';
 import { humanize, machineName } from './names.js';
 import { REFERENCE_ELEMENTS, syncReferenceElements } from './references.js';
-import { fitWidth, wrapLabel } from './label-fit.js';
+import { fitWidth, labelCentre, wrapLabel } from './label-fit.js';
 import { checkpoint, untracked } from './undo.js';
 import { describeNode } from './history.js';
 import { packColumns, tidyColumns } from './packing.js';
@@ -412,6 +412,14 @@ function entityTextWidth(ele) {
   return Math.ceil(fitWidth(box.lines, entityShape(ele.data('entityType')), box.halfHeight, ENTITY_BOX.padding, ENTITY_BOX.inset));
 }
 
+// Model-space offset of an entity's label from its box centre, which puts the
+// label on the centre point of the entity's shape.
+function labelOffset(ele) {
+  const centre = labelCentre(entityShape(ele.data('entityType')));
+
+  return { x: centre.x * (entityTextWidth(ele) / 2 + ENTITY_BOX.padding), y: centre.y * entityLines(ele).halfHeight };
+}
+
 // Model-space outer width of an entity or field box.
 function boxWidth(ele) {
   if (ele.data('group') === 'entity') {
@@ -502,6 +510,8 @@ function style() {
         'text-max-width': ENTITY_BOX.textMaxWidth,
         'text-valign': 'center',
         'text-halign': 'center',
+        'text-margin-x': (ele) => labelOffset(ele).x,
+        'text-margin-y': (ele) => labelOffset(ele).y,
         'font-family': LABEL_FONT_FAMILY,
         'font-size': ENTITY_BOX.fontSize,
         'font-weight': ENTITY_BOX.fontWeight,
@@ -1100,17 +1110,24 @@ function buildController(model, options = {}) {
     return node.nonempty() && !node.hasClass('hidden') && !node.hasClass('faded') && cy.zoom() >= 0.35;
   }
 
-  // Rendered y of a node's box bottom, of the top of its type caption and of
-  // the top of the first machine-name line below it. Each line below takes 1
-  // step.
+  // Rendered y of a node's box bottom, rendered x and y of the centre top of
+  // its type caption and rendered y of the top of the first machine-name line
+  // below it. Each line below takes 1 step.
   function captionStack(node) {
     const zoom = cy.zoom();
     const boxBottom = node.renderedPosition('y') + node.renderedOuterHeight() / 2;
     // The type caption centres on the blank last line of the entity label,
-    // which ends half the border plus the padding above the box bottom.
-    const typeCentre = boxBottom - (ENTITY_BOX.border / 2 + ENTITY_BOX.padding + ENTITY_BOX.fontSize / 2) * zoom;
+    // which ends half the border plus the padding above the box bottom when
+    // the label is centred. The label's margins move it with the label.
+    const typeCentre = boxBottom + (node.numericStyle('text-margin-y') - ENTITY_BOX.border / 2 - ENTITY_BOX.padding - ENTITY_BOX.fontSize / 2) * zoom;
 
-    return { boxBottom: boxBottom, typeTop: typeCentre - (CAPTION_LINE / 2) * zoom, top: boxBottom + CAPTION_GAP * zoom, step: CAPTION_LINE * zoom };
+    return {
+      boxBottom: boxBottom,
+      typeX: node.renderedPosition('x') + node.numericStyle('text-margin-x') * zoom,
+      typeTop: typeCentre - (CAPTION_LINE / 2) * zoom,
+      top: boxBottom + CAPTION_GAP * zoom,
+      step: CAPTION_LINE * zoom,
+    };
   }
 
   function positionCaptions() {
@@ -1134,12 +1151,13 @@ function buildController(model, options = {}) {
       let below = stack.top;
       divs.forEach((div) => {
         div.style.display = 'block';
-        div.style.left = pos.x + 'px';
         div.style.fontSize = size + 'px';
         div.style.lineHeight = stack.step + 'px';
         if (div.classList.contains('caption--type')) {
+          div.style.left = stack.typeX + 'px';
           div.style.top = stack.typeTop + 'px';
         } else {
+          div.style.left = pos.x + 'px';
           div.style.top = below + 'px';
           below += stack.step;
         }
