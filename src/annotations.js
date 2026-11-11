@@ -8,6 +8,8 @@
 
 import { Field, KIND_CALCULATED } from './model.js';
 
+export const ANNOTATION_FILES = ['annotations.yml', 'nexus.annotations.yml'];
+
 export const ANNOTATION_KINDS = [
   { kind: 'event', label: 'Event' },
   { kind: 'api', label: 'API' },

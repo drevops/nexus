@@ -870,6 +870,18 @@ test('heads the landing screen with the app name above its 2 sections', async ({
   expect(headings).toEqual(['H1 Nexus', 'H2 Your configuration', 'H2 Start from a template']);
 });
 
+test('links the landing note to the annotation overlay documentation in a new tab', async ({ page }) => {
+  const link = page.locator('.landing__note').getByRole('link', { name: 'annotations.yml' });
+
+  await expect(link).toBeVisible();
+  await expect(link).toHaveAttribute('href', 'https://github.com/drevops/nexus#annotation-overlay');
+  await expect(link).toHaveAttribute('target', '_blank');
+  await expect(link).toHaveAttribute('rel', 'noopener');
+  expect(await link.evaluate((element) => getComputedStyle(element).color)).toBe(
+    await page.locator('.landing__more a').evaluate((element) => getComputedStyle(element).color),
+  );
+});
+
 test('lists every template with its badge, its counts and a drawn mark', async ({ page }) => {
   const rows = page.locator('.template-row');
 

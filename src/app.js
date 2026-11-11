@@ -8,7 +8,7 @@
  */
 
 import { isModelConfig, parseConfig } from './parser.js';
-import { applyAnnotations } from './annotations.js';
+import { ANNOTATION_FILES, applyAnnotations } from './annotations.js';
 import { render } from './render.js';
 import { exportPng, exportSvg, exportCsv, exportDocument } from './export.js';
 import { EXPORT_FORMATS, findExportFormat, loadExportFormat, saveExportFormat } from './export-formats.js';
@@ -25,7 +25,6 @@ import { TEMPLATES, summaryCounts, templatePath, templateTitle } from './templat
 import { formatCount } from './entity-types.js';
 import { $ } from './dom.js';
 
-const ANNOTATION_FILES = ['annotations.yml', 'nexus.annotations.yml'];
 const THEME_TOGGLES = '[data-theme-toggle]';
 
 const EXPORTERS = {
