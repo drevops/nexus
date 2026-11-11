@@ -120,11 +120,17 @@ jobs:
         timeout-minutes: 30
 
   test-e2e:
-    name: E2E
+    name: E2E ${{ matrix.runner }}
     runs-on: ubuntu-latest
 
     permissions:
       contents: read
+
+    # Each spec file's top-level describe carries 1 '@runner-N' tag.
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [1, 2]
 
     steps:
       - name: Checkout code
@@ -145,7 +151,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run end-to-end tests
-        run: npm run test-e2e
+        run: npm run test-e2e -- --grep @runner-${{ matrix.runner }}
         continue-on-error: ${{ vars.CI_TEST_IGNORE_FAILURE == '1' }}
 
   deploy:
