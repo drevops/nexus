@@ -7,7 +7,8 @@
  *
  * Dropping a panel near an edge, or clicking its pin, docks it into a side
  * rail. Any number of docked panels stack, each scrolling independently, and
- * the rail can be resized horizontally.
+ * the rail can be resized horizontally. Dragging a docked panel's header
+ * undocks it, while its grip handle moves it within or between the rails.
  *
  * The canvas host is a no-update component so the Cytoscape instance and the
  * imperative overlays it owns are never re-rendered.
@@ -30,16 +31,19 @@ import {
   movePanel,
   pinPanel,
   unpinPanel,
+  dockPanel,
+  dockedPanels,
+  setDragging,
   setDockWidth,
   setPanelHeight,
   setTableFilter,
   openTableFor,
+  PANEL_ORDER,
 } from './store.js';
 import { $ } from './dom.js';
 
 const html = htmBase.bind(h);
 
-const PANEL_ORDER = ['entities', 'table', 'settings', 'legend', 'history', 'inspector'];
 const TITLES = { entities: 'Entities', table: 'Fields', settings: 'Settings', legend: 'Legend', history: 'History', inspector: 'Inspector' };
 const WIDE = { table: true };
 const PANEL_TOGGLES = [
@@ -109,36 +113,109 @@ function edgeSide(clientX) {
   return null;
 }
 
+// A rail takes a drop anywhere across its width, not only within the edge
+// zone.
+function sideAt(clientX) {
+  const side = ['left', 'right'].find((key) => {
+    const dock = $('dock-' + key);
+
+    if (!dock) {
+      return false;
+    }
+
+    const rect = dock.getBoundingClientRect();
+
+    return clientX >= rect.left && clientX <= rect.right;
+  });
+
+  return side || edgeSide(clientX);
+}
+
+// The index a panel dropped at the pointer takes among the other open panels
+// on the side: 1 past each panel whose middle is above the pointer.
+function dockIndexAt(side, id, clientY) {
+  const above = dockedPanels(side).filter((key) => {
+    if (key === id) {
+      return false;
+    }
+
+    const rect = $(key).getBoundingClientRect();
+
+    return rect.top + rect.height / 2 < clientY;
+  });
+
+  return above.length;
+}
+
+// The least distance, in pixels, between a dragged panel's grab point and its
+// right edge.
+const GRAB_MARGIN = 24;
+
 function highlightDrop(side) {
   const stage = $('stage-root');
   stage.classList.toggle('drop-left', side === 'left');
   stage.classList.toggle('drop-right', side === 'right');
 }
 
+// Moves a docked panel up or down its rail, or to the other rail. Over the
+// canvas the panel stays where it last was, so it never undocks.
+function startDockDrag(id, evt) {
+  function move(e) {
+    const side = sideAt(e.clientX) || getState().panels[id].dock;
+    const index = dockIndexAt(side, id, e.clientY);
+
+    if (getState().panels[id].dock !== side || dockedPanels(side).indexOf(id) !== index) {
+      dockPanel(id, side, index);
+    }
+  }
+
+  function up() {
+    document.removeEventListener('mousemove', move);
+    document.removeEventListener('mouseup', up);
+    document.body.classList.remove('is-dragging-panel');
+    setDragging(null);
+  }
+
+  setDragging(id);
+  document.body.classList.add('is-dragging-panel');
+  document.addEventListener('mousemove', move);
+  document.addEventListener('mouseup', up);
+  evt.preventDefault();
+}
+
 function startDrag(id, evt, el) {
   if (evt.target.closest('button, input, select, a, code')) {
     return;
   }
-  const area = el.closest('.stage__canvas').getBoundingClientRect();
-  const rect = el.getBoundingClientRect();
-  if (getState().panels[id].dock) {
-    movePanel(id, rect.left - area.left, rect.top - area.top);
+
+  // The handle keeps a docked panel docked; the rest of the header undocks it.
+  if (getState().panels[id].dock && evt.target.closest('.panel__grip')) {
+    startDockDrag(id, evt);
+    return;
   }
+
+  const rect = el.getBoundingClientRect();
   const offsetX = evt.clientX - rect.left;
   const offsetY = evt.clientY - rect.top;
 
+  // The first move undocks a docked panel, which can remove its rail and
+  // shift the canvas, so each move measures the canvas again. The panel also
+  // narrows to its floating width, so the grab point is kept inside it.
   function move(e) {
-    movePanel(id, Math.max(0, e.clientX - area.left - offsetX), Math.max(0, e.clientY - area.top - offsetY));
-    highlightDrop(edgeSide(e.clientX));
+    const area = $('stage-root').querySelector('.stage__canvas').getBoundingClientRect();
+    const grabX = Math.min(offsetX, $(id).offsetWidth - GRAB_MARGIN);
+
+    movePanel(id, Math.max(0, e.clientX - area.left - grabX), Math.max(0, e.clientY - area.top - offsetY));
+    highlightDrop(sideAt(e.clientX));
   }
 
   function up(e) {
     document.removeEventListener('mousemove', move);
     document.removeEventListener('mouseup', up);
     highlightDrop(null);
-    const side = edgeSide(e.clientX);
+    const side = sideAt(e.clientX);
     if (side) {
-      pinPanel(id, side);
+      dockPanel(id, side, dockIndexAt(side, id, e.clientY));
     }
   }
 
@@ -199,10 +276,13 @@ function startVResize(id, evt, el) {
 
 /* Shell ------------------------------------------------------------------- */
 
-function Panel({ id, panel, header, children }) {
+const FLOAT_DRAG_TITLE = 'Drag to move, drop at an edge to dock';
+
+function Panel({ id, panel, dragging, header, children }) {
   const ref = useRef(null);
   const docked = !!panel.dock;
-  const cls = 'panel' + (WIDE[id] ? ' panel--wide' : '') + (id === 'legend' ? ' panel--legend' : '') + (docked ? ' is-docked' : '');
+  const cls =
+    'panel' + (WIDE[id] ? ' panel--wide' : '') + (id === 'legend' ? ' panel--legend' : '') + (docked ? ' is-docked' : '') + (dragging ? ' is-dragging' : '');
   const style = docked
     ? panel.height
       ? { zIndex: panel.z, flex: '0 0 auto', height: panel.height + 'px' }
@@ -210,7 +290,16 @@ function Panel({ id, panel, header, children }) {
     : floatStyle(panel);
 
   return html` <section id=${id} ref=${ref} class=${cls} style=${style} onMouseDown=${() => focusPanel(id)}>
-    <div class="panel__head" onMouseDown=${(e) => startDrag(id, e, ref.current)} title="Drag to move, drop at an edge to dock">
+    <div
+      class="panel__head"
+      onMouseDown=${(e) => startDrag(id, e, ref.current)}
+      title=${docked ? 'Drag to undock and move, drop at an edge to dock' : FLOAT_DRAG_TITLE}
+    >
+      <span
+        class="panel__grip"
+        title=${docked ? 'Drag to move up or down, or to the other side' : FLOAT_DRAG_TITLE}
+        dangerouslySetInnerHTML=${{ __html: icon('grip-vertical') }}
+      ></span>
       <span class="panel__title">${TITLES[id]}</span>
       ${header}
       <span class="panel__spacer"></span>
@@ -219,6 +308,7 @@ function Panel({ id, panel, header, children }) {
         type="button"
         title=${docked ? 'Unpin from side' : 'Pin to a side'}
         aria-label="Pin"
+        aria-pressed=${docked ? 'true' : 'false'}
         onClick=${() => pinFromButton(id, ref.current)}
         dangerouslySetInnerHTML=${{ __html: icon('pin') }}
       ></button>
@@ -237,11 +327,11 @@ function Panel({ id, panel, header, children }) {
 }
 
 function panelFor(id, s) {
-  return html`<${Panel} key=${id} id=${id} panel=${s.panels[id]}>${body(id, s)}<//>`;
+  return html`<${Panel} key=${id} id=${id} panel=${s.panels[id]} dragging=${s.dragging === id}>${body(id, s)}<//>`;
 }
 
 function DockRail({ side, s }) {
-  const ids = PANEL_ORDER.filter((id) => s.panels[id].open && s.panels[id].dock === side);
+  const ids = dockedPanels(side);
   if (!ids.length) {
     return null;
   }

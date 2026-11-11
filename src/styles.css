@@ -696,8 +696,26 @@ sl-button#zoom-level::part(base) {
   user-select: none;
 }
 
-.panel.is-docked .panel__head {
-  cursor: default;
+.panel__grip {
+  display: inline-flex;
+  flex: 0 0 auto;
+  margin-left: -0.3rem;
+  color: var(--muted);
+  cursor: grab;
+}
+
+.panel__grip:hover {
+  color: var(--text);
+}
+
+.panel.is-dragging {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+body.is-dragging-panel,
+body.is-dragging-panel * {
+  cursor: grabbing !important;
 }
 
 .panel__title {
@@ -737,8 +755,17 @@ sl-button#zoom-level::part(base) {
   color: var(--text);
 }
 
+.panel__pin svg {
+  transform: rotate(45deg);
+  transition: transform 0.15s ease;
+}
+
 .panel.is-docked .panel__pin {
   color: var(--accent);
+}
+
+.panel.is-docked .panel__pin svg {
+  transform: none;
 }
 
 .filters {

@@ -429,6 +429,189 @@ test('remembers the panel layout across reloads', async ({ page }) => {
   expect(await page.locator('#entities').evaluate((el) => el.closest('.dock').id)).toBe('dock-left');
 });
 
+// The ids of the panels in a side rail, top to bottom.
+function railOf(page, side) {
+  const ids = (panels) => panels.map((panel) => panel.id);
+
+  return page.locator('#dock-' + side + ' > .dock__scroll > .panel').evaluateAll(ids);
+}
+
+// Presses a panel's grip, moves the pointer to the point and releases it.
+async function dragGrip(page, id, x, y) {
+  const grip = await page.locator('#' + id + ' .panel__grip').boundingBox();
+
+  await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(x, y, { steps: 8 });
+  await page.mouse.up();
+}
+
+// Pins the fields table and the legend to the right rail, table first.
+async function pinTableAndLegend(page) {
+  await page.click('#legend .panel__pin');
+  await page.click('#table-toggle');
+  await page.click('#table .panel__pin');
+  await expect.poll(() => railOf(page, 'right')).toEqual(['table', 'legend']);
+}
+
+test('tilts the pin of a floating panel and stands it upright in the accent colour when pinned', async ({ page }) => {
+  await loadExample(page);
+
+  const pin = page.locator('#legend .panel__pin');
+  const accent = await page.evaluate(() => {
+    const probe = document.createElement('span');
+    probe.style.color = 'var(--accent)';
+    document.body.append(probe);
+    const color = getComputedStyle(probe).color;
+    probe.remove();
+
+    return color;
+  });
+  const muted = await page.locator('#legend .panel__close').evaluate((el) => getComputedStyle(el).color);
+
+  await expect(pin).toHaveAttribute('aria-pressed', 'false');
+  await expect(pin.locator('svg')).toHaveCSS('transform', 'matrix(0.707107, 0.707107, -0.707107, 0.707107, 0, 0)');
+  await expect(pin).toHaveCSS('color', muted);
+
+  await pin.click();
+  await expect(page.locator('#legend')).toHaveClass(/is-docked/);
+  await expect(pin).toHaveAttribute('aria-pressed', 'true');
+  await expect(pin.locator('svg')).toHaveCSS('transform', 'none');
+  await expect(pin).toHaveCSS('color', accent);
+  expect(accent).not.toBe(muted);
+});
+
+test('starts each panel header with a grip handle before the title', async ({ page }) => {
+  await loadExample(page);
+  await page.click('#entities-toggle');
+
+  for (const id of ['legend', 'entities']) {
+    const classes = await page.locator('#' + id + ' .panel__head > *').evaluateAll((children) => children.slice(0, 2).map((child) => child.className));
+
+    expect(classes).toEqual(['panel__grip', 'panel__title']);
+    await expect(page.locator('#' + id + ' .panel__grip svg')).toBeVisible();
+  }
+});
+
+test('names what dragging the grip and the header does in their titles', async ({ page }) => {
+  await loadExample(page);
+
+  const head = page.locator('#legend .panel__head');
+  const grip = page.locator('#legend .panel__grip');
+
+  await expect(head).toHaveAttribute('title', 'Drag to move, drop at an edge to dock');
+  await expect(grip).toHaveAttribute('title', 'Drag to move, drop at an edge to dock');
+
+  await page.click('#legend .panel__pin');
+  await expect(head).toHaveAttribute('title', 'Drag to undock and move, drop at an edge to dock');
+  await expect(grip).toHaveAttribute('title', 'Drag to move up or down, or to the other side');
+});
+
+test('moves a pinned panel up and down its rail by its grip', async ({ page }) => {
+  await loadExample(page);
+  await pinTableAndLegend(page);
+
+  const table = await page.locator('#table').boundingBox();
+  const grip = await page.locator('#legend .panel__grip').boundingBox();
+
+  await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(grip.x + grip.width / 2, table.y + 10, { steps: 8 });
+  await expect(page.locator('#legend')).toHaveClass(/is-dragging/);
+  await expect.poll(() => railOf(page, 'right')).toEqual(['legend', 'table']);
+  await page.mouse.up();
+  await expect(page.locator('#legend')).not.toHaveClass(/is-dragging/);
+
+  const legend = await page.locator('#legend').boundingBox();
+  const moved = await page.locator('#table').boundingBox();
+  await dragGrip(page, 'legend', legend.x + 20, moved.y + moved.height - 10);
+
+  await expect.poll(() => railOf(page, 'right')).toEqual(['table', 'legend']);
+  await expect(page.locator('#legend')).toHaveClass(/is-docked/);
+});
+
+test('moves a pinned panel to the other rail by its grip and keeps it docked', async ({ page }) => {
+  await loadExample(page);
+  await pinTableAndLegend(page);
+
+  const stage = await page.locator('#stage-root').boundingBox();
+  await dragGrip(page, 'legend', stage.x + 20, stage.y + stage.height / 2);
+
+  await expect.poll(() => railOf(page, 'left')).toEqual(['legend']);
+  await expect.poll(() => railOf(page, 'right')).toEqual(['table']);
+  await expect(page.locator('#legend')).toHaveClass(/is-docked/);
+});
+
+test('keeps a pinned panel in its rail when its grip is dropped on the canvas', async ({ page }) => {
+  await loadExample(page);
+  await pinTableAndLegend(page);
+
+  const canvas = await page.locator('.stage__canvas').boundingBox();
+  await dragGrip(page, 'legend', canvas.x + canvas.width / 2, canvas.y + canvas.height / 2);
+
+  await expect(page.locator('#legend')).toHaveClass(/is-docked/);
+  await expect.poll(() => railOf(page, 'right')).toEqual(['table', 'legend']);
+});
+
+test('undocks a pinned panel dragged by its header but not one clicked there', async ({ page }) => {
+  await loadExample(page);
+  await page.click('#entities-toggle');
+  await page.click('#entities .panel__pin');
+  await expect(page.locator('#entities')).toHaveClass(/is-docked/);
+
+  await page.click('#entities .panel__title');
+  await expect(page.locator('#entities')).toHaveClass(/is-docked/);
+
+  const head = await page.locator('#entities .panel__title').boundingBox();
+  const canvas = await page.locator('.stage__canvas').boundingBox();
+  await page.mouse.move(head.x + head.width / 2, head.y + head.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(canvas.x + canvas.width / 2, canvas.y + canvas.height / 2, { steps: 8 });
+  await page.mouse.up();
+
+  await expect(page.locator('#entities')).not.toHaveClass(/is-docked/);
+  expect(await page.locator('#entities').evaluate((el) => el.parentElement.classList.contains('stage__canvas'))).toBe(true);
+});
+
+test('moves a floating panel by its grip', async ({ page }) => {
+  await loadExample(page);
+  await page.click('#entities-toggle');
+
+  const grip = await page.locator('#entities .panel__grip').boundingBox();
+  await dragGrip(page, 'entities', grip.x + 260, grip.y + 200);
+
+  const pos = await page.locator('#entities').evaluate((el) => ({ left: parseFloat(el.style.left), top: parseFloat(el.style.top) }));
+  expect(pos.left).toBeGreaterThan(120);
+  expect(pos.top).toBeGreaterThan(120);
+  await expect(page.locator('#entities')).not.toHaveClass(/is-docked/);
+});
+
+test('docks a floating panel between the pinned panels it is dropped on', async ({ page }) => {
+  await loadExample(page);
+  await pinTableAndLegend(page);
+  await page.click('#entities-toggle');
+
+  const legend = await page.locator('#legend').boundingBox();
+  await dragGrip(page, 'entities', legend.x + legend.width / 2, legend.y + 5);
+
+  await expect.poll(() => railOf(page, 'right')).toEqual(['table', 'entities', 'legend']);
+});
+
+test('remembers the order of a rail across reloads', async ({ page }) => {
+  await loadExample(page);
+  await pinTableAndLegend(page);
+
+  const table = await page.locator('#table').boundingBox();
+  await dragGrip(page, 'legend', table.x + 20, table.y + 10);
+  await expect.poll(() => railOf(page, 'right')).toEqual(['legend', 'table']);
+  await page.waitForTimeout(500);
+
+  await page.reload();
+  await loadExample(page);
+
+  await expect.poll(() => railOf(page, 'right')).toEqual(['legend', 'table']);
+});
+
 test('draws a pressed panel above the panel it overlaps', async ({ page }) => {
   await loadExample(page);
 
