@@ -15,7 +15,7 @@
  * imperative overlays it owns are never re-rendered.
  */
 
-import { h, render, Component } from 'preact';
+import { h, render, Component, options } from 'preact';
 import { useState, useEffect, useLayoutEffect, useRef } from 'preact/hooks';
 import htmBase from 'htm';
 import { icon } from './icons.js';
@@ -23,6 +23,7 @@ import { cardinalityLabel, identifierSegments, fitFontSize } from './model.js';
 import { InspectorBody } from './inspector.js';
 import { goToVersion, historyState } from './undo.js';
 import { MODES } from './diagram-defaults.js';
+import { titleShoelaceHosts } from './host-titles.js';
 import {
   getState,
   subscribe,
@@ -366,7 +367,7 @@ function DockRail({ side, s }) {
   }
   return html` <div class="dock" id=${'dock-' + side} data-side=${side} style=${{ width: s.dockWidth[side] + 'px' }}>
     <div class="dock__scroll">${ids.map((id) => panelFor(id, s))}</div>
-    <div class=${'dock__resize dock__resize--' + side} onMouseDown=${(e) => startResize(side, e)}></div>
+    <div class=${'dock__resize dock__resize--' + side} title="Drag to resize the side rail" onMouseDown=${(e) => startResize(side, e)}></div>
   </div>`;
 }
 
@@ -453,7 +454,7 @@ function EntitiesBody({ controller }) {
   return html` <div id="type-filters" class="filters">
       ${controller.presentTypes().map(
         (t) =>
-          html` <label class="filters__item">
+          html` <label class="filters__item" title=${'Show or hide every ' + t.label + ' entity on the canvas'}>
             <input type="checkbox" checked=${t.visible} onChange=${(e) => controller.setTypeVisible(t.type, e.target.checked)} />
             <span class="filters__swatch" style=${{ background: t.color }}></span>${t.label}
           </label>`,
@@ -515,11 +516,16 @@ function HistoryBody() {
     <p class="panel__note history-note">Click a version to return to it. The versions after it stay until your next edit.</p>`;
 }
 
+const KIND_BADGE_TITLES = {
+  system: 'System field: a base field every bundle of the entity type has',
+  calculated: 'Calculated field: a value worked out rather than stored',
+};
+
 // Base and computed fields carry a category badge; everything else shows its
 // cardinality (1, 1..N, 1..n) coloured by single vs multi.
 function cardBadge(r) {
   if (r.kind === 'system' || r.kind === 'calculated') {
-    return html`<span class=${'badge badge--' + r.kind}>${r.kind}</span>`;
+    return html`<span class=${'badge badge--' + r.kind} title=${KIND_BADGE_TITLES[r.kind]}>${r.kind}</span>`;
   }
 
   const label = cardinalityLabel(r.cardinality);
@@ -696,7 +702,7 @@ function TableBody({ controller, filter }) {
         <td>${r.field}<br /><code data-fit>${wrappable(r.name)}</code></td>
         <td data-fit>${wrappable(r.type)}</td>
         <td>${cardBadge(r)}</td>
-        <td>${r.required ? '✓' : ''}</td>
+        <td>${r.required ? html`<span title="Required: the field must have a value">✓</span>` : ''}</td>
         <td>
           ${r.refs.map(
             (ref, i) =>
@@ -718,7 +724,14 @@ function TableBody({ controller, filter }) {
   });
 
   return html` <div class="panel__toolbar">
-      <sl-select id="table-entity" class="panel__select" size="small" value=${filter} onsl-change=${(e) => setTableFilter(e.target.value)}>
+      <sl-select
+        id="table-entity"
+        class="panel__select"
+        size="small"
+        title="List the fields of every entity or of 1 entity"
+        value=${filter}
+        onsl-change=${(e) => setTableFilter(e.target.value)}
+      >
         <sl-option value="__all__">All entities</sl-option>
         ${controller.entities().map((e) => html`<sl-option value=${e.id}>${e.label}</sl-option>`)}
       </sl-select>
@@ -728,6 +741,7 @@ function TableBody({ controller, filter }) {
         size="small"
         type="search"
         placeholder="Filter fields…"
+        title="Filter the fields by entity, label, machine name, type or reference"
         clearable
         value=${term}
         onsl-input=${(e) => setTerm(e.target.value)}
@@ -737,11 +751,11 @@ function TableBody({ controller, filter }) {
       <table id="field-table" class="field-table" ref=${tableRef}>
         <thead>
           <tr>
-            <th>Field</th>
-            <th>Type</th>
-            <th>Card.</th>
-            <th>Req</th>
-            <th>References</th>
+            <th title="Field: its label and machine name">Field</th>
+            <th title="Type: the field type">Type</th>
+            <th title="Cardinality: how many values the field holds">Card.</th>
+            <th title="Required: whether the field must have a value">Req</th>
+            <th title="References: the entities a reference field points to">References</th>
             <th class="field-table__action" title="Show or hide each field on the canvas">${rawIcon('eye', 14)}<span class="visually-hidden">Show</span></th>
             <th class="field-table__action" title="Go to each field on the canvas">${rawIcon('crosshair', 14)}<span class="visually-hidden">Go to</span></th>
           </tr>
@@ -903,6 +917,7 @@ function SettingsBody({ controller }) {
               size="small"
               no-format-toggle
               hoist
+              title=${'Colour of ' + controller.typeLabel(t)}
               onsl-input=${(e) => controller.applyColor(t, e.target.value)}
             ></sl-color-picker>
             ${symbolSelect(controller, t, controller.symbolFor(t), controller.colorFor(t), (e) => controller.applySymbol(t, e.target.value))}
@@ -936,6 +951,7 @@ function SettingsBody({ controller }) {
         <input
           class="type-add__input"
           placeholder="Label"
+          title="Label of the new type, such as Event ticket"
           aria-label="Label of the new type"
           value=${nt.label}
           onInput=${(e) => setNt((p) => ({ ...p, label: e.target.value }))}
@@ -947,6 +963,7 @@ function SettingsBody({ controller }) {
         size="small"
         no-format-toggle
         hoist
+        title="Colour of the new type"
         onsl-input=${(e) => setNt((p) => ({ ...p, color: e.target.value }))}
       ></sl-color-picker>
       ${symbolSelect(controller, null, nt.symbol, nt.color, (e) => setNt((p) => ({ ...p, symbol: e.target.value })))}
@@ -1030,6 +1047,7 @@ function syncToggles() {
 }
 
 export function initUI() {
+  titleShoelaceHosts(options);
   render(html`<${StageApp} />`, $('stage-root'));
 
   PANEL_TOGGLES.forEach(([btn, id]) => {
