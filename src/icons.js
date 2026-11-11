@@ -52,6 +52,8 @@ const PATHS = {
   search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
   single: '<ellipse cx="12" cy="12" rx="9" ry="7"/>',
   diamond: '<path d="M12 2 22 12 12 22 2 12Z"/>',
+  hexagon: '<path d="M7 5h10l5 7-5 7H7l-5-7Z"/>',
+  callback: '<rect x="2" y="6" width="20" height="12" rx="2"/><path d="M2 13h20"/>',
   'zoom-in': '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M11 8v6"/><path d="M8 11h6"/>',
   'zoom-out': '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M8 11h6"/>',
   fit: '<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/>',

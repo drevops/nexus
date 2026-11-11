@@ -97,12 +97,12 @@ test('offers a palette button for every built-in entity type, in order', () => {
   assert.deepEqual(palette, ENTITY_TYPE_ORDER);
 });
 
-test('paints no palette swatch colour in the markup', () => {
-  const swatches = [...INDEX.matchAll(/<span class="palette__swatch"[^>]*>/g)].map((match) => match[0]);
+test('leaves every palette symbol for the script to draw', () => {
+  const symbols = [...INDEX.matchAll(/<span class="palette__symbol"[^>]*>(.*?)<\/span>/g)];
 
-  assert.equal(swatches.length, ENTITY_TYPE_ORDER.length);
+  assert.equal(symbols.length, ENTITY_TYPE_ORDER.length);
   assert.deepEqual(
-    swatches.filter((swatch) => swatch.includes('style=')),
+    symbols.filter((match) => match[0].includes('style=') || match[1] !== ''),
     [],
   );
 });

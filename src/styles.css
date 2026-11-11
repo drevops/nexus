@@ -95,8 +95,7 @@ body {
   display: none;
 }
 
-.toolbar__palette .toolbar__button,
-.toolbar__palette .palette__swatch {
+.toolbar__palette .toolbar__button {
   flex: 0 0 auto;
 }
 
@@ -325,12 +324,9 @@ sl-button#zoom-level::part(base) {
   padding: 0.35rem 0.45rem;
 }
 
-.palette__swatch {
+.palette__symbol {
+  display: inline-flex;
   flex: 0 0 auto;
-  width: 12px;
-  height: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.25);
-  border-radius: 3px;
 }
 
 .icon {
