@@ -1177,7 +1177,8 @@ body.is-dragging-panel * {
 
 .default-row::part(form-control) {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 10rem;
+  grid-template-columns: auto minmax(0, 12rem);
+  justify-content: space-between;
   align-items: center;
   gap: 0.4rem;
 }
