@@ -1206,6 +1206,16 @@ function dataProviderEntityScreens() {
   ];
 }
 
+test('moves the focus into the entity form a crumb opens from the keyboard', async ({ page }) => {
+  await buildStoryWithField(page);
+  await page.locator('#inspector [data-crumb="node.story"]').focus();
+
+  await page.keyboard.press('Enter');
+
+  await expect(page.locator('#inspector .insp__title')).toHaveText('Entity');
+  await expect(page.locator('#inspector .insp')).toBeFocused();
+});
+
 test('shows no breadcrumb on a screen with nothing above it', async ({ page }) => {
   await buildStoryWithField(page);
 

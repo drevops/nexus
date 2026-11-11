@@ -1600,6 +1600,10 @@ html.sl-theme-dark .icon--nexus .ink {
   font-weight: 600;
 }
 
+.insp:focus {
+  outline: none;
+}
+
 .insp__crumbs ol {
   display: flex;
   flex-wrap: wrap;

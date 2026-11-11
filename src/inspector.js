@@ -37,6 +37,10 @@ const ANNOTATION_OPTIONS = ANNOTATION_KINDS.map((entry) => [entry.kind, entry.la
 // keeps its selection, so the focus stays where it was.
 let focusedSelection = null;
 
+// Set by a breadcrumb crumb: the crumb holding the focus is gone once the
+// entity form replaces its screen, so the form takes the focus instead.
+let focusEntityForm = false;
+
 function cy() {
   return getController().cy;
 }
@@ -138,6 +142,14 @@ function refTargets(fieldId) {
 export function EntityForm({ id }) {
   const node = cy().getElementById(id);
   const [label, setLabel] = useState(node.data('label'));
+  const formRef = useRef(null);
+
+  useEffect(() => {
+    if (focusEntityForm) {
+      focusEntityForm = false;
+      formRef.current.focus();
+    }
+  }, []);
 
   const fields = fieldsOf(id).map(
     (f) =>
@@ -146,7 +158,7 @@ export function EntityForm({ id }) {
       </button>`,
   );
 
-  return html` <div class="insp">
+  return html` <div class="insp" tabindex="-1" ref=${formRef}>
     <p class="insp__title">Entity</p>
     <${Row} label="Label">
       <sl-input
@@ -708,7 +720,16 @@ function Breadcrumb({ selected }) {
       ${trail.map((crumb) =>
         crumb.id
           ? html`<li>
-              <button type="button" class="insp__crumb" data-crumb=${crumb.id} title=${'Back to ' + crumb.label} onClick=${() => getBuilder().select(crumb.id)}>
+              <button
+                type="button"
+                class="insp__crumb"
+                data-crumb=${crumb.id}
+                title=${'Back to ' + crumb.label}
+                onClick=${() => {
+                  focusEntityForm = true;
+                  getBuilder().select(crumb.id);
+                }}
+              >
                 ${crumb.label}
               </button>
             </li>`
