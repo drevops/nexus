@@ -1157,6 +1157,47 @@ body.is-dragging-panel * {
   margin-top: 0.9rem;
 }
 
+/* New diagrams: each setting on 1 line, its label on the left and its
+   control on the right. A switch draws its label after the control, so its
+   base is reversed. */
+.diagram-defaults {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.type-add + .settings-section__title {
+  margin-top: 1.1rem;
+}
+
+.default-row {
+  display: block;
+  font-size: 0.82rem;
+}
+
+.default-row::part(form-control) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 10rem;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.default-row::part(form-control-label) {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.default-row--switch::part(base) {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: space-between;
+}
+
+.default-row--switch::part(label) {
+  margin-inline-start: 0;
+  font-size: 0.82rem;
+}
+
 .settings-reset svg.icon {
   margin-inline-end: 0.35rem;
 }

@@ -87,7 +87,7 @@ By default, content types are rounded rectangles, vocabularies are tags, media a
 
 ## Navigating the diagram
 
-The diagram opens with its entities stacked in columns that fill the screen, with every field, proxy and machine name on show. 3 switches at the left end of the status bar choose what the diagram shows:
+By default the diagram opens in View mode with its entities stacked in columns that fill the screen, with every field, proxy and machine name on show. **Settings** changes how every new diagram opens (see [New diagrams](#new-diagrams)). 3 switches at the left end of the status bar choose what the open diagram shows:
 
 - **Fields** - turn it off to collapse the diagram to an entity-only overview.
 - **Proxies** - draw each reference as a faded copy of its target beside the field, or as an edge to the entity itself.
@@ -96,7 +96,7 @@ The diagram opens with its entities stacked in columns that fill the screen, wit
 The toolbar offers:
 
 - **Find entity** - type a name, then press Enter or the search button to fade everything else and zoom to the matches.
-- **Layout** - re-run the current layout, or pick another from the arrow beside it: **Columns** stacks each entity and its fields in columns that fill the screen, grouped by entity type, while **LR** and **TB** lay the whole diagram out as 1 flow, left to right or top to bottom. Your pick is remembered.
+- **Layout** - re-run the current layout, or pick another from the arrow beside it: **Columns** stacks each entity and its fields in columns that fill the screen, grouped by entity type, while **LR** and **TB** lay the whole diagram out as 1 flow, left to right or top to bottom. Your pick applies to the open diagram, and the next diagram opens in the layout **Settings** sets.
 - **Tidy** - straighten each entity's fields and line the entities up in columns near where they already are, so a diagram you've dragged around or edited gets neat without being rearranged. Drag an entity roughly into place and Tidy slots it in.
 - **Entities** - an index with per-type filters and field counts; click a bundle to focus it or open its fields.
 - **Table** - a searchable table of all fields (or a single entity's) with type, cardinality, requiredness and references. The eye at the end of a row hides that field and its proxies on the canvas, and a second click shows them again. The field stays in the model and in the table. The target beside the eye goes to the field on the canvas. A hidden field stays hidden when **Fields** is turned back on, and a layout keeps it beside its entity.
@@ -105,11 +105,25 @@ The toolbar offers:
 - **Undo / Redo** - step back and forward through your changes.
 - **Export** - export the whole canvas as PNG or SVG, or the field table as CSV. Pick a format from the arrow beside it and the button keeps that format, so the next press exports it straight away.
 
-The top-right corner holds the About box, a link to this repository, the light/dark theme toggle and **Settings**, where you choose each entity type's color and symbol or add types of your own. The right end of the status bar holds the zoom controls: **Reset**, **Fit**, zoom out, zoom in and a zoom-level menu. The mouse wheel or a trackpad pinch zooms the diagram, and a drag with the right mouse button pans it in either mode. The browser's zoom keys, <kbd>Ctrl</kbd> with <kbd>+</kbd>, <kbd>-</kbd> or <kbd>0</kbd>, zoom the diagram and leave the page at its size. A pinch over the toolbar or a panel does nothing. Click a node to focus it and its connections, and right-click an entity to isolate it with its fields. Nodes stay in place in View mode. To move a node, double-click it: Nexus switches to Edit with that node selected.
+The top-right corner holds the About box, a link to this repository, the light/dark theme toggle and **Settings**, where you choose each entity type's color and symbol, add types of your own and set how new diagrams open. The right end of the status bar holds the zoom controls: **Reset**, **Fit**, zoom out, zoom in and a zoom-level menu. The mouse wheel or a trackpad pinch zooms the diagram, and a drag with the right mouse button pans it in either mode. The browser's zoom keys, <kbd>Ctrl</kbd> with <kbd>+</kbd>, <kbd>-</kbd> or <kbd>0</kbd>, zoom the diagram and leave the page at its size. A pinch over the toolbar or a panel does nothing. Click a node to focus it and its connections, and right-click an entity to isolate it with its fields. Nodes stay in place in View mode. To move a node, double-click it: Nexus switches to Edit with that node selected.
 
 Panels float over the canvas. Drag one by its header, or drop it at the left or right edge (or click its pin) to dock it in a side rail that you can resize. The pin stands upright in blue on a docked panel and leans over on a floating one. To move a docked panel up or down its rail, or to the other rail, drag the grip at the left of its header. To move a docked panel out onto the canvas, drag the rest of its header.
 
 A docked panel grows only as tall as its content, and you can drag its bottom edge to make it shorter. The Inspector always takes the height of its form, and the other panels in its rail shrink or move further down the rail to make room.
+
+### New diagrams
+
+The **New diagrams** section of **Settings** sets how each diagram opens:
+
+| Setting | Default | What it sets |
+|---------|---------|--------------|
+| **Layout** | Columns | The layout the diagram is drawn in |
+| **Mode** | View | View or Edit |
+| **Fields** | On | The **Fields** switch |
+| **Proxies** | On | The **Proxies** switch |
+| **Machine names** | On | The **Machine names** switch |
+
+The settings apply to every config folder you import, every template and **Start from scratch**. A saved diagram opens with its nodes where you saved them, and the other 4 settings still apply. Edit mode needs fields, so a diagram that opens in Edit mode shows them whatever **Fields** says. A layout picked from the toolbar or a flipped switch changes the open diagram only. **Reset to defaults** restores the settings in this table, along with the colors and symbols.
 
 ## Editing
 
@@ -269,7 +283,7 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for local development setup, the lintin
 
 ## Privacy
 
-Nexus has no backend. The configuration you import and the diagrams you build stay in your browser's memory and leave it only when you save or export a file; nothing is uploaded to or processed by any server. Your preferences - theme, panel layout, diagram layout, entity colours and symbols, custom entity types and the last export format - are kept in the browser's `localStorage`.
+Nexus has no backend. The configuration you import and the diagrams you build stay in your browser's memory and leave it only when you save or export a file; nothing is uploaded to or processed by any server. Your preferences - theme, panel layout, the settings new diagrams open with, entity colours and symbols, custom entity types and the last export format - are kept in the browser's `localStorage`.
 
 Nexus is provided as is, without warranty of any kind, and the authors accept no responsibility or liability for any data you load into it or create with it.
 
