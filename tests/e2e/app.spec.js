@@ -1970,26 +1970,74 @@ test('shows the edit palette as a second toolbar row only in edit mode', async (
   await expect(palette).toBeVisible();
 });
 
-function paletteSwatches(page) {
-  return page
-    .locator('#build-tools [data-add-entity]')
-    .evaluateAll((buttons) =>
-      buttons.map((btn) => ({ type: btn.dataset.addEntity, color: getComputedStyle(btn.querySelector('.palette__swatch')).backgroundColor })),
-    );
+// The symbol each palette type button draws: its symbol key, the tag of the
+// shape and the colour the shape is filled with.
+function paletteSymbols(page) {
+  const read = (buttons) =>
+    buttons.map((btn) => {
+      const span = btn.querySelector('.palette__symbol');
+      const shape = span.querySelector('svg > *');
+
+      return { type: btn.dataset.addEntity, symbol: span.dataset.symbol, shape: shape.tagName, fill: shape.getAttribute('fill') };
+    });
+
+  return page.locator('#build-tools [data-add-entity]').evaluateAll(read);
 }
 
-test('paints each palette swatch in the colour of its entity type', async ({ page }) => {
+// The symbol and colour each Settings type row has picked, in row order.
+function settingsSymbols(page) {
+  const read = (rows) =>
+    rows.map((row) => ({
+      type: row.dataset.typeRow,
+      symbol: row.querySelector('sl-select[data-symbol]').value,
+      fill: row.querySelector('sl-color-picker[data-color]').value,
+    }));
+
+  return page.locator('#settings [data-type-row]').evaluateAll(read);
+}
+
+async function paletteSymbolOf(page, type) {
+  return (await paletteSymbols(page)).find((entry) => entry.type === type);
+}
+
+test('draws each palette type button with the symbol and colour Settings picked for its type', async ({ page }) => {
   await loadExample(page);
   await page.click('#mode-build');
   await page.click('#settings-toggle');
 
-  const types = await page.locator('#settings [data-type-row]').evaluateAll((rows) => rows.map((row) => row.dataset.typeRow));
-  const swatches = await paletteSwatches(page);
-  expect(swatches.map((swatch) => swatch.type)).toEqual(types);
-  expect(swatches.find((swatch) => swatch.type === 'paragraph').color).toBe('rgb(205, 189, 236)');
+  const symbols = (await paletteSymbols(page)).map(({ type, symbol, fill }) => ({ type, symbol, fill }));
+
+  // Shoelace defines the Settings controls after the panel renders, and an
+  // undefined control has no value yet.
+  await expect.poll(() => settingsSymbols(page)).toEqual(symbols);
+  expect(await paletteSymbolOf(page, 'paragraph')).toEqual({ type: 'paragraph', symbol: 'cut', shape: 'polygon', fill: '#cdbdec' });
+  expect(await paletteSymbolOf(page, 'user')).toEqual({ type: 'user', symbol: 'ellipse', shape: 'ellipse', fill: '#ea9999' });
+  await expect(page.locator('#add-paragraph .palette__symbol svg')).toBeVisible();
+});
+
+test('redraws a palette type button when Settings changes its colour or symbol and when they are reset', async ({ page }) => {
+  await loadExample(page);
+  await page.click('#mode-build');
+  await page.click('#settings-toggle');
 
   await slFill(page, 'sl-color-picker[data-color="paragraph"]', '#112233');
-  expect((await paletteSwatches(page)).find((swatch) => swatch.type === 'paragraph').color).toBe('rgb(17, 34, 51)');
+  await expect.poll(() => paletteSymbolOf(page, 'paragraph')).toEqual({ type: 'paragraph', symbol: 'cut', shape: 'polygon', fill: '#112233' });
+
+  await slSelect(page, 'sl-select[data-symbol="paragraph"]', 'ellipse');
+  await expect.poll(() => paletteSymbolOf(page, 'paragraph')).toEqual({ type: 'paragraph', symbol: 'ellipse', shape: 'ellipse', fill: '#112233' });
+
+  await page.click('#settings-reset');
+  await expect.poll(() => paletteSymbolOf(page, 'paragraph')).toEqual({ type: 'paragraph', symbol: 'cut', shape: 'polygon', fill: '#cdbdec' });
+});
+
+test('draws the shape of each note on its palette button', async ({ page }) => {
+  await loadExample(page);
+  await page.click('#mode-build');
+
+  for (const id of ['#add-event', '#add-api', '#add-callback']) {
+    await expect(page.locator(id + ' svg.icon')).toBeVisible();
+    expect(await page.locator(id + ' svg.icon').evaluate((svg) => svg.childElementCount)).toBeGreaterThan(0);
+  }
 });
 
 test('adds an external entity from the palette', async ({ page }) => {

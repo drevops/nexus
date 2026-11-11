@@ -137,7 +137,9 @@ function noteLabel(kind) {
   return entry ? entry.label : 'Note';
 }
 
-function paintSwatches() {
+// The store updates on every panel drag move, so a symbol is redrawn only
+// when its type's symbol or colour changed.
+function paintPaletteSymbols() {
   const controller = getController();
 
   if (!controller) {
@@ -145,7 +147,18 @@ function paintSwatches() {
   }
 
   document.querySelectorAll('[data-add-entity]').forEach((btn) => {
-    btn.querySelector('.palette__swatch').style.background = controller.colorFor(btn.getAttribute('data-add-entity'));
+    const type = btn.getAttribute('data-add-entity');
+    const symbol = controller.symbolFor(type);
+    const color = controller.colorFor(type);
+    const span = btn.querySelector('.palette__symbol');
+
+    if (span.dataset.symbol === symbol && span.dataset.color === color) {
+      return;
+    }
+
+    span.dataset.symbol = symbol;
+    span.dataset.color = color;
+    span.innerHTML = controller.symbolSvg(symbol, color);
   });
 }
 
@@ -196,7 +209,7 @@ export function initBuilder() {
     }
   });
 
-  subscribe(paintSwatches);
+  subscribe(paintPaletteSymbols);
 }
 
 export function attachBuilder(instance) {

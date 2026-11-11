@@ -113,7 +113,7 @@ Panels float over the canvas. Drag one by its header, or drop it at the left or 
 
 Switch to **Edit** and a palette appears under the toolbar:
 
-- **Content**, **Vocab**, **Media**, **Para**, **Block**, **User** and **External** add an entity. Click one to fill in a form, and the new entity lands in the clear spot nearest the middle of the view. Drag one onto the canvas to drop it in place.
+- **Content**, **Vocab**, **Media**, **Para**, **Block**, **User** and **External** add an entity. Each button shows its type's symbol and color from **Settings**. Click one to fill in a form, and the new entity lands in the clear spot nearest the middle of the view. Drag one onto the canvas to drop it in place.
 - **Field** adds a field to an entity and can reuse the definition of a field that already exists. The **+** handles around a selected entity add a field in a single click.
 - **Event**, **API** and **Callback** place an annotation: click one and then the canvas, or drag it into place.
 - **Connect** lets you drag from a field to an entity to create a reference.
