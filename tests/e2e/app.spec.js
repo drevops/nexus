@@ -302,13 +302,13 @@ test('parses an uploaded config folder in the browser', async ({ page }) => {
 test('shows fields by default and collapses to an overview', async ({ page }) => {
   await loadExample(page);
 
-  await expect(page.locator('#fields-toggle')).toHaveClass(/is-active/);
-  await expect(page.locator('#machine-names')).toHaveClass(/is-active/);
+  await expect(page.locator('#fields-toggle')).toHaveJSProperty('checked', true);
+  await expect(page.locator('#machine-names')).toHaveJSProperty('checked', true);
   expect(await page.locator('#captions .caption').count()).toBeGreaterThan(0);
   const detailed = await page.evaluate(() => window.__nexus.cy.nodes(':visible').length);
 
   await page.click('#fields-toggle');
-  await expect(page.locator('#fields-toggle')).not.toHaveClass(/is-active/);
+  await expect(page.locator('#fields-toggle')).toHaveJSProperty('checked', false);
   const overview = await page.evaluate(() => window.__nexus.cy.nodes(':visible').length);
   expect(overview).toBeLessThan(detailed);
 
@@ -518,8 +518,8 @@ test("traces a field's inbound and outbound connections", async ({ page }) => {
 test('declutters references into faded proxies', async ({ page }) => {
   await loadExample(page);
 
-  await expect(page.locator('#proxy-toggle')).toHaveClass(/is-active/);
-  await expect(page.locator('#fields-toggle')).toHaveClass(/is-active/);
+  await expect(page.locator('#proxy-toggle')).toHaveJSProperty('checked', true);
+  await expect(page.locator('#fields-toggle')).toHaveJSProperty('checked', true);
 
   const counts = await page.evaluate(() => {
     const cy = window.__nexus.cy;
@@ -2185,7 +2185,7 @@ test('describes a hovered export menu item in the status bar', async ({ page }) 
 
 test('enables proxy declutter by default on render', async ({ page }) => {
   await loadExample(page);
-  await expect(page.locator('#proxy-toggle')).toHaveClass(/is-active/);
+  await expect(page.locator('#proxy-toggle')).toHaveJSProperty('checked', true);
   expect(await page.evaluate(() => window.__nexus.cy.nodes('[group="proxy"]:visible').length)).toBeGreaterThan(0);
 });
 
@@ -2354,7 +2354,7 @@ test('removes the captions of a deleted entity and its fields', async ({ page })
 test('captions a new entity with its type alone while machine names are hidden', async ({ page }) => {
   await page.click('#new-btn');
   await page.click('#machine-names');
-  await expect(page.locator('#machine-names')).not.toHaveClass(/is-active/);
+  await expect(page.locator('#machine-names')).toHaveJSProperty('checked', false);
   await page.click('#mode-build');
 
   await createEntity(page, 'node', 'story', 'Story');
@@ -3258,6 +3258,83 @@ test('leads the status bar tips with the F1 shortcut view', async ({ page }) => 
   await expect(page.locator('#statusbar .statusbar__tips')).toHaveText(/^F1 shows keyboard shortcuts · /);
 });
 
+test('puts the display switches at the left end of the status bar', async ({ page }) => {
+  await loadExample(page);
+
+  const parts = await page.evaluate(() => [...document.querySelector('#statusbar').children].map((el) => el.id || el.className));
+  expect(parts).toEqual(['statusbar__display', 'statusbar-hint', 'statusbar__tips', 'statusbar__zoom']);
+
+  const switches = await page.evaluate(() =>
+    [...document.querySelectorAll('.statusbar__display > *')].map((el) => [el.tagName.toLowerCase(), el.id, el.textContent, el.dataset.shortcut]),
+  );
+  expect(switches).toEqual([
+    ['sl-switch', 'fields-toggle', 'Fields', 'F'],
+    ['sl-switch', 'proxy-toggle', 'Proxies', 'P'],
+    ['sl-switch', 'machine-names', 'Machine names', 'M'],
+  ]);
+  await expect(page.locator('.toolbar sl-switch, .toolbar #fields-toggle, .toolbar #proxy-toggle, .toolbar #machine-names')).toHaveCount(0);
+});
+
+for (const side of dataProviderSwitchClickSides()) {
+  test(`turns a display switch off and on again with a click on its ${side}`, async ({ page }) => {
+    await loadExample(page);
+    const fields = page.locator('#fields-toggle');
+    const box = await fields.boundingBox();
+    const position = { x: side === 'track' ? 4 : box.width - 4, y: box.height / 2 };
+    const detailed = await page.evaluate(() => window.__nexus.cy.nodes(':visible').length);
+
+    await fields.click({ position: position });
+    await expect(fields).toHaveJSProperty('checked', false);
+    expect(await page.evaluate(() => window.__nexus.cy.nodes(':visible').length)).toBeLessThan(detailed);
+
+    await fields.click({ position: position });
+    await expect(fields).toHaveJSProperty('checked', true);
+    expect(await page.evaluate(() => window.__nexus.cy.nodes(':visible').length)).toBe(detailed);
+  });
+}
+
+function dataProviderSwitchClickSides() {
+  return ['track', 'label'];
+}
+
+test('turns a focused display switch off with Space', async ({ page }) => {
+  await loadExample(page);
+
+  await page.locator('#machine-names').evaluate((el) => el.focus());
+  await page.keyboard.press('Space');
+
+  await expect(page.locator('#machine-names')).toHaveJSProperty('checked', false);
+  await expect(page.locator('#captions .caption:not(.caption--type)')).toHaveCount(0);
+});
+
+test('echoes a hovered display switch description into the status bar', async ({ page }) => {
+  await loadExample(page);
+
+  await page.locator('#proxy-toggle').hover();
+  await expect(page.locator('#statusbar-hint')).toHaveText('Show references as semi-opaque proxies instead of long edges');
+});
+
+for (const width of dataProviderStatusbarWidths()) {
+  test(`keeps the display switches and the zoom controls in the window and clear of each other ${width}px wide`, async ({ page }) => {
+    await page.setViewportSize({ width: width, height: 800 });
+    await loadExample(page);
+
+    const box = (selector) => page.locator(selector).boundingBox();
+    const [display, zoom, statusbar, stage] = await Promise.all(['.statusbar__display', '.statusbar__zoom', '#statusbar', '#stage-root'].map(box));
+    const apart = display.x + display.width <= zoom.x || display.y + display.height <= zoom.y;
+
+    expect(apart).toBe(true);
+    expect(Math.max(display.x + display.width, zoom.x + zoom.width)).toBeLessThanOrEqual(width);
+    expect(Math.min(display.x, zoom.x)).toBeGreaterThanOrEqual(0);
+    expect(stage.y + stage.height).toBeLessThanOrEqual(statusbar.y);
+    expect(statusbar.y + statusbar.height).toBeLessThanOrEqual(800);
+  });
+}
+
+function dataProviderStatusbarWidths() {
+  return [360, 420, 640, 641, 1280];
+}
+
 test('renders a non-empty glyph for every toolbar, status bar and landing icon', async ({ page }) => {
   const empty = await page.evaluate(() =>
     [...document.querySelectorAll('.toolbar [data-icon], .statusbar [data-icon], .landing [data-icon]')]
@@ -3383,7 +3460,6 @@ test('groups the toolbar tools into sections in order', async ({ page }) => {
     ['doc-new', 'doc-import', 'doc-open-btn', 'doc-save', 'export-run', 'export-choose'],
     ['undo', 'redo'],
     ['mode-view', 'mode-build'],
-    ['fields-toggle', 'proxy-toggle', 'machine-names'],
     ['search', 'search-btn'],
     ['layout-run', 'layout-choose', 'tidy'],
     ['entities-toggle', 'table-toggle', 'legend-toggle', 'history-toggle'],
@@ -3395,7 +3471,7 @@ test('ends every toolbar section but the last in a separator', async ({ page }) 
   await loadExample(page);
 
   const shown = { separator: 'visible', lineEnd: false };
-  await expect.poll(() => toolbarSeparators(page)).toEqual([shown, shown, shown, shown, shown, shown, { separator: 'none', lineEnd: true }]);
+  await expect.poll(() => toolbarSeparators(page)).toEqual([shown, shown, shown, shown, shown, { separator: 'none', lineEnd: true }]);
 });
 
 for (const width of dataProviderWrappedToolbarWidths()) {
@@ -3404,7 +3480,7 @@ for (const width of dataProviderWrappedToolbarWidths()) {
     await loadExample(page);
 
     await expect.poll(async () => misplacedSeparators(await toolbarSeparators(page))).toEqual([]);
-    expect(await toolbarSeparators(page)).toHaveLength(7);
+    expect(await toolbarSeparators(page)).toHaveLength(6);
     expect(await hiddenSeparators(page)).not.toEqual([]);
   });
 }
@@ -3416,7 +3492,7 @@ function dataProviderWrappedToolbarWidths() {
 test('hides the toolbar separators that end a line as the window narrows and shows them as it widens', async ({ page }) => {
   await page.setViewportSize({ width: 3000, height: 800 });
   await loadExample(page);
-  await expect.poll(() => toolbarSeparators(page)).toHaveLength(7);
+  await expect.poll(() => toolbarSeparators(page)).toHaveLength(6);
 
   await page.setViewportSize({ width: 1000, height: 800 });
   await expect.poll(() => hiddenSeparators(page)).not.toEqual([]);
@@ -3460,7 +3536,7 @@ test('keeps each toolbar section as tall as its controls when its separator no l
   });
 
   await page.setViewportSize({ width: width, height: 800 });
-  await expect.poll(() => toolbarSectionSlack(page)).toEqual([0, 0, 0, 0, 0, 0, 0]);
+  await expect.poll(() => toolbarSectionSlack(page)).toEqual([0, 0, 0, 0, 0, 0]);
 });
 
 test('opens an about dialog explaining browser-only storage and the licence', async ({ page }) => {
@@ -4249,7 +4325,7 @@ test('opens the About box with ? and leaves every shortcut off while it is open'
   await page.keyboard.press('f');
   await page.keyboard.press('F1');
 
-  await expect(page.locator('#fields-toggle')).toHaveClass(/is-active/);
+  await expect(page.locator('#fields-toggle')).toHaveJSProperty('checked', true);
   await expect(page.locator('#shortcut-hints')).toBeHidden();
 });
 
@@ -4300,9 +4376,9 @@ function dataProviderToolbarShortcuts() {
     ['Import', 'Alt+i', (page) => expect(page.locator('#landing')).toBeVisible()],
     ['Export before a format is chosen', 'Control+e', (page) => expect(page.locator('#export-menu')).toBeVisible()],
     ['the export format menu', 'Control+Shift+E', (page) => expect(page.locator('#export-menu')).toBeVisible()],
-    ['Fields', 'f', (page) => expect(page.locator('#fields-toggle')).not.toHaveClass(/is-active/)],
-    ['Proxies', 'p', (page) => expect(page.locator('#proxy-toggle')).not.toHaveClass(/is-active/)],
-    ['Machine names', 'm', (page) => expect(page.locator('#machine-names')).not.toHaveClass(/is-active/)],
+    ['Fields', 'f', (page) => expect(page.locator('#fields-toggle')).toHaveJSProperty('checked', false)],
+    ['Proxies', 'p', (page) => expect(page.locator('#proxy-toggle')).toHaveJSProperty('checked', false)],
+    ['Machine names', 'm', (page) => expect(page.locator('#machine-names')).toHaveJSProperty('checked', false)],
     ['Entities', '1', (page) => expect(page.locator('#entities')).toBeVisible()],
     ['Table', '2', (page) => expect(page.locator('#table')).toBeVisible()],
     ['Legend', '3', (page) => expect(page.locator('#legend')).toHaveCount(0)],
@@ -4598,7 +4674,7 @@ for (const [name, key, field] of dataProviderNewItemForms()) {
 
     await expect(page.locator(field)).toHaveJSProperty('value', 'cf');
     await expect(page.locator('#connect-toggle')).not.toHaveClass(/is-active/);
-    await expect(page.locator('#fields-toggle')).toHaveClass(/is-active/);
+    await expect(page.locator('#fields-toggle')).toHaveJSProperty('checked', true);
   });
 }
 
@@ -4641,7 +4717,7 @@ test('types into a text box instead of running the shortcuts of the keys', async
   await page.keyboard.press('Alt+n');
 
   await expect(page.locator('#search')).toHaveJSProperty('value', 'f1?');
-  await expect(page.locator('#fields-toggle')).toHaveClass(/is-active/);
+  await expect(page.locator('#fields-toggle')).toHaveJSProperty('checked', true);
   await expect(page.locator('#entities')).toHaveCount(0);
   await expect(page.locator('#about-dialog')).not.toBeVisible();
   expect(await entityCount(page)).toBeGreaterThan(0);
@@ -4653,7 +4729,7 @@ test('leaves letter keys to a focused select', async ({ page }) => {
 
   await page.keyboard.press('m');
 
-  await expect(page.locator('#machine-names')).toHaveClass(/is-active/);
+  await expect(page.locator('#machine-names')).toHaveJSProperty('checked', true);
 });
 
 test('leaves letter keys to an open menu', async ({ page }) => {
@@ -4664,7 +4740,7 @@ test('leaves letter keys to an open menu', async ({ page }) => {
 
   await page.keyboard.press('p');
 
-  await expect(page.locator('#proxy-toggle')).toHaveClass(/is-active/);
+  await expect(page.locator('#proxy-toggle')).toHaveJSProperty('checked', true);
   await expect(page.locator('#export-menu')).toBeVisible();
 });
 
@@ -4680,7 +4756,7 @@ test('repeats a held zoom key, but not a held toggle or F1', async ({ page }) =>
   await page.keyboard.down('f');
   await page.keyboard.down('f');
   await page.keyboard.up('f');
-  await expect(page.locator('#fields-toggle')).not.toHaveClass(/is-active/);
+  await expect(page.locator('#fields-toggle')).toHaveJSProperty('checked', false);
 
   await page.keyboard.down('F1');
   await page.keyboard.down('F1');

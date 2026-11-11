@@ -860,7 +860,7 @@ function buildController(model, options = {}) {
 
   function applyLayout(layout) {
     fieldsMode = true;
-    $('fields-toggle').classList.add('is-active');
+    $('fields-toggle').checked = true;
     refresh(false);
     cy.nodes().forEach((node) => {
       if (layout[node.id()]) {
@@ -1311,9 +1311,9 @@ function buildController(model, options = {}) {
     removeNoteBadge(evt.target);
   });
 
-  $('fields-toggle').classList.add('is-active');
-  $('proxy-toggle').classList.add('is-active');
-  $('machine-names').classList.add('is-active');
+  $('fields-toggle').checked = true;
+  $('proxy-toggle').checked = true;
+  $('machine-names').checked = true;
   $('search').value = '';
 
   return {
@@ -1467,28 +1467,27 @@ function wire() {
   });
 
   // The display toggles re-run the layout too, but undo reverts edits only,
-  // so their layout is not a history step.
-  $('fields-toggle').addEventListener('click', (evt) => {
-    fieldsMode = !fieldsMode;
-    evt.target.classList.toggle('is-active', fieldsMode);
+  // so their layout is not a history step. A click on a switch's label
+  // clicks its input too, so the handlers take 'sl-change', which fires
+  // once per toggle.
+  $('fields-toggle').addEventListener('sl-change', (evt) => {
+    fieldsMode = evt.target.checked;
     controller.clearFocus();
     untracked(() => controller.refresh(true));
   });
 
-  $('proxy-toggle').addEventListener('click', (evt) => {
-    proxyMode = !proxyMode;
-    evt.target.classList.toggle('is-active', proxyMode);
+  $('proxy-toggle').addEventListener('sl-change', (evt) => {
+    proxyMode = evt.target.checked;
     if (proxyMode && !fieldsMode) {
       fieldsMode = true;
-      $('fields-toggle').classList.add('is-active');
+      $('fields-toggle').checked = true;
     }
     controller.clearFocus();
     untracked(() => controller.refresh(true));
   });
 
-  $('machine-names').addEventListener('click', (evt) => {
-    showMachineNames = !showMachineNames;
-    evt.target.classList.toggle('is-active', showMachineNames);
+  $('machine-names').addEventListener('sl-change', (evt) => {
+    showMachineNames = evt.target.checked;
     controller.rebuildCaptions();
   });
 

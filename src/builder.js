@@ -330,7 +330,7 @@ function applyMode() {
 
   if (buildMode) {
     const fields = $('fields-toggle');
-    if (!fields.classList.contains('is-active')) {
+    if (!fields.checked) {
       fields.click();
     }
   } else {
