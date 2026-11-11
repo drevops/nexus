@@ -58,6 +58,12 @@ test('ships every file index.html loads', () => {
   assert.ok(shipped.has(join(SITE, 'src', 'parser.js')));
 });
 
+test('ships the document schema at the path its id names', () => {
+  const schema = JSON.parse(readFileSync(join(SITE, 'schema', 'nexus.schema.json'), 'utf8'));
+
+  assert.ok(schema.$id.endsWith('/schema/nexus.schema.json'));
+});
+
 test('ships every template', () => {
   for (const template of TEMPLATES) {
     const doc = JSON.parse(readFileSync(join(SITE, templatePath(template)), 'utf8'));

@@ -1,22 +1,7 @@
 /**
  * The Nexus diagram document (".nexus.json"), the format of saved diagrams.
  *
- * Schema (version 1):
- * {
- *   "nexus": 1,
- *   "title": "…",
- *   "colors": { "<entityType>": "#hex" },        // colour overrides
- *   "symbols": { "<entityType>": "<symbol>" },   // symbol overrides
- *   "customTypes": [ { type, label } ],          // custom entity types
- *   "entities": [ { entityType, bundle, label, note, fields: [
- *       { name, label, fieldType, kind, cardinality, required, note,
- *         targetType, targetBundles, hidden } ] } ],  // hidden: off the canvas
- *   "annotations": {
- *     nodes: [ { id, kind, label, method?, note? } ],
- *     edges: [ { from, to, label } ] },
- *   "layout": { "<nodeId>": { x, y } },          // exact canvas positions
- *   "ui": { … } | null                           // panel arrangement
- * }
+ * schema/nexus.schema.json defines the format (version 1).
  *
  * `documentFromGraph` reads a live Cytoscape instance; `documentToModel` is a
  * pure transform back to renderable model data (so it can be unit-tested).
