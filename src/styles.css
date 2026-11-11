@@ -420,6 +420,12 @@ sl-button#zoom-level::part(base) {
   text-align: center;
 }
 
+/* The tips fill the room the hint grows into, so a hovered control's
+   description takes their place while it shows. */
+.statusbar__hint:not(:empty) + .statusbar__tips {
+  display: none;
+}
+
 .statusbar__zoom {
   display: flex;
   align-items: center;

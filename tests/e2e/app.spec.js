@@ -4281,6 +4281,21 @@ test('echoes a hovered control description into the status bar', async ({ page }
   await expect(page.locator('#statusbar-hint')).toHaveText(LAYOUT_HINT);
 });
 
+test('shows a hovered control description in place of the status bar tips', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await loadExample(page);
+
+  await page.locator('#layout-run').hover();
+  await expect(page.locator('#statusbar-hint')).toHaveText(LAYOUT_HINT);
+  await expect(page.locator('#statusbar-hint')).toBeVisible();
+  await expect(page.locator('#statusbar .statusbar__tips')).toBeHidden();
+  expect((await page.locator('#statusbar-hint').boundingBox()).width).toBeGreaterThan(200);
+
+  await page.locator('#cy').hover();
+  await expect(page.locator('#statusbar-hint')).toHaveText('');
+  await expect(page.locator('#statusbar .statusbar__tips')).toBeVisible();
+});
+
 test('describes the picked layout when the layout button is hovered', async ({ page }) => {
   await loadExample(page);
   await pickLayout(page, 'tb');
