@@ -24,7 +24,7 @@
  * Safe to call repeatedly - each call tears down the previous graph.
  */
 
-import { setController, bump, closeInspector } from './store.js';
+import { setController, bump, closeInspector, getState, subscribe } from './store.js';
 import { icon } from './icons.js';
 import { ENTITY_TYPE_ORDER, findEntityType } from './entity-types.js';
 import { humanize, machineName } from './names.js';
@@ -33,8 +33,9 @@ import { drawnShape, fitWidth, labelDrop, labelX, polygonPoints, wrapLabel } fro
 import { checkpoint, untracked } from './undo.js';
 import { describeNode } from './history.js';
 import { DIAGRAM_DEFAULTS, readDiagramDefaults } from './diagram-defaults.js';
-import { packColumns, tidyColumns } from './packing.js';
+import { keepOrder, packColumns, tidyColumns } from './packing.js';
 import { frameSettings } from './mode-frame.js';
+import { nodeLookup, selectionEntity } from './inspector-trail.js';
 import { $ } from './dom.js';
 
 // A small library of UML-ish node shapes, keyed for settings/persistence; the
@@ -74,6 +75,11 @@ const LAYOUTS = {
   tb: { label: 'TB', name: 'Top to bottom (TB)', title: 'Lay the diagram out top to bottom', rankDir: 'TB', packed: false },
   columns: { label: 'Columns', name: 'Columns', title: 'Stack the entities in columns that fill the screen', rankDir: 'LR', packed: true },
 };
+
+// The Tidy button's title with nothing selected, and the end of its title
+// after the name of the entity a selection belongs to.
+const TIDY_TITLE = 'Tidy up: straighten each entity, keeping its fields in their order, and line the entities up in columns near where they are';
+const TIDY_ENTITY_TITLE = ': straighten it, keeping its fields in their order, and leave the rest of the diagram where it is';
 
 // Cytoscape's default label font, pinned so canvas measurement matches the
 // labels Cytoscape draws.
@@ -795,6 +801,9 @@ function buildController(model, options = {}) {
     maxZoom: 3,
     layout: { name: 'grid' },
   });
+
+  // The node a View-mode tap focused, as { kind, id }, or null.
+  let focused = null;
   syncReferenceElements(cy);
 
   const captionsEl = $('captions');
@@ -931,13 +940,52 @@ function buildController(model, options = {}) {
     positionNotes();
   }
 
-  // Lays each island out on its own again and lines the islands up in
-  // columns near where they were (see tidyColumns()). The view stays put.
+  // The entity Tidy works on: the one the Inspector's screen or the focused
+  // node belongs to. Empty when the selection belongs to no shown entity.
+  function tidyTarget() {
+    const id = selectionEntity(getState().selected || focused, nodeLookup(cy));
+
+    return id ? shown(cy.getElementById(id)) : cy.collection();
+  }
+
+  // Names the entity Tidy will work on in the Tidy button's title.
+  function showTidyTarget() {
+    const target = tidyTarget();
+    const title = target.nonempty() ? 'Tidy up ' + nodeLookup(cy)(target.id()).label + TIDY_ENTITY_TITLE : TIDY_TITLE;
+    const button = $('tidy');
+
+    if (button.getAttribute('title') !== title) {
+      button.setAttribute('title', title);
+    }
+  }
+
+  // An entity with its shown fields, their shown proxies and the edges
+  // between them.
+  function entityGroup(entity) {
+    const own = cy.nodes('[group="field"], [group="proxy"]').filter((node) => node.data('entity') === entity.id());
+    const nodes = entity.union(own);
+    const edges = nodes.connectedEdges().filter((edge) => nodes.contains(edge.source()) && nodes.contains(edge.target()));
+
+    return shown(nodes.union(edges));
+  }
+
+  // Lays each island out on its own again, keeps each entity's field order
+  // and lines the islands up in columns near where they were (see
+  // tidyColumns()). With a target entity, only the entity, its fields and
+  // their proxies move, and they keep their top-left corner. The view stays
+  // put.
   function tidy() {
+    const target = tidyTarget();
+    const elements = target.nonempty() ? entityGroup(target) : shown(cy.elements());
     const { options, gap } = layoutSettings();
+    const before = new Map(elements.nodes().map((node) => [node.id(), { ...node.position() }]));
 
     keepHiddenFields(() => {
-      const islands = layIslandsOut(shown(cy.elements()), options);
+      const islands = layIslandsOut(elements, options).map((entry) => {
+        keepFieldOrder(entry.island, before, options.nodeSep);
+
+        return { ...entry, box: entry.island.boundingBox() };
+      });
       const boxes = islands.map((entry) => ({ x: entry.before.x1, y: entry.before.y1, w: entry.box.w, h: entry.box.h }));
 
       placeIslands(islands, tidyColumns(boxes, gap).positions);
@@ -971,6 +1019,48 @@ function buildController(model, options = {}) {
     positionNotes();
     checkpoint((hidden ? 'Hid ' : 'Showed ') + describeNode(field));
     bump();
+  }
+
+  // Dagre orders an entity's fields as it likes, so each field, with its
+  // proxies, goes back to the place it had in the order before the run: top
+  // to bottom in LR and Columns, left to right in TB. `before` holds each
+  // node's position before the run. The entity stays centred on its fields.
+  function keepFieldOrder(island, before, gap) {
+    const across = LAYOUTS[layoutName].rankDir === 'TB' ? 'x' : 'y';
+    const along = across === 'x' ? 'y' : 'x';
+    const middle = (box) => (box[across + '1'] + box[across + '2']) / 2;
+
+    island.nodes('[group="entity"]').forEach((entity) => {
+      const fields = island.nodes('[group="field"]').filter((field) => field.data('entity') === entity.id());
+
+      if (fields.empty()) {
+        return;
+      }
+
+      const span = fields.boundingBox();
+      const ranks = new Map();
+
+      fields.forEach((field) => {
+        const rank = Math.round(field.position(along));
+        ranks.set(rank, (ranks.get(rank) || []).concat([field]));
+      });
+
+      ranks.forEach((fieldsOfRank) => {
+        // A field's proxies can reach past its neighbours, so the fields'
+        // own positions give the layout's order.
+        const rank = [...fieldsOfRank].sort((a, b) => a.position(across) - b.position(across));
+        const units = rank.map((field) => field.union(island.nodes('[group="proxy"]').filter((proxy) => proxy.data('field') === field.id())));
+        const boxes = units.map((unit, index) => {
+          const box = unit.boundingBox();
+
+          return { start: box[across + '1'], end: box[across + '2'], key: before.get(rank[index].id())[across] };
+        });
+
+        keepOrder(boxes, gap).forEach((shift, index) => units[index].shift(across, shift));
+      });
+
+      entity.shift(across, middle(fields.boundingBox()) - middle(span));
+    });
   }
 
   // A comparator that orders entities by the place of their type in the
@@ -1101,11 +1191,18 @@ function buildController(model, options = {}) {
     placeProxies(added);
   }
 
+  // Keeps the node a View-mode tap focused as a selection Tidy reads.
+  function setFocused(selection) {
+    focused = selection;
+    showTidyTarget();
+  }
+
   function focusEntity(id) {
     const node = cy.getElementById(id);
     if (node.empty()) {
       return;
     }
+    setFocused({ kind: 'entity', id: id });
     const hood = node.closedNeighborhood().closedNeighborhood();
     cy.elements().removeClass('trace trace-source').addClass('faded');
     hood.removeClass('faded');
@@ -1118,6 +1215,7 @@ function buildController(model, options = {}) {
     if (node.empty()) {
       return;
     }
+    setFocused({ kind: 'field', id: id });
 
     // A field's closed neighbourhood is exactly its inbound owner (via the
     // has-edge) and outbound reference targets - the connections to trace.
@@ -1130,6 +1228,7 @@ function buildController(model, options = {}) {
 
   function clearFocus() {
     cy.elements().removeClass('faded trace trace-source');
+    setFocused(null);
   }
 
   // Under each node: the entity type (always, de-emphasised) then, when
@@ -1456,7 +1555,10 @@ function buildController(model, options = {}) {
     if (window.__nexusBuild) {
       return;
     }
+    // The proxy highlights the entity it stands in for, but it belongs to
+    // the entity of its field.
     focusEntity(evt.target.data('target'));
+    setFocused({ kind: 'proxy', id: evt.target.id() });
   });
   cy.on('render', () => {
     if (captionRaf) {
@@ -1493,6 +1595,8 @@ function buildController(model, options = {}) {
     cy,
     refresh,
     runLayout,
+    tidyTarget,
+    showTidyTarget,
     tidy,
     applyLayout,
     syncReferences,
@@ -1619,9 +1723,15 @@ function wire() {
     checkpoint('Re-ran the ' + LAYOUTS[layoutName].label + ' layout');
   });
   $('tidy').addEventListener('click', () => {
+    const target = controller.tidyTarget();
+
     controller.tidy();
-    checkpoint('Tidied the layout');
+    checkpoint(target.nonempty() ? 'Tidied ' + nodeLookup(controller.cy)(target.id()).label : 'Tidied the layout');
   });
+
+  // The Inspector's screen is in the store, so its changes reach the Tidy
+  // button's title from here.
+  subscribe(() => controller.showTidyTarget());
 
   fillLayoutMenu();
 
@@ -1708,6 +1818,7 @@ export function render(model, options = {}) {
   }
 
   showLayout();
+  controller.showTidyTarget();
 
   if (options.layout && Object.keys(options.layout).length) {
     controller.applyLayout(options.layout);
