@@ -55,6 +55,19 @@ test('starts with no panel raised', () => {
   assert.deepEqual(raisedZIndexes(), []);
 });
 
+test('starts every panel without a height', () => {
+  assert.deepEqual(
+    PANELS.map((id) => getState().panels[id].height),
+    PANELS.map(() => null),
+  );
+});
+
+test('keeps a missing height when a layout is imported', () => {
+  importLayout({ panels: { entities: { open: false, dock: 'left', height: null } } });
+
+  assert.equal(getState().panels.entities.height, null);
+});
+
 test('opens a raised panel above every other and keeps the others in order', async (t) => {
   for (const [name, id, raise, expected] of dataProviderRaise()) {
     await t.test(name, () => {

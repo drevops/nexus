@@ -38,7 +38,7 @@ let saveTimer = null;
 function initialPanels() {
   const panels = {};
   Object.keys(DEFAULT_POS).forEach((id) => {
-    panels[id] = { open: false, dock: null, pos: { ...DEFAULT_POS[id] }, z: 4, height: 260, order: PANEL_ORDER.indexOf(id) };
+    panels[id] = { open: false, dock: null, pos: { ...DEFAULT_POS[id] }, z: 4, height: null, order: PANEL_ORDER.indexOf(id) };
   });
   return panels;
 }
