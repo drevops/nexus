@@ -70,8 +70,10 @@
       </sl-button-group>
     </div>
     <div class="toolbar__section">
-      <sl-input id="search" class="toolbar__search" size="small" type="search" placeholder="Find entity…" autocomplete="off" clearable data-shortcut="/" title="Type an entity name and press Enter or the search button"></sl-input>
-      <sl-button id="search-btn" class="toolbar__button toolbar__button--icon" size="small" data-icon="search" title="Find the entity and zoom to it" aria-label="Search"></sl-button>
+      <div class="toolbar__find" role="search">
+        <sl-input id="search" class="toolbar__search" size="small" type="search" placeholder="Find entity…" autocomplete="off" clearable data-shortcut="/" title="Type an entity name and press Enter or the search button"></sl-input>
+        <sl-button id="search-btn" class="toolbar__button toolbar__button--icon" size="small" data-icon="search" title="Find the entity and zoom to it" aria-label="Search"></sl-button>
+      </div>
     </div>
     <div class="toolbar__section">
       <sl-button-group class="toolbar__group" label="Layout">

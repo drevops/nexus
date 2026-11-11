@@ -295,6 +295,30 @@ sl-input.toolbar__search {
   min-width: 180px;
 }
 
+/* Find entity: the field and its button share 1 outline. The button overlaps
+   the field's end border by 1px, so its start border is the divider. */
+.toolbar__find {
+  display: inline-flex;
+  align-items: stretch;
+}
+
+.toolbar__find sl-input::part(base) {
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+}
+
+.toolbar__find sl-button::part(base) {
+  margin-inline-start: -1px;
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+}
+
+/* The focused field's border draws over the button's start border. */
+.toolbar__find sl-input:focus-within {
+  position: relative;
+  z-index: 1;
+}
+
 .toolbar__search-icon {
   display: inline-flex;
   color: var(--muted);
