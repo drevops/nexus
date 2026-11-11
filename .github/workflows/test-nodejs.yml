@@ -25,18 +25,16 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || (github.event_name == 'schedule' && 'schedule') || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+env:
+  NODE_VERSION: 26
+
 jobs:
   test-nodejs:
-    name: Node.js ${{ matrix.node }}
+    name: Lint and unit tests
     runs-on: ubuntu-latest
 
     permissions:
       contents: read
-
-    strategy:
-      fail-fast: false
-      matrix:
-        node: [22, 24]
 
     steps:
       - name: Checkout code
@@ -47,14 +45,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
-          node-version: ${{ matrix.node }}
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
 
       - name: Install dependencies
         run: npm ci
 
       - name: Check coding standards
-        if: matrix.node == 24
         run: npm run lint
         continue-on-error: ${{ vars.CI_LINT_IGNORE_FAILURE == '1' }}
 
@@ -63,7 +60,6 @@ jobs:
         continue-on-error: ${{ vars.CI_TEST_IGNORE_FAILURE == '1' }}
 
       - name: Check code coverage threshold
-        if: matrix.node == 24
         run: |
           RATE=$(grep -o 'line-rate="[0-9.]*"' .logs/cobertura-coverage.xml | head -1 | tr -cd '0-9.')
           PERCENT=$(awk "BEGIN {printf \"%.2f\", $RATE*100}")
@@ -82,14 +78,14 @@ jobs:
       - name: Upload coverage report as an artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: ${{github.job}}-code-coverage-report-${{ matrix.node }}
+          name: ${{github.job}}-code-coverage-report
           path: .logs
           include-hidden-files: true
           if-no-files-found: error
 
       - name: Upload coverage report to Codecov
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7
-        if: matrix.node == 24 && env.CODECOV_TOKEN != ''
+        if: env.CODECOV_TOKEN != ''
         with:
           files: .logs/cobertura-coverage.xml
           fail_ci_if_error: true
@@ -117,7 +113,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
-          node-version: 24
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
 
       - name: Install dependencies
