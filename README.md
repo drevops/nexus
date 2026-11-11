@@ -95,7 +95,7 @@ By default the diagram opens in View mode with its entities stacked in columns t
 
 The toolbar offers:
 
-- **Find entity** - type a name, then press Enter or the search button to fade everything else and zoom to the matches.
+- **Find entity** - type a name, then press Enter or the search button to fade everything else and zoom to the matches. Each match and its fields land in the middle of the part of the canvas the open panels leave free.
 - **Layout** - re-run the current layout, or pick another from the arrow beside it: **Columns** stacks each entity and its fields in columns that fill the screen, grouped by entity type, while **LR** and **TB** lay the whole diagram out as 1 flow, left to right or top to bottom. Your pick applies to the open diagram, and the next diagram opens in the layout **Settings** sets.
 - **Tidy** - straighten each entity's fields and line the entities up in columns near where they already are, so a diagram you've dragged around or edited gets neat without being rearranged. Drag an entity roughly into place and Tidy slots it in. Fields keep their order, so a field you drag to a new place among its entity's fields stays there. With an entity, or one of its fields or proxies, selected, Tidy straightens only that entity and leaves the rest of the diagram where it is.
 - **Entities** - an index with per-type filters and field counts; click a bundle to focus it or open its fields.

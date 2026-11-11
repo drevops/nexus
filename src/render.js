@@ -34,6 +34,7 @@ import { checkpoint, untracked } from './undo.js';
 import { describeNode } from './history.js';
 import { DIAGRAM_DEFAULTS, readDiagramDefaults } from './diagram-defaults.js';
 import { keepOrder, packColumns, tidyColumns } from './packing.js';
+import { freeArea } from './free-area.js';
 import { frameSettings } from './mode-frame.js';
 import { nodeLookup, selectionEntity } from './inspector-trail.js';
 import { $ } from './dom.js';
@@ -1197,6 +1198,33 @@ function buildController(model, options = {}) {
     showTidyTarget();
   }
 
+  // The part of the canvas no floating panel covers, in rendered
+  // coordinates. Docked panels sit beside the canvas, so they don't count.
+  function openArea() {
+    const box = cy.container().getBoundingClientRect();
+    const panels = [...document.querySelectorAll('.stage__canvas > .panel')].map((panel) => {
+      const rect = panel.getBoundingClientRect();
+
+      return { x1: rect.left - box.left, y1: rect.top - box.top, x2: rect.right - box.left, y2: rect.bottom - box.top };
+    });
+
+    return freeArea({ x1: 0, y1: 0, x2: box.width, y2: box.height }, panels);
+  }
+
+  // Animates to the zoom with the visible elements centred in openArea().
+  function centreOn(eles, zoom) {
+    const area = openArea();
+    const box = eles.filter(':visible').boundingBox();
+    const pan = { x: (area.x1 + area.x2) / 2 - ((box.x1 + box.x2) / 2) * zoom, y: (area.y1 + area.y2) / 2 - ((box.y1 + box.y2) / 2) * zoom };
+
+    cy.animate({ zoom, pan }, { duration: 350 });
+  }
+
+  // An entity with its fields, the group the focus and Find entity centre.
+  function withFields(entities) {
+    return entities.union(cy.nodes('[group="field"]').filter((field) => entities.some((entity) => entity.id() === field.data('entity'))));
+  }
+
   function focusEntity(id) {
     const node = cy.getElementById(id);
     if (node.empty()) {
@@ -1207,7 +1235,7 @@ function buildController(model, options = {}) {
     cy.elements().removeClass('trace trace-source').addClass('faded');
     hood.removeClass('faded');
     node.removeClass('faded');
-    cy.animate({ center: { eles: node }, zoom: Math.max(cy.zoom(), 0.8) }, { duration: 350 });
+    centreOn(withFields(node), Math.max(cy.zoom(), 0.8));
   }
 
   function focusField(id) {
@@ -1223,7 +1251,7 @@ function buildController(model, options = {}) {
     cy.elements().removeClass('trace trace-source').addClass('faded');
     hood.removeClass('faded').addClass('trace');
     node.removeClass('trace').addClass('trace-source');
-    cy.animate({ center: { eles: hood }, zoom: Math.max(cy.zoom(), 0.8) }, { duration: 350 });
+    centreOn(hood, Math.max(cy.zoom(), 0.8));
   }
 
   function clearFocus() {
@@ -1514,7 +1542,7 @@ function buildController(model, options = {}) {
     }
     matches.union(matches.closedNeighborhood().closedNeighborhood()).removeClass('faded');
 
-    cy.animate({ center: { eles: matches }, zoom: 1 }, { duration: 350 });
+    centreOn(withFields(matches), 1);
   }
 
   cy.on('zoom', () => {
