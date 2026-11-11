@@ -78,13 +78,14 @@ const DEFAULT_LAYOUT = 'columns';
 // labels Cytoscape draws.
 const LABEL_FONT_FAMILY = 'Helvetica Neue, Helvetica, sans-serif';
 
-// Model-space label and box metrics of entity and field nodes. The inset is
-// the clearance between a text line and a slanted or curved edge. Box sizes
-// stay on a quarter-pixel grid, so layout arithmetic is exact and a repeated
-// layout gives identical positions.
+// Model-space label and box metrics of entity, field and proxy nodes. The
+// inset is the clearance between a text line and a slanted or curved edge.
+// Box sizes stay on a quarter-pixel grid, so layout arithmetic is exact and a
+// repeated layout gives identical positions. A proxy's smaller text wraps at
+// about as many characters a line as its entity's.
 const ENTITY_BOX = { fontSize: 12, fontWeight: 600, lineHeight: 1.25, textMaxWidth: 160, padding: 10, border: 1.5, inset: 3 };
 const FIELD_BOX = { fontSize: 10, fontWeight: 'normal', padding: 7, border: 1 };
-const PROXY_BOX = { fontSize: 10, fontStyle: 'italic', fontWeight: 'normal', padding: 7, border: 1, inset: 2 };
+const PROXY_BOX = { fontSize: 10, fontStyle: 'italic', fontWeight: 'normal', lineHeight: 1.25, textMaxWidth: 130, padding: 7, border: 1, inset: 2 };
 
 // The shape-polygon-points value of a shape Cytoscape draws on its own, which
 // ignores it.
@@ -389,32 +390,41 @@ function fieldLabel(ele) {
   return ele.data('required') ? ele.data('label') + ' *' : ele.data('label');
 }
 
-// The text lines of an entity box and half the box's height. Each line has
-// its width and the offsets of its top and bottom from the box centre: the
-// name lines as Cytoscape wraps them, then the type caption on the label's
-// blank last line.
-function entityLines(ele) {
-  const font = labelFont(ENTITY_BOX);
-  const names = wrapLabel(ele.data('label'), ENTITY_BOX.textMaxWidth, (text) => textWidth(text, font));
-  const pitch = ENTITY_BOX.fontSize * ENTITY_BOX.lineHeight;
-  const labelBottom = (ENTITY_BOX.fontSize + names.length * pitch) / 2;
-  const lines = names.map((name, i) => {
-    const bottom = labelBottom - (names.length - i) * pitch;
+// The lines of a label as Cytoscape wraps it, with blank lines reserved below
+// them, and the offset of the label's bottom from its centre line. Each line
+// has its width and the offsets of its top and bottom from the centre line.
+// Cytoscape draws k lines 1 font size plus k - 1 line pitches tall.
+function wrappedLines(text, metrics, reserved) {
+  const font = labelFont(metrics);
+  const texts = wrapLabel(text, metrics.textMaxWidth, (line) => textWidth(line, font));
+  const pitch = metrics.fontSize * metrics.lineHeight;
+  const count = texts.length + reserved;
+  const labelBottom = (metrics.fontSize + (count - 1) * pitch) / 2;
+  const lines = texts.map((line, i) => {
+    const bottom = labelBottom - (count - 1 - i) * pitch;
 
-    return { width: textWidth(name, font), top: bottom - ENTITY_BOX.fontSize, bottom: bottom };
+    return { width: textWidth(line, font), top: bottom - metrics.fontSize, bottom: bottom };
   });
-  const typeCentre = labelBottom - ENTITY_BOX.fontSize / 2;
-  const typeWidth = captionWidth(typeLabel(ele.data('entityType')), TYPE_CAPTION);
-  lines.push({ width: typeWidth, top: typeCentre - CAPTION_LINE / 2, bottom: typeCentre + CAPTION_LINE / 2 });
 
-  return { lines: lines, halfHeight: labelBottom + ENTITY_BOX.padding };
+  return { lines: lines, labelBottom: labelBottom };
 }
 
-// The single text line of a proxy and half the proxy's height.
-function proxyLines(ele) {
-  const width = textWidth(ele.data('label'), labelFont(PROXY_BOX));
+// The text lines of an entity box and half the box's height: the name lines,
+// then the type caption on the label's blank last line.
+function entityLines(ele) {
+  const label = wrappedLines(ele.data('label'), ENTITY_BOX, 1);
+  const typeCentre = label.labelBottom - ENTITY_BOX.fontSize / 2;
+  const typeWidth = captionWidth(typeLabel(ele.data('entityType')), TYPE_CAPTION);
+  label.lines.push({ width: typeWidth, top: typeCentre - CAPTION_LINE / 2, bottom: typeCentre + CAPTION_LINE / 2 });
 
-  return { lines: [{ width: width, top: -PROXY_BOX.fontSize / 2, bottom: PROXY_BOX.fontSize / 2 }], halfHeight: PROXY_BOX.fontSize / 2 + PROXY_BOX.padding };
+  return { lines: label.lines, halfHeight: label.labelBottom + ENTITY_BOX.padding };
+}
+
+// The text lines of a proxy and half the proxy's height.
+function proxyLines(ele) {
+  const label = wrappedLines(ele.data('label'), PROXY_BOX, 0);
+
+  return { lines: label.lines, halfHeight: label.labelBottom + PROXY_BOX.padding };
 }
 
 // The model-space box of an entity or proxy in its shape: the width of its
@@ -607,6 +617,8 @@ function style() {
         'border-width': PROXY_BOX.border,
         'border-style': 'dashed',
         label: (ele) => ele.data('label'),
+        'text-wrap': 'wrap',
+        'text-max-width': PROXY_BOX.textMaxWidth,
         'text-valign': 'center',
         'text-halign': 'center',
         'text-margin-x': (ele) => nodeBox(ele).offset.x,
@@ -614,6 +626,7 @@ function style() {
         'font-family': LABEL_FONT_FAMILY,
         'font-size': PROXY_BOX.fontSize,
         'font-style': PROXY_BOX.fontStyle,
+        'line-height': PROXY_BOX.lineHeight,
         color: tc.muted,
         width: (ele) => nodeBox(ele).width,
         height: 'label',

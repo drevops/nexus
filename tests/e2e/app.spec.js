@@ -1932,6 +1932,34 @@ test('relabels the proxies of an entity relabelled in edit mode', async ({ page 
   expect([...new Set(labels)]).toEqual(['Picture']);
 });
 
+test('wraps the long name of a proxy over several lines inside its shape', async ({ page }) => {
+  await editExample(page);
+
+  await tapNode(page, 'taxonomy_term.topics');
+  await slFill(page, '#inspector sl-input[data-label]', 'Conference session topics, tracks and the keywords speakers pick');
+
+  // A proxy wraps at 130 pixels of text, and 3 lines of 10 pixel text with a
+  // 1.25 line height stand 35 pixels tall.
+  const proxies = () =>
+    page.evaluate(() =>
+      window.__nexus.cy.nodes('[group="proxy"][target="taxonomy_term.topics"]').map((proxy) => ({
+        wrap: proxy.style('text-wrap'),
+        width: proxy.width(),
+        height: proxy.height(),
+        corners: proxy.style('shape-polygon-points').split(' ').length / 2,
+      })),
+    );
+
+  await expect.poll(async () => (await proxies()).length && (await proxies())[0].height).toBeGreaterThanOrEqual(35);
+  const drawn = await proxies();
+
+  for (const proxy of drawn) {
+    expect(proxy.wrap).toBe('wrap');
+    expect(proxy.width).toBeLessThan(160);
+    expect(proxy.corners).toBe(5);
+  }
+});
+
 test('relabels the proxy edges of a field whose cardinality changes in edit mode', async ({ page }) => {
   await selectTrackField(page);
   await slSelect(page, '#inspector sl-select[data-cardinality]', '3');
