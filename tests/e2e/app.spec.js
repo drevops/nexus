@@ -4050,6 +4050,42 @@ function zoomLevel(page) {
   return page.evaluate(() => window.__nexus.cy.zoom());
 }
 
+// Records each key pressed with a modifier that the page keeps from the
+// browser. The listener runs last, after the shortcut listener.
+function recordKeptKeys(page) {
+  return page.evaluate(() => {
+    window.keptKeys = [];
+    window.addEventListener('keydown', (evt) => {
+      if ((evt.ctrlKey || evt.metaKey) && evt.defaultPrevented && !['Control', 'Meta', 'Shift'].includes(evt.key)) {
+        window.keptKeys.push(evt.key);
+      }
+    });
+  });
+}
+
+function keptKeys(page) {
+  return page.evaluate(() => window.keptKeys);
+}
+
+// The ids of the visible nodes whose boxes overlap the box of a node.
+function overlapsOf(page, id) {
+  return page.evaluate((nodeId) => {
+    const cy = window.__nexus.cy;
+    const node = cy.getElementById(nodeId);
+    const box = node.boundingBox();
+    const overlapping = cy
+      .nodes(':visible')
+      .not(node)
+      .filter((other) => {
+        const o = other.boundingBox();
+
+        return o.x1 < box.x2 && box.x1 < o.x2 && o.y1 < box.y2 && box.y1 < o.y2;
+      });
+
+    return overlapping.map((other) => other.id());
+  }, id);
+}
+
 // Expects the inspector to offer a new entity of the type with this label.
 function offersNewEntity(label) {
   return (page) => expect(page.locator('#inspector .insp__title')).toHaveText('New ' + label);
@@ -4349,6 +4385,79 @@ test('zooms in with + and =, out with -, back to 100% with 0 and to fit with Shi
   await page.keyboard.press('0');
   await page.click('#fit');
   expect(await zoomLevel(page)).toBeCloseTo(fitted, 5);
+});
+
+for (const [name, modifier] of dataProviderShortcutModifiers()) {
+  test(`zooms the diagram instead of the page with ${name} and =, - and 0`, async ({ page }) => {
+    await loadExample(page);
+    await page.keyboard.press('0');
+    await recordKeptKeys(page);
+
+    await page.keyboard.press(modifier + '+=');
+    expect(await zoomLevel(page)).toBeCloseTo(1.25, 5);
+    await page.keyboard.press(modifier + '++');
+    expect(await zoomLevel(page)).toBeCloseTo(1.5625, 5);
+    await page.keyboard.press(modifier + '+-');
+    expect(await zoomLevel(page)).toBeCloseTo(1.25, 5);
+    await page.keyboard.press(modifier + '+0');
+    expect(await zoomLevel(page)).toBeCloseTo(1, 5);
+
+    expect(await keptKeys(page)).toEqual(['=', '+', '-', '0']);
+  });
+}
+
+test('keeps the browser zoom keys from the page on the landing screen and under a dialog', async ({ page }) => {
+  await recordKeptKeys(page);
+  await page.keyboard.press('Control+=');
+  await page.keyboard.press('Control+-');
+
+  await page.click('#new-btn');
+  await page.click('#about-toggle');
+  await expect(page.locator('#about-dialog')).toHaveAttribute('open', '');
+  await page.keyboard.press('Control+0');
+  await page.keyboard.press('Control+_');
+
+  expect(await keptKeys(page)).toEqual(['=', '-', '0', '_']);
+});
+
+test('keeps a pinch outside the canvas from zooming the page and zooms the diagram with a pinch on it', async ({ page }) => {
+  await loadExample(page);
+
+  const kept = await page.evaluate(() =>
+    ['.toolbar', '#statusbar'].map((selector) => {
+      const target = document.querySelector(selector);
+      const wheel = new WheelEvent('wheel', { deltaY: -100, ctrlKey: true, bubbles: true, cancelable: true });
+      const gesture = new Event('gesturechange', { bubbles: true, cancelable: true });
+
+      return [!target.dispatchEvent(wheel), !target.dispatchEvent(gesture)];
+    }),
+  );
+  expect(kept).toEqual([
+    [true, true],
+    [true, true],
+  ]);
+
+  await page.keyboard.press('0');
+  const box = await page.locator('#cy').boundingBox();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.keyboard.down('Control');
+  await page.mouse.wheel(0, -200);
+  await page.keyboard.up('Control');
+
+  await expect.poll(() => zoomLevel(page)).toBeGreaterThan(1);
+});
+
+test('places an entity created from a palette button clear of the entity at the centre of the view', async ({ page }) => {
+  await loadExample(page);
+  await page.click('#mode-build');
+  await page.evaluate(() => window.__nexus.cy.center(window.__nexus.cy.getElementById('node.event')));
+
+  await page.click('[data-add-entity="media"]');
+  await slFill(page, '[data-new-bundle]', 'photo');
+  await page.click('[data-create-entity]');
+
+  expect(await overlapsOf(page, 'media.photo')).toEqual([]);
+  expect(await page.evaluate(() => window.__nexus.cy.getElementById('media.photo').visible())).toBe(true);
 });
 
 for (const [name, modifier] of dataProviderShortcutModifiers()) {

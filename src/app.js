@@ -542,6 +542,24 @@ function initToolbarSeparators() {
   [row, ...sections].forEach((el) => observer.observe(el));
 }
 
+// A pinch reaches the page as a wheel event with ctrlKey set, or as gesture
+// events in Safari, and zooms the page wherever Cytoscape does not take it.
+function initPageZoomGuard() {
+  document.addEventListener(
+    'wheel',
+    (evt) => {
+      if (evt.ctrlKey) {
+        evt.preventDefault();
+      }
+    },
+    { passive: false },
+  );
+
+  for (const type of ['gesturestart', 'gesturechange']) {
+    document.addEventListener(type, (evt) => evt.preventDefault());
+  }
+}
+
 function initAbout() {
   const dialog = $('about-dialog');
   $('about-toggle').addEventListener('click', () => dialog.show());
@@ -565,5 +583,6 @@ initIcons();
 initTheme();
 initStatusbar();
 initToolbarSeparators();
+initPageZoomGuard();
 initAbout();
 initVersion();

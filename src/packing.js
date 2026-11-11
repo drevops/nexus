@@ -13,6 +13,8 @@
  *
  * tidyColumns() takes the columns from where the boxes already are, so the
  * boxes keep their place relative to each other.
+ *
+ * clearSpot() finds the nearest place where a box overlaps no other box.
  */
 
 // Fills columns top to bottom and starts a new one when the next box would
@@ -154,4 +156,35 @@ export function tidyColumns(boxes, gap) {
   const positions = arrangement.positions.map((position) => ({ x: left + position.x, y: top + position.y }));
 
   return { positions: positions, w: arrangement.w, h: arrangement.h };
+}
+
+/**
+ * Finds the shortest shift that moves a box clear of other boxes.
+ *
+ * `box`, each of `obstacles` and `frame` are { x1, y1, x2, y2 } boxes. The
+ * shifts tried are multiples of `gap` that keep the box inside the frame,
+ * and a clear box keeps `gap` from every obstacle.
+ *
+ * Returns the shift as { x, y }, or { x: 0, y: 0 } when no shift inside the
+ * frame clears the box.
+ */
+export function clearSpot(box, obstacles, frame, gap) {
+  const clearAt = (shift) =>
+    obstacles.every(
+      (other) =>
+        box.x1 + shift.x >= other.x2 + gap || other.x1 >= box.x2 + shift.x + gap || box.y1 + shift.y >= other.y2 + gap || other.y1 >= box.y2 + shift.y + gap,
+    );
+  // Math.ceil() rounds a fraction above -1 to -0.
+  const firstStep = (distance) => Math.ceil(distance / gap) || 0;
+  const shifts = [];
+
+  for (let i = firstStep(frame.x1 - box.x1); box.x2 + i * gap <= frame.x2; i++) {
+    for (let j = firstStep(frame.y1 - box.y1); box.y2 + j * gap <= frame.y2; j++) {
+      shifts.push({ x: i * gap, y: j * gap });
+    }
+  }
+
+  shifts.sort((a, b) => Math.hypot(a.x, a.y) - Math.hypot(b.x, b.y));
+
+  return shifts.find(clearAt) || { x: 0, y: 0 };
 }

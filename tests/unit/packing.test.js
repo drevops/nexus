@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { packColumns, tidyColumns } from '../../src/packing.js';
+import { clearSpot, packColumns, tidyColumns } from '../../src/packing.js';
 
 const NO_GAP = { x: 0, y: 0 };
 
@@ -209,3 +209,26 @@ function dataProviderTidyColumns() {
     ],
   ];
 }
+
+test('finds the shortest shift that clears a box of other boxes', async (t) => {
+  for (const [name, obstacles, expected] of dataProviderClearSpot()) {
+    await t.test(name, () => {
+      assert.deepEqual(clearSpot({ x1: 40, y1: 40, x2: 60, y2: 60 }, obstacles, { x1: 0, y1: 0, x2: 100, y2: 100 }, 10), expected);
+    });
+  }
+});
+
+function dataProviderClearSpot() {
+  return [
+    ['no other boxes', [], { x: 0, y: 0 }],
+    ['a box a gap away', [{ x1: 70, y1: 40, x2: 90, y2: 60 }], { x: 0, y: 0 }],
+    ['a box closer than the gap', [{ x1: 65, y1: 40, x2: 85, y2: 60 }], { x: -10, y: 0 }],
+    ['a box covering most of the frame', [{ x1: 35, y1: 0, x2: 100, y2: 100 }], { x: -40, y: 0 }],
+    ['a bar across the frame, cleared upwards on a tie', [{ x1: 0, y1: 45, x2: 100, y2: 55 }], { x: 0, y: -30 }],
+    ['boxes leaving no room in the frame', [{ x1: 0, y1: 0, x2: 100, y2: 100 }], { x: 0, y: 0 }],
+  ];
+}
+
+test('leaves a box larger than the frame where it is', () => {
+  assert.deepEqual(clearSpot({ x1: 0, y1: 0, x2: 200, y2: 20 }, [{ x1: 0, y1: 0, x2: 10, y2: 10 }], { x1: 0, y1: 0, x2: 100, y2: 100 }, 10), { x: 0, y: 0 });
+});

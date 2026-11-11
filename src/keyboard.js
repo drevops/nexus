@@ -5,6 +5,9 @@
  * syntax of `src/shortcuts.js`. The shortcut clicks the control, or focuses
  * it when it is a text field, so it runs the control's own code.
  *
+ * The browser's zoom keys never zoom the page. The zoom controls take them
+ * as shortcuts while a diagram is open.
+ *
  * F1 toggles the shortcut view, which labels every control on screen with
  * its shortcut. Escape, a pointer press, a resize, a scroll, the window
  * losing focus or a shortcut closes it.
@@ -16,6 +19,10 @@ import { $ } from './dom.js';
 const MAC = /Mac|iPhone|iPad/.test(navigator.platform);
 
 const VIEW_SHORTCUT = 'F1';
+
+// Browser zoom rescales the page under the diagram, so the page keeps these
+// keys even where no zoom control takes them.
+const BROWSER_ZOOM = 'Mod+Plus Mod+= Mod+- Mod+_ Mod+0';
 
 // Input types that hold no text, so a key press on 1 runs the shortcuts.
 const TEXTLESS_INPUTS = ['button', 'checkbox', 'color', 'file', 'image', 'radio', 'range', 'reset', 'submit'];
@@ -166,6 +173,10 @@ function hideView() {
 function onKeydown(evt) {
   if (evt.isComposing || evt.defaultPrevented) {
     return;
+  }
+
+  if (matchShortcut(BROWSER_ZOOM, evt)) {
+    evt.preventDefault();
   }
 
   if (matchShortcut(VIEW_SHORTCUT, evt)) {
