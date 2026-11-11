@@ -22,6 +22,7 @@ import { icon } from './icons.js';
 import { cardinalityLabel, identifierSegments, fitFontSize } from './model.js';
 import { InspectorBody } from './inspector.js';
 import { goToVersion, historyState } from './undo.js';
+import { MODES } from './diagram-defaults.js';
 import {
   getState,
   subscribe,
@@ -793,6 +794,58 @@ function symbolSelect(controller, type, value, color, onChange) {
   </sl-select>`;
 }
 
+const DEFAULT_SWITCHES = [
+  ['fields', 'Fields', 'Show the fields of each entity'],
+  ['proxies', 'Proxies', 'Draw each reference as a faded copy of its target beside the field'],
+  ['machineNames', 'Machine names', 'Show each machine name under its node'],
+];
+
+// The settings a new diagram opens with, 1 per line with its label on the
+// left.
+function DiagramDefaults({ controller }) {
+  const defaults = controller.diagramDefaults();
+
+  return html`<h3 class="settings-section__title">New diagrams</h3>
+    <div class="diagram-defaults">
+      <sl-select
+        class="default-row"
+        size="small"
+        hoist
+        label="Layout"
+        data-default="layout"
+        title="The layout a new diagram opens with"
+        value=${defaults.layout}
+        onsl-change=${(e) => controller.setDiagramDefault('layout', e.target.value)}
+      >
+        ${controller.layoutOptions().map((o) => html`<sl-option value=${o.value}>${o.name}</sl-option>`)}
+      </sl-select>
+      <sl-select
+        class="default-row"
+        size="small"
+        hoist
+        label="Mode"
+        data-default="mode"
+        title="The mode a new diagram opens in"
+        value=${defaults.mode}
+        onsl-change=${(e) => controller.setDiagramDefault('mode', e.target.value)}
+      >
+        ${MODES.map((mode) => html`<sl-option value=${mode.id}>${mode.label}</sl-option>`)}
+      </sl-select>
+      ${DEFAULT_SWITCHES.map(
+        ([key, label, title]) =>
+          html`<sl-switch
+            class="default-row default-row--switch"
+            size="small"
+            data-default=${key}
+            title=${title + ' in a new diagram'}
+            checked=${defaults[key]}
+            onsl-change=${(e) => controller.setDiagramDefault(key, e.target.checked)}
+            >${label}</sl-switch
+          >`,
+      )}
+    </div>`;
+}
+
 // Below this width, in rem, each entity type's label leaves too little room
 // beside its controls.
 const NARROW_SETTINGS_REM = 17;
@@ -907,7 +960,13 @@ function SettingsBody({ controller }) {
         >${rawIcon('plus', 14)}</sl-button
       >
     </div>
-    <sl-button id="settings-reset" class="settings-reset" size="small" title="Restore the default colours and symbols" onClick=${() => controller.resetColors()}
+    <${DiagramDefaults} controller=${controller} />
+    <sl-button
+      id="settings-reset"
+      class="settings-reset"
+      size="small"
+      title="Restore the default colours, symbols and new diagram settings"
+      onClick=${() => controller.resetSettings()}
       >${rawIcon('rotate-ccw')}Reset to defaults</sl-button
     >
     <p class="panel__note">Saved to this browser and reused across diagrams.</p>

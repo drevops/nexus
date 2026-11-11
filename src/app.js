@@ -87,7 +87,7 @@ function showTitle(title) {
 // `origin` labels the first version in the diagram's history.
 function showDiagram(modelData, options, origin) {
   const controller = render(modelData, options);
-  attachBuilder(controller.cy);
+  attachBuilder(controller.cy, controller.diagramDefaults().mode === 'edit');
   showTitle((modelData.meta && modelData.meta.title) || DEFAULT_TITLE);
   setLandingOpen(false);
   resetHistory(origin);

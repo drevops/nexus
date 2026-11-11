@@ -214,8 +214,11 @@ export function initBuilder() {
   subscribe(paintPaletteSymbols);
 }
 
-export function attachBuilder(instance) {
+// Attaches the builder to a newly drawn diagram, which opens in Edit mode
+// when `build` is true and in View mode otherwise.
+export function attachBuilder(instance, build = false) {
   cy = instance;
+  buildMode = build;
   connectSource = null;
   taps = [null, null];
   cy.on('tap', (evt) => {

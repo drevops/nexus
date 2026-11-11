@@ -5,20 +5,21 @@
  * mapping each element to the diagram's visual language. The model has the
  * shape that ContentModel.toArray() returns.
  *
- * Each render shows fields, proxies and machine names, and the toolbar
- * toggles each of them. Hiding fields collapses the diagram to an
- * entity-only overview.
+ * Each render starts from the new diagram settings (see
+ * src/diagram-defaults.js): the layout and whether fields, proxies and
+ * machine names show. The status bar switches toggle the last 3 for the open
+ * diagram. Hiding fields collapses the diagram to an entity-only overview.
  *
  * The proxies and the overview's collapsed edges are derived from the ref
  * edges (see src/references.js). The controller's syncReferences() brings
  * them in line with a changed graph.
  *
- * The toolbar's layout menu picks the layout that each layout run uses (see
- * LAYOUTS), and localStorage keeps the pick for later diagrams.
+ * The toolbar's layout menu picks the layout that each layout run of the
+ * open diagram uses (see LAYOUTS).
  *
- * The controller that render() returns sets entity type colours and symbols
- * and adds or removes custom entity types, saving each change to
- * localStorage.
+ * The controller that render() returns sets entity type colours and symbols,
+ * adds or removes custom entity types and sets the new diagram settings,
+ * saving each change to localStorage.
  *
  * Safe to call repeatedly - each call tears down the previous graph.
  */
@@ -31,6 +32,7 @@ import { REFERENCE_ELEMENTS, syncReferenceElements } from './references.js';
 import { fitWidth, wrapLabel } from './label-fit.js';
 import { checkpoint, untracked } from './undo.js';
 import { describeNode } from './history.js';
+import { DIAGRAM_DEFAULTS, readDiagramDefaults } from './diagram-defaults.js';
 import { packColumns, tidyColumns } from './packing.js';
 import { $ } from './dom.js';
 
@@ -72,8 +74,6 @@ const LAYOUTS = {
   columns: { label: 'Columns', name: 'Columns', title: 'Stack the entities in columns that fill the screen', rankDir: 'LR', packed: true },
 };
 
-const DEFAULT_LAYOUT = 'columns';
-
 // Cytoscape's default label font, pinned so canvas measurement matches the
 // labels Cytoscape draws.
 const LABEL_FONT_FAMILY = 'Helvetica Neue, Helvetica, sans-serif';
@@ -104,7 +104,7 @@ const captionStyles = {};
 
 let fieldsMode = false;
 let proxyMode = false;
-let layoutName = Object.hasOwn(LAYOUTS, settings.layout) ? settings.layout : DEFAULT_LAYOUT;
+let layoutName = DIAGRAM_DEFAULTS.layout;
 let showMachineNames = false;
 let typeVisible = {};
 
@@ -125,6 +125,17 @@ function saveSettings() {
   } catch {
     // Storage may be unavailable (e.g. private mode); fall back to in-memory.
   }
+}
+
+function diagramDefaults() {
+  return readDiagramDefaults(settings.newDiagrams, Object.keys(LAYOUTS));
+}
+
+// Sets 1 of the settings the next diagram opens with.
+function setDiagramDefault(key, value) {
+  settings.newDiagrams = { ...diagramDefaults(), [key]: value };
+  saveSettings();
+  bump();
 }
 
 function initColors() {
@@ -672,10 +683,15 @@ function tooltipHtml(node) {
 }
 
 function buildController(model, options = {}) {
+  const defaults = diagramDefaults();
+
   typeVisible = {};
-  fieldsMode = true;
-  proxyMode = true;
-  showMachineNames = true;
+  layoutName = defaults.layout;
+  // Edit mode turns Fields on, so the diagram starts with them rather than
+  // re-running the layout when the builder enters the mode.
+  fieldsMode = defaults.fields || defaults.mode === 'edit';
+  proxyMode = defaults.proxies;
+  showMachineNames = defaults.machineNames;
   initColors();
   if (Array.isArray(options.customTypes) && options.customTypes.length) {
     const known = new Set(customTypes().map((t) => t.type));
@@ -927,8 +943,6 @@ function buildController(model, options = {}) {
   }
 
   function applyLayout(layout) {
-    fieldsMode = true;
-    $('fields-toggle').checked = true;
     refresh(false);
     cy.nodes().forEach((node) => {
       if (layout[node.id()]) {
@@ -1267,9 +1281,12 @@ function buildController(model, options = {}) {
     bump();
   }
 
-  function resetColors() {
+  // The new diagram settings apply to the next diagram, so only the colours
+  // and symbols are redrawn.
+  function resetSettings() {
     delete settings.colors;
     delete settings.symbols;
+    delete settings.newDiagrams;
     saveSettings();
     initColors();
     // applyColor sets inline overrides on the nodes; clear them so the
@@ -1379,9 +1396,9 @@ function buildController(model, options = {}) {
     removeNoteBadge(evt.target);
   });
 
-  $('fields-toggle').checked = true;
-  $('proxy-toggle').checked = true;
-  $('machine-names').checked = true;
+  $('fields-toggle').checked = fieldsMode;
+  $('proxy-toggle').checked = proxyMode;
+  $('machine-names').checked = showMachineNames;
   $('search').value = '';
 
   return {
@@ -1402,7 +1419,10 @@ function buildController(model, options = {}) {
     searchHighlight,
     applyColor,
     applySymbol,
-    resetColors,
+    resetSettings,
+    diagramDefaults,
+    setDiagramDefault,
+    layoutOptions: () => Object.entries(LAYOUTS).map(([value, layout]) => ({ value: value, name: layout.name })),
     addCustomType,
     removeCustomType,
     applyTheme: () => {
@@ -1522,8 +1542,6 @@ function wire() {
   // step, as for the display toggles below.
   $('layout-menu').addEventListener('sl-select', (evt) => {
     layoutName = evt.detail.item.value;
-    settings.layout = layoutName;
-    saveSettings();
     showLayout();
     controller.cy.style().update();
     untracked(() => controller.runLayout());
