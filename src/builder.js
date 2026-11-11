@@ -281,6 +281,7 @@ export function attachBuilder(instance) {
   });
   cy.on('captions', positionHandles);
   setBuilder({
+    select: selectNode,
     createEntity,
     createField,
     createFields,

@@ -19,6 +19,7 @@ import { icon } from './icons.js';
 import { cardinalityLabel, kindForCardinality, FIELD_TYPES, KIND_SYSTEM, MAX_CARDINALITY, REFERENCE_FIELD_TYPES } from './model.js';
 import { ANNOTATION_KINDS } from './annotations.js';
 import { formatFieldLine, parseFieldLines } from './bulk-fields.js';
+import { BULK_FIELDS_LABEL, inspectorTrail, NEW_FIELD_LABEL } from './inspector-trail.js';
 import { describeNode } from './history.js';
 import { checkpoint } from './undo.js';
 import { getController, getBuilder, openInspector, bump } from './store.js';
@@ -437,7 +438,7 @@ export function NewFieldForm({ entityId, side, selection }) {
   const entityOptions = entities.map((e) => html`<sl-option value=${e.id()}>${e.data('label')}</sl-option>`);
 
   return html` <div class="insp" data-new="field" data-side=${side || ''}>
-    <p class="insp__title">New field</p>
+    <p class="insp__title">${NEW_FIELD_LABEL}</p>
     ${!entityId ? html`<${Row} label="On entity"><sl-select size="small" data-new-entity value=${form.entity} onsl-change=${(e) => setForm((p) => ({ ...p, entity: e.target.value }))}>${entityOptions}</sl-select><//>` : null}
     <${Row} label="Machine name">
       <input
@@ -559,7 +560,7 @@ export function BulkFieldsForm({ entityId, selection }) {
     );
   }
 
-  let action = 'Add fields';
+  let action = BULK_FIELDS_LABEL;
 
   if (errorCount) {
     action = 'Fix ' + countOf(errorCount, 'line');
@@ -662,10 +663,7 @@ export function NewAnnotationForm() {
 
 // The forms read the graph when they mount, so they are keyed by the store's
 // revision and remount after the history changes the graph.
-export function InspectorBody({ selected, revision }) {
-  if (!selected) {
-    return html`<p class="insp__empty">Select a node in build mode to inspect it.</p>`;
-  }
+function InspectorForm({ selected, revision }) {
   if (selected.kind === 'entity') {
     return html`<${EntityForm} key=${selected.id + '@' + revision} id=${selected.id} />`;
   }
@@ -685,4 +683,45 @@ export function InspectorBody({ selected, revision }) {
     return html`<${BulkFieldsForm} key=${'bulk:' + selected.entityId + '@' + revision} entityId=${selected.entityId} selection=${selected} />`;
   }
   return html`<${NewFieldForm} key=${'new:' + selected.entityId + '@' + revision} entityId=${selected.entityId} side=${selected.side} selection=${selected} />`;
+}
+
+// A node on the canvas as inspectorTrail() reads it.
+function trailNode(id) {
+  const node = cy().getElementById(id);
+
+  if (node.empty()) {
+    return null;
+  }
+
+  return { label: node.data('label') || node.data('name') || node.data('bundle'), entity: node.data('entity') };
+}
+
+function Breadcrumb({ selected }) {
+  const trail = inspectorTrail(selected, trailNode);
+
+  if (!trail.length) {
+    return null;
+  }
+
+  return html`<nav class="insp__crumbs" aria-label="Inspector breadcrumb">
+    <ol>
+      ${trail.map((crumb) =>
+        crumb.id
+          ? html`<li>
+              <button type="button" class="insp__crumb" data-crumb=${crumb.id} title=${'Back to ' + crumb.label} onClick=${() => getBuilder().select(crumb.id)}>
+                ${crumb.label}
+              </button>
+            </li>`
+          : html`<li aria-current="page">${crumb.label}</li>`,
+      )}
+    </ol>
+  </nav>`;
+}
+
+export function InspectorBody({ selected, revision }) {
+  if (!selected) {
+    return html`<p class="insp__empty">Select a node in build mode to inspect it.</p>`;
+  }
+
+  return html`<${Breadcrumb} selected=${selected} /><${InspectorForm} selected=${selected} revision=${revision} />`;
 }
