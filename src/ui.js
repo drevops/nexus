@@ -684,14 +684,70 @@ function TableBody({ controller, filter }) {
     </div>`;
 }
 
-function symbolSelect(controller, type, value, onChange) {
-  return html`<sl-select class="type-row__symbol" size="small" hoist data-symbol=${type || ''} value=${value} onsl-change=${onChange}>
-    ${controller.symbolOptions().map((o) => html`<sl-option value=${o.key}><span slot="prefix" class="type-row__preview" dangerouslySetInnerHTML=${{ __html: controller.symbolSvg(o.key, '#c7d2df', 20) }}></span>${o.label}</sl-option>`)}
+// The list is wider than its select, so it ends under the select's right
+// edge when starting under the left edge would cross the window's edge.
+function alignSymbolList(evt) {
+  const select = evt.currentTarget;
+
+  if (evt.target !== select) {
+    return;
+  }
+
+  const list = select.shadowRoot.querySelector('[part~="listbox"]');
+  const width = parseFloat(getComputedStyle(list).width);
+
+  select.classList.toggle('is-list-end', select.getBoundingClientRect().left + width > document.documentElement.clientWidth);
+}
+
+// The select draws the picked symbol in place of its name, so it takes no
+// more room than the color picker beside it.
+function symbolSelect(controller, type, value, color, onChange) {
+  const options = controller.symbolOptions();
+  const picked = options.find((o) => o.key === value);
+
+  return html`<sl-select
+    class="type-row__symbol"
+    size="small"
+    hoist
+    data-symbol=${type || ''}
+    value=${value}
+    title=${'Symbol: ' + (picked ? picked.label : value)}
+    onsl-show=${alignSymbolList}
+    onsl-change=${onChange}
+  >
+    <span slot="prefix" class="type-row__preview" dangerouslySetInnerHTML=${{ __html: controller.symbolSvg(value, color, 20) }}></span>
+    ${options.map((o) => html`<sl-option value=${o.key}><span slot="prefix" class="type-row__preview" dangerouslySetInnerHTML=${{ __html: controller.symbolSvg(o.key, '#c7d2df', 20) }}></span>${o.label}</sl-option>`)}
   </sl-select>`;
 }
 
+// Below this width, in rem, each entity type's label leaves too little room
+// beside its controls.
+const NARROW_SETTINGS_REM = 17;
+
 function SettingsBody({ controller }) {
   const [nt, setNt] = useState({ name: '', label: '', color: '#cfe3f7', symbol: 'rounded' });
+  const [narrow, setNarrow] = useState(false);
+  const bodyRef = useRef(null);
+
+  // A container query can't switch the layout: an inline-size container is
+  // the containing block of the hoisted popups inside it. The class changes
+  // the body's height, so it waits a frame to avoid a ResizeObserver loop.
+  useEffect(() => {
+    let frame = 0;
+    const observer = new ResizeObserver(([entry]) => {
+      const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => setNarrow(entry.contentRect.width < NARROW_SETTINGS_REM * rem));
+    });
+
+    observer.observe(bodyRef.current);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, []);
 
   function add() {
     if (controller.addCustomType(nt.name, nt.label, nt.color, nt.symbol)) {
@@ -699,52 +755,68 @@ function SettingsBody({ controller }) {
     }
   }
 
-  return html` <div class="settings-body">
+  return html` <div class=${'settings-body' + (narrow ? ' is-narrow' : '')} ref=${bodyRef}>
     <h3 class="settings-section__title">Entity types</h3>
     <div id="type-settings" class="type-settings">
       ${controller.allTypes().map(
         (t) =>
           html` <div class="type-row" data-type-row=${t}>
-            <span class="type-row__label">${controller.typeLabel(t)}</span>
-            <div class="type-row__controls">
-              <sl-color-picker
-                data-color=${t}
-                value=${controller.colorFor(t)}
-                format="hex"
-                size="small"
-                no-format-toggle
-                hoist
-                onsl-input=${(e) => controller.applyColor(t, e.target.value)}
-              ></sl-color-picker>
-              ${symbolSelect(controller, t, controller.symbolFor(t), (e) => controller.applySymbol(t, e.target.value))}
-              ${controller.isCustomType(t) ? html`<button class="type-row__remove" type="button" title="Remove this custom type" onClick=${() => controller.removeCustomType(t)}>${rawIcon('x', 14)}</button>` : null}
-            </div>
+            <span class="type-row__label" title=${controller.typeLabel(t)}>${controller.typeLabel(t)}</span>
+            <sl-color-picker
+              data-color=${t}
+              value=${controller.colorFor(t)}
+              format="hex"
+              size="small"
+              no-format-toggle
+              hoist
+              onsl-input=${(e) => controller.applyColor(t, e.target.value)}
+            ></sl-color-picker>
+            ${symbolSelect(controller, t, controller.symbolFor(t), controller.colorFor(t), (e) => controller.applySymbol(t, e.target.value))}
+            ${controller.isCustomType(t)
+              ? html`<sl-button
+                  class="type-row__action"
+                  size="small"
+                  data-remove-type=${t}
+                  title="Remove this custom type"
+                  aria-label=${'Remove ' + controller.typeLabel(t)}
+                  onClick=${() => controller.removeCustomType(t)}
+                  >${rawIcon('minus', 14)}</sl-button
+                >`
+              : null}
           </div>`,
       )}
     </div>
-    <div class="type-add">
+    <div class="type-row type-add">
       <div class="type-add__names">
         <input
           class="type-add__input"
           data-new-type
-          placeholder="machine_name"
+          placeholder="Name"
+          title="Machine name of the new type, such as event_ticket"
+          aria-label="Machine name of the new type"
           value=${nt.name}
           onInput=${(e) => setNt((p) => ({ ...p, name: e.target.value }))}
         />
-        <input class="type-add__input" placeholder="Label" value=${nt.label} onInput=${(e) => setNt((p) => ({ ...p, label: e.target.value }))} />
+        <input
+          class="type-add__input"
+          placeholder="Label"
+          aria-label="Label of the new type"
+          value=${nt.label}
+          onInput=${(e) => setNt((p) => ({ ...p, label: e.target.value }))}
+        />
       </div>
-      <div class="type-add__controls">
-        <sl-color-picker
-          value=${nt.color}
-          format="hex"
-          size="small"
-          no-format-toggle
-          hoist
-          onsl-input=${(e) => setNt((p) => ({ ...p, color: e.target.value }))}
-        ></sl-color-picker>
-        ${symbolSelect(controller, null, nt.symbol, (e) => setNt((p) => ({ ...p, symbol: e.target.value })))}
-        <sl-button size="small" variant="primary" data-add-type title="Add a custom entity type" onClick=${add}>${rawIcon('plus')}Add</sl-button>
-      </div>
+      <sl-color-picker
+        value=${nt.color}
+        format="hex"
+        size="small"
+        no-format-toggle
+        hoist
+        onsl-input=${(e) => setNt((p) => ({ ...p, color: e.target.value }))}
+      ></sl-color-picker>
+      ${symbolSelect(controller, null, nt.symbol, nt.color, (e) => setNt((p) => ({ ...p, symbol: e.target.value })))}
+      <sl-button class="type-row__action" size="small" variant="primary" data-add-type title="Add a custom entity type" aria-label="Add a custom entity type" onClick=${add}
+        >${rawIcon('plus', 14)}</sl-button
+      >
     </div>
     <sl-button id="settings-reset" class="settings-reset" size="small" title="Restore the default colours and symbols" onClick=${() => controller.resetColors()}
       >${rawIcon('rotate-ccw')}Reset to defaults</sl-button
