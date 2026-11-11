@@ -26,7 +26,7 @@ Nexus is a static web app. Drop a Drupal **exported configuration folder** onto 
 
 To try changes before they're released, open the [development version](https://drevops-nexus.netlify.app). It runs the latest code merged into `main`.
 
-![A conference site's content model drawn in Nexus as an overview of its entity types, the references between them and its annotations](screenshot.png)
+![Nexus in Edit mode on a conference site's content model, with the Inspector open on the Session content type and its fields and references drawn beside it](screenshot.png)
 
 ## Features
 
