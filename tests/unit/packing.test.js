@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { clearSpot, packColumns, tidyColumns } from '../../src/packing.js';
+import { clearSpot, keepOrder, packColumns, tidyColumns } from '../../src/packing.js';
 
 const NO_GAP = { x: 0, y: 0 };
 
@@ -206,6 +206,70 @@ function dataProviderTidyColumns() {
         w: 110,
         h: 50,
       },
+    ],
+  ];
+}
+
+test('puts boxes back in the order of their keys', async (t) => {
+  for (const [name, boxes, expected] of dataProviderKeepOrder()) {
+    await t.test(name, () => {
+      assert.deepEqual(keepOrder(boxes, 10), expected);
+    });
+  }
+});
+
+function dataProviderKeepOrder() {
+  return [
+    ['no boxes', [], []],
+    [
+      'boxes already in key order',
+      [
+        { start: 0, end: 20, key: 5 },
+        { start: 30, end: 50, key: 9 },
+      ],
+      [0, 0],
+    ],
+    [
+      'overlapping boxes already in key order',
+      [
+        { start: 0, end: 40, key: 1 },
+        { start: 30, end: 60, key: 2 },
+      ],
+      [0, 0],
+    ],
+    [
+      'swapped boxes of the same size',
+      [
+        { start: 0, end: 20, key: 2 },
+        { start: 30, end: 50, key: 1 },
+      ],
+      [30, -30],
+    ],
+    [
+      'boxes of different sizes, ending where the last slot ended',
+      [
+        { start: 0, end: 10, key: 3 },
+        { start: 20, end: 50, key: 1 },
+        { start: 60, end: 70, key: 2 },
+      ],
+      [60, -20, -20],
+    ],
+    [
+      'overlapping boxes, swapped and kept the gap apart',
+      [
+        { start: 0, end: 40, key: 2 },
+        { start: 30, end: 60, key: 1 },
+      ],
+      [40, -30],
+    ],
+    [
+      'boxes with the same key, kept in the layout order',
+      [
+        { start: 0, end: 20, key: 1 },
+        { start: 30, end: 50, key: 1 },
+        { start: 60, end: 80, key: 0 },
+      ],
+      [30, 30, -60],
     ],
   ];
 }

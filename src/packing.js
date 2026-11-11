@@ -14,6 +14,8 @@
  * tidyColumns() takes the columns from where the boxes already are, so the
  * boxes keep their place relative to each other.
  *
+ * keepOrder() puts a run of boxes along 1 axis back in a given order.
+ *
  * clearSpot() finds the nearest place where a box overlaps no other box.
  */
 
@@ -156,6 +158,43 @@ export function tidyColumns(boxes, gap) {
   const positions = arrangement.positions.map((position) => ({ x: left + position.x, y: top + position.y }));
 
   return { positions: positions, w: arrangement.w, h: arrangement.h };
+}
+
+/**
+ * Puts a run of boxes along 1 axis back in the order of their keys.
+ *
+ * `boxes` come in the order a layout gave them, each as { start, end, key }:
+ * `start` and `end` are where the layout put it on the axis, and `key` ranks
+ * it. The extents of neighbouring boxes may overlap. Boxes with the same key
+ * keep the layout's order, and boxes already in key order stay where they
+ * are.
+ *
+ * Otherwise the boxes follow each other from the first box's start, in key
+ * order. Each gap is the one the layout left after the box in that turn, but
+ * at least `gap`, so boxes whose extents overlapped can't collide once
+ * swapped.
+ *
+ * Returns the shift along the axis of each box, in input order.
+ */
+export function keepOrder(boxes, gap) {
+  const byKey = boxes.map((box, index) => index).sort((a, b) => boxes[a].key - boxes[b].key);
+  const shifts = boxes.map(() => 0);
+
+  if (byKey.every((index, turn) => index === turn)) {
+    return shifts;
+  }
+
+  let next = boxes[0].start;
+
+  byKey.forEach((index, turn) => {
+    const box = boxes[index];
+    const after = turn + 1 < boxes.length ? boxes[turn + 1].start - boxes[turn].end : 0;
+
+    shifts[index] = next - box.start;
+    next += box.end - box.start + Math.max(after, gap);
+  });
+
+  return shifts;
 }
 
 /**

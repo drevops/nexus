@@ -19,7 +19,7 @@ import { icon } from './icons.js';
 import { cardinalityLabel, kindForCardinality, FIELD_TYPES, KIND_SYSTEM, MAX_CARDINALITY, REFERENCE_FIELD_TYPES } from './model.js';
 import { ANNOTATION_KINDS } from './annotations.js';
 import { formatFieldLine, parseFieldLines } from './bulk-fields.js';
-import { BULK_FIELDS_LABEL, inspectorTrail, NEW_FIELD_LABEL } from './inspector-trail.js';
+import { BULK_FIELDS_LABEL, inspectorTrail, NEW_FIELD_LABEL, nodeLookup } from './inspector-trail.js';
 import { describeNode } from './history.js';
 import { checkpoint } from './undo.js';
 import { getController, getBuilder, openInspector, bump } from './store.js';
@@ -697,19 +697,8 @@ function InspectorForm({ selected, revision }) {
   return html`<${NewFieldForm} key=${'new:' + selected.entityId + '@' + revision} entityId=${selected.entityId} side=${selected.side} selection=${selected} />`;
 }
 
-// A node on the canvas as inspectorTrail() reads it.
-function trailNode(id) {
-  const node = cy().getElementById(id);
-
-  if (node.empty()) {
-    return null;
-  }
-
-  return { label: node.data('label') || node.data('name') || node.data('bundle'), entity: node.data('entity') };
-}
-
 function Breadcrumb({ selected }) {
-  const trail = inspectorTrail(selected, trailNode);
+  const trail = inspectorTrail(selected, nodeLookup(cy()));
 
   if (!trail.length) {
     return null;
