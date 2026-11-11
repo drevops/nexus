@@ -32,6 +32,8 @@ const CARDINALITY_OPTIONS = [
   ['-1', 'Unlimited'],
 ];
 const ANNOTATION_OPTIONS = ANNOTATION_KINDS.map((entry) => [entry.kind, entry.label]);
+const ANNOTATION_KIND_TITLE = 'The kind of annotation: ' + ANNOTATION_KINDS.map((entry) => entry.label).join(', ');
+const METHOD_TITLE = 'A method shown under the label, such as an HTTP verb';
 
 // The selection whose form last took the focus. A form the history remounts
 // keeps its selection, so the focus stays where it was.
@@ -89,6 +91,7 @@ function NoteField({ node }) {
       rows="3"
       resize="auto"
       placeholder="Add a note - shows as a badge on the canvas…"
+      title="A note on this node, shown as a badge on the canvas"
       value=${note}
       onsl-input=${(e) => {
         setNote(e.target.value);
@@ -164,6 +167,7 @@ export function EntityForm({ id }) {
       <sl-input
         size="small"
         data-label
+        title="The entity's label"
         value=${label}
         onsl-input=${(e) => {
           setLabel(e.target.value);
@@ -247,6 +251,7 @@ export function FieldForm({ id }) {
     <${Row} label="Label"
       ><sl-input
         size="small"
+        title="The field's label"
         value=${s.label}
         onsl-input=${(e) => {
           set('label', e.target.value);
@@ -266,6 +271,7 @@ export function FieldForm({ id }) {
     <${Row} label="Type"
       ><sl-select
         size="small"
+        title="The field type"
         value=${s.fieldType}
         onsl-change=${(e) => {
           set('fieldType', e.target.value);
@@ -275,13 +281,19 @@ export function FieldForm({ id }) {
       ><//
     >
     <${Row} label="Cardinality"
-      ><sl-select size="small" data-cardinality value=${String(s.cardinality)} onsl-change=${(e) => setCardinality(e.target.value)}
+      ><sl-select
+        size="small"
+        data-cardinality
+        title="How many values the field holds"
+        value=${String(s.cardinality)}
+        onsl-change=${(e) => setCardinality(e.target.value)}
         >${slOptions(CARDINALITY_OPTIONS)}</sl-select
       ><//
     >
     <${Row} label="Required"
       ><sl-switch
         size="small"
+        title="Whether the field must have a value"
         checked=${s.required}
         onsl-change=${(e) => {
           set('required', e.target.checked);
@@ -301,6 +313,7 @@ export function FieldForm({ id }) {
                     class="insp__reftag"
                     size="small"
                     removable
+                    title=${'This field references ' + (cy().getElementById(t).data('label') || t) + '. The cross removes the reference.'}
                     onsl-remove=${() => {
                       getBuilder().removeReference(id, t);
                       bump();
@@ -313,6 +326,7 @@ export function FieldForm({ id }) {
         <sl-select
           size="small"
           placeholder="Add target…"
+          title="Add an entity this field references"
           value=""
           onsl-change=${(e) => {
             if (e.target.value) {
@@ -347,6 +361,7 @@ export function AnnotationForm({ id }) {
     <${Row} label="Label"
       ><sl-input
         size="small"
+        title="The annotation's label"
         value=${s.label}
         onsl-input=${(e) => {
           set('label', e.target.value);
@@ -357,6 +372,7 @@ export function AnnotationForm({ id }) {
     <${Row} label="Kind"
       ><sl-select
         size="small"
+        title=${ANNOTATION_KIND_TITLE}
         value=${s.kind}
         onsl-change=${(e) => {
           set('kind', e.target.value);
@@ -368,6 +384,7 @@ export function AnnotationForm({ id }) {
     <${Row} label="Method"
       ><sl-input
         size="small"
+        title=${METHOD_TITLE}
         value=${s.method}
         placeholder="POST, GET…"
         onsl-input=${(e) => {
@@ -394,7 +411,11 @@ export function NewEntityForm({ entityType, selection }) {
   return html` <div class="insp" data-new="entity">
     <p class="insp__title">New ${controller.typeLabel(form.entityType) || 'entity'}</p>
     <${Row} label="Type"
-      ><sl-select size="small" value=${form.entityType} onsl-change=${(e) => setForm((p) => ({ ...p, entityType: e.target.value }))}
+      ><sl-select
+        size="small"
+        title="The entity type of the new bundle"
+        value=${form.entityType}
+        onsl-change=${(e) => setForm((p) => ({ ...p, entityType: e.target.value }))}
         >${slOptions(typeOptions)}</sl-select
       ><//
     >
@@ -403,6 +424,7 @@ export function NewEntityForm({ entityType, selection }) {
         size="small"
         data-new-bundle
         ref=${bundleRef}
+        title="Machine name of the new bundle, such as article"
         value=${form.bundle}
         placeholder="e.g. article"
         onsl-input=${(e) => setForm((p) => ({ ...p, bundle: e.target.value }))}
@@ -412,6 +434,7 @@ export function NewEntityForm({ entityType, selection }) {
       ><sl-input
         size="small"
         data-new-label
+        title="Label of the new bundle, such as Article"
         value=${form.label}
         placeholder="e.g. Article"
         onsl-input=${(e) => setForm((p) => ({ ...p, label: e.target.value }))}
@@ -451,13 +474,27 @@ export function NewFieldForm({ entityId, side, selection }) {
 
   return html` <div class="insp" data-new="field" data-side=${side || ''}>
     <p class="insp__title">${NEW_FIELD_LABEL}</p>
-    ${!entityId ? html`<${Row} label="On entity"><sl-select size="small" data-new-entity value=${form.entity} onsl-change=${(e) => setForm((p) => ({ ...p, entity: e.target.value }))}>${entityOptions}</sl-select><//>` : null}
+    ${
+      !entityId
+        ? html`<${Row} label="On entity"
+            ><sl-select
+              size="small"
+              data-new-entity
+              title="The entity to add the field to"
+              value=${form.entity}
+              onsl-change=${(e) => setForm((p) => ({ ...p, entity: e.target.value }))}
+              >${entityOptions}</sl-select
+            ><//
+          >`
+        : null
+    }
     <${Row} label="Machine name">
       <input
         class="insp__input"
         data-new-name
         ref=${nameRef}
         list="existing-field-list"
+        title="Machine name of the new field, or of an existing field to reuse its definition"
         value=${form.name}
         placeholder="e.g. field_body"
         autocomplete="off"
@@ -469,13 +506,19 @@ export function NewFieldForm({ entityId, side, selection }) {
       ><sl-input
         size="small"
         data-new-label
+        title="Label of the new field, such as Body"
         value=${form.label}
         placeholder="e.g. Body"
         onsl-input=${(e) => setForm((p) => ({ ...p, label: e.target.value }))}
       ></sl-input
     ><//>
     <${Row} label="Type"
-      ><sl-select size="small" data-new-fieldtype value=${form.fieldType} onsl-change=${(e) => setForm((p) => ({ ...p, fieldType: e.target.value }))}
+      ><sl-select
+        size="small"
+        data-new-fieldtype
+        title="The field type"
+        value=${form.fieldType}
+        onsl-change=${(e) => setForm((p) => ({ ...p, fieldType: e.target.value }))}
         >${slOptions(FIELD_TYPES)}</sl-select
       ><//
     >
@@ -483,12 +526,28 @@ export function NewFieldForm({ entityId, side, selection }) {
       ><sl-select
         size="small"
         data-new-cardinality
+        title="How many values the field holds"
         value=${String(form.cardinality)}
         onsl-change=${(e) => setForm((p) => ({ ...p, cardinality: parseInt(e.target.value, 10) }))}
         >${slOptions(CARDINALITY_OPTIONS)}</sl-select
       ><//
     >
-    ${isRef ? html`<${Row} label="Link to"><sl-select size="small" data-new-target value=${form.target} placeholder="(no reference)" clearable onsl-change=${(e) => setForm((p) => ({ ...p, target: e.target.value }))}>${entityOptions}</sl-select><//>` : null}
+    ${
+      isRef
+        ? html`<${Row} label="Link to"
+            ><sl-select
+              size="small"
+              data-new-target
+              title="The entity the new field references"
+              value=${form.target}
+              placeholder="(no reference)"
+              clearable
+              onsl-change=${(e) => setForm((p) => ({ ...p, target: e.target.value }))}
+              >${entityOptions}</sl-select
+            ><//
+          >`
+        : null
+    }
     <p class="insp__hint">Type a new name, or pick an existing field to reuse its definition.</p>
     <sl-button
       size="small"
@@ -588,6 +647,7 @@ export function BulkFieldsForm({ entityId, selection }) {
             ><sl-select
               size="small"
               data-copy-from
+              title="Add the fields of another entity to the box"
               placeholder="Pick an entity…"
               value=""
               onsl-change=${(e) => {
@@ -607,6 +667,7 @@ export function BulkFieldsForm({ entityId, selection }) {
       class="insp__bulktext"
       data-bulk-text
       ref=${textRef}
+      title="The fields to add, 1 per line"
       label="Fields, 1 per line"
       help-text="A label or machine name, then any of a type, a cardinality, required and target entity ids, split by commas."
       rows="8"
@@ -645,7 +706,7 @@ export function NewAnnotationForm() {
   return html` <div class="insp" data-new="annotation">
     <p class="insp__title">New annotation</p>
     <${Row} label="Kind"
-      ><sl-select size="small" value=${form.kind} onsl-change=${(e) => setForm((p) => ({ ...p, kind: e.target.value }))}
+      ><sl-select size="small" title=${ANNOTATION_KIND_TITLE} value=${form.kind} onsl-change=${(e) => setForm((p) => ({ ...p, kind: e.target.value }))}
         >${slOptions(ANNOTATION_OPTIONS)}</sl-select
       ><//
     >
@@ -653,13 +714,20 @@ export function NewAnnotationForm() {
       ><sl-input
         size="small"
         data-new-label
+        title="Label of the new annotation, such as Sync API"
         value=${form.label}
         placeholder="e.g. Sync API"
         onsl-input=${(e) => setForm((p) => ({ ...p, label: e.target.value }))}
       ></sl-input
     ><//>
     <${Row} label="Method"
-      ><sl-input size="small" value=${form.method} placeholder="POST, GET…" onsl-input=${(e) => setForm((p) => ({ ...p, method: e.target.value }))}></sl-input
+      ><sl-input
+        size="small"
+        title=${METHOD_TITLE}
+        value=${form.method}
+        placeholder="POST, GET…"
+        onsl-input=${(e) => setForm((p) => ({ ...p, method: e.target.value }))}
+      ></sl-input
     ><//>
     <sl-button
       size="small"

@@ -131,14 +131,14 @@
     <sl-dropdown class="statusbar__zoomlevel" placement="top-end" hoist>
       <sl-button id="zoom-level" slot="trigger" class="toolbar__button" size="small" caret data-shortcut="Z" title="Set the zoom level">100%</sl-button>
       <sl-menu id="zoom-menu">
-        <sl-menu-item value="fit">Fit</sl-menu-item>
-        <sl-menu-item value="0.25">25%</sl-menu-item>
-        <sl-menu-item value="0.5">50%</sl-menu-item>
-        <sl-menu-item value="0.75">75%</sl-menu-item>
-        <sl-menu-item value="1">100%</sl-menu-item>
-        <sl-menu-item value="1.5">150%</sl-menu-item>
-        <sl-menu-item value="2">200%</sl-menu-item>
-        <sl-menu-item value="3">300%</sl-menu-item>
+        <sl-menu-item value="fit" title="Fit the whole diagram in view">Fit</sl-menu-item>
+        <sl-menu-item value="0.25" title="Zoom to 25%">25%</sl-menu-item>
+        <sl-menu-item value="0.5" title="Zoom to 50%">50%</sl-menu-item>
+        <sl-menu-item value="0.75" title="Zoom to 75%">75%</sl-menu-item>
+        <sl-menu-item value="1" title="Zoom to 100%">100%</sl-menu-item>
+        <sl-menu-item value="1.5" title="Zoom to 150%">150%</sl-menu-item>
+        <sl-menu-item value="2" title="Zoom to 200%">200%</sl-menu-item>
+        <sl-menu-item value="3" title="Zoom to 300%">300%</sl-menu-item>
       </sl-menu>
     </sl-dropdown>
   </div>
@@ -174,11 +174,11 @@
       <section aria-labelledby="landing-templates-heading">
         <h2 id="landing-templates-heading" class="landing__heading">Start from a template</h2>
         <div id="template-list" class="template-list"></div>
-        <p class="landing__more">Missing a theme or distribution? <a href="https://github.com/drevops/nexus/issues" target="_blank" rel="noopener">Suggest a template</a>.</p>
+        <p class="landing__more">Missing a theme or distribution? <a href="https://github.com/drevops/nexus/issues" target="_blank" rel="noopener" title="Open an issue on GitHub to suggest a template">Suggest a template</a>.</p>
       </section>
     </div>
     <sl-alert id="landing-error" class="landing__error" variant="danger" closable><span id="landing-error-text"></span></sl-alert>
-    <p class="landing__note">Point at an exported config sync directory (the folder of <code>*.yml</code> files) or a module's <code>config/install</code>. Add an <a href="https://github.com/drevops/nexus#annotation-overlay" target="_blank" rel="noopener"><code>annotations.yml</code></a> to overlay events, APIs and callbacks.</p>
+    <p class="landing__note">Point at an exported config sync directory (the folder of <code>*.yml</code> files) or a module's <code>config/install</code>. Add an <a href="https://github.com/drevops/nexus#annotation-overlay" target="_blank" rel="noopener" title="Read how to write an annotation overlay"><code>annotations.yml</code></a> to overlay events, APIs and callbacks.</p>
   </sl-card>
 </div>
 
@@ -195,11 +195,11 @@
     <p>Press F1 to label every button with its keyboard shortcut.</p>
     <p>Everything runs in your browser. Any configuration you import and every diagram you build are kept in this browser only - there is no backend, and nothing you provide is uploaded to or processed by any server.</p>
     <p>Nexus is provided as is, without warranty of any kind. The authors accept no responsibility or liability for any data you load into it or create with it - even though that data never leaves your browser.</p>
-    <p>Nexus is open source - browse the code, report issues or contribute on <a id="about-repo" href="https://github.com/drevops/nexus" target="_blank" rel="noopener">GitHub</a>.</p>
-    <p>Nexus is free software, released under the <a id="about-license" href="https://github.com/drevops/nexus/blob/main/LICENSE" target="_blank" rel="noopener">GNU General Public License, version 2 or later</a> (GPL-2.0-or-later).</p>
+    <p>Nexus is open source - browse the code, report issues or contribute on <a id="about-repo" href="https://github.com/drevops/nexus" target="_blank" rel="noopener" title="Open the Nexus repository on GitHub">GitHub</a>.</p>
+    <p>Nexus is free software, released under the <a id="about-license" href="https://github.com/drevops/nexus/blob/main/LICENSE" target="_blank" rel="noopener" title="Read the licence">GNU General Public License, version 2 or later</a> (GPL-2.0-or-later).</p>
     <p class="about__version">Version <span id="about-version" data-version>dev</span></p>
   </div>
-  <sl-button id="about-close" slot="footer" variant="primary">Close</sl-button>
+  <sl-button id="about-close" slot="footer" variant="primary" title="Close the About box">Close</sl-button>
 </sl-dialog>
 
 <script src="assets/vendor/cytoscape.min.js"></script>
