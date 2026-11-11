@@ -755,6 +755,13 @@ function SettingsBody({ controller }) {
     }
   }
 
+  // The removed row takes its focused button with it, so the focus moves to
+  // the new type's name instead of leaving the panel.
+  function remove(type) {
+    controller.removeCustomType(type);
+    bodyRef.current.querySelector('[data-new-type]').focus();
+  }
+
   return html` <div class=${'settings-body' + (narrow ? ' is-narrow' : '')} ref=${bodyRef}>
     <h3 class="settings-section__title">Entity types</h3>
     <div id="type-settings" class="type-settings">
@@ -779,7 +786,7 @@ function SettingsBody({ controller }) {
                   data-remove-type=${t}
                   title="Remove this custom type"
                   aria-label=${'Remove ' + controller.typeLabel(t)}
-                  onClick=${() => controller.removeCustomType(t)}
+                  onClick=${() => remove(t)}
                   >${rawIcon('minus', 14)}</sl-button
                 >`
               : null}

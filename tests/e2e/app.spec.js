@@ -3944,6 +3944,7 @@ test('removes a custom type with its minus button and offers none on the built-i
   await remove.click();
 
   await expect(page.locator('#settings [data-type-row="widget"]')).toHaveCount(0);
+  await expect(page.locator('#settings [data-new-type]')).toBeFocused();
   await expect(page.locator('#settings [data-remove-type]')).toHaveCount(0);
 });
 
