@@ -1,6 +1,19 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { getState, focusPanel, openPanel, togglePanel, closePanel, openTableFor, openInspector, importLayout } from '../../src/store.js';
+import {
+  getState,
+  focusPanel,
+  openPanel,
+  togglePanel,
+  closePanel,
+  openTableFor,
+  openInspector,
+  importLayout,
+  exportLayout,
+  dockPanel,
+  dockedPanels,
+  PANEL_ORDER,
+} from '../../src/store.js';
 
 // The store holds 1 state per module, so these tests share it and run in
 // order. Node has no window, so the store starts from its default layout.
@@ -127,3 +140,124 @@ function dataProviderRaiseSequence() {
     ['every panel in turn 200 times', Array.from({ length: 200 }, () => PANELS).flat()],
   ];
 }
+
+// Imports a layout of closed, floating panels in the default order, with the
+// given panels overridden.
+function useLayout(entries) {
+  const panels = Object.fromEntries(PANEL_ORDER.map((id, order) => [id, { open: false, dock: null, order, ...entries[id] }]));
+
+  importLayout({ panels });
+}
+
+// The right rail holds entities, table, a closed settings and inspector; the
+// left rail holds history, and legend floats.
+function useRails() {
+  useLayout({
+    entities: { open: true, dock: 'right' },
+    table: { open: true, dock: 'right' },
+    settings: { open: false, dock: 'right' },
+    legend: { open: true },
+    history: { open: true, dock: 'left' },
+    inspector: { open: true, dock: 'right' },
+  });
+}
+
+function rails() {
+  return { left: dockedPanels('left'), right: dockedPanels('right') };
+}
+
+test('starts with every panel in the default order', () => {
+  assert.deepEqual(
+    PANEL_ORDER.map((id) => getState().panels[id].order),
+    PANEL_ORDER.map((id, i) => i),
+  );
+});
+
+test('lists the open panels docked on a side in their order', () => {
+  useRails();
+
+  assert.deepEqual(rails(), { left: ['history'], right: ['entities', 'table', 'inspector'] });
+});
+
+test('docks a panel at an index among the open panels of a side', async (t) => {
+  for (const [name, move, expected] of dataProviderDockPanel()) {
+    await t.test(name, () => {
+      useRails();
+      move();
+
+      assert.deepEqual(rails(), expected);
+    });
+  }
+});
+
+function dataProviderDockPanel() {
+  return [
+    ['moves a panel down past the next one', () => dockPanel('entities', 'right', 1), { left: ['history'], right: ['table', 'entities', 'inspector'] }],
+    ['moves a panel up to the top', () => dockPanel('inspector', 'right', 0), { left: ['history'], right: ['inspector', 'entities', 'table'] }],
+    ['moves a panel to the end', () => dockPanel('entities', 'right', 2), { left: ['history'], right: ['table', 'inspector', 'entities'] }],
+    [
+      'places a panel last for an index past the end',
+      () => dockPanel('entities', 'right', 9),
+      { left: ['history'], right: ['table', 'inspector', 'entities'] },
+    ],
+    [
+      'leaves a panel dropped at its own index in place',
+      () => dockPanel('table', 'right', 1),
+      { left: ['history'], right: ['entities', 'table', 'inspector'] },
+    ],
+    ['moves a panel to the top of the other side', () => dockPanel('table', 'left', 0), { left: ['table', 'history'], right: ['entities', 'inspector'] }],
+    ['moves a panel to the end of the other side', () => dockPanel('table', 'left', 1), { left: ['history', 'table'], right: ['entities', 'inspector'] }],
+    [
+      'docks a floating panel between 2 docked ones',
+      () => dockPanel('legend', 'right', 1),
+      { left: ['history'], right: ['entities', 'legend', 'table', 'inspector'] },
+    ],
+    [
+      'moves and opens a closed panel on the other side',
+      () => dockPanel('settings', 'left', 0),
+      { left: ['settings', 'history'], right: ['entities', 'table', 'inspector'] },
+    ],
+    [
+      'keeps a closed panel after the panel it followed',
+      () => {
+        dockPanel('inspector', 'right', 0);
+        openPanel('settings');
+      },
+      { left: ['history'], right: ['inspector', 'entities', 'table', 'settings'] },
+    ],
+  ];
+}
+
+test('keeps the height of a panel moved within its side and clears it on the other side', () => {
+  useRails();
+  importLayout({ panels: { table: { open: true, dock: 'right', height: 300 } } });
+
+  dockPanel('table', 'right', 0);
+  assert.equal(getState().panels.table.height, 300);
+
+  dockPanel('table', 'left', 0);
+  assert.equal(getState().panels.table.height, null);
+  assert.equal(getState().panels.table.dock, 'left');
+});
+
+test('saves the order of the panels with the layout and restores it', () => {
+  useRails();
+  dockPanel('inspector', 'right', 0);
+
+  const saved = exportLayout();
+
+  useRails();
+  assert.deepEqual(dockedPanels('right'), ['entities', 'table', 'inspector']);
+
+  importLayout(saved);
+  assert.deepEqual(dockedPanels('right'), ['inspector', 'entities', 'table']);
+});
+
+test('keeps the order a panel has when the imported layout has none', () => {
+  useRails();
+  dockPanel('inspector', 'right', 0);
+
+  importLayout({ panels: { inspector: { open: true, dock: 'right' }, entities: { open: true, dock: 'right', order: 'top' } } });
+
+  assert.deepEqual(dockedPanels('right'), ['inspector', 'entities', 'table']);
+});

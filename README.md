@@ -104,7 +104,7 @@ The diagram opens with its entities stacked in columns that fill the screen, wit
 
 The top-right corner holds the About box, a link to this repository, the light/dark theme toggle and **Settings**, where you choose each entity type's color and symbol or add types of your own. The status bar holds the zoom controls: **Reset**, **Fit**, zoom out, zoom in and a zoom-level menu. The mouse wheel or a trackpad pinch zooms the diagram, and dragging the canvas pans it. The browser's zoom keys, <kbd>Ctrl</kbd> with <kbd>+</kbd>, <kbd>-</kbd> or <kbd>0</kbd>, zoom the diagram and leave the page at its size. A pinch over the toolbar or a panel does nothing. Click a node to focus it and its connections. Hold the right mouse button down on a node and drag to move it, in View mode as well as Edit, and right-click an entity to isolate it so it moves together with its fields.
 
-Panels float over the canvas. Drag one by its header, or drop it at the left or right edge (or click its pin) to dock it in a side rail that you can resize.
+Panels float over the canvas. Drag one by its header, or drop it at the left or right edge (or click its pin) to dock it in a side rail that you can resize. The pin stands upright in blue on a docked panel and leans over on a floating one. To move a docked panel up or down its rail, or to the other rail, drag the grip at the left of its header. To move a docked panel out onto the canvas, drag the rest of its header.
 
 ## Editing
 

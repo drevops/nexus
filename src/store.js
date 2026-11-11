@@ -2,12 +2,16 @@
  * Shared UI store.
  *
  * A tiny observable holding the panel windowing, the inspector target and
- * the dock widths.
+ * the dock widths. Each panel's `order` places it in its side rail.
  *
  * `revision` counts the times the history changed the graph.
  */
 
 const listeners = new Set();
+
+// The default order of the panels, also the order of a side rail's panels
+// until they are moved.
+export const PANEL_ORDER = ['entities', 'table', 'settings', 'legend', 'history', 'inspector'];
 
 const DEFAULT_POS = {
   entities: { left: 16, top: 16 },
@@ -31,7 +35,7 @@ let saveTimer = null;
 function initialPanels() {
   const panels = {};
   Object.keys(DEFAULT_POS).forEach((id) => {
-    panels[id] = { open: false, dock: null, pos: { ...DEFAULT_POS[id] }, z: 4, height: 260 };
+    panels[id] = { open: false, dock: null, pos: { ...DEFAULT_POS[id] }, z: 4, height: 260, order: PANEL_ORDER.indexOf(id) };
   });
   return panels;
 }
@@ -40,7 +44,7 @@ function layoutSnapshot() {
   const panels = {};
   Object.keys(state.panels).forEach((id) => {
     const p = state.panels[id];
-    panels[id] = { open: p.open, dock: p.dock, pos: p.pos, height: p.height };
+    panels[id] = { open: p.open, dock: p.dock, pos: p.pos, height: p.height, order: p.order };
   });
   return { panels: panels, dockWidth: state.dockWidth };
 }
@@ -49,9 +53,26 @@ function mergeLayout(panels, saved) {
   Object.keys(panels).forEach((id) => {
     const entry = saved.panels && saved.panels[id];
     if (entry) {
-      panels[id] = { ...panels[id], open: !!entry.open, dock: entry.dock || null, pos: entry.pos || panels[id].pos, height: entry.height || panels[id].height };
+      const order = Number.isFinite(entry.order) ? entry.order : panels[id].order;
+
+      panels[id] = {
+        ...panels[id],
+        open: !!entry.open,
+        dock: entry.dock || null,
+        pos: entry.pos || panels[id].pos,
+        height: entry.height || panels[id].height,
+        order,
+      };
     }
   });
+}
+
+// The ids of the panels docked on a side, open or closed, in rail order.
+// Panels that share an order keep the PANEL_ORDER order.
+function sidePanels(panels, side) {
+  const ids = PANEL_ORDER.filter((id) => panels[id].dock === side);
+
+  return ids.sort((a, b) => panels[a].order - panels[b].order || PANEL_ORDER.indexOf(a) - PANEL_ORDER.indexOf(b));
 }
 
 function loadLayout() {
@@ -92,7 +113,7 @@ function initialState() {
   } else {
     panels.legend.open = true;
   }
-  return { panels: panels, dockWidth: dockWidth, selected: null, tableFilter: '__all__', version: 0, revision: 0 };
+  return { panels: panels, dockWidth: dockWidth, selected: null, tableFilter: '__all__', version: 0, revision: 0, dragging: null };
 }
 
 let state = initialState();
@@ -196,6 +217,36 @@ export function movePanel(id, left, top) {
 export function pinPanel(id, side) {
   // Clear any prior height so a freshly docked panel fills the sidebar.
   patchPanel(id, { open: true, dock: side, height: null });
+}
+
+// The ids of the open panels docked on a side, top to bottom.
+export function dockedPanels(side) {
+  return sidePanels(state.panels, side).filter((id) => state.panels[id].open);
+}
+
+// Docks a panel on a side above the open panel now at the index, or last
+// when the index is past the end. The side's closed panels keep their place
+// relative to the others, so each reopens where it was.
+export function dockPanel(id, side, index) {
+  const panels = { ...state.panels };
+  const ids = sidePanels(panels, side).filter((key) => key !== id);
+  const next = dockedPanels(side).filter((key) => key !== id)[index];
+
+  ids.splice(next ? ids.indexOf(next) : ids.length, 0, id);
+  ids.forEach((key, order) => {
+    panels[key] = { ...panels[key], order };
+  });
+
+  // A panel that changes side fills its new rail, as a pinned panel does.
+  const height = state.panels[id].dock === side ? state.panels[id].height : null;
+
+  panels[id] = { ...panels[id], open: true, dock: side, height };
+  emit({ panels });
+}
+
+// Marks the docked panel being dragged by its handle, or none.
+export function setDragging(id) {
+  emit({ dragging: id });
 }
 
 export function unpinPanel(id) {
