@@ -24,6 +24,8 @@ Nexus is a static web app. Drop a Drupal **exported configuration folder** onto 
 
 **[Open the app →](https://nexus.drevops.com/)**
 
+To try changes before they're released, open the [development version](https://drevops-nexus.netlify.app). It runs the latest code merged into `main`.
+
 ![A conference site's content model drawn in Nexus as an overview of its entity types, the references between them and its annotations](screenshot.png)
 
 ## Features
@@ -221,6 +223,17 @@ computed_fields:
 - `edges` draw explicit links between any 2 nodes.
 - `computed_fields` add calculated fields to an existing entity, keyed by its `entity_type.bundle` id.
 
+## Built with
+
+Nexus has no backend and no build step. The page loads its own ES modules from `src/` and these libraries from `assets/vendor/`:
+
+- [Preact](https://preactjs.com/) and [htm](https://github.com/developit/htm) render the interface.
+- [Shoelace](https://shoelace.style/) supplies the buttons, menus and form controls.
+- [Cytoscape.js](https://js.cytoscape.org/) draws the diagram, with [Dagre](https://github.com/dagrejs/dagre) and [cytoscape-dagre](https://github.com/cytoscape/cytoscape.js-dagre) for the layouts and [cytoscape-svg](https://github.com/kinimesi/cytoscape-svg) for the SVG export.
+- [js-yaml](https://github.com/nodeca/js-yaml) reads the configuration files.
+
+The icons come from [Lucide](https://lucide.dev/).
+
 ## Contributing
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for local development setup, the linting and testing commands, the Netlify previews for pull requests, how a release deploys to GitHub Pages and how to pull in template updates.
@@ -236,6 +249,4 @@ Nexus is provided as is, without warranty of any kind, and the authors accept no
 Nexus is free software, released under the [GNU General Public License, version 2 or later](LICENSE) (GPL-2.0-or-later), matching the Drupal ecosystem it serves.
 
 ---
-_Rendered with [Cytoscape.js](https://js.cytoscape.org/) and [Dagre](https://github.com/dagrejs/dagre), with a UI built on [Preact](https://preactjs.com/) and [Shoelace](https://shoelace.style/); YAML via [js-yaml](https://github.com/nodeca/js-yaml) and icons from [Lucide](https://lucide.dev/)._
-
 _This repository was created using the [Scaffold](https://getscaffold.dev/) project template_
