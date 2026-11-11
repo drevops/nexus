@@ -675,8 +675,11 @@ sl-button#zoom-level::part(base) {
   border-radius: 8px;
 }
 
+/* A docked panel is sized to its content, so a scrollbar that narrowed the
+   body would wrap the content taller than the panel. */
 .panel.is-docked .panel__body {
   padding-bottom: 10px;
+  scrollbar-gutter: stable;
 }
 
 .panel__vresize {
@@ -1630,6 +1633,9 @@ html.sl-theme-dark .icon--nexus .ink {
 .insp sl-select,
 .insp__note sl-textarea {
   width: 100%;
+  /* A flex item's automatic minimum is its content width, which overflows a
+     narrow Inspector once its body shows a scrollbar. */
+  min-width: 0;
 }
 
 .insp__note {

@@ -191,6 +191,13 @@ function dockedSizes(page, selector) {
   });
 }
 
+// The height of the Inspector's form that its body scrolls out of view.
+async function hiddenInspectorHeight(page) {
+  const sizes = await dockedSizes(page, '#inspector');
+
+  return sizes.bodyScroll - sizes.bodyClient;
+}
+
 // Drags the height handle of a docked panel by the given distance.
 async function dragPanelEdge(page, selector, distance) {
   const handle = await page.locator(selector + ' .panel__vresize').boundingBox();
@@ -442,6 +449,19 @@ test('resizes a docked panel vertically', async ({ page }) => {
   expect(after).toBeGreaterThan(before + 70);
 });
 
+test('shares a dock equally between panels taller than their share', async ({ page }) => {
+  await loadExample(page);
+
+  await page.click('#legend .panel__pin');
+  await page.click('#table-toggle');
+  await page.click('#table .panel__pin');
+
+  const table = await dockedSizes(page, '#table');
+  const legend = await dockedSizes(page, '#legend');
+  expect(legend.bodyScroll).toBeGreaterThan(legend.bodyClient);
+  expect(Math.abs(table.panel - legend.panel)).toBeLessThanOrEqual(1);
+});
+
 test('stops a docked panel growing past its content', async ({ page }) => {
   await loadExample(page);
 
@@ -494,12 +514,27 @@ test('scrolls the docked Inspector when its form is taller than the dock', async
   expect(sizes.bodyScroll).toBeGreaterThan(sizes.bodyClient);
 });
 
+test('shows the whole docked Inspector form again after the window grows', async ({ page }) => {
+  await loadExample(page);
+
+  await page.click('#mode-build');
+  await tapNode(page, 'node.event');
+  await page.click('#inspector .panel__pin');
+  await page.setViewportSize({ width: 1280, height: 600 });
+  await expect.poll(() => hiddenInspectorHeight(page)).toBeGreaterThan(1);
+
+  await page.setViewportSize({ width: 1280, height: 1200 });
+  await expect.poll(() => hiddenInspectorHeight(page)).toBeLessThanOrEqual(1);
+  expect(await page.locator('#inspector .panel__body').evaluate((el) => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(0);
+});
+
 test('remembers the panel layout across reloads', async ({ page }) => {
   await loadExample(page);
 
   await page.click('#entities-toggle');
   await page.click('#entities .panel__pin');
   await expect(page.locator('#entities')).toHaveClass(/is-docked/);
+  const docked = (await dockedSizes(page, '#entities')).panel;
   await page.waitForTimeout(500);
 
   await page.reload();
@@ -507,6 +542,7 @@ test('remembers the panel layout across reloads', async ({ page }) => {
 
   await expect(page.locator('#entities')).toHaveClass(/is-docked/);
   expect(await page.locator('#entities').evaluate((el) => el.closest('.dock').id)).toBe('dock-left');
+  expect(Math.abs((await dockedSizes(page, '#entities')).panel - docked)).toBeLessThanOrEqual(1);
 });
 
 // The ids of the panels in a side rail, top to bottom.
