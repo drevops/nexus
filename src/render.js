@@ -28,7 +28,7 @@ import { icon } from './icons.js';
 import { ENTITY_TYPE_ORDER, findEntityType } from './entity-types.js';
 import { humanize, machineName } from './names.js';
 import { REFERENCE_ELEMENTS, syncReferenceElements } from './references.js';
-import { fitWidth, labelCentre, wrapLabel } from './label-fit.js';
+import { drawnShape, fitWidth, labelDrop, labelX, polygonPoints, wrapLabel } from './label-fit.js';
 import { checkpoint, untracked } from './undo.js';
 import { describeNode } from './history.js';
 import { packColumns, tidyColumns } from './packing.js';
@@ -84,6 +84,12 @@ const LABEL_FONT_FAMILY = 'Helvetica Neue, Helvetica, sans-serif';
 // layout gives identical positions.
 const ENTITY_BOX = { fontSize: 12, fontWeight: 600, lineHeight: 1.25, textMaxWidth: 160, padding: 10, border: 1.5, inset: 3 };
 const FIELD_BOX = { fontSize: 10, fontWeight: 'normal', padding: 7, border: 1 };
+const PROXY_BOX = { fontSize: 10, fontStyle: 'italic', fontWeight: 'normal', padding: 7, border: 1, inset: 2 };
+
+// The shape-polygon-points value of a shape Cytoscape draws on its own, which
+// ignores it.
+const SQUARE_POLYGON = '-1 -1 1 -1 1 1 -1 1';
+const NODE_BOX_LIMIT = 2000;
 
 // Model-space caption metrics: the font size, the height of 1 caption line
 // and the gap between a node's box and its first machine-name line.
@@ -100,6 +106,7 @@ const activeSymbols = {};
 
 let measureContext = null;
 const textWidths = new Map();
+const nodeBoxes = new Map();
 const captionStyles = {};
 
 let fieldsMode = false;
@@ -350,7 +357,7 @@ function textWidth(text, font) {
 
 // The canvas font Cytoscape draws a label in for the given box metrics.
 function labelFont(box) {
-  return 'normal ' + box.fontWeight + ' ' + box.fontSize + 'px ' + LABEL_FONT_FAMILY;
+  return (box.fontStyle || 'normal') + ' ' + box.fontWeight + ' ' + box.fontSize + 'px ' + LABEL_FONT_FAMILY;
 }
 
 // The canvas font and horizontal padding of a caption line at zoom 1, read
@@ -403,27 +410,51 @@ function entityLines(ele) {
   return { lines: lines, halfHeight: labelBottom + ENTITY_BOX.padding };
 }
 
-// Model-space width of the text area of an entity box, wide enough for every
-// line to fit inside the entity's shape. It is rounded up to a whole pixel to
-// stay on the box grid.
-function entityTextWidth(ele) {
-  const box = entityLines(ele);
+// The single text line of a proxy and half the proxy's height.
+function proxyLines(ele) {
+  const width = textWidth(ele.data('label'), labelFont(PROXY_BOX));
 
-  return Math.ceil(fitWidth(box.lines, entityShape(ele.data('entityType')), box.halfHeight, ENTITY_BOX.padding, ENTITY_BOX.inset));
+  return { lines: [{ width: width, top: -PROXY_BOX.fontSize / 2, bottom: PROXY_BOX.fontSize / 2 }], halfHeight: PROXY_BOX.fontSize / 2 + PROXY_BOX.padding };
 }
 
-// Model-space offset of an entity's label from its box centre, which puts the
-// label on the centre point of the entity's shape.
-function labelOffset(ele) {
-  const centre = labelCentre(entityShape(ele.data('entityType')));
+// The model-space box of an entity or proxy in its shape: the width of its
+// text area, the offset of its label from the box centre and the polygon
+// that draws a fixed-end shape. The width is rounded up to a whole pixel to
+// stay on the box grid.
+function fitBox(ele, metrics) {
+  const shape = entityShape(ele.data('entityType'));
+  const text = ele.data('group') === 'proxy' ? proxyLines(ele) : entityLines(ele);
+  const width = Math.ceil(fitWidth(text.lines, shape, text.halfHeight, metrics.padding, metrics.inset));
+  const halfWidth = width / 2 + metrics.padding;
+  const points = polygonPoints(shape, halfWidth, text.halfHeight);
 
-  return { x: centre.x * (entityTextWidth(ele) / 2 + ENTITY_BOX.padding), y: centre.y * entityLines(ele).halfHeight };
+  return {
+    width: width,
+    offset: { x: labelX(text.lines, shape, halfWidth, text.halfHeight, metrics.padding, metrics.inset), y: labelDrop(shape) * text.halfHeight },
+    points: points ? points.join(' ') : SQUARE_POLYGON,
+  };
+}
+
+// The box of an entity or proxy, as fitBox() works it out. Cytoscape reads it
+// once per style property, so boxes are cached by everything they depend on.
+function nodeBox(ele) {
+  const group = ele.data('group');
+  const key = [group, entityShape(ele.data('entityType')), typeLabel(ele.data('entityType')), ele.data('label')].join('\n');
+
+  if (!nodeBoxes.has(key)) {
+    if (nodeBoxes.size >= NODE_BOX_LIMIT) {
+      nodeBoxes.clear();
+    }
+    nodeBoxes.set(key, fitBox(ele, group === 'proxy' ? PROXY_BOX : ENTITY_BOX));
+  }
+
+  return nodeBoxes.get(key);
 }
 
 // Model-space outer width of an entity or field box.
 function boxWidth(ele) {
   if (ele.data('group') === 'entity') {
-    return entityTextWidth(ele) + 2 * ENTITY_BOX.padding + ENTITY_BOX.border;
+    return nodeBox(ele).width + 2 * ENTITY_BOX.padding + ENTITY_BOX.border;
   }
 
   return textWidth(fieldLabel(ele), labelFont(FIELD_BOX)) + 2 * FIELD_BOX.padding + FIELD_BOX.border;
@@ -498,7 +529,8 @@ function style() {
     {
       selector: 'node[group="entity"]',
       style: {
-        shape: (ele) => entityShape(ele.data('entityType')),
+        shape: (ele) => drawnShape(entityShape(ele.data('entityType'))),
+        'shape-polygon-points': (ele) => nodeBox(ele).points,
         'background-color': (ele) => entityColor(ele.data('entityType')),
         'border-color': tc.nodeBorder,
         'border-width': ENTITY_BOX.border,
@@ -510,14 +542,14 @@ function style() {
         'text-max-width': ENTITY_BOX.textMaxWidth,
         'text-valign': 'center',
         'text-halign': 'center',
-        'text-margin-x': (ele) => labelOffset(ele).x,
-        'text-margin-y': (ele) => labelOffset(ele).y,
+        'text-margin-x': (ele) => nodeBox(ele).offset.x,
+        'text-margin-y': (ele) => nodeBox(ele).offset.y,
         'font-family': LABEL_FONT_FAMILY,
         'font-size': ENTITY_BOX.fontSize,
         'font-weight': ENTITY_BOX.fontWeight,
         'line-height': ENTITY_BOX.lineHeight,
         color: '#1f2933',
-        width: (ele) => entityTextWidth(ele),
+        width: (ele) => nodeBox(ele).width,
         height: 'label',
         padding: ENTITY_BOX.padding + 'px',
       },
@@ -567,21 +599,25 @@ function style() {
     {
       selector: 'node[group="proxy"]',
       style: {
-        shape: (ele) => entityShape(ele.data('entityType')),
+        shape: (ele) => drawnShape(entityShape(ele.data('entityType'))),
+        'shape-polygon-points': (ele) => nodeBox(ele).points,
         'background-color': (ele) => entityColor(ele.data('entityType')),
         'background-opacity': 0.4,
         'border-color': '#8a94a3',
-        'border-width': 1,
+        'border-width': PROXY_BOX.border,
         'border-style': 'dashed',
         label: (ele) => ele.data('label'),
         'text-valign': 'center',
         'text-halign': 'center',
-        'font-size': 10,
-        'font-style': 'italic',
+        'text-margin-x': (ele) => nodeBox(ele).offset.x,
+        'text-margin-y': (ele) => nodeBox(ele).offset.y,
+        'font-family': LABEL_FONT_FAMILY,
+        'font-size': PROXY_BOX.fontSize,
+        'font-style': PROXY_BOX.fontStyle,
         color: tc.muted,
-        width: 'label',
+        width: (ele) => nodeBox(ele).width,
         height: 'label',
-        padding: '7px',
+        padding: PROXY_BOX.padding + 'px',
       },
     },
     {

@@ -2319,7 +2319,13 @@ test('adds an external entity from the palette', async ({ page }) => {
   await slFill(page, '[data-new-label]', 'CRM contact');
   await page.click('[data-create-entity]');
 
-  expect(await page.evaluate(() => window.__nexus.cy.getElementById('external.crm_contact').style('shape'))).toBe('hexagon');
+  // A hexagon is drawn as a 6-cornered polygon, so its ends keep their size.
+  const shape = await page.evaluate(() => {
+    const node = window.__nexus.cy.getElementById('external.crm_contact');
+
+    return node.style('shape') + ' ' + node.style('shape-polygon-points').split(' ').length / 2;
+  });
+  expect(shape).toBe('polygon 6');
   expect(await captionsOf(page, 'external.crm_contact')).toEqual([
     { text: 'External entity', shown: true },
     { text: 'crm_contact', shown: true },
@@ -2987,10 +2993,9 @@ test('keeps the type caption of each vocabulary inside its tag', async ({ page }
         const x = origin.left + node.renderedPosition('x');
         const y = origin.top + node.renderedPosition('y');
         const halfWidth = (node.width() / 2 + node.padding()) * cy.zoom();
-        const halfHeight = (node.height() / 2 + node.padding()) * cy.zoom();
-        // The tag's right edge runs from a quarter of its half-width at the
-        // top and bottom out to its point at mid-height.
-        const edge = (at) => x + halfWidth * (1 - (3 * Math.abs(at - y)) / (4 * halfHeight));
+        // The tag's point narrows by 3 for every 4 it runs from mid-height
+        // towards the top or bottom, whatever the width of the tag.
+        const edge = (at) => x + halfWidth - (3 * Math.abs(at - y)) / 4;
 
         return caption.right > edge(caption.top) || caption.right > edge(caption.bottom);
       })
@@ -3052,7 +3057,7 @@ for (const [symbol, centre] of dataProviderLabelCentres()) {
         const placement = await labelPlacement(page, 'node.event');
 
         return {
-          labelX: Math.abs(placement.labelX - centre.x) < 0.005,
+          labelX: placement.labelX > centre.x[0] - 0.005 && placement.labelX < centre.x[1] + 0.005,
           labelY: Math.abs(placement.labelY - centre.y) < 0.005,
           captionX: Math.abs(placement.captionX - rounded.captionX) <= 1,
           captionY: Math.abs(placement.captionY - rounded.captionY) <= 1,
@@ -3062,11 +3067,60 @@ for (const [symbol, centre] of dataProviderLabelCentres()) {
   });
 }
 
+// The range of the label's x and its y, as fractions of the shape's half-size.
+// A tag's label sits at or left of the box centre, towards the tag's body.
 function dataProviderLabelCentres() {
   return [
-    ['tag', { x: -9 / 52, y: 0 }],
-    ['pentagon', { x: 0, y: 1 - 2 / Math.sqrt(5) }],
-    ['diamond', { x: 0, y: 0 }],
+    ['tag', { x: [-0.2, 0], y: 0 }],
+    ['pentagon', { x: [0, 0], y: 1 - 2 / Math.sqrt(5) }],
+    ['diamond', { x: [0, 0], y: 0 }],
+    ['hexagon', { x: [0, 0], y: 0 }],
+  ];
+}
+
+for (const [symbol, end] of dataProviderFixedEnds()) {
+  test(`keeps the ends of the ${symbol} symbol the same size when its name gets longer`, async ({ page }) => {
+    await openDiagram(page, 'example');
+    await page.click('#settings-toggle');
+    await slSelect(page, '#settings sl-select[data-symbol="node"]', symbol);
+
+    // The size of the shape's end in model pixels, and the size the shape
+    // gives its end, as a fraction of the half-height.
+    const ends = (label) =>
+      page.evaluate(
+        ([nodeId, text, endIndex]) => {
+          const node = window.__nexus.cy.getElementById(nodeId);
+          if (text) {
+            node.data('label', text);
+          }
+          const points = node.style('shape-polygon-points').split(' ').map(Number);
+          const halfWidth = node.width() / 2 + node.padding();
+          const halfHeight = node.height() / 2 + node.padding();
+
+          return { width: node.width(), end: ((points[endIndex[1]] - points[endIndex[0]]) * halfWidth) / halfHeight };
+        },
+        ['node.event', label, end.points],
+      );
+
+    // Points are rounded to 3 places of the half-width, so the end is
+    // compared to 1 place.
+    await expect.poll(async () => (await ends(null)).end).toBeCloseTo(end.size, 1);
+    const short = await ends(null);
+    await ends('An event with a much longer name');
+
+    await expect.poll(async () => (await ends(null)).width).toBeGreaterThan(short.width * 1.5);
+    expect((await ends(null)).end).toBeCloseTo(end.size, 1);
+  });
+}
+
+// Each shape's end, as the indexes of 2 x values in its polygon points, and
+// the size the shape gives it as a fraction of the half-height.
+function dataProviderFixedEnds() {
+  return [
+    ['tag', { points: [2, 4], size: 0.75 }],
+    ['hexagon', { points: [0, 2], size: 0.5 }],
+    ['octagon', { points: [2, 4], size: 2 - Math.SQRT2 }],
+    ['rhomboid', { points: [2, 4], size: 0.667 }],
   ];
 }
 
@@ -4280,12 +4334,19 @@ test('shows the app version on the landing screen and in the about dialog', asyn
 test('draws entity types with their symbols and a dynamic legend', async ({ page }) => {
   await loadExample(page);
 
-  const shapes = await page.evaluate(() => ({
-    node: window.__nexus.cy.nodes('[group="entity"][entityType="node"]').first().style('shape'),
-    vocab: window.__nexus.cy.nodes('[group="entity"][entityType="taxonomy_term"]').first().style('shape'),
-  }));
+  const shapes = await page.evaluate(() => {
+    const vocab = window.__nexus.cy.nodes('[group="entity"][entityType="taxonomy_term"]').first();
+
+    return {
+      node: window.__nexus.cy.nodes('[group="entity"][entityType="node"]').first().style('shape'),
+      vocab: vocab.style('shape'),
+      vocabCorners: vocab.style('shape-polygon-points').split(' ').length / 2,
+    };
+  });
   expect(shapes.node).toBe('round-rectangle');
-  expect(shapes.vocab).toBe('tag');
+  // A tag is drawn as a 5-cornered polygon, so its point keeps its size.
+  expect(shapes.vocab).toBe('polygon');
+  expect(shapes.vocabCorners).toBe(5);
 
   const legend = await page.locator('#legend .legend__label').allTextContents();
   expect(legend).toContain('Content type');
