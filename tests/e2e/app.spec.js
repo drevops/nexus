@@ -4620,12 +4620,15 @@ test('sets the mode frame from Settings and keeps it across reloads', async ({ p
   await expect.poll(async () => (await modeFrame(page)).display).toBe('none');
   await expect(page.locator('#settings sl-color-picker[data-frame-color="view"]')).toHaveAttribute('disabled', '');
 
+  // The panel layout is saved after a short delay, so the reload waits for
+  // it to keep Settings open.
+  await page.waitForFunction(() => JSON.parse(window.localStorage.getItem('nexusLayout') || '{}').panels?.settings?.open === true);
   await page.reload();
   await loadExample(page);
   expect((await modeFrame(page)).display).toBe('none');
 
-  // The panel layout survives the reload too, so Settings is still open, but
-  // not its place in the stack, so it's raised over the Legend.
+  // The reload keeps the open panels but not their stack, so Settings is
+  // raised over the Legend.
   await page.click('#settings .panel__title');
   await page.click('#frame-toggle');
   await expect.poll(() => modeFrame(page)).toEqual({ display: 'block', width: '10px', color: 'rgb(68, 85, 102)', pointerEvents: 'none' });
