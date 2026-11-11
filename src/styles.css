@@ -924,12 +924,12 @@ body.is-dragging-panel * {
 
 .field-table th:nth-child(2),
 .field-table td:nth-child(2) {
-  width: 21%;
+  width: 20%;
 }
 
 .field-table th:nth-child(3),
 .field-table td:nth-child(3) {
-  width: 13%;
+  width: 11%;
 }
 
 .field-table th:nth-child(4),
@@ -939,7 +939,45 @@ body.is-dragging-panel * {
 
 .field-table th:nth-child(5),
 .field-table td:nth-child(5) {
-  width: 31%;
+  width: 20%;
+}
+
+.field-table th:nth-child(6),
+.field-table td:nth-child(6),
+.field-table th:nth-child(7),
+.field-table td:nth-child(7) {
+  width: 7%;
+  padding-inline: 0;
+  text-align: center;
+}
+
+.table__action {
+  display: inline-flex;
+  padding: 0.15rem;
+  color: var(--muted);
+  background: none;
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.table__action:hover {
+  color: var(--accent);
+  background: var(--surface-2);
+}
+
+.table__action[aria-disabled='true'] {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.table__action[aria-disabled='true']:hover {
+  color: var(--muted);
+  background: none;
+}
+
+.field-table .is-hidden-field td:not(.field-table__action) {
+  opacity: 0.5;
 }
 
 .table__reflink {

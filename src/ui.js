@@ -586,6 +586,48 @@ function fitIdentifiers(table) {
   });
 }
 
+// The title of a field's go-to button for each reason the field is off the
+// canvas (see hiddenBy() in render.js).
+const GO_TO_TITLES = {
+  field: 'Show this field to go to it',
+  fields: 'Turn on Fields to go to this field',
+  type: 'Show its entity type to go to this field',
+};
+
+// The show-or-hide and go-to cells of a field's row.
+function fieldActions(controller, r) {
+  const visibilityTitle = r.hidden ? 'Show ' + r.field + ' on the canvas' : 'Hide ' + r.field + ' on the canvas';
+  const goToTitle = r.hiddenBy ? GO_TO_TITLES[r.hiddenBy] : 'Go to ' + r.field + ' on the canvas';
+
+  return html`<td class="field-table__action">
+      <button
+        type="button"
+        class=${'table__action' + (r.hidden ? ' is-off' : '')}
+        data-field-visibility=${r.id}
+        title=${visibilityTitle}
+        aria-label=${visibilityTitle}
+        onClick=${() => controller.setFieldHidden(r.id, !r.hidden)}
+        dangerouslySetInnerHTML=${{ __html: icon(r.hidden ? 'eye-off' : 'eye', 14) }}
+      ></button>
+    </td>
+    <td class="field-table__action">
+      <button
+        type="button"
+        class="table__action"
+        data-field-go-to=${r.id}
+        title=${goToTitle}
+        aria-label=${goToTitle}
+        aria-disabled=${r.hiddenBy ? 'true' : null}
+        onClick=${() => {
+          if (!r.hiddenBy) {
+            controller.focusField(r.id);
+          }
+        }}
+        dangerouslySetInnerHTML=${{ __html: icon('crosshair', 14) }}
+      ></button>
+    </td>`;
+}
+
 function TableBody({ controller, filter }) {
   const [term, setTerm] = useState('');
   const tableRef = useRef(null);
@@ -643,12 +685,12 @@ function TableBody({ controller, filter }) {
       current = r.entityId;
       rows.push(
         html`<tr class="is-group">
-          <td colspan="5">${r.entity} · ${controller.typeLabel(r.entityType)}</td>
+          <td colspan="7">${r.entity} · ${controller.typeLabel(r.entityType)}</td>
         </tr>`,
       );
     }
     rows.push(
-      html`<tr>
+      html`<tr class=${r.hidden ? 'is-hidden-field' : null}>
         <td>${r.field}<br /><code data-fit>${wrappable(r.name)}</code></td>
         <td data-fit>${wrappable(r.type)}</td>
         <td>${cardBadge(r)}</td>
@@ -668,6 +710,7 @@ function TableBody({ controller, filter }) {
                 >`,
           )}
         </td>
+        ${fieldActions(controller, r)}
       </tr>`,
     );
   });
@@ -697,6 +740,8 @@ function TableBody({ controller, filter }) {
             <th>Card.</th>
             <th>Req</th>
             <th>References</th>
+            <th class="field-table__action" title="Show or hide each field on the canvas">${rawIcon('eye', 14)}<span class="visually-hidden">Show</span></th>
+            <th class="field-table__action" title="Go to each field on the canvas">${rawIcon('crosshair', 14)}<span class="visually-hidden">Go to</span></th>
           </tr>
         </thead>
         <tbody>
@@ -704,7 +749,7 @@ function TableBody({ controller, filter }) {
             rows.length
               ? rows
               : html`<tr>
-                  <td colspan="5">No fields match.</td>
+                  <td colspan="7">No fields match.</td>
                 </tr>`
           }
         </tbody>

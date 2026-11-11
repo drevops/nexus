@@ -129,6 +129,14 @@ function addNote(cy) {
   cy.getElementById(TAGS_FIELD).data('note', 'Up to 3 tags.');
 }
 
+function hideTagsField(cy) {
+  cy.getElementById(TAGS_FIELD).data('hidden', true);
+}
+
+function showTagsField(cy) {
+  cy.getElementById(TAGS_FIELD).removeData('hidden');
+}
+
 // Re-points the annotation edge under its own id, as a rename of its end
 // does.
 function repointAnnotationEdge(cy) {
@@ -149,6 +157,7 @@ function dataProviderEdits() {
     ['a changed cardinality', changeCardinality],
     ['an added annotation method', addMethod],
     ['an added field note', addNote],
+    ['a hidden field', hideTagsField],
     ['a removed reference and its proxy', removeTagsReference],
     ['a re-pointed annotation edge', repointAnnotationEdge],
     ['a renamed reference target', renameTags],
@@ -276,6 +285,7 @@ function dataProviderChangedIds() {
     ['a moved proxy', moveProxy, 'Blog', { elements: [], positions: [TAGS_PROXY], title: false }],
     ['an added entity', addPage, 'Blog', { elements: [PAGE], positions: [PAGE], title: false }],
     ['a removed reference and its proxy', removeTagsReference, 'Blog', { elements: [TAGS_REF], positions: [TAGS_PROXY], title: false }],
+    ['a hidden field', hideTagsField, 'Blog', { elements: [TAGS_FIELD], positions: [], title: false }],
     ['a renamed diagram', () => {}, 'Notes', { elements: [], positions: [], title: true }],
   ];
 }
@@ -340,6 +350,7 @@ function dataProviderRevertedChanges() {
       },
       ['Blog', 'Blog', 'Blog'],
     ],
+    ['a hidden field shown again', hideTagsField, showTagsField, ['Blog', 'Blog', 'Blog']],
     ['a renamed diagram and its reverse', () => {}, () => {}, ['Blog', 'Notes', 'Blog']],
   ];
 }

@@ -10,7 +10,7 @@
  *   "customTypes": [ { type, label } ],          // custom entity types
  *   "entities": [ { entityType, bundle, label, note, fields: [
  *       { name, label, fieldType, kind, cardinality, required, note,
- *         targetType, targetBundles } ] } ],
+ *         targetType, targetBundles, hidden } ] } ],  // hidden: off the canvas
  *   "annotations": {
  *     nodes: [ { id, kind, label, method?, note? } ],
  *     edges: [ { from, to, label } ] },
@@ -55,6 +55,7 @@ function serializeField(field) {
     note: field.data('note') || '',
     targetType: targetType,
     targetBundles: targetBundles,
+    hidden: !!field.data('hidden'),
   };
 }
 
@@ -134,6 +135,7 @@ export function documentToModel(doc) {
         field.cardinality != null ? field.cardinality : field.kind === 'multi' ? -1 : 1,
       );
       builtField.note = field.note || '';
+      builtField.hidden = field.hidden === true;
       built.addField(builtField);
     });
     model.addEntity(built);
