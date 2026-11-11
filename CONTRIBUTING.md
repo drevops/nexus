@@ -18,7 +18,7 @@ Set `PORT` to serve on another port, for example `PORT=8001 npm start`.
 
 `npm run lint` checks the code with ESLint and Prettier, and `npm run lint-fix` fixes what it can. `npm run test` runs both suites, which you can also run on their own:
 
-- `npm run test-unit` - Node's built-in test runner over the pure model modules (the parser, model, annotations, document, reference elements, edit history, entity types, export formats, keyboard shortcuts, templates and name conversions), the label fitting that sizes entity boxes and the template update helpers, plus checks that `npm run assemble` ships every file the app loads, that each template's saved diagram carries its version and the bundles its landing row advertises, that the release workflow stamps only constants the source exports, that the page's Nexus mark matches `logo.svg`, that every icon the page names is drawn, that every shortcut on the page parses and none clash, and that the edit palette offers every built-in entity type.
+- `npm run test-unit` - Node's built-in test runner over the pure model modules (the parser, model, annotations, document, reference elements, edit history, entity types, export formats, keyboard shortcuts, templates and name conversions), the label fitting that sizes entity boxes and the template update helpers, plus checks that `npm run assemble` ships every file the app loads, that each template's saved diagram carries its version and the bundles its landing row advertises, that the release workflow stamps only constants the source exports, that the page's Nexus mark matches `logo.svg`, that every icon the page names is drawn, that every shortcut on the page parses and none clash, and that the edit palette offers every built-in entity type. They also check that the document schema accepts every saved document and template, and that the `create-nexus-diagram` skill's tables and example match the code.
 - `npm run test-e2e` - Playwright drives the app end to end in Chromium: importing, rendering, editing, saving and exporting. It needs its browser installed once with `npx playwright install chromium`. The suite starts the dev server on port 8000, or reuses one already listening there - so if another checkout is serving that port, stop it first or the tests run against that checkout's code.
 - `npm run test-coverage` - the unit tests with c8 coverage, written to `.logs/`.
 
@@ -38,6 +38,9 @@ The app's own code lives in `src/`. The third-party builds it loads live in `ass
 - `src/styles.css` - the page's styles.
 - `templates/` - 1 saved `.nexus.json` diagram per template.
 - `scripts/update-templates.mjs` - rebuilds the template diagrams, with its helpers in `scripts/lib/`.
+- `schema/nexus.schema.json` - the JSON Schema of the `.nexus.json` format, shipped with the site.
+- `scripts/check-diagram.mjs` - checks documents against the schema and the rules it can't express, with the checks in `scripts/lib/diagram-check.mjs`.
+- `skills/create-nexus-diagram/SKILL.md` - the skill an AI agent follows to write a diagram from another source.
 
 Each built-in entity type, annotation kind, export format and name conversion is defined once: the entity types in `src/entity-types.js`, the annotation kinds in `src/annotations.js`, the export formats in `src/export-formats.js` and the conversions in `src/names.js`. Import them from there rather than copying them into another module, so the copies can't drift apart. Adding an entity type also means adding its button to the edit palette in `index.html`, and `npm run test-unit` fails until you do. In the same way, a new key that `src/annotations.js` reads fails the unit tests until the README's [Annotation overlay](README.md#annotation-overlay) table documents it.
 
@@ -47,7 +50,7 @@ The Nexus mark lives in 3 places: `logo.svg` for the README, `assets/favicon.svg
 
 Every change a user makes to the diagram should be undoable. Once an action has finished changing the graph, record it with `checkpoint(label)` from `src/undo.js`, and pass a coalesce key as well from a text field, so typing makes 1 step. Record in the action itself rather than in the helpers it calls, so 1 action stays 1 step. A display change that moves nodes without changing the model runs through `untracked()` instead, so undo leaves its layout alone.
 
-The schema in the `src/document.js` docblock describes the saved `.nexus.json` format. A change to what a document holds goes into that schema too, and into the full document in `tests/unit/document.test.js`: the unit tests open it into a headless Cytoscape graph, save it again and fail unless the copy matches the original exactly.
+`schema/nexus.schema.json` defines the saved `.nexus.json` format. A change to what a document holds goes into that schema and into the full document in `tests/fixtures/saved-document.js`. The unit tests open that document into a headless Cytoscape graph, save it again and fail unless the copy matches the original exactly. They also fail while the schema declares a key the full document lacks, or the other way round. A change to the entity types, the builder's field types or the base fields fails them until the `create-nexus-diagram` skill lists it.
 
 ## Updating the templates
 
@@ -84,7 +87,7 @@ Without the variable the job is skipped, and without the token its deploy step i
 
 ## Releasing
 
-Every push to `main` updates a draft release that lists the pull requests merged since the last one. Publishing that draft creates its tag and triggers `.github/workflows/release.yml`, which assembles `index.html`, `src/`, `assets/` and `templates/` with `npm run assemble`, stamps the release tag as the app version and deploys the site to GitHub Pages, which serves it at https://nexus.drevops.com. Pushes to `main` never touch GitHub Pages: they run the tests and update the Netlify project's main address.
+Every push to `main` updates a draft release that lists the pull requests merged since the last one. Publishing that draft creates its tag and triggers `.github/workflows/release.yml`, which assembles `index.html`, `src/`, `assets/`, `templates/` and `schema/` with `npm run assemble`, stamps the release tag as the app version and deploys the site to GitHub Pages, which serves it at https://nexus.drevops.com. Pushes to `main` never touch GitHub Pages: they run the tests and update the Netlify project's main address.
 
 GitHub Pages needs setting up once, under **Settings → Pages**: choose "GitHub Actions" as the source, enter `nexus.drevops.com` as the custom domain, and tick **Enforce HTTPS** once GitHub has issued the certificate. The domain resolves through a `CNAME` record for `nexus` in the `drevops.com` DNS zone that points at `drevops.github.io`. The repository has no `CNAME` file, because Pages ignores one when a workflow does the deploying. The old address, https://drevops.github.io/nexus/, redirects to the new one.
 

@@ -39,6 +39,7 @@ To try changes before they're released, open the [development version](https://d
 - **Undo and history.** Undo and redo your edits, and step back to an earlier version of the diagram from the History panel.
 - **Keyboard shortcuts.** Most buttons have a keyboard shortcut, and pressing **F1** labels every button on screen with its shortcut at once (see [Keyboard shortcuts](#keyboard-shortcuts)).
 - **Saved as a document.** Save the diagram, layout and all, as a `.nexus.json` file and open it again later.
+- **Built by an AI agent.** An AI agent can write a diagram from a screenshot, a spreadsheet or a spec (see [Build a diagram with an AI agent](#build-a-diagram-with-an-ai-agent)).
 - **Customisable & remembered.** Switch between light and dark themes, recolour entity types, swap their symbols or add types of your own; the choices persist in your browser and apply to every diagram you open.
 - **Export.** Export the whole canvas as **PNG** or **SVG**, or the field table as **CSV** - all client-side. The Export button remembers the last format you picked, so the next export takes 1 click.
 
@@ -267,6 +268,30 @@ Every key is optional. The following table lists what each key draws:
 - An annotation's id is the `id` it's given in `nodes`. Give each annotation an `id` that no other node has.
 
 An `attach`, an edge or a `computed_fields` entry that names an id the diagram doesn't have draws nothing. `computed_fields` takes entity ids only.
+
+## Build a diagram with an AI agent
+
+An AI agent can turn a content model you hold in another form into a Nexus diagram. The source can be a screenshot or photo of a diagram, a spreadsheet, a Word or PDF spec or a list of content types and fields. The agent writes a `.nexus.json` document, and you open it with **Open a saved diagram**.
+
+This repository gives the agent 2 files:
+
+- The [`create-nexus-diagram` skill](skills/create-nexus-diagram/SKILL.md) holds the steps for mapping a source onto entity types, fields and references. It also covers checking the result and includes a complete example document.
+- The [JSON Schema](schema/nexus.schema.json) defines the `.nexus.json` format. The app serves it at `https://nexus.drevops.com/schema/nexus.schema.json`.
+
+Give the skill to your agent in 1 of 2 ways:
+
+- In Claude Code, copy the `skills/create-nexus-diagram` folder into `~/.claude/skills/`, or into `.claude/skills/` in your project.
+- In any other agent, attach `SKILL.md` or give the agent its URL: `https://raw.githubusercontent.com/drevops/nexus/main/skills/create-nexus-diagram/SKILL.md`.
+
+Then hand the agent your source and ask for a Nexus diagram. The agent leaves the layout out, so Nexus lays the diagram out when you open it.
+
+To check a document before you open it, run this command in a clone of this repository:
+
+```bash
+npm run check-diagram -- path/to/diagram.nexus.json
+```
+
+The command prints each error and warning with the JSON Pointer of the part it's about, and `OK` for a document with neither. An error marks a break in the format or a part of the model that gets lost, such as 2 entities with the same id. A warning marks a part that opens but isn't drawn, such as a reference to an entity the document doesn't define. The command exits with 1 when any document has an error.
 
 ## Built with
 

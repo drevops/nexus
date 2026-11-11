@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { documentFromGraph, documentToModel } from '../../src/document.js';
 import { DEFAULT_TITLE } from '../../src/model.js';
+import { savedDocument } from '../fixtures/saved-document.js';
 
 // The vendored UMD build exports nothing to an ES module import and sets
 // globalThis.cytoscape instead.
@@ -32,68 +33,6 @@ const DOC = {
   ],
   annotations: { nodes: [{ id: 'api1', kind: 'api', label: 'API' }], edges: [{ from: 'api1', to: 'node.article', label: 'calls' }] },
   layout: { 'node.article': { x: 10, y: 20 } },
-};
-
-// Holds every key documentFromGraph() writes, in the form it writes them.
-const SAVED_DOC = {
-  nexus: 1,
-  title: 'Saved model',
-  colors: { node: '#112233' },
-  symbols: { node: 'diamond' },
-  customTypes: [{ type: 'gadget', label: 'Gadget' }],
-  entities: [
-    {
-      entityType: 'node',
-      bundle: 'article',
-      label: 'Article',
-      note: 'Long-form content.',
-      fields: [
-        {
-          name: 'field_tags',
-          label: 'Tags',
-          fieldType: 'entity_reference',
-          kind: 'multi',
-          cardinality: 3,
-          required: true,
-          note: 'Up to 3 tags.',
-          targetType: 'taxonomy_term',
-          targetBundles: ['tags'],
-          hidden: false,
-        },
-        {
-          name: 'field_media',
-          label: 'Media',
-          fieldType: 'entity_reference',
-          kind: 'single',
-          cardinality: 1,
-          required: false,
-          note: '',
-          targetType: 'media',
-          targetBundles: [],
-          hidden: true,
-        },
-      ],
-    },
-    { entityType: 'taxonomy_term', bundle: 'tags', label: 'Tags', note: '', fields: [] },
-    { entityType: 'media', bundle: '*', label: 'Any Media', note: '', fields: [] },
-  ],
-  annotations: {
-    nodes: [
-      { id: 'sync', kind: 'api', label: 'Sync API', note: 'Runs nightly.' },
-      { id: 'publish', kind: 'callback', label: 'Publish', method: 'POST' },
-    ],
-    edges: [{ from: 'sync', to: 'node.article', label: 'fills' }],
-  },
-  layout: {
-    'node.article': { x: 0, y: 0 },
-    'field:node.article:field_tags': { x: 200, y: -40 },
-    'field:node.article:field_media': { x: 200, y: 40 },
-    'taxonomy_term.tags': { x: 400, y: -40 },
-    'media.*': { x: 400, y: 40 },
-    sync: { x: -200, y: 0 },
-    publish: { x: -200, y: 100 },
-  },
-  ui: { panels: { legend: { open: true, dock: null, pos: { right: 16, bottom: 16 }, height: 260 } }, dockWidth: { left: 320, right: 340 } },
 };
 
 // Saves a headless graph of the elements. The preset layout keeps their
@@ -214,11 +153,11 @@ test('rejects input that is not a Nexus document', () => {
 });
 
 test('saves every key of a Nexus document and opens it back unchanged', () => {
-  const opened = documentToModel(SAVED_DOC);
+  const opened = documentToModel(savedDocument);
   const nodes = opened.modelData.nodes.map((node) => ({ ...node, position: { ...opened.layout[node.data.id] } }));
   const meta = { title: opened.modelData.meta.title, colors: opened.colors, symbols: opened.symbols, customTypes: opened.customTypes, ui: opened.ui };
 
-  assert.deepEqual(saveGraph(nodes.concat(opened.modelData.edges), meta), SAVED_DOC);
+  assert.deepEqual(saveGraph(nodes.concat(opened.modelData.edges), meta), savedDocument);
 });
 
 test('rounds saved positions and leaves hidden proxies out of the layout', () => {

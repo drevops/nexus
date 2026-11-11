@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nexus.drevops.com/schema/nexus.schema.json",
+  "title": "Nexus diagram",
+  "description": "A Nexus diagram document (.nexus.json): a Drupal content model with its annotations and, optionally, its canvas layout and display settings. Nexus opens it with 'Open a saved diagram'.",
+  "type": "object",
+  "required": ["nexus", "entities"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "description": "The URL of this schema, so an editor can validate the document.",
+      "type": "string"
+    },
+    "nexus": {
+      "description": "The version of the document format.",
+      "const": 1
+    },
+    "title": {
+      "description": "The diagram's title. Defaults to 'Content model'.",
+      "type": "string"
+    },
+    "colors": {
+      "description": "Fill colour overrides, keyed by entity type.",
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/machineName" },
+      "additionalProperties": { "$ref": "#/$defs/color" }
+    },
+    "symbols": {
+      "description": "Symbol overrides, keyed by entity type.",
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/machineName" },
+      "additionalProperties": { "$ref": "#/$defs/symbol" }
+    },
+    "customTypes": {
+      "description": "Entity types beyond the built-in ones (node, taxonomy_term, media, paragraph, block_content, user, external).",
+      "type": "array",
+      "items": { "$ref": "#/$defs/customType" }
+    },
+    "entities": {
+      "description": "The entity bundles of the model, each with its fields.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/entity" }
+    },
+    "annotations": {
+      "description": "Event, API and Callback nodes and the edges between any 2 nodes of the diagram.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/annotationNode" }
+        },
+        "edges": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/annotationEdge" }
+        }
+      }
+    },
+    "layout": {
+      "description": "Canvas positions keyed by node id. Leave it out, or empty, and Nexus lays the diagram out when it opens.",
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/position" }
+    },
+    "ui": {
+      "description": "The panel arrangement Nexus saves with a diagram. Leave it out, or null, to keep the arrangement the browser already has.",
+      "type": ["object", "null"]
+    }
+  },
+  "$defs": {
+    "machineName": {
+      "description": "A Drupal machine name: lowercase letters, digits and underscores.",
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$"
+    },
+    "color": {
+      "description": "A 6- or 8-digit hex colour.",
+      "type": "string",
+      "pattern": "^#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$"
+    },
+    "symbol": {
+      "description": "The shape that draws an entity type.",
+      "enum": ["rounded", "rectangle", "ellipse", "diamond", "hexagon", "tag", "barrel", "cut", "rhomboid", "pentagon", "octagon"]
+    },
+    "customType": {
+      "type": "object",
+      "required": ["type", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "$ref": "#/$defs/machineName" },
+        "label": { "type": "string", "minLength": 1 }
+      }
+    },
+    "entity": {
+      "description": "An entity bundle, such as a content type or a vocabulary. Its id in the diagram is '<entityType>.<bundle>'.",
+      "type": "object",
+      "required": ["entityType", "bundle", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "entityType": { "$ref": "#/$defs/machineName" },
+        "bundle": {
+          "description": "The bundle's machine name, or '*' for an entity that stands for every bundle of its type.",
+          "anyOf": [{ "$ref": "#/$defs/machineName" }, { "const": "*" }]
+        },
+        "label": { "type": "string", "minLength": 1 },
+        "note": { "description": "Free text shown as a note badge.", "type": "string" },
+        "fields": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/field" }
+        }
+      }
+    },
+    "field": {
+      "description": "A field on an entity bundle. Its id in the diagram is 'field:<entityType>.<bundle>:<name>'.",
+      "type": "object",
+      "required": ["name", "label", "fieldType", "kind"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "$ref": "#/$defs/machineName" },
+        "label": { "type": "string", "minLength": 1 },
+        "fieldType": {
+          "description": "The Drupal field type, such as 'string' or 'entity_reference'.",
+          "$ref": "#/$defs/machineName"
+        },
+        "kind": {
+          "description": "'single' or 'multi' for a configured field, by its cardinality; 'system' for a base field; 'calculated' for a computed one.",
+          "enum": ["single", "multi", "system", "calculated"]
+        },
+        "cardinality": {
+          "description": "How many values the field holds: 1, a limit above 1, or -1 for unlimited. Defaults to -1 for a 'multi' field and 1 for any other.",
+          "type": "integer",
+          "anyOf": [{ "const": -1 }, { "minimum": 1 }]
+        },
+        "required": { "type": "boolean" },
+        "note": { "description": "Free text shown as a note badge.", "type": "string" },
+        "targetType": {
+          "description": "The entity type a reference field points to, or null for a field that references nothing.",
+          "anyOf": [{ "$ref": "#/$defs/machineName" }, { "type": "null" }]
+        },
+        "targetBundles": {
+          "description": "The bundles a reference field points to. Empty points it to the '<targetType>.*' entity.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/machineName" }
+        },
+        "hidden": { "description": "True keeps the field off the canvas.", "type": "boolean" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "single" } } },
+          "then": { "properties": { "cardinality": { "const": 1 } } }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "multi" } } },
+          "then": { "properties": { "cardinality": { "not": { "const": 1 } } } }
+        }
+      ]
+    },
+    "annotationNode": {
+      "description": "An Event, API or Callback node. Its id is the id it's given here.",
+      "type": "object",
+      "required": ["id", "kind", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["event", "api", "callback"] },
+        "label": { "type": "string" },
+        "method": { "description": "A second line of text, such as an HTTP verb.", "type": "string" },
+        "note": { "description": "Free text shown as a note badge.", "type": "string" }
+      }
+    },
+    "annotationEdge": {
+      "description": "An edge between 2 nodes of the diagram, named by their ids.",
+      "type": "object",
+      "required": ["from", "to"],
+      "additionalProperties": false,
+      "properties": {
+        "from": { "type": "string", "minLength": 1 },
+        "to": { "type": "string", "minLength": 1 },
+        "label": { "type": "string" }
+      }
+    },
+    "position": {
+      "type": "object",
+      "required": ["x", "y"],
+      "additionalProperties": false,
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" }
+      }
+    }
+  }
+}
