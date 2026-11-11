@@ -109,6 +109,8 @@ The top-right corner holds the About box, a link to this repository, the light/d
 
 Panels float over the canvas. Drag one by its header, or drop it at the left or right edge (or click its pin) to dock it in a side rail that you can resize. The pin stands upright in blue on a docked panel and leans over on a floating one. To move a docked panel up or down its rail, or to the other rail, drag the grip at the left of its header. To move a docked panel out onto the canvas, drag the rest of its header.
 
+A docked panel grows only as tall as its content, and you can drag its bottom edge to make it shorter. The Inspector always takes the height of its form, and the other panels in its rail shrink or move further down the rail to make room.
+
 ## Editing
 
 Switch to **Edit** and a palette appears under the toolbar:
