@@ -2852,6 +2852,71 @@ test('searches on the button and zooms to the match at 100%', async ({ page }) =
   expect(await page.evaluate(() => window.__nexus.cy.elements('.faded').length)).toBeGreaterThan(0);
 });
 
+const MAP = 'paragraph.civictheme_map';
+
+// Where an entity with its visible fields sits once the view stops moving:
+// whether it overlaps an open floating panel, whether it stays inside the
+// canvas, and how far its centre is from the canvas centre.
+function placement(page, id) {
+  return page.evaluate((entityId) => {
+    const cy = window.__nexus.cy;
+    const canvas = cy.container().getBoundingClientRect();
+    const fields = cy.nodes('[group="field"]').filter((field) => field.data('entity') === entityId);
+    const rendered = cy.getElementById(entityId).union(fields).filter(':visible').renderedBoundingBox();
+    const box = { x1: canvas.left + rendered.x1, y1: canvas.top + rendered.y1, x2: canvas.left + rendered.x2, y2: canvas.top + rendered.y2 };
+    const panels = [...document.querySelectorAll('.stage__canvas > .panel')].map((panel) => panel.getBoundingClientRect());
+    const overlaps = (rect) => box.x1 < rect.right && rect.left < box.x2 && box.y1 < rect.bottom && rect.top < box.y2;
+
+    return {
+      animating: cy.animated(),
+      underPanel: panels.some(overlaps),
+      inCanvas: box.x1 >= canvas.left && box.x2 <= canvas.right && box.y1 >= canvas.top && box.y2 <= canvas.bottom,
+      offCentre: Math.round(Math.hypot((box.x1 + box.x2) / 2 - (canvas.left + canvas.right) / 2, (box.y1 + box.y2) / 2 - (canvas.top + canvas.bottom) / 2)),
+    };
+  }, id);
+}
+
+async function findEntity(page, term) {
+  await slFill(page, '#search', term);
+  await page.click('#search-btn');
+}
+
+test('centres the match of Find entity and its fields in the area the open panels leave free', async ({ page }) => {
+  await openDiagram(page, 'civictheme');
+  await page.click('#entities-toggle');
+  await page.click('#table-toggle');
+  await expect(page.locator('#table')).toBeVisible();
+
+  await findEntity(page, 'civictheme_map');
+
+  await expect
+    .poll(async () => ({ ...(await placement(page, MAP)), offCentre: null }))
+    .toEqual({ animating: false, underPanel: false, inCanvas: true, offCentre: null });
+});
+
+test('centres an entity focused from the Entities panel in the area the open panels leave free', async ({ page }) => {
+  await openDiagram(page, 'civictheme');
+  await page.click('#entities-toggle');
+  await page.click('#table-toggle');
+  await expect(page.locator('#table')).toBeVisible();
+
+  await page.locator('#entity-list .entity-row__name', { hasText: /^Map/ }).click();
+
+  await expect
+    .poll(async () => ({ ...(await placement(page, MAP)), offCentre: null }))
+    .toEqual({ animating: false, underPanel: false, inCanvas: true, offCentre: null });
+});
+
+test('centres the match of Find entity and its fields in the canvas when no panel is open', async ({ page }) => {
+  await openDiagram(page, 'civictheme');
+  await page.click('#legend-toggle');
+  await expect(page.locator('.stage__canvas > .panel')).toHaveCount(0);
+
+  await findEntity(page, 'civictheme_map');
+
+  await expect.poll(() => placement(page, MAP)).toEqual({ animating: false, underPanel: false, inCanvas: true, offCentre: 0 });
+});
+
 test('sizes a single docked panel to its content', async ({ page }) => {
   await loadExample(page);
 
