@@ -159,6 +159,7 @@ export class Field {
     this.targetBundles = [...targetBundles];
     this.cardinality = cardinality;
     this.note = '';
+    this.hidden = false;
   }
 
   isReference() {
@@ -269,6 +270,9 @@ export class ContentModel {
             required: fieldItem.required,
             note: fieldItem.note || '',
             entity: entity.id(),
+            // A shown field has no hidden key, so its data matches a field
+            // shown again with removeData().
+            ...(fieldItem.hidden ? { hidden: true } : {}),
           },
         });
 

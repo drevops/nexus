@@ -99,7 +99,7 @@ The toolbar offers:
 - **Layout** - re-run the current layout, or pick another from the arrow beside it: **Columns** stacks each entity and its fields in columns that fill the screen, grouped by entity type, while **LR** and **TB** lay the whole diagram out as 1 flow, left to right or top to bottom. Your pick is remembered.
 - **Tidy** - straighten each entity's fields and line the entities up in columns near where they already are, so a diagram you've dragged around or edited gets neat without being rearranged. Drag an entity roughly into place and Tidy slots it in.
 - **Entities** - an index with per-type filters and field counts; click a bundle to focus it or open its fields.
-- **Table** - a searchable table of all fields (or a single entity's) with type, cardinality, requiredness and references.
+- **Table** - a searchable table of all fields (or a single entity's) with type, cardinality, requiredness and references. The eye at the end of a row hides that field and its proxies on the canvas, and a second click shows them again. The field stays in the model and in the table. The target beside the eye goes to the field on the canvas. A hidden field stays hidden when **Fields** is turned back on, and a layout keeps it beside its entity.
 - **Legend** - what each symbol means.
 - **History** - the versions of the diagram since you opened it, up to your last 200 changes (see [Undo and history](#undo-and-history)).
 - **Undo / Redo** - step back and forward through your changes.
@@ -145,7 +145,7 @@ To copy fields from another entity, pick it from **Copy from**. Its fields land 
 
 ## Undo and history
 
-**Undo** and **Redo** in the toolbar step back and forward through your changes, and so do `Ctrl+Z` and `Ctrl+Shift+Z` or `Ctrl+Y` (`⌘Z` and `⇧⌘Z` on a Mac). Every change to the diagram counts: adding, renaming and deleting entities, fields, references and annotations, editing them in the Inspector, dragging nodes, **Tidy**, re-running the layout with the **Layout** button and renaming the diagram. Typing into a field is 1 step, however many characters it takes. While a text box has the focus, the shortcuts undo your typing there instead.
+**Undo** and **Redo** in the toolbar step back and forward through your changes, and so do `Ctrl+Z` and `Ctrl+Shift+Z` or `Ctrl+Y` (`⌘Z` and `⇧⌘Z` on a Mac). Every change to the diagram counts: adding, renaming and deleting entities, fields, references and annotations, editing them in the Inspector, hiding or showing a field from the **Table**, dragging nodes, **Tidy**, re-running the layout with the **Layout** button and renaming the diagram. Typing into a field is 1 step, however many characters it takes. While a text box has the focus, the shortcuts undo your typing there instead.
 
 **History** opens a panel listing the versions of the diagram since you opened it, newest first, with the time of each change. It keeps your last 200 changes, so in a longer session the oldest ones leave the list. Click a version to go back to it. The versions after it stay in the list, greyed out, so you can jump forward again until your next edit replaces them.
 
@@ -153,7 +153,7 @@ Undo covers what the diagram holds, not how it's shown, so it leaves the **Field
 
 ## Saving diagrams
 
-**Save** downloads the diagram as a `.nexus.json` document holding the model, its layout, the entity colours and symbols, any custom types and the panel arrangement, and **Open** brings it back with every node where you left it. The title box at the top left names the diagram and the files it saves and exports. **New** starts an empty model, and **Import** returns to the import screen to load another config folder or template.
+**Save** downloads the diagram as a `.nexus.json` document holding the model, its layout, the fields you've hidden, the entity colours and symbols, any custom types and the panel arrangement, and **Open** brings it back with every node where you left it. The title box at the top left names the diagram and the files it saves and exports. **New** starts an empty model, and **Import** returns to the import screen to load another config folder or template.
 
 ## Keyboard shortcuts
 

@@ -30,6 +30,7 @@ import { humanize, machineName } from './names.js';
 import { REFERENCE_ELEMENTS, syncReferenceElements } from './references.js';
 import { fitWidth, wrapLabel } from './label-fit.js';
 import { checkpoint, untracked } from './undo.js';
+import { describeNode } from './history.js';
 import { packColumns, tidyColumns } from './packing.js';
 import { $ } from './dom.js';
 
@@ -714,12 +715,26 @@ function buildController(model, options = {}) {
       return typeVisible[node.data('entityType')] !== false;
     }
     if (group === 'field') {
-      return fieldsMode && typeVisible[entityTypeOf(node.data('entity'))] !== false;
+      return hiddenBy(node) === null;
     }
     if (group === 'proxy') {
-      return proxyMode && fieldsMode && typeVisible[entityTypeOf(node.data('entity'))] !== false && typeVisible[node.data('entityType')] !== false;
+      return proxyMode && hiddenBy(cy.getElementById(node.data('field'))) === null && typeVisible[node.data('entityType')] !== false;
     }
     return true;
+  }
+
+  // What keeps a field off the canvas: the field itself, the Fields switch,
+  // its entity type's filter, or null when nothing does.
+  function hiddenBy(field) {
+    if (field.data('hidden')) {
+      return 'field';
+    }
+
+    if (!fieldsMode) {
+      return 'fields';
+    }
+
+    return typeVisible[entityTypeOf(field.data('entity'))] === false ? 'type' : null;
   }
 
   function edgeVisible(edge) {
@@ -784,15 +799,33 @@ function buildController(model, options = {}) {
     return { options: options, gap: { x: spacing.columnSep, y: spacing.islandSep } };
   }
 
+  // Layouts place only the shown nodes, so each hidden field moves with its
+  // entity and is beside it when shown again.
+  function keepHiddenFields(run) {
+    const offsets = cy.nodes('[group="field"][?hidden]').map((field) => {
+      const entity = cy.getElementById(field.data('entity'));
+
+      return { field: field, entity: entity, dx: field.position('x') - entity.position('x'), dy: field.position('y') - entity.position('y') };
+    });
+
+    run();
+
+    offsets.forEach(({ field, entity, dx, dy }) => {
+      field.position({ x: entity.position('x') + dx, y: entity.position('y') + dy });
+    });
+  }
+
   function runLayout() {
     const { options, gap } = layoutSettings();
     const elements = shown(cy.elements());
 
-    if (LAYOUTS[layoutName].packed) {
-      packIslands(elements, options, gap);
-    } else {
-      elements.layout(options).run();
-    }
+    keepHiddenFields(() => {
+      if (LAYOUTS[layoutName].packed) {
+        packIslands(elements, options, gap);
+      } else {
+        elements.layout(options).run();
+      }
+    });
 
     resetView();
     positionCaptions();
@@ -803,12 +836,42 @@ function buildController(model, options = {}) {
   // columns near where they were (see tidyColumns()). The view stays put.
   function tidy() {
     const { options, gap } = layoutSettings();
-    const islands = layIslandsOut(shown(cy.elements()), options);
-    const boxes = islands.map((entry) => ({ x: entry.before.x1, y: entry.before.y1, w: entry.box.w, h: entry.box.h }));
 
-    placeIslands(islands, tidyColumns(boxes, gap).positions);
+    keepHiddenFields(() => {
+      const islands = layIslandsOut(shown(cy.elements()), options);
+      const boxes = islands.map((entry) => ({ x: entry.before.x1, y: entry.before.y1, w: entry.box.w, h: entry.box.h }));
+
+      placeIslands(islands, tidyColumns(boxes, gap).positions);
+    });
     positionCaptions();
     positionNotes();
+  }
+
+  // Hides a field on the canvas with its proxies and reference edges, or
+  // shows it again with its proxies placed beside it, as 1 history step.
+  function setFieldHidden(id, hidden) {
+    const field = cy.getElementById(id);
+
+    if (field.empty() || !!field.data('hidden') === hidden) {
+      return;
+    }
+
+    if (hidden) {
+      field.data('hidden', true);
+    } else {
+      field.removeData('hidden');
+    }
+
+    refresh(false);
+
+    if (!hidden) {
+      placeProxies(cy.nodes('[group="proxy"]').filter((proxy) => proxy.data('field') === id));
+    }
+
+    positionCaptions();
+    positionNotes();
+    checkpoint((hidden ? 'Hid ' : 'Showed ') + describeNode(field));
+    bump();
   }
 
   // A comparator that orders entities by the place of their type in the
@@ -1327,6 +1390,7 @@ function buildController(model, options = {}) {
     clearFocus,
     focusEntity,
     focusField,
+    setFieldHidden,
     rebuildCaptions,
     rebuildNotes,
     renderedBottom,
@@ -1366,6 +1430,9 @@ function buildController(model, options = {}) {
             return { id: e.target().id(), label: target.nonempty() ? target.data('label') : e.target().id() };
           });
         return {
+          id: f.id(),
+          hidden: !!f.data('hidden'),
+          hiddenBy: hiddenBy(f),
           entityId: f.data('entity'),
           entity: owner.nonempty() ? owner.data('label') : f.data('entity'),
           entityType: owner.nonempty() ? owner.data('entityType') : '',
@@ -1470,10 +1537,13 @@ function wire() {
   // so their layout is not a history step. A click on a switch's label
   // clicks its input too, so the handlers take 'sl-change', which fires
   // once per toggle.
+  // The Fields table shows which fields are on the canvas, so the Fields
+  // switch notifies the store.
   $('fields-toggle').addEventListener('sl-change', (evt) => {
     fieldsMode = evt.target.checked;
     controller.clearFocus();
     untracked(() => controller.refresh(true));
+    bump();
   });
 
   $('proxy-toggle').addEventListener('sl-change', (evt) => {
@@ -1484,6 +1554,7 @@ function wire() {
     }
     controller.clearFocus();
     untracked(() => controller.refresh(true));
+    bump();
   });
 
   $('machine-names').addEventListener('sl-change', (evt) => {

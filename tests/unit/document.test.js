@@ -58,6 +58,7 @@ const SAVED_DOC = {
           note: 'Up to 3 tags.',
           targetType: 'taxonomy_term',
           targetBundles: ['tags'],
+          hidden: false,
         },
         {
           name: 'field_media',
@@ -69,6 +70,7 @@ const SAVED_DOC = {
           note: '',
           targetType: 'media',
           targetBundles: [],
+          hidden: true,
         },
       ],
     },
@@ -183,6 +185,26 @@ function dataProviderFieldCardinality() {
     ['a single-value field without a cardinality', { kind: 'single' }, 1],
     ['a system field without a cardinality', { kind: 'system' }, 1],
     ['a field with a cardinality', { kind: 'multi', cardinality: 3 }, 3],
+  ];
+}
+
+test('hides only a field the document marks hidden', async (t) => {
+  for (const [name, field, hidden] of dataProviderHiddenField()) {
+    await t.test(name, () => {
+      const { modelData } = documentToModel({ entities: [{ entityType: 'node', bundle: 'page', fields: [{ name: 'field_body', kind: 'single', ...field }] }] });
+      const node = modelData.nodes.find((candidate) => candidate.data.id === 'field:node.page:field_body');
+
+      assert.equal(node.data.hidden, hidden);
+    });
+  }
+});
+
+function dataProviderHiddenField() {
+  return [
+    ['a hidden field', { hidden: true }, true],
+    ['a shown field', { hidden: false }, undefined],
+    ['a field without the key', {}, undefined],
+    ['a hidden value that is not true', { hidden: 'yes' }, undefined],
   ];
 }
 
