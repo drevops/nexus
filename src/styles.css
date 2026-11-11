@@ -675,10 +675,13 @@ sl-button#zoom-level::part(base) {
   border-radius: 8px;
 }
 
-/* A docked panel is sized to its content, so a scrollbar that narrowed the
-   body would wrap the content taller than the panel. */
 .panel.is-docked .panel__body {
   padding-bottom: 10px;
+}
+
+/* The docked Inspector is sized to its form, so a scrollbar that narrowed the
+   body would wrap the form taller than the panel. */
+#inspector.is-docked .panel__body {
   scrollbar-gutter: stable;
 }
 
