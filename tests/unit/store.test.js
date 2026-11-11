@@ -12,6 +12,7 @@ import {
   exportLayout,
   dockPanel,
   dockedPanels,
+  setPanelHeight,
   PANEL_ORDER,
 } from '../../src/store.js';
 
@@ -261,3 +262,25 @@ test('keeps the order a panel has when the imported layout has none', () => {
 
   assert.deepEqual(dockedPanels('right'), ['inspector', 'entities', 'table']);
 });
+
+test('keeps a docked panel height between the minimum and the maximum', async (t) => {
+  for (const [name, height, maxHeight, expected] of dataProviderPanelHeight()) {
+    await t.test(name, () => {
+      setPanelHeight('legend', height, maxHeight);
+
+      assert.equal(getState().panels.legend.height, expected);
+    });
+  }
+});
+
+function dataProviderPanelHeight() {
+  return [
+    ['a height below the maximum', 300, 500, 300],
+    ['a height at the maximum', 500, 500, 500],
+    ['a height above the maximum', 1200, 500, 500],
+    ['a height below the minimum', 40, 500, 90],
+    ['a maximum below the minimum', 300, 60, 90],
+    ['a fractional height', 300.6, 500, 301],
+    ['a fractional maximum', 800, 412.4, 412],
+  ];
+}

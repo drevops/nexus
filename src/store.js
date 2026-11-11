@@ -26,6 +26,9 @@ const DEFAULT_POS = {
 // panel, above the z-index every panel starts at.
 const PANEL_Z = 10;
 
+// Matches the min-height of .panel.is-docked in styles.css.
+const MIN_PANEL_HEIGHT = 90;
+
 const LAYOUT_KEY = 'nexusLayout';
 
 let controller = null;
@@ -215,7 +218,7 @@ export function movePanel(id, left, top) {
 }
 
 export function pinPanel(id, side) {
-  // Clear any prior height so a freshly docked panel fills the sidebar.
+  // Clear any prior height so a freshly docked panel takes its content height.
   patchPanel(id, { open: true, dock: side, height: null });
 }
 
@@ -237,7 +240,7 @@ export function dockPanel(id, side, index) {
     panels[key] = { ...panels[key], order };
   });
 
-  // A panel that changes side fills its new rail, as a pinned panel does.
+  // A panel that changes side takes its content height, as a pinned panel does.
   const height = state.panels[id].dock === side ? state.panels[id].height : null;
 
   panels[id] = { ...panels[id], open: true, dock: side, height };
@@ -265,8 +268,9 @@ export function setDockWidth(side, width) {
   emit({ dockWidth: { ...state.dockWidth, [side]: Math.max(220, Math.min(680, Math.round(width))) } });
 }
 
-export function setPanelHeight(id, height) {
-  patchPanel(id, { height: Math.max(90, Math.min(900, Math.round(height))) });
+// The minimum wins over a maxHeight below it.
+export function setPanelHeight(id, height, maxHeight) {
+  patchPanel(id, { height: Math.max(MIN_PANEL_HEIGHT, Math.round(Math.min(height, maxHeight))) });
 }
 
 export function exportLayout() {

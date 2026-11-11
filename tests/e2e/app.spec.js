@@ -175,6 +175,34 @@ async function buildStoryWithField(page) {
   await page.waitForFunction(() => window.__nexus.cy.getElementById('field:node.story:field_1').nonempty());
 }
 
+// Heights of a docked panel, its body and the first element in its body, and
+// the height of the dock that holds it.
+function dockedSizes(page, selector) {
+  return page.locator(selector).evaluate((panel) => {
+    const bodyEl = panel.querySelector('.panel__body');
+
+    return {
+      panel: panel.getBoundingClientRect().height,
+      dock: panel.closest('.dock__scroll').clientHeight,
+      bodyClient: bodyEl.clientHeight,
+      bodyScroll: bodyEl.scrollHeight,
+      content: bodyEl.firstElementChild.getBoundingClientRect().height,
+    };
+  });
+}
+
+// Drags the height handle of a docked panel by the given distance.
+async function dragPanelEdge(page, selector, distance) {
+  const handle = await page.locator(selector + ' .panel__vresize').boundingBox();
+  const x = handle.x + handle.width / 2;
+  const y = handle.y + handle.height / 2;
+
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x, y + distance, { steps: 6 });
+  await page.mouse.up();
+}
+
 // The callback returns nothing, since Playwright is slow to serialize the
 // collection emit() returns.
 function tapNode(page, id) {
@@ -412,6 +440,58 @@ test('resizes a docked panel vertically', async ({ page }) => {
   await page.mouse.up();
   const after = (await page.locator('#table').boundingBox()).height;
   expect(after).toBeGreaterThan(before + 70);
+});
+
+test('stops a docked panel growing past its content', async ({ page }) => {
+  await loadExample(page);
+
+  await page.click('#legend .panel__pin');
+  const full = (await dockedSizes(page, '#legend')).panel;
+
+  await dragPanelEdge(page, '#legend', -120);
+  const shrunk = await dockedSizes(page, '#legend');
+  expect(shrunk.panel).toBeLessThan(full - 100);
+  expect(shrunk.bodyScroll).toBeGreaterThan(shrunk.bodyClient);
+
+  await dragPanelEdge(page, '#legend', 400);
+  expect(Math.abs((await dockedSizes(page, '#legend')).panel - full)).toBeLessThanOrEqual(1);
+});
+
+test('gives the docked Inspector its full height beside the other docked panels', async ({ page }) => {
+  // The entity form is taller than the dock of a 720px window.
+  await page.setViewportSize({ width: 1280, height: 1200 });
+  await loadExample(page);
+
+  await page.click('#legend .panel__pin');
+  await page.click('#table-toggle');
+  await page.click('#table .panel__pin');
+  await page.click('#mode-build');
+  await tapNode(page, 'node.event');
+  await page.click('#inspector .panel__pin');
+  await expect(page.locator('#dock-right #inspector')).toBeVisible();
+
+  const ids = await page.locator('#dock-right .panel').evaluateAll((panels) => panels.map((panel) => panel.id));
+  expect(ids).toEqual(['table', 'legend', 'inspector']);
+
+  const sizes = await dockedSizes(page, '#inspector');
+  expect(sizes.bodyScroll).toBeLessThanOrEqual(sizes.bodyClient + 1);
+  await expect(page.locator('#inspector .panel__vresize')).toHaveCount(0);
+
+  const table = await dockedSizes(page, '#table');
+  expect(table.bodyScroll).toBeGreaterThan(table.bodyClient);
+});
+
+test('scrolls the docked Inspector when its form is taller than the dock', async ({ page }) => {
+  await loadExample(page);
+
+  await page.click('#mode-build');
+  await tapNode(page, 'node.event');
+  await page.click('#inspector .panel__pin');
+  await expect(page.locator('#dock-right #inspector')).toBeVisible();
+
+  const sizes = await dockedSizes(page, '#inspector');
+  expect(sizes.panel).toBeLessThanOrEqual(sizes.dock);
+  expect(sizes.bodyScroll).toBeGreaterThan(sizes.bodyClient);
 });
 
 test('remembers the panel layout across reloads', async ({ page }) => {
@@ -2436,19 +2516,17 @@ test('searches on the button and zooms to the match at 100%', async ({ page }) =
   expect(await page.evaluate(() => window.__nexus.cy.elements('.faded').length)).toBeGreaterThan(0);
 });
 
-test('a single docked panel fills the sidebar height', async ({ page }) => {
+test('sizes a single docked panel to its content', async ({ page }) => {
   await loadExample(page);
 
   await page.click('#legend .panel__pin');
   await expect(page.locator('#legend.is-docked')).toBeVisible();
 
-  const sizes = await page.evaluate(() => {
-    const panel = document.getElementById('legend');
-    const scroll = panel.closest('.dock__scroll');
-    return { panelH: panel.getBoundingClientRect().height, scrollH: scroll.clientHeight };
-  });
-  // The lone docked panel fills the dock's content box (minus its padding).
-  expect(sizes.panelH).toBeGreaterThan(sizes.scrollH - 40);
+  const sizes = await dockedSizes(page, '#legend');
+
+  expect(sizes.panel).toBeLessThan(sizes.dock);
+  expect(sizes.bodyScroll).toBeLessThanOrEqual(sizes.bodyClient + 1);
+  expect(sizes.content).toBeGreaterThan(sizes.bodyClient - 12);
 });
 
 test('labels reference edges with cardinality in the default proxy view', async ({ page }) => {

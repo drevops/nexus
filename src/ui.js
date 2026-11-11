@@ -6,9 +6,10 @@
  * header.
  *
  * Dropping a panel near an edge, or clicking its pin, docks it into a side
- * rail. Any number of docked panels stack, each scrolling independently, and
- * the rail can be resized horizontally. Dragging a docked panel's header
- * undocks it, while its grip handle moves it within or between the rails.
+ * rail. Any number of docked panels stack, each at most as tall as its
+ * content and scrolling independently, and the rail can be resized
+ * horizontally. Dragging a docked panel's header undocks it, while its grip
+ * handle moves it within or between the rails.
  *
  * The canvas host is a no-update component so the Cytoscape instance and the
  * imperative overlays it owns are never re-rendered.
@@ -253,14 +254,28 @@ function startResize(side, evt) {
   evt.preventDefault();
 }
 
+// The height a panel needs to show its body without scrolling.
+function contentHeight(el) {
+  const bodyEl = el.querySelector('.panel__body');
+
+  return el.getBoundingClientRect().height - bodyEl.clientHeight + bodyEl.scrollHeight;
+}
+
+// The height of a dock's content box, inside its padding.
+function dockHeight(el) {
+  const scroll = el.closest('.dock__scroll');
+  const style = getComputedStyle(scroll);
+
+  return scroll.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+}
+
 function startVResize(id, evt, el) {
   const startY = evt.clientY;
   const startH = el.getBoundingClientRect().height;
+  const maxH = Math.min(contentHeight(el), dockHeight(el));
 
-  // Fixing a height makes this panel stop filling; the other docked panels then
-  // share the remaining sidebar space.
   function move(e) {
-    setPanelHeight(id, startH + (e.clientY - startY));
+    setPanelHeight(id, startH + (e.clientY - startY), maxH);
   }
 
   function up() {
@@ -278,16 +293,28 @@ function startVResize(id, evt, el) {
 
 const FLOAT_DRAG_TITLE = 'Drag to move, drop at an edge to dock';
 
+// A docked panel is never taller than its content. The Inspector keeps its
+// content height and the other panels shrink, while a resized panel keeps the
+// height it was given as a maximum.
+function dockStyle(id, panel) {
+  if (id === 'inspector') {
+    return { zIndex: panel.z, flex: '0 0 auto', maxHeight: '100%' };
+  }
+
+  if (panel.height) {
+    return { zIndex: panel.z, flex: '0 0 auto', maxHeight: panel.height + 'px' };
+  }
+
+  return { zIndex: panel.z, flex: '0 1 auto' };
+}
+
 function Panel({ id, panel, dragging, header, children }) {
   const ref = useRef(null);
   const docked = !!panel.dock;
+  const resizable = docked && id !== 'inspector';
   const cls =
     'panel' + (WIDE[id] ? ' panel--wide' : '') + (id === 'legend' ? ' panel--legend' : '') + (docked ? ' is-docked' : '') + (dragging ? ' is-dragging' : '');
-  const style = docked
-    ? panel.height
-      ? { zIndex: panel.z, flex: '0 0 auto', height: panel.height + 'px' }
-      : { zIndex: panel.z, flex: '1 1 0', minHeight: '90px' }
-    : floatStyle(panel);
+  const style = docked ? dockStyle(id, panel) : floatStyle(panel);
 
   return html` <section id=${id} ref=${ref} class=${cls} style=${style} onMouseDown=${() => focusPanel(id)}>
     <div
@@ -322,7 +349,7 @@ function Panel({ id, panel, dragging, header, children }) {
       ></button>
     </div>
     <div class="panel__body">${children}</div>
-    ${docked ? html`<div class="panel__vresize" title="Drag to resize height" onMouseDown=${(e) => startVResize(id, e, ref.current)}></div>` : null}
+    ${resizable ? html`<div class="panel__vresize" title="Drag to resize height" onMouseDown=${(e) => startVResize(id, e, ref.current)}></div>` : null}
   </section>`;
 }
 
