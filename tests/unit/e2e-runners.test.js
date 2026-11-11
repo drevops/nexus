@@ -6,7 +6,9 @@ import { join } from 'node:path';
 const ROOT = join(import.meta.dirname, '..', '..');
 const E2E_DIR = join(ROOT, 'tests', 'e2e');
 const WORKFLOW = readFileSync(join(ROOT, '.github', 'workflows', 'test-nodejs.yml'), 'utf8');
-const SPECS = readdirSync(E2E_DIR).filter((name) => name.endsWith('.spec.js')).sort();
+const SPECS = readdirSync(E2E_DIR)
+  .filter((name) => name.endsWith('.spec.js'))
+  .sort();
 
 // The runner numbers the E2E job's matrix lists.
 function workflowRunners() {
