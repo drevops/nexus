@@ -1170,27 +1170,42 @@ body.is-dragging-panel * {
   gap: 0.6rem;
 }
 
+/* Each type and the add form share 1 line of columns: label (or the 2 name
+   inputs), color, symbol and the + or - button. */
 .type-row {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.type-row__label {
-  font-size: 0.82rem;
-}
-
-.type-row__controls,
-.type-add__controls,
-.type-add__names {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto 1.875rem;
   align-items: center;
   gap: 0.4rem;
 }
 
+.type-row__label {
+  font-size: 0.82rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .type-row__symbol {
-  flex: 1 1 auto;
+  width: 4.5rem;
+}
+
+/* The picked symbol stands in for its name, which stays in the title. */
+.type-row__symbol::part(display-input) {
+  flex: 0 0 0;
+  width: 0;
   min-width: 0;
+  padding: 0;
+  opacity: 0;
+}
+
+/* The list is wider than the select, so the option names fit on 1 line. */
+.type-row__symbol::part(listbox) {
+  width: 13.5rem;
+}
+
+.type-row__symbol.is-list-end::part(listbox) {
+  margin-inline-start: calc(100% - 13.5rem);
 }
 
 .type-row__preview {
@@ -1198,30 +1213,42 @@ body.is-dragging-panel * {
   align-items: center;
 }
 
-.type-row__remove {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 3px;
-  color: var(--muted);
-  background: none;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  cursor: pointer;
+.type-row__action {
+  grid-column: 4;
 }
 
-.type-row__remove:hover {
-  color: #b3261e;
-  border-color: #b3261e;
+.type-row__action::part(base) {
+  width: 1.875rem;
+  padding: 0;
+}
+
+.type-row__action::part(label) {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
 }
 
 .type-add {
   margin-top: 0.7rem;
   padding-top: 0.7rem;
   border-top: 1px solid var(--border);
+}
+
+.type-add__names {
   display: flex;
-  flex-direction: column;
   gap: 0.4rem;
+  min-width: 0;
+}
+
+/* In a narrow side rail the label or the name inputs take a line of their
+   own above the controls. */
+.settings-body.is-narrow .type-row {
+  grid-template-columns: auto auto minmax(0, 1fr) 1.875rem;
+}
+
+.settings-body.is-narrow .type-row__label,
+.settings-body.is-narrow .type-add__names {
+  grid-column: 1 / -1;
 }
 
 .type-add__input {
