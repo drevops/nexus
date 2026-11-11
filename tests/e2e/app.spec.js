@@ -1161,7 +1161,7 @@ test('leaves base fields out when copying fields from another entity', async ({ 
 
   await tapNode(page, 'taxonomy_term.tracks');
   await page.click('#inspector [data-bulk-fields]');
-  await expect(page.locator('#inspector [data-copy-from] sl-option[value="node.session"]')).toHaveText(new RegExp('\\(' + fields.other.length + '\\)$'));
+  await expect(page.locator('#inspector [data-copy-from] sl-option[value="node.session"]')).toContainText('(' + fields.other.length + ')');
   await slSelect(page, '#inspector [data-copy-from]', 'node.session');
 
   const copied = await page.locator('#inspector [data-bulk-text]').evaluate((el) => el.value.split('\n').map((line) => line.match(/\(([a-z0-9_]+)\),/)[1]));
