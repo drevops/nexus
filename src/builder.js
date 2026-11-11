@@ -21,6 +21,7 @@ import { ANNOTATION_KINDS } from './annotations.js';
 import { findEntityType } from './entity-types.js';
 import { describeNode } from './history.js';
 import { humanize, machineName } from './names.js';
+import { clearSpot } from './packing.js';
 import { checkpoint } from './undo.js';
 import { openInspector, closeInspector, setBuilder, bump, getController, getState, subscribe } from './store.js';
 import { $ } from './dom.js';
@@ -42,6 +43,10 @@ let rightDrag = null;
 // added together are stacked.
 const FIELD_DISTANCE = 200;
 const FIELD_SPACING = 56;
+
+// Screen pixels kept between a node placed without a position and the nodes
+// around it.
+const CLEARANCE = 24;
 
 function startPlaceNote(kind) {
   connectMode = false;
@@ -681,12 +686,27 @@ function renameField(oldId, newNameRaw) {
 
 /* Mutations ------------------------------------------------------------- */
 
+// A node without a position starts at the view's centre, where another node
+// can already sit, so it moves to the nearest clear spot in view.
+function addNode(data, position) {
+  const node = cy.add({ group: 'nodes', data: data, position: position || viewportCenter() });
+
+  if (position) {
+    return;
+  }
+
+  const others = cy.nodes(':visible').not(node);
+  const obstacles = others.map((other) => other.boundingBox());
+
+  node.shift(clearSpot(node.boundingBox(), obstacles, cy.extent(), CLEARANCE / cy.zoom()));
+}
+
 function addEntity(entityType, bundle, label, position) {
   const id = entityNodeId(entityType, bundle);
   if (cy.getElementById(id).nonempty()) {
     return null;
   }
-  cy.add({ group: 'nodes', data: { id: id, group: 'entity', entityType: entityType, bundle: bundle, label: label }, position: position || viewportCenter() });
+  addNode({ id: id, group: 'entity', entityType: entityType, bundle: bundle, label: label }, position);
   return id;
 }
 
@@ -736,7 +756,7 @@ function addAnnotation(kind, label, method, position) {
   if (method) {
     data.method = method;
   }
-  cy.add({ group: 'nodes', data: data, position: position || viewportCenter() });
+  addNode(data, position);
   return id;
 }
 

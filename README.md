@@ -100,7 +100,7 @@ The diagram opens with its entities stacked in columns that fill the screen, wit
 - **Undo / Redo** - step back and forward through your changes.
 - **Export** - export the whole canvas as PNG or SVG, or the field table as CSV. Pick a format from the arrow beside it and the button keeps that format, so the next press exports it straight away.
 
-The top-right corner holds the About box, a link to this repository, the light/dark theme toggle and **Settings**, where you choose each entity type's colour and symbol or add types of your own. The status bar holds the zoom controls - **Reset**, **Fit**, zoom out, zoom in and a zoom-level menu - and the mouse wheel zooms while dragging the canvas pans. Click a node to focus it and its connections. Hold the right mouse button down on a node and drag to move it, in View mode as well as Edit, and right-click an entity to isolate it so it moves together with its fields.
+The top-right corner holds the About box, a link to this repository, the light/dark theme toggle and **Settings**, where you choose each entity type's color and symbol or add types of your own. The status bar holds the zoom controls: **Reset**, **Fit**, zoom out, zoom in and a zoom-level menu. The mouse wheel or a trackpad pinch zooms the diagram, and dragging the canvas pans it. The browser's zoom keys, <kbd>Ctrl</kbd> with <kbd>+</kbd>, <kbd>-</kbd> or <kbd>0</kbd>, zoom the diagram and leave the page at its size. A pinch over the toolbar or a panel does nothing. Click a node to focus it and its connections. Hold the right mouse button down on a node and drag to move it, in View mode as well as Edit, and right-click an entity to isolate it so it moves together with its fields.
 
 Panels float over the canvas. Drag one by its header, or drop it at the left or right edge (or click its pin) to dock it in a side rail that you can resize.
 
@@ -108,7 +108,7 @@ Panels float over the canvas. Drag one by its header, or drop it at the left or 
 
 Switch to **Edit** and a palette appears under the toolbar:
 
-- **Content**, **Vocab**, **Media**, **Para**, **Block**, **User** and **External** add an entity. Click one to fill in a form, or drag it onto the canvas to drop one in place.
+- **Content**, **Vocab**, **Media**, **Para**, **Block**, **User** and **External** add an entity. Click one to fill in a form, and the new entity lands in the clear spot nearest the middle of the view. Drag one onto the canvas to drop it in place.
 - **Field** adds a field to an entity and can reuse the definition of a field that already exists. The **+** handles around a selected entity add a field in a single click.
 - **Event**, **API** and **Callback** place an annotation: click one and then the canvas, or drag it into place.
 - **Connect** lets you drag from a field to an entity to create a reference.
@@ -182,8 +182,8 @@ The table uses the Windows and Linux names. A Mac labels the same keys with **‚å
 | Content, Vocab, Media, Para, Block, User, External | `Shift+C`, `Shift+V`, `Shift+M`, `Shift+P`, `Shift+B`, `Shift+U`, `Shift+X` |
 | Field, Event, API, Callback | `Shift+F`, `Shift+E`, `Shift+A`, `Shift+K` |
 | Connect | `C` |
-| Reset / Fit | `0` / `Shift+1` |
-| Zoom out / zoom in | `-` / `+` or `=` |
+| Reset / Fit | <kbd>0</kbd> or <kbd>Ctrl+0</kbd> / <kbd>Shift+1</kbd> |
+| Zoom out / zoom in | <kbd>-</kbd> or <kbd>Ctrl+-</kbd> / <kbd>+</kbd>, <kbd>=</kbd> or <kbd>Ctrl+=</kbd> |
 | Zoom level | `Z` |
 
 The palette shortcuts work in Edit mode, where the palette is on screen. One that opens a form puts the cursor in its machine name, so you can type the name straight away. On the landing screen, **Choose a config folder**, **Open a saved diagram** and **Start from scratch** take the shortcuts of **Import**, **Open** and **New**, `D` switches the theme, `1` and `2` load the templates in the order they're listed, and **Esc** closes the screen when there's a diagram behind it.
