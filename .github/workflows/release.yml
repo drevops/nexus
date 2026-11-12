@@ -1,30 +1,37 @@
 name: Release
 
 on:
-  release:
-    types:
-      - published
-  workflow_dispatch:
+  push:
+    tags:
+      - '*'
 
 concurrency:
   group: pages
   cancel-in-progress: false
 
+permissions: {}
+
 jobs:
-  release:
-    name: Build and deploy
+  build:
+    name: Build
     runs-on: ubuntu-latest
 
     permissions:
       contents: read
-      pages: write
-      id-token: write
-
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url || steps.deployment_retry.outputs.page_url || steps.deployment_retry2.outputs.page_url }}
+      id-token: write # Sign the provenance attestation.
+      attestations: write # Store the provenance attestation.
 
     steps:
+      # The tag is written into JavaScript, so only a version gets through.
+      - name: Check the tag
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          if [[ ! "${TAG}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Tag '${TAG}' is not a version."
+            exit 1
+          fi
+
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -33,22 +40,96 @@ jobs:
       - name: Assemble static site
         run: npm run assemble
 
-      # The source ships version.js as `dev`; stamp the published release tag so
-      # the deployed build reports its version. Manual runs stay on `dev`.
       - name: Stamp the release version
         env:
-          RELEASE_VERSION: ${{ github.event.release.tag_name || 'dev' }}
-        run: echo "export const VERSION = '${RELEASE_VERSION}';" > _site/src/version.js
+          TAG: ${{ github.ref_name }}
+        run: echo "export const VERSION = '${TAG}';" > _site/src/version.js
 
+      - name: Package the site
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          mkdir release
+          (cd _site && find . -type f -printf '%P\n' | LC_ALL=C sort | xargs -d '\n' sha256sum) > release/checksums.txt
+          tar --sort=name --owner=0 --group=0 --numeric-owner -czf "release/nexus-${TAG}.tar.gz" -C _site .
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: release/*
+
+      - name: Upload release files
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: release
+          path: release
+          if-no-files-found: error
+
+      - name: Upload site
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
+        with:
+          path: _site
+
+  publish:
+    name: Publish
+    needs: build
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write # Upload the release files and publish the release.
+
+    steps:
+      - name: Download release files
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release
+          path: release
+
+      # Release Drafter keeps a draft named after the next version; the files
+      # go on that draft, or on a new one, before it is published.
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          state="$(gh release view "${TAG}" --json isDraft --jq 'if .isDraft then "draft" else "published" end' || echo 'none')"
+
+          if [ "${state}" = 'published' ]; then
+            echo "::warning::Release '${TAG}' was published before this run, so its files can't be attached. The site still deploys."
+            exit 0
+          fi
+
+          if [ "${state}" = 'none' ]; then
+            gh release create "${TAG}" --title "${TAG}" --generate-notes --draft --verify-tag
+          fi
+
+          prerelease='false'
+          if [[ "${TAG}" == *-* ]]; then
+            prerelease='true'
+          fi
+
+          gh release upload "${TAG}" release/* --clobber
+          gh release edit "${TAG}" --draft=false --prerelease="${prerelease}" --verify-tag
+
+  deploy:
+    name: Deploy
+    needs: publish
+    runs-on: ubuntu-latest
+
+    permissions:
+      pages: write # Deploy the site.
+      id-token: write # Prove the deployment's origin to GitHub Pages.
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url || steps.deployment_retry.outputs.page_url || steps.deployment_retry2.outputs.page_url }}
+
+    steps:
       - name: Configure Pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6
         with:
           enablement: true
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
-        with:
-          path: _site
 
       # GitHub Pages intermittently rejects a deployment with "try again later"
       # while its backend is busy. The deploy is attempted up to 3 times with
