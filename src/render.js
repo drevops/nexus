@@ -37,23 +37,8 @@ import { keepOrder, packColumns, tidyColumns } from './packing.js';
 import { freeArea } from './free-area.js';
 import { frameSettings } from './mode-frame.js';
 import { nodeLookup, selectionEntity } from './inspector-trail.js';
+import { SYMBOLS, customTypeList, isHexColor, isSymbol, isTypeName, typeColors, typeSymbols } from './type-styles.js';
 import { $ } from './dom.js';
-
-// A small library of UML-ish node shapes, keyed for settings/persistence; the
-// value is the Cytoscape shape that draws it.
-const SYMBOLS = {
-  rounded: { shape: 'round-rectangle', label: 'Rounded rectangle' },
-  rectangle: { shape: 'rectangle', label: 'Rectangle' },
-  ellipse: { shape: 'ellipse', label: 'Ellipse' },
-  diamond: { shape: 'diamond', label: 'Diamond' },
-  hexagon: { shape: 'hexagon', label: 'Hexagon' },
-  tag: { shape: 'tag', label: 'Tag' },
-  barrel: { shape: 'barrel', label: 'Barrel' },
-  cut: { shape: 'cut-rectangle', label: 'Cut rectangle' },
-  rhomboid: { shape: 'rhomboid', label: 'Parallelogram' },
-  pentagon: { shape: 'pentagon', label: 'Pentagon' },
-  octagon: { shape: 'octagon', label: 'Octagon' },
-};
 
 const FALLBACK_COLOR = '#eceff3';
 const FALLBACK_SYMBOL = 'rounded';
@@ -173,15 +158,18 @@ function setFrame(patch) {
 }
 
 function initColors() {
+  const colors = typeColors(settings.colors);
+  const symbols = typeSymbols(settings.symbols);
+
   allTypeKeys().forEach((type) => {
     const builtIn = findEntityType(type);
-    activeColors[type] = (settings.colors && settings.colors[type]) || (builtIn ? builtIn.color : FALLBACK_COLOR);
-    activeSymbols[type] = (settings.symbols && settings.symbols[type]) || (builtIn ? builtIn.symbol : FALLBACK_SYMBOL);
+    activeColors[type] = colors[type] || (builtIn ? builtIn.color : FALLBACK_COLOR);
+    activeSymbols[type] = symbols[type] || (builtIn ? builtIn.symbol : FALLBACK_SYMBOL);
   });
 }
 
 function customTypes() {
-  return Array.isArray(settings.customTypes) ? settings.customTypes : [];
+  return customTypeList(settings.customTypes);
 }
 
 function allTypeKeys() {
@@ -755,7 +743,7 @@ function tooltipHtml(node) {
   }
 
   if (group === 'field') {
-    const meta = [humanize(node.data('kind')) + ' field', esc(node.data('fieldType'))];
+    const meta = [esc(humanize(node.data('kind'))) + ' field', esc(node.data('fieldType'))];
     const refs = fieldReferences(node);
     if (refs.length) {
       meta.push('→ ' + esc(refs.join(', ')));
@@ -787,16 +775,13 @@ function buildController(model, options = {}) {
   proxyMode = defaults.proxies;
   showMachineNames = defaults.machineNames;
   initColors();
-  if (Array.isArray(options.customTypes) && options.customTypes.length) {
+  const added = customTypeList(options.customTypes);
+  if (added.length) {
     const known = new Set(customTypes().map((t) => t.type));
-    settings.customTypes = customTypes().concat(options.customTypes.filter((t) => t && t.type && !known.has(t.type)));
+    settings.customTypes = customTypes().concat(added.filter((t) => !known.has(t.type)));
   }
-  if (options.colors) {
-    Object.assign(activeColors, options.colors);
-  }
-  if (options.symbols) {
-    Object.assign(activeSymbols, options.symbols);
-  }
+  Object.assign(activeColors, typeColors(options.colors));
+  Object.assign(activeSymbols, typeSymbols(options.symbols));
 
   const elements = buildElements(model);
   ENTITY_TYPE_ORDER.forEach((t) => {
@@ -1486,6 +1471,10 @@ function buildController(model, options = {}) {
   }
 
   function applyColor(type, color) {
+    if (!isTypeName(type) || !isHexColor(color)) {
+      return;
+    }
+
     activeColors[type] = color;
     cy.nodes('[group="entity"][entityType="' + type + '"]').style('background-color', color);
     settings.colors = settings.colors || {};
@@ -1495,6 +1484,10 @@ function buildController(model, options = {}) {
   }
 
   function applySymbol(type, key) {
+    if (!isTypeName(type) || !isSymbol(key)) {
+      return;
+    }
+
     activeSymbols[type] = key;
     // The shape and entity width functions read activeSymbols, which isn't
     // element data, so Cytoscape restyles only when asked.
@@ -1530,8 +1523,8 @@ function buildController(model, options = {}) {
       return null;
     }
     settings.customTypes = customTypes().concat([{ type: key, label: (label || '').trim() || humanize(key) }]);
-    settings.colors = { ...(settings.colors || {}), [key]: color || FALLBACK_COLOR };
-    settings.symbols = { ...(settings.symbols || {}), [key]: symbol || FALLBACK_SYMBOL };
+    settings.colors = { ...(settings.colors || {}), [key]: isHexColor(color) ? color : FALLBACK_COLOR };
+    settings.symbols = { ...(settings.symbols || {}), [key]: isSymbol(symbol) ? symbol : FALLBACK_SYMBOL };
     activeColors[key] = settings.colors[key];
     activeSymbols[key] = settings.symbols[key];
     saveSettings();
