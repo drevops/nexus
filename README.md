@@ -39,7 +39,7 @@ To try changes before they're released, open the [development version](https://d
 - **Undo and history.** Undo and redo your edits, and step back to an earlier version of the diagram from the History panel.
 - **Keyboard shortcuts.** Most buttons have a keyboard shortcut, and pressing **F1** labels every button on screen with its shortcut at once (see [Keyboard shortcuts](#keyboard-shortcuts)).
 - **Saved as a document.** Save the diagram, layout and all, as a `.nexus.json` file and open it again later.
-- **Built by an AI agent.** An AI agent can write a diagram from a screenshot, a spreadsheet or a spec (see [Build a diagram with an AI agent](#build-a-diagram-with-an-ai-agent)).
+- **Built by an AI agent.** An AI agent can write a diagram from a screenshot, a spreadsheet or a spec. **Create with AI** hands the agent its skill and opens the diagram you paste back (see [Build a diagram with an AI agent](#build-a-diagram-with-an-ai-agent)).
 - **Customisable & remembered.** Switch between light and dark themes, recolour entity types, swap their symbols or add types of your own; the choices persist in your browser and apply to every diagram you open.
 - **Export.** Export the whole canvas as **PNG** or **SVG**, or the field table as **CSV** - all client-side. The Export button remembers the last format you picked, so the next export takes 1 click.
 
@@ -47,12 +47,12 @@ To try changes before they're released, open the [development version](https://d
 
 There's nothing to install: [open the app](https://nexus.drevops.com/) in a modern browser.
 
-To host your own copy, serve `index.html`, `src/`, `assets/` and `templates/` from any static web server. Opening `index.html` straight from disk won't work, because browsers don't load ES modules over `file://`.
+To host your own copy, run `npm run assemble` and serve the `_site/` folder it fills from any static web server. Opening `index.html` straight from disk won't work, because browsers don't load ES modules over `file://`.
 
 ## Usage
 
 1. Open the app (or your own copy - see [Installation](#installation)). The light/dark theme toggle sits in the top-right corner of the landing screen too, so you can pick a theme before loading anything.
-2. **Choose a config folder** or drag one onto the drop zone - the folder of `*.yml` files exported from a Drupal site (its config sync directory), or a module's `config/install`. Or pick one of the [templates](#templates) beside it, **Open a saved diagram** or **Start from scratch**.
+2. **Choose a config folder** or drag one onto the drop zone - the folder of `*.yml` files exported from a Drupal site (its config sync directory), or a module's `config/install`. Or pick one of the [templates](#templates) beside it, **Open a saved diagram**, **Start from scratch** or [**Create with AI**](#build-a-diagram-with-an-ai-agent).
 3. Explore with the toolbar, switch to **Edit** to change the model, then **Save** it or export it as PNG, SVG or CSV.
 
 Add an `annotations.yml` file to the folder to overlay [events, APIs and callbacks](#annotation-overlay).
@@ -188,6 +188,7 @@ The table uses the Windows and Linux names. A Mac labels the same keys with **‚å
 | New | `Alt+N` |
 | Import | `Alt+I` |
 | Open | `Ctrl+O` |
+| AI | <kbd>Alt+A</kbd> |
 | Save | `Ctrl+S` |
 | Undo | `Ctrl+Z` |
 | Redo | `Ctrl+Shift+Z` or `Ctrl+Y` |
@@ -212,7 +213,7 @@ The table uses the Windows and Linux names. A Mac labels the same keys with **‚å
 | Zoom out / zoom in | <kbd>-</kbd> or <kbd>Ctrl+-</kbd> / <kbd>+</kbd>, <kbd>=</kbd> or <kbd>Ctrl+=</kbd> |
 | Zoom level | `Z` |
 
-The palette shortcuts work in Edit mode, where the palette is on screen. One that opens a form puts the cursor in its machine name, so you can type the name straight away. On the landing screen, **Choose a config folder**, **Open a saved diagram** and **Start from scratch** take the shortcuts of **Import**, **Open** and **New**, `D` switches the theme, `1` and `2` load the templates in the order they're listed, and **Esc** closes the screen when there's a diagram behind it.
+The palette shortcuts work in Edit mode, where the palette is on screen. One that opens a form puts the cursor in its machine name, so you can type the name straight away. On the landing screen, **Choose a config folder**, **Open a saved diagram**, **Start from scratch** and **Create with AI** take the shortcuts of **Import**, **Open**, **New** and **AI**. There, `D` switches the theme, `1` and `2` load the templates in the order they're listed, and **Esc** closes the screen when there's a diagram behind it.
 
 The shortcuts stay out of your way while you type. A text box, a dropdown or an open menu keeps the plain keys for itself, so typing an `f` into **Find entity** doesn't hide the fields. In a text box only the **Ctrl** shortcuts work, apart from undo and redo, which undo your typing there - so **Ctrl+S** saves the diagram while you're renaming it. Hold a key down and only undo, redo and the zoom keys repeat.
 
@@ -271,19 +272,30 @@ An `attach`, an edge or a `computed_fields` entry that names an id the diagram d
 
 ## Build a diagram with an AI agent
 
-An AI agent can turn a content model you hold in another form into a Nexus diagram. The source can be a screenshot or photo of a diagram, a spreadsheet, a Word or PDF spec or a list of content types and fields. The agent writes a `.nexus.json` document, and you open it with **Open a saved diagram**.
+An AI agent can turn a content model you hold in another form into a Nexus diagram. The source can be a screenshot or photo of a diagram, a spreadsheet, a Word or PDF spec or a list of content types and fields. The agent follows the `create-nexus-diagram` skill and writes a `.nexus.json` document.
 
-This repository gives the agent 2 files:
+To hand the skill to your agent, click **Create with AI** on the landing screen or **AI** in the toolbar. Then pick the tab that matches your agent:
 
-- The [`create-nexus-diagram` skill](skills/create-nexus-diagram/SKILL.md) holds the steps for mapping a source onto entity types, fields and references. It also covers checking the result and includes a complete example document.
-- The [JSON Schema](schema/nexus.schema.json) defines the `.nexus.json` format. The app serves it at `https://nexus.drevops.com/schema/nexus.schema.json`.
+| Tab | Use it for |
+|-----|------------|
+| **Prompt** | An agent that can read web pages, such as Claude Code, Codex or Cursor. The prompt links the skill this site serves |
+| **Skill** | A chat that can't read web pages. Copy the whole skill, or download it as `SKILL.md` |
+| **Install** | Keeping the skill in a project. The command downloads it into `.claude/skills/create-nexus-diagram/`, where Claude Code reads it |
 
-Give the skill to your agent in 1 of 2 ways:
+To use the skill in every Claude Code project, put `SKILL.md` in `~/.claude/skills/create-nexus-diagram/` instead. Then hand the agent your source and ask for a Nexus diagram.
 
-- In Claude Code, copy the `skills/create-nexus-diagram` folder into `~/.claude/skills/`, or into `.claude/skills/` in your project.
-- In any other agent, attach `SKILL.md` or give the agent its URL: `https://raw.githubusercontent.com/drevops/nexus/main/skills/create-nexus-diagram/SKILL.md`.
+To open the diagram the agent writes:
 
-Then hand the agent your source and ask for a Nexus diagram. The agent leaves the layout out, so Nexus lays the diagram out when you open it.
+1. Paste the document into **Paste the diagram**. The agent's whole reply works too, when it holds the document in a code block.
+2. Click **Open diagram**. When the document can't open, the dialog stays open and shows the reason.
+
+A document the agent saved as a file opens with **Open a saved diagram**. The agent leaves the layout out, so Nexus lays the diagram out when you open it.
+
+The site serves 3 files for agents:
+
+- The [`create-nexus-diagram` skill](skills/create-nexus-diagram/SKILL.md), at `https://nexus.drevops.com/skills/create-nexus-diagram/SKILL.md`, holds the steps for mapping a source onto entity types, fields and references. It also covers checking the result and includes a complete example document.
+- The [JSON Schema](schema/nexus.schema.json), at `https://nexus.drevops.com/schema/nexus.schema.json`, defines the `.nexus.json` format.
+- [`llms.txt`](llms.txt), at `https://nexus.drevops.com/llms.txt`, links both, so an agent given only the site's address finds them.
 
 To check a document before you open it, run this command in a clone of this repository:
 

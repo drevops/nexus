@@ -47,6 +47,7 @@
         <sl-button id="doc-new" class="toolbar__button" size="small" data-icon="file-plus" data-shortcut="Alt+N" title="Start a new empty content model">New</sl-button>
         <sl-button id="doc-import" class="toolbar__button" size="small" data-icon="folder-input" data-shortcut="Alt+I" title="Import a Drupal config folder">Import</sl-button>
         <sl-button id="doc-open-btn" class="toolbar__button" size="small" data-icon="folder-open" data-shortcut="Mod+O" title="Open a saved Nexus diagram (.nexus.json)">Open</sl-button>
+        <sl-button id="doc-ai" class="toolbar__button" size="small" data-icon="sparkles" data-shortcut="Alt+A" title="Create a diagram with an AI agent from a screenshot, spreadsheet or spec">AI</sl-button>
         <sl-button id="doc-save" class="toolbar__button" size="small" data-icon="download" data-shortcut="Mod+S" title="Save this diagram as a Nexus document (.nexus.json)">Save</sl-button>
       </sl-button-group>
       <sl-button-group id="export-group" class="toolbar__group" label="Export">
@@ -169,6 +170,7 @@
         <div class="landing__actions">
           <sl-button id="landing-open" size="small" data-icon="folder-open" data-shortcut="Mod+O" title="Open a saved Nexus diagram (.nexus.json)">Open a saved diagram</sl-button>
           <sl-button id="new-btn" size="small" data-icon="file-plus" data-shortcut="Alt+N" title="Start a new empty content model">Start from scratch</sl-button>
+          <sl-button id="landing-ai" class="landing__ai" size="small" data-icon="sparkles" data-shortcut="Alt+A" title="Create a diagram with an AI agent from a screenshot, spreadsheet or spec">Create with AI</sl-button>
         </div>
       </section>
       <section aria-labelledby="landing-templates-heading">
@@ -200,6 +202,43 @@
     <p class="about__version">Version <span id="about-version" data-version>dev</span></p>
   </div>
   <sl-button id="about-close" slot="footer" variant="primary" title="Close the About box">Close</sl-button>
+</sl-dialog>
+
+<sl-dialog id="ai-dialog" class="ai-dialog" label="Create with AI">
+  <div class="ai">
+    <p class="ai__intro">Give an AI agent a screenshot, a spreadsheet, a spec or a list of content types, and it writes a Nexus diagram by following the <code>create-nexus-diagram</code> skill. Pick how to hand the skill over, then paste what the agent writes back below.</p>
+    <sl-tab-group id="ai-tabs" class="ai__tabs">
+      <sl-tab id="ai-tab-prompt" slot="nav" panel="prompt" title="A prompt for an agent that can read web pages">Prompt</sl-tab>
+      <sl-tab id="ai-tab-skill" slot="nav" panel="skill" title="The whole skill, for a chat that can't read web pages">Skill</sl-tab>
+      <sl-tab id="ai-tab-install" slot="nav" panel="install" title="A command that adds the skill to your project">Install</sl-tab>
+      <sl-tab-panel name="prompt">
+        <p class="ai__hint">For an agent that can read web pages, such as Claude Code, Codex or Cursor. Copy the prompt, then describe the content model or attach the source.</p>
+        <pre id="ai-prompt" class="ai__code"></pre>
+        <div class="ai__actions">
+          <sl-button id="ai-copy-prompt" size="small" data-icon="copy" data-copy="ai-prompt" title="Copy the prompt to the clipboard"><span class="ai__copy-label">Copy prompt</span></sl-button>
+        </div>
+      </sl-tab-panel>
+      <sl-tab-panel name="skill">
+        <p class="ai__hint">For a chat that can't read web pages. Paste the whole skill first, then your source.</p>
+        <pre id="ai-skill" class="ai__code ai__code--long">Loading the skill…</pre>
+        <div class="ai__actions">
+          <sl-button id="ai-copy-skill" size="small" data-icon="copy" data-copy="ai-skill" title="Copy the whole skill to the clipboard" disabled><span class="ai__copy-label">Copy skill</span></sl-button>
+          <sl-button id="ai-download-skill" size="small" data-icon="download" href="skills/create-nexus-diagram/SKILL.md" download="SKILL.md" title="Download the skill as SKILL.md">Download SKILL.md</sl-button>
+        </div>
+      </sl-tab-panel>
+      <sl-tab-panel name="install">
+        <p class="ai__hint">Keeps the skill in your project, so your agent uses it whenever you ask for a Nexus diagram. Run it in the project's root. It writes to <code>.claude/skills</code> for Claude Code; other agents read the same file from their own skills folder.</p>
+        <pre id="ai-install" class="ai__code"></pre>
+        <div class="ai__actions">
+          <sl-button id="ai-copy-install" size="small" data-icon="copy" data-copy="ai-install" title="Copy the command to the clipboard"><span class="ai__copy-label">Copy command</span></sl-button>
+        </div>
+      </sl-tab-panel>
+    </sl-tab-group>
+    <sl-textarea id="ai-paste" class="ai__paste" label="Paste the diagram" rows="4" resize="vertical" placeholder="Paste the .nexus.json document, or the agent's whole reply" title="Paste the document the agent wrote, or its whole reply with the document in a code block"></sl-textarea>
+    <sl-alert id="ai-error" class="ai__error" variant="danger"><span id="ai-error-text"></span></sl-alert>
+  </div>
+  <sl-button id="ai-close" slot="footer" title="Close this dialog">Close</sl-button>
+  <sl-button id="ai-open" slot="footer" variant="primary" data-icon="folder-open" title="Open the pasted document as the diagram">Open diagram</sl-button>
 </sl-dialog>
 
 <script src="assets/vendor/cytoscape.min.js"></script>

@@ -134,6 +134,14 @@ test.describe('Titles', { tag: '@runner-1' }, () => {
       ['the export menu', menu('#export-choose', '#export-menu')],
       ['the layout menu', menu('#layout-choose', '#layout-menu')],
       ['the zoom menu', menu('#zoom-level', '#zoom-menu')],
+      ...['prompt', 'skill', 'install'].map((tab) => [
+        `the ${tab} tab of the Create with AI dialog`,
+        async (page) => {
+          await page.click('#landing-ai');
+          await page.click('#ai-tab-' + tab);
+          await expect(page.locator(`sl-tab-panel[name="${tab}"]`)).toBeVisible();
+        },
+      ]),
       [
         'the About box',
         async (page) => {

@@ -6,6 +6,7 @@ import {
   slFill,
   slSelect,
   openDocument,
+  pasteDiagram,
   createEntity,
   buildStoryWithField,
   tapNode,
@@ -370,6 +371,14 @@ test.describe('History', { tag: '@runner-1' }, () => {
       ['an imported config folder', loadExample, /^Imported a config folder$/],
       ['an opened diagram', (page) => openDocument(page, SCATTERED_DOC), /^Opened diagram\.nexus\.json$/],
       ['a new content model', (page) => page.click('#new-btn'), /^Started a new content model$/],
+      [
+        'a diagram pasted from an AI agent',
+        async (page) => {
+          await pasteDiagram(page, JSON.stringify(SCATTERED_DOC));
+          await waitForGraph(page);
+        },
+        /^Opened a diagram from an AI agent$/,
+      ],
       [
         'a template',
         async (page) => {

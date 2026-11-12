@@ -54,6 +54,15 @@ export async function openDocument(page, doc) {
   await waitForGraph(page);
 }
 
+// Pastes text into the Create with AI dialog, opened from the landing screen,
+// and presses Open diagram.
+export async function pasteDiagram(page, text) {
+  await page.click('#landing-ai');
+  await expect(page.locator('#ai-paste')).toBeVisible();
+  await slFill(page, '#ai-paste', text);
+  await page.click('#ai-open');
+}
+
 // Clicks the element and returns the download the click starts.
 export async function downloadFrom(page, selector) {
   const [download] = await Promise.all([page.waitForEvent('download'), page.click(selector)]);

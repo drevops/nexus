@@ -125,7 +125,7 @@ Leave `annotations` out when the source shows none.
 - **Leave out `layout` and `ui`.** Nexus lays the diagram out when it opens.
 - Leave out `colors` and `symbols` unless the user asks for them.
 - Don't invent bundles or fields the source doesn't show. Beyond the source, add only the base fields from [Kind and cardinality](#kind-and-cardinality) and the entities your references need.
-- Save the document under a filename made from the title and ending in `.nexus.json`, such as `events-site.nexus.json`.
+- Save the document under a filename made from the title and ending in `.nexus.json`, such as `events-site.nexus.json`. When you can't save files, reply with the whole document in a single JSON code block instead.
 
 This is a complete document for a small events site:
 
@@ -238,6 +238,6 @@ Without the repository, validate the document against the published schema with 
 
 Tell the user:
 
-- The file you wrote, and that they open it at https://nexus.drevops.com with **Open a saved diagram**.
+- The file you wrote, and that they open it at https://nexus.drevops.com with **Open a saved diagram**. A document you replied with instead goes into the **Paste the diagram** box under **Create with AI** there.
 - Each assumption you made, such as a field type you picked or a bundle you added for a reference.
 - Anything in the source you couldn't read or place, and where it was.

@@ -17,6 +17,7 @@ import { initBuilder, attachBuilder } from './builder.js';
 import { initUI } from './ui.js';
 import { initUndo, resetHistory, checkpoint } from './undo.js';
 import { initShortcuts } from './keyboard.js';
+import { initAiDialog } from './ai-dialog.js';
 import { initIcons, icon } from './icons.js';
 import { VERSION } from './version.js';
 import { DEFAULT_TITLE } from './model.js';
@@ -181,7 +182,7 @@ async function loadTemplate(template) {
   showError('');
   showLoader('Loading ' + title + '…');
   try {
-    showDocument(await fetchText(templatePath(template)), 'Loaded the ' + title + ' template');
+    showDocument(JSON.parse(await fetchText(templatePath(template))), 'Loaded the ' + title + ' template');
   } catch (e) {
     showError('Could not load ' + title + ': ' + e.message);
   } finally {
@@ -412,8 +413,8 @@ function saveDocument() {
   exportDocument(doc, title);
 }
 
-function showDocument(text, origin) {
-  const doc = documentToModel(JSON.parse(text));
+function showDocument(data, origin) {
+  const doc = documentToModel(data);
   showDiagram(doc.modelData, { layout: doc.layout, colors: doc.colors, symbols: doc.symbols, customTypes: doc.customTypes }, origin);
   if (doc.ui) {
     importLayout(doc.ui);
@@ -424,7 +425,7 @@ async function openDocument(file) {
   showError('');
   showLoader('Opening diagram…');
   try {
-    showDocument(await file.text(), 'Opened ' + file.name);
+    showDocument(JSON.parse(await file.text()), 'Opened ' + file.name);
   } catch (e) {
     showLanding();
     showError('Could not open that diagram: ' + e.message);
@@ -584,4 +585,5 @@ initStatusbar();
 initToolbarSeparators();
 initPageZoomGuard();
 initAbout();
+initAiDialog(showDocument);
 initVersion();

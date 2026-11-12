@@ -114,7 +114,7 @@ test.describe('Toolbar', { tag: '@runner-2' }, () => {
     await expect(page.locator('.toolbar__tools > :not(.toolbar__section)')).toHaveCount(0);
 
     expect(await toolbarSections(page)).toEqual([
-      ['doc-new', 'doc-import', 'doc-open-btn', 'doc-save', 'export-run', 'export-choose'],
+      ['doc-new', 'doc-import', 'doc-open-btn', 'doc-ai', 'doc-save', 'export-run', 'export-choose'],
       ['undo', 'redo'],
       ['mode-view', 'mode-build'],
       ['search', 'search-btn'],

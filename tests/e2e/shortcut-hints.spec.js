@@ -224,6 +224,7 @@ test.describe('Shortcut hints', { tag: '@runner-2' }, () => {
       ['folder-btn', 'Alt+I'],
       ['landing-open', 'Ctrl+O'],
       ['new-btn', 'Alt+N'],
+      ['landing-ai', 'Alt+A'],
       ['template-drupal-cms', '1'],
       ['template-civictheme', '2'],
     ]);
