@@ -40,7 +40,12 @@ test('loads vendored files in index.html only from recorded libraries', () => {
   const recorded = readManifest().map((library) => library.path);
 
   assert.ok(loaded.length > 0);
-  loaded.forEach((path) => assert.ok(recorded.some((owner) => path === owner || path.startsWith(owner + '/')), path));
+  loaded.forEach((path) =>
+    assert.ok(
+      recorded.some((owner) => path === owner || path.startsWith(owner + '/')),
+      path,
+    ),
+  );
 });
 
 test('digests a folder as the listing sha256sum prints', () => {

@@ -19,7 +19,12 @@ const TMP = join(ROOT, '.artifacts', 'tmp');
 
 // Downloads and unpacks a package, returning the folder that holds its files.
 function unpack(name, version, dir) {
-  const [packed] = JSON.parse(execFileSync('npm', ['pack', name + '@' + version, '--json', '--ignore-scripts', '--pack-destination', dir], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }));
+  const [packed] = JSON.parse(
+    execFileSync('npm', ['pack', name + '@' + version, '--json', '--ignore-scripts', '--pack-destination', dir], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    }),
+  );
   const target = mkdtempSync(join(dir, 'package-'));
 
   execFileSync('tar', ['-xzf', join(dir, packed.filename), '-C', target]);

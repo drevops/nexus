@@ -28,7 +28,12 @@ export function readManifest() {
 export function listFiles(dir) {
   return readdirSync(dir, { recursive: true, withFileTypes: true })
     .filter((entry) => entry.isFile())
-    .map((entry) => join(entry.parentPath, entry.name).slice(dir.length + 1).split('\\').join('/'))
+    .map((entry) =>
+      join(entry.parentPath, entry.name)
+        .slice(dir.length + 1)
+        .split('\\')
+        .join('/'),
+    )
     .sort();
 }
 

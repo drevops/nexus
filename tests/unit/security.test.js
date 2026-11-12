@@ -38,7 +38,10 @@ test('allows only its own origin to run code and send requests', async (t) => {
 
   for (const [directive, expected] of dataProviderDirectives()) {
     await t.test(directive, () => {
-      assert.deepEqual(directives[directive].filter((source) => !source.startsWith("'sha256-")), expected);
+      assert.deepEqual(
+        directives[directive].filter((source) => !source.startsWith("'sha256-")),
+        expected,
+      );
     });
   }
 });
