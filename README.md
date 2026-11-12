@@ -84,13 +84,13 @@ The **Legend** panel lists every symbol. Nexus draws entities, fields and refere
 | Ellipse, yellow fill | Calculated field | Annotation |
 | Diamond | Event | Annotation |
 | Hexagon | API | Annotation |
-| Rectangle with a method | Callback | Annotation |
+| Rounded rectangle with a method | Callback | Annotation |
 
 Content types are rounded rectangles, vocabularies are tags, media are barrels, paragraphs are cut rectangles, blocks are rectangles, users are ellipses and external entities are hexagons. **Settings** changes the color and shape of any type. A field label ending in `*` marks a required field. A reference arrow carries the field's cardinality: `1`, `1..N` for a limit of N or `1..n` for unlimited.
 
 ## Work with a diagram
 
-A diagram opens in View mode, laid out in columns, with every field, proxy and machine name on show.
+By default, a diagram opens in View mode, laid out in columns, with every field, proxy and machine name on show. **Settings** changes these defaults.
 
 ### View the diagram
 
@@ -160,7 +160,7 @@ The arrow beside **Save** opens **Save as**, which saves the document as **JSON*
 
 Press <kbd>F1</kbd> to label every button on screen with its keyboard shortcut. Press <kbd>F1</kbd> again or <kbd>Esc</kbd> to hide the labels. On a Mac keyboard whose top row sets the brightness, hold <kbd>Fn</kbd> as you press <kbd>F1</kbd>.
 
-A Mac labels <kbd>Ctrl</kbd> as <kbd>⌘</kbd>. A text box, a dropdown or an open menu keeps the plain keys for itself, so typing an `f` into **Find entity** doesn't hide the fields. The browser's zoom keys zoom the diagram.
+On a Mac, <kbd>⌘</kbd> takes the place of <kbd>Ctrl</kbd>. A text box, a dropdown or an open menu keeps the plain keys for itself, so typing an `f` into **Find entity** doesn't hide the fields. The browser's zoom keys zoom the diagram.
 
 ## Annotation overlay
 
