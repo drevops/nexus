@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for considering a contribution to Nexus. This guide covers setting up a local environment, running the linting and tests, updating the content-model templates, previewing a pull request on Netlify, how a release reaches GitHub Pages, and pulling in updates from the project template.
+Thank you for considering a contribution to Nexus. This guide covers setting up a local environment, hosting your own copy, running the linting and tests, checking a diagram document, updating the content-model templates, previewing a pull request on Netlify, how a release reaches GitHub Pages, and pulling in updates from the project template.
 
 ## Local setup
 
@@ -10,6 +10,27 @@ Nexus has no build step: it's static ES modules in `src/` plus vendored librarie
     npm start
 
 Set `PORT` to serve on another port, for example `PORT=8001 npm start`.
+
+To try the latest code merged into `main` without a local setup, open the [development version](https://drevops-nexus.netlify.app) (see [Previews on Netlify](#previews-on-netlify)).
+
+## Host your own copy
+
+To host Nexus yourself, copy the files the site ships into `_site/`:
+
+    npm run assemble
+
+Then serve `_site/` from any static web server.
+
+## Built with
+
+The page loads its own ES modules from `src/` and these libraries from `assets/vendor/`:
+
+- [Preact](https://preactjs.com/) and [htm](https://github.com/developit/htm) render the interface.
+- [Shoelace](https://shoelace.style/) supplies the buttons, menus and form controls.
+- [Cytoscape.js](https://js.cytoscape.org/) draws the diagram, with [Dagre](https://github.com/dagrejs/dagre) and [cytoscape-dagre](https://github.com/cytoscape/cytoscape.js-dagre) for the layouts and [cytoscape-svg](https://github.com/kinimesi/cytoscape-svg) for the SVG export.
+- [js-yaml](https://github.com/nodeca/js-yaml) reads the configuration files.
+
+The icons come from [Lucide](https://lucide.dev/).
 
 ## Linting and tests
 
@@ -48,11 +69,19 @@ Each built-in entity type, annotation kind, save format and name conversion is d
 
 The buttons in the toolbar, the edit palette, the status bar and the landing screen have keyboard shortcuts, each named in its button's `data-shortcut` attribute in the syntax the `src/shortcuts.js` docblock describes. Give a new button a shortcut too, along with an `id`, which the F1 view labels it by. `npm run test-unit` fails while a shortcut doesn't parse, a control with a shortcut has no `id`, or 2 controls on the same screen share a key.
 
-The Nexus mark lives in 3 places: `logo.svg` for the README, `assets/favicon.svg` for the browser tab and the `nexus` icon in `src/icons.js` for the page. The 2 files switch to white ink in a dark colour scheme by themselves, while the page's copy takes its colours from `src/styles.css` so it follows the app's theme toggle. A change to the mark's shapes goes into all 3, and `npm run test-unit` fails while `src/icons.js` and `logo.svg` differ.
+The Nexus mark lives in 3 places: `logo.svg` for the README, `assets/favicon.svg` for the browser tab and the `nexus` icon in `src/icons.js` for the page. The 2 files switch to white ink in a dark color scheme by themselves, while the page's copy takes its colors from `src/styles.css` so it follows the app's theme toggle. A change to the mark's shapes goes into all 3, and `npm run test-unit` fails while `src/icons.js` and `logo.svg` differ.
 
 Every change a user makes to the diagram should be undoable. Once an action has finished changing the graph, record it with `checkpoint(label)` from `src/undo.js`, and pass a coalesce key as well from a text field, so typing makes 1 step. Record in the action itself rather than in the helpers it calls, so 1 action stays 1 step. A display change that moves nodes without changing the model runs through `untracked()` instead, so undo leaves its layout alone.
 
 `schema/nexus.schema.json` defines the saved `.nexus.json` format. A change to what a document holds goes into that schema and into the full document in `tests/fixtures/saved-document.js`. The unit tests open that document into a headless Cytoscape graph, save it again and fail unless the copy matches the original exactly. They also fail while the schema declares a key the full document lacks, or the other way round. A change to the entity types, the builder's field types or the base fields fails them until the `create-nexus-diagram` skill lists it.
+
+## Check a diagram document
+
+To check a `.nexus.json` document before you open it, such as one an AI agent wrote, run this command in a clone of this repository:
+
+    npm run check-diagram -- path/to/diagram.nexus.json
+
+The command prints each error and warning with the JSON Pointer of the part it's about, and `OK` for a document with neither. An error marks a break in the format or a part of the model that gets lost, such as 2 entities with the same id. A warning marks a part that opens but isn't drawn, such as a reference to an entity the document doesn't define. The command exits with 1 when any document has an error.
 
 ## Updating the templates
 
@@ -61,7 +90,7 @@ The landing screen's templates are listed in `src/templates.js`, and each ships 
     npm run update-templates
     npm run update-templates -- civictheme
 
-With no argument it rebuilds every template. For each upstream source it clones only the listed config folders at the pinned tag into a temporary folder under `.artifacts/tmp/`, then draws the files the parser reads into the template's diagram with the same parser the app uses. The diagram carries no layout, so the app lays it out when it opens, the same as a dropped config folder. The clones are deleted afterwards, so no upstream config ends up in the repository.
+With no argument it rebuilds every template. For each upstream source it clones only the listed config folders at the pinned tag into a temporary folder under `.artifacts/tmp/`, then draws the files the parser reads into the template's diagram with the same parser the app uses. The diagram carries no layout, so the app lays it out when it opens, the same as a dropped config folder. The clones are deleted afterward, so no upstream config ends up in the repository.
 
 To move a template to a new release, change the source's `ref` and the template's `version` in `src/templates.js`, run the command and commit the rebuilt diagram with the change. A release that adds or removes bundles makes the command print the counts to put in `src/templates.js`, and `npm run test-unit` fails until they match. The same tests fail while a diagram's title names another version, so the version can't be bumped without rebuilding the diagram.
 
