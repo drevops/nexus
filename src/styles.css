@@ -274,6 +274,67 @@ sl-dropdown::part(trigger) {
   font-size: 0.85rem;
 }
 
+.ai-dialog {
+  --width: min(44rem, 100vw - 2rem);
+}
+
+.ai p {
+  margin: 0 0 0.75rem;
+  line-height: 1.5;
+}
+
+.ai__intro {
+  font-size: 0.9rem;
+}
+
+.ai__hint {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.ai__tabs sl-tab-panel {
+  --padding: 0.85rem 0 0;
+}
+
+.ai__code {
+  overflow: auto;
+  max-height: 9rem;
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--sl-font-mono);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.ai__code--long {
+  max-height: 12rem;
+}
+
+.ai__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.ai-dialog sl-button svg.icon {
+  margin-inline-end: 0.4rem;
+}
+
+.ai__paste {
+  margin-top: 1rem;
+}
+
+.ai__error {
+  margin-top: 0.75rem;
+}
+
 .toolbar__actions {
   display: flex;
   align-items: center;
@@ -1560,6 +1621,10 @@ body.is-dragging-panel * {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
   gap: 0.5rem;
   margin-top: 0.75rem;
+}
+
+.landing__ai {
+  grid-column: 1 / -1;
 }
 
 .dropzone sl-button svg.icon,

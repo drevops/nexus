@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loadExample, tapNode, topmostOf } from './helpers.js';
+import { loadExample, openFrom, tapNode, topmostOf } from './helpers.js';
 
 test.describe('Panels', { tag: '@runner-1' }, () => {
   // Heights of a docked panel, its body and the first element in its body, and
@@ -468,7 +468,7 @@ test.describe('Panels', { tag: '@runner-1' }, () => {
     await expect.poll(() => topmostOf(page, ['#zoom-menu', '#legend'])).toBe('#zoom-menu');
     await page.keyboard.press('Escape');
 
-    await page.click('#doc-import');
+    await openFrom(page, 'import');
     await expect(page.locator('#landing')).toBeVisible();
     await expect.poll(() => topmostOf(page, ['#landing', '#legend'])).toBe('#landing');
   });

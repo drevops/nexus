@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { entityCount, loadExample, boxesOverlap } from './helpers.js';
+import { entityCount, loadExample, boxesOverlap, openFrom } from './helpers.js';
 
 test.describe('Landing', { tag: '@runner-1' }, () => {
   function boxesOf(page, selectors) {
@@ -20,7 +20,7 @@ test.describe('Landing', { tag: '@runner-1' }, () => {
   test('reopens the import screen and cancels back to the diagram', async ({ page }) => {
     await loadExample(page);
 
-    await page.click('#doc-import');
+    await openFrom(page, 'import');
     await expect(page.locator('#landing')).toBeVisible();
     await expect(page.locator('#landing-cancel')).toBeVisible();
 
@@ -66,7 +66,7 @@ test.describe('Landing', { tag: '@runner-1' }, () => {
     await expect(page.locator('#landing-cancel')).toBeHidden();
 
     await loadExample(page);
-    await page.click('#doc-import');
+    await openFrom(page, 'import');
     await expect(page.locator('#landing-cancel')).toBeVisible();
 
     const [card, close] = await boxesOf(page, ['.landing__card', '#landing-cancel']);
@@ -80,7 +80,7 @@ test.describe('Landing', { tag: '@runner-1' }, () => {
     expectInTopRightCorner(card, toggle);
 
     await loadExample(page);
-    await page.click('#doc-import');
+    await openFrom(page, 'import');
     await expect(page.locator('#landing-cancel')).toBeVisible();
 
     const [cardWithClose, beside, close] = await boxesOf(page, ['.landing__card', '#landing-theme', '#landing-cancel']);
@@ -95,7 +95,7 @@ test.describe('Landing', { tag: '@runner-1' }, () => {
     test(`keeps the corner buttons clear of the Nexus mark in a ${width}px window`, async ({ page }) => {
       await page.setViewportSize({ width, height: 700 });
       await loadExample(page);
-      await page.click('#doc-import');
+      await openFrom(page, 'import');
       await expect(page.locator('#landing-cancel')).toBeVisible();
 
       const [mark, toggle, close] = await boxesOf(page, ['.landing__logo svg.icon--nexus', '#landing-theme', '#landing-cancel']);
@@ -122,7 +122,7 @@ test.describe('Landing', { tag: '@runner-1' }, () => {
     expect(await focusedId()).toBe('folder-btn');
 
     await loadExample(page);
-    await page.click('#doc-import');
+    await openFrom(page, 'import');
     await page.keyboard.press('Tab');
     expect(await focusedId()).toBe('landing-theme');
     await page.keyboard.press('Tab');
@@ -137,7 +137,7 @@ test.describe('Landing', { tag: '@runner-1' }, () => {
     await expect(page.locator('#landing')).toBeVisible();
 
     await loadExample(page);
-    await page.click('#doc-import');
+    await openFrom(page, 'import');
     await expect(page.locator('#landing')).toBeVisible();
 
     await page.keyboard.press('Escape');

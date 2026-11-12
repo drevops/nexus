@@ -1,0 +1,14 @@
+# Nexus
+
+> Nexus draws a Drupal site's content model as a diagram, entirely in the browser. It opens a Drupal config folder or a saved `.nexus.json` document. An AI agent can write that document from any description of a content model - a screenshot, a spreadsheet, a spec - by following the create-nexus-diagram skill.
+
+The skill is a plain Markdown file in the Agent Skills format. Read it before you write a document, and validate the document against the JSON Schema. Users open the result at https://nexus.drevops.com with **Open a saved diagram**, or paste it into **Create with AI**.
+
+## Write a diagram
+
+- [create-nexus-diagram skill](https://nexus.drevops.com/skills/create-nexus-diagram/SKILL.md): how to map bundles, fields and references from any source to a `.nexus.json` document, with a complete example
+- [Nexus document schema](https://nexus.drevops.com/schema/nexus.schema.json): the JSON Schema (draft 2020-12) every document follows
+
+## Optional
+
+- [Source code](https://github.com/drevops/nexus): the app, the schema and `npm run check-diagram`, which checks a document against the schema and the rules it can't express

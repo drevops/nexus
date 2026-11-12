@@ -1,12 +1,12 @@
 import { test, expect } from '@playwright/test';
-import { loadExample, slFill, boxesOverlap } from './helpers.js';
+import { loadExample, openFrom, slFill, boxesOverlap } from './helpers.js';
 
 test.describe('Shortcut hints', { tag: '@runner-2' }, () => {
   const MAC_LABELS = {
     'doc-save': '⌘S',
     'doc-new': '⌥N',
     redo: '⇧⌘Z',
-    'export-choose': '⇧⌘E',
+    'save-choose': '⇧⌘S',
     fit: '⇧1',
     'zoom-in': '+',
     search: '/',
@@ -17,7 +17,7 @@ test.describe('Shortcut hints', { tag: '@runner-2' }, () => {
     'doc-save': 'Ctrl+S',
     'doc-new': 'Alt+N',
     redo: 'Ctrl+Shift+Z',
-    'export-choose': 'Ctrl+Shift+E',
+    'save-choose': 'Ctrl+Shift+S',
     fit: 'Shift+1',
     'zoom-in': '+',
     search: '/',
@@ -224,6 +224,7 @@ test.describe('Shortcut hints', { tag: '@runner-2' }, () => {
       ['folder-btn', 'Alt+I'],
       ['landing-open', 'Ctrl+O'],
       ['new-btn', 'Alt+N'],
+      ['landing-ai', 'Alt+A'],
       ['template-drupal-cms', '1'],
       ['template-civictheme', '2'],
     ]);
@@ -231,7 +232,7 @@ test.describe('Shortcut hints', { tag: '@runner-2' }, () => {
 
   test('closes the shortcut labels and then the import screen with Escape', async ({ page }) => {
     await loadExample(page);
-    await page.click('#doc-import');
+    await openFrom(page, 'import');
 
     await page.keyboard.press('F1');
     expect(Object.fromEntries(await shortcutHints(page))['landing-cancel']).toBe('Esc');

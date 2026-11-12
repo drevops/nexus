@@ -1,10 +1,46 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-import { entityCount, nodePositions, waitForGraph, loadExample, openDocument } from './helpers.js';
+import { entityCount, nodePositions, waitForGraph, loadExample, openDocument, openFrom } from './helpers.js';
 
 test.describe('Documents', { tag: '@runner-1' }, () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/index.html');
+  });
+
+  test('lists a saved diagram, a config folder or template and Create with AI under Open', async ({ page }) => {
+    await loadExample(page);
+
+    await page.click('#open-choose');
+
+    await expect(page.locator('#open-menu sl-menu-item')).toHaveText(['Saved diagram…', 'Config folder or template…', 'Create with AI…']);
+  });
+
+  for (const [name, open] of dataProviderSavedDiagramPickers()) {
+    test(`opens the saved diagram picker from ${name}`, async ({ page }) => {
+      await loadExample(page);
+      const chooser = page.waitForEvent('filechooser');
+
+      await open(page);
+
+      expect(await (await chooser).element().evaluate((el) => el.id)).toBe('doc-open');
+    });
+  }
+
+  function dataProviderSavedDiagramPickers() {
+    return [
+      ['the Open button', (page) => page.click('#doc-open-btn')],
+      ['the Open menu', (page) => openFrom(page, 'document')],
+    ];
+  }
+
+  test('returns to the import screen from the Open menu, keeping the diagram behind it', async ({ page }) => {
+    await loadExample(page);
+
+    await openFrom(page, 'import');
+
+    await expect(page.locator('#landing')).toBeVisible();
+    await expect(page.locator('#landing-cancel')).toBeVisible();
+    expect(await entityCount(page)).toBe(16);
   });
 
   test('saves and reloads a Nexus diagram document', async ({ page }) => {

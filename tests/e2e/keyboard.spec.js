@@ -6,7 +6,6 @@ import {
   loadExample,
   slFill,
   openDocument,
-  exportFrom,
   selectTrackField,
   SCATTERED_DOC,
   entityIds,
@@ -69,9 +68,8 @@ test.describe('Keyboard', { tag: '@runner-2' }, () => {
     return [
       ['the theme toggle', 'd', (page) => expect(page.locator('html')).toHaveClass(/sl-theme-dark/)],
       ['Settings', ',', (page) => expect(page.locator('#settings')).toBeVisible()],
-      ['Import', 'Alt+i', (page) => expect(page.locator('#landing')).toBeVisible()],
-      ['Export before a format is chosen', 'Control+e', (page) => expect(page.locator('#export-menu')).toBeVisible()],
-      ['the export format menu', 'Control+Shift+E', (page) => expect(page.locator('#export-menu')).toBeVisible()],
+      ['the Open menu', 'Shift+O', (page) => expect(page.locator('#open-menu')).toBeVisible()],
+      ['the Save as menu', 'Control+Shift+S', (page) => expect(page.locator('#save-menu')).toBeVisible()],
       ['Fields', 'f', (page) => expect(page.locator('#fields-toggle')).toHaveJSProperty('checked', false)],
       ['Proxies', 'p', (page) => expect(page.locator('#proxy-toggle')).toHaveJSProperty('checked', false)],
       ['Machine names', 'm', (page) => expect(page.locator('#machine-names')).toHaveJSProperty('checked', false)],
@@ -232,22 +230,15 @@ test.describe('Keyboard', { tag: '@runner-2' }, () => {
     });
   }
 
-  test('exports the chosen format again with Ctrl+E', async ({ page }) => {
-    await loadExample(page);
-    await exportFrom(page, 'svg');
-
-    const [download] = await Promise.all([page.waitForEvent('download'), page.keyboard.press('Control+e')]);
-
-    expect(download.suggestedFilename()).toBe('example-content-model.svg');
-  });
-
-  test('picks an export format from the keyboard once Ctrl+Shift+E opens the menu', async ({ page }) => {
+  test('picks a save format from the keyboard once Ctrl+Shift+S opens the menu', async ({ page }) => {
     await loadExample(page);
 
-    await page.keyboard.press('Control+Shift+E');
-    await expect(page.locator('#export-menu')).toBeVisible();
+    await page.keyboard.press('Control+Shift+S');
+    await expect(page.locator('#save-menu')).toBeVisible();
     await page.keyboard.press('ArrowDown');
-    await expect(page.locator('#export-menu sl-menu-item[value="png"]')).toBeFocused();
+    await expect(page.locator('#save-menu sl-menu-item[value="json"]')).toBeFocused();
+    await page.keyboard.press('ArrowDown');
+    await expect(page.locator('#save-menu sl-menu-item[value="png"]')).toBeFocused();
 
     const [download] = await Promise.all([page.waitForEvent('download'), page.keyboard.press('Enter')]);
     expect(download.suggestedFilename()).toBe('example-content-model.png');
@@ -417,14 +408,14 @@ test.describe('Keyboard', { tag: '@runner-2' }, () => {
 
   test('leaves letter keys to an open menu', async ({ page }) => {
     await loadExample(page);
-    await page.keyboard.press('Control+Shift+E');
+    await page.keyboard.press('Control+Shift+S');
     await page.keyboard.press('ArrowDown');
-    await expect(page.locator('#export-menu sl-menu-item[value="png"]')).toBeFocused();
+    await expect(page.locator('#save-menu sl-menu-item[value="json"]')).toBeFocused();
 
     await page.keyboard.press('p');
 
     await expect(page.locator('#proxy-toggle')).toHaveJSProperty('checked', true);
-    await expect(page.locator('#export-menu')).toBeVisible();
+    await expect(page.locator('#save-menu')).toBeVisible();
   });
 
   test('repeats a held zoom key, but not a held toggle or F1', async ({ page }) => {

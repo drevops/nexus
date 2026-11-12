@@ -4,6 +4,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, sep } from 'node:path';
 import { TEMPLATES, templatePath } from '../../src/templates.js';
+import { SKILL_PATH, skillUrl } from '../../src/agent-skill.js';
 
 const ROOT = join(import.meta.dirname, '..', '..');
 const SITE = join(ROOT, '_site');
@@ -62,6 +63,16 @@ test('ships the document schema at the path its id names', () => {
   const schema = JSON.parse(readFileSync(join(SITE, 'schema', 'nexus.schema.json'), 'utf8'));
 
   assert.ok(schema.$id.endsWith('/schema/nexus.schema.json'));
+});
+
+test('ships the skill and an llms.txt that links it and the schema', () => {
+  const { homepage } = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
+  const schema = JSON.parse(readFileSync(join(SITE, 'schema', 'nexus.schema.json'), 'utf8'));
+  const llms = readFileSync(join(SITE, 'llms.txt'), 'utf8');
+
+  assert.equal(readFileSync(join(SITE, SKILL_PATH), 'utf8'), readFileSync(join(ROOT, SKILL_PATH), 'utf8'));
+  assert.ok(llms.includes('](' + skillUrl(homepage + '/') + ')'), 'llms.txt does not link the skill');
+  assert.ok(llms.includes('](' + schema.$id + ')'), 'llms.txt does not link the schema');
 });
 
 test('ships every template', () => {

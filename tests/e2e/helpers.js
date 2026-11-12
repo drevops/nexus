@@ -54,21 +54,38 @@ export async function openDocument(page, doc) {
   await waitForGraph(page);
 }
 
+// Pastes text into the Create with AI dialog, opened from the landing screen,
+// and presses Open diagram.
+export async function pasteDiagram(page, text) {
+  await page.click('#landing-ai');
+  await expect(page.locator('#ai-paste')).toBeVisible();
+  await slFill(page, '#ai-paste', text);
+  await page.click('#ai-open');
+}
+
 // Clicks the element and returns the download the click starts.
 export async function downloadFrom(page, selector) {
   const [download] = await Promise.all([page.waitForEvent('download'), page.click(selector)]);
   return download;
 }
 
-// Picks a format from the Export button's menu and returns its download once
+// Picks a format from the Save button's menu and returns its download once
 // the menu has closed. A dropdown reopened while its close animation runs
 // stays open but hidden.
-export async function exportFrom(page, format) {
-  await page.click('#export-choose');
-  const download = await downloadFrom(page, '#export-menu sl-menu-item[value="' + format + '"]');
-  await expect(page.locator('#export-menu')).toBeHidden();
+export async function saveFrom(page, format) {
+  await page.click('#save-choose');
+  const download = await downloadFrom(page, '#save-menu sl-menu-item[value="' + format + '"]');
+  await expect(page.locator('#save-menu')).toBeHidden();
 
   return download;
+}
+
+// Picks an item, by its value, from the Open button's menu and waits for the
+// menu to close.
+export async function openFrom(page, item) {
+  await page.click('#open-choose');
+  await page.click('#open-menu sl-menu-item[value="' + item + '"]');
+  await expect(page.locator('#open-menu')).toBeHidden();
 }
 
 export async function createEntity(page, entityType, bundle, label) {
