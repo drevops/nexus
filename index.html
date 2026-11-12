@@ -43,18 +43,25 @@
   </div>
   <div class="toolbar__tools">
     <div class="toolbar__section">
-      <sl-button-group class="toolbar__group" label="Document">
-        <sl-button id="doc-new" class="toolbar__button" size="small" data-icon="file-plus" data-shortcut="Alt+N" title="Start a new empty content model">New</sl-button>
-        <sl-button id="doc-import" class="toolbar__button" size="small" data-icon="folder-input" data-shortcut="Alt+I" title="Import a Drupal config folder">Import</sl-button>
+      <sl-button id="doc-new" class="toolbar__button" size="small" data-icon="file-plus" data-shortcut="Alt+N" title="Start a new empty content model">New</sl-button>
+      <sl-button-group id="open-group" class="toolbar__group" label="Open">
         <sl-button id="doc-open-btn" class="toolbar__button" size="small" data-icon="folder-open" data-shortcut="Mod+O" title="Open a saved Nexus diagram (.nexus.json)">Open</sl-button>
-        <sl-button id="doc-ai" class="toolbar__button" size="small" data-icon="sparkles" data-shortcut="Alt+A" title="Create a diagram with an AI agent from a screenshot, spreadsheet or spec">AI</sl-button>
-        <sl-button id="doc-save" class="toolbar__button" size="small" data-icon="download" data-shortcut="Mod+S" title="Save this diagram as a Nexus document (.nexus.json)">Save</sl-button>
+        <sl-dropdown id="open-dropdown" placement="bottom-end" hoist>
+          <sl-button id="open-choose" slot="trigger" class="toolbar__button" size="small" caret data-shortcut="Shift+O" title="Open a config folder, a template or a diagram from an AI agent" aria-label="Choose what to open"></sl-button>
+          <sl-menu id="open-menu">
+            <sl-menu-item value="document" title="Open a saved Nexus diagram (.nexus.json)"><span slot="prefix" data-icon="folder-open"></span>Saved diagram…</sl-menu-item>
+            <sl-menu-item value="import" title="Import a Drupal config folder or start from a template"><span slot="prefix" data-icon="folder-input"></span>Config folder or template…</sl-menu-item>
+            <sl-menu-item value="ai" title="Create a diagram with an AI agent from a screenshot, spreadsheet or spec"><span slot="prefix" data-icon="sparkles"></span>Create with AI…</sl-menu-item>
+          </sl-menu>
+        </sl-dropdown>
       </sl-button-group>
-      <sl-button-group id="export-group" class="toolbar__group" label="Export">
-        <sl-button id="export-run" class="toolbar__button" size="small" data-icon="share" data-shortcut="Mod+E" title="Export the diagram or its fields table"><span class="export-label">Export</span></sl-button>
-        <sl-dropdown id="export-dropdown" placement="bottom-end" hoist>
-          <sl-button id="export-choose" slot="trigger" class="toolbar__button" size="small" caret data-shortcut="Mod+Shift+E" title="Choose the export format" aria-label="Choose the export format"></sl-button>
-          <sl-menu id="export-menu"></sl-menu>
+      <sl-button-group id="save-group" class="toolbar__group" label="Save">
+        <sl-button id="doc-save" class="toolbar__button" size="small" data-icon="download" data-shortcut="Mod+S" title="Save this diagram as a Nexus document (.nexus.json)">Save</sl-button>
+        <sl-dropdown id="save-dropdown" placement="bottom-end" hoist>
+          <sl-button id="save-choose" slot="trigger" class="toolbar__button" size="small" caret data-shortcut="Mod+Shift+S" title="Save the diagram as an image or its fields table as CSV" aria-label="Save as"></sl-button>
+          <sl-menu id="save-menu">
+            <sl-menu-label>Save as</sl-menu-label>
+          </sl-menu>
         </sl-dropdown>
       </sl-button-group>
     </div>
@@ -83,7 +90,7 @@
           <sl-button id="layout-choose" slot="trigger" class="toolbar__button" size="small" caret data-shortcut="Shift+L" title="Choose a layout" aria-label="Choose a layout"></sl-button>
           <sl-menu id="layout-menu"></sl-menu>
         </sl-dropdown>
-        <sl-button id="tidy" class="toolbar__button" size="small" data-icon="tidy" data-shortcut="T" title="Tidy up: straighten each entity, keeping its fields in their order, and line the entities up in columns near where they are">Tidy</sl-button>
+        <sl-button id="tidy" class="toolbar__button" size="small" data-icon="tidy" data-shortcut="T" title="Tidy up: straighten each entity, keeping its fields in their order, and line the entities up in columns near where they are">Tidy up</sl-button>
       </sl-button-group>
     </div>
     <div class="toolbar__section">

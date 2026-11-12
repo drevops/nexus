@@ -34,7 +34,7 @@ test('draws the shapes of every template icon', () => {
 test('draws every icon the page names', () => {
   const names = [...INDEX.matchAll(/data-icon="([^"]+)"/g)].map((match) => match[1]);
 
-  assert.ok(names.includes('share'));
+  assert.ok(names.includes('sparkles'));
   assert.deepEqual(
     names.filter((name) => !hasIcon(name)),
     [],

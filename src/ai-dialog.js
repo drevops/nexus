@@ -91,7 +91,17 @@ function openPasted(dialog, open) {
 }
 
 /**
- * Wires the dialog to its toolbar and landing buttons.
+ * Opens the dialog with no error showing, and loads the skill on its first
+ * open.
+ */
+export function showAiDialog() {
+  showError('');
+  $('ai-dialog').show();
+  loadSkill(skillUrl(document.baseURI));
+}
+
+/**
+ * Wires the dialog and its landing button.
  *
  * `open` takes a parsed document and the label of the first version in its
  * history, and throws when the document can't be drawn.
@@ -102,14 +112,7 @@ export function initAiDialog(open) {
 
   $('ai-prompt').textContent = agentPrompt(url);
   $('ai-install').textContent = installCommand(url);
-
-  for (const id of ['doc-ai', 'landing-ai']) {
-    $(id).addEventListener('click', () => {
-      showError('');
-      dialog.show();
-      loadSkill(url);
-    });
-  }
+  $('landing-ai').addEventListener('click', showAiDialog);
 
   for (const button of dialog.querySelectorAll('[data-copy]')) {
     button.addEventListener('click', () => copy(button));

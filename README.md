@@ -41,7 +41,7 @@ To try changes before they're released, open the [development version](https://d
 - **Saved as a document.** Save the diagram, layout and all, as a `.nexus.json` file and open it again later.
 - **Built by an AI agent.** An AI agent can write a diagram from a screenshot, a spreadsheet or a spec. **Create with AI** hands the agent its skill and opens the diagram you paste back (see [Build a diagram with an AI agent](#build-a-diagram-with-an-ai-agent)).
 - **Customisable & remembered.** Switch between light and dark themes, recolour entity types, swap their symbols or add types of your own; the choices persist in your browser and apply to every diagram you open.
-- **Export.** Export the whole canvas as **PNG** or **SVG**, or the field table as **CSV** - all client-side. The Export button remembers the last format you picked, so the next export takes 1 click.
+- **Export.** **Save as** saves the whole canvas as **PNG** or **SVG**, or the field table as **CSV** - all client-side.
 
 ## Installation
 
@@ -53,7 +53,7 @@ To host your own copy, run `npm run assemble` and serve the `_site/` folder it f
 
 1. Open the app (or your own copy - see [Installation](#installation)). The light/dark theme toggle sits in the top-right corner of the landing screen too, so you can pick a theme before loading anything.
 2. **Choose a config folder** or drag one onto the drop zone - the folder of `*.yml` files exported from a Drupal site (its config sync directory), or a module's `config/install`. Or pick one of the [templates](#templates) beside it, **Open a saved diagram**, **Start from scratch** or [**Create with AI**](#build-a-diagram-with-an-ai-agent).
-3. Explore with the toolbar, switch to **Edit** to change the model, then **Save** it or export it as PNG, SVG or CSV.
+3. Explore with the toolbar, switch to **Edit** to change the model, then **Save** it. **Save as** also saves it as PNG, SVG or CSV.
 
 Add an `annotations.yml` file to the folder to overlay [events, APIs and callbacks](#annotation-overlay).
 
@@ -98,13 +98,13 @@ The toolbar offers:
 
 - **Find entity** - type a name, then press Enter or the search button to fade everything else and zoom to the matches. Each match and its fields land in the middle of the part of the canvas the open panels leave free.
 - **Layout** - re-run the current layout, or pick another from the arrow beside it: **Columns** stacks each entity and its fields in columns that fill the screen, grouped by entity type, while **LR** and **TB** lay the whole diagram out as 1 flow, left to right or top to bottom. Your pick applies to the open diagram, and the next diagram opens in the layout **Settings** sets.
-- **Tidy** - straighten each entity's fields and line the entities up in columns near where they already are, so a diagram you've dragged around or edited gets neat without being rearranged. Drag an entity roughly into place and Tidy slots it in. Fields keep their order, so a field you drag to a new place among its entity's fields stays there. With an entity, or one of its fields or proxies, selected, Tidy straightens only that entity and leaves the rest of the diagram where it is.
+- **Tidy up** - straighten each entity's fields and line the entities up in columns near where they already are, so a diagram you've dragged around or edited gets neat without being rearranged. Drag an entity roughly into place and **Tidy up** slots it in. Fields keep their order, so a field you drag to a new place among its entity's fields stays there. With an entity, or one of its fields or proxies, selected, **Tidy up** straightens only that entity and leaves the rest of the diagram where it is.
 - **Entities** - an index with per-type filters and field counts; click a bundle to focus it or open its fields.
 - **Table** - a searchable table of all fields (or a single entity's) with type, cardinality, requiredness and references. The eye at the end of a row hides that field and its proxies on the canvas, and a second click shows them again. The field stays in the model and in the table. The target beside the eye goes to the field on the canvas. A hidden field stays hidden when **Fields** is turned back on, and a layout keeps it beside its entity.
 - **Legend** - what each symbol means.
 - **History** - the versions of the diagram since you opened it, up to your last 200 changes (see [Undo and history](#undo-and-history)).
 - **Undo / Redo** - step back and forward through your changes.
-- **Export** - export the whole canvas as PNG or SVG, or the field table as CSV. Pick a format from the arrow beside it and the button keeps that format, so the next press exports it straight away.
+- **Save** - save the diagram as a `.nexus.json` document (see [Saving diagrams](#saving-diagrams)). The arrow beside it opens **Save as**, which saves the document as **JSON**, the whole canvas as **PNG** or **SVG**, or the field table as **CSV**.
 
 The top-right corner holds the About box, a link to this repository, the light/dark theme toggle and **Settings**, where you choose each entity type's color and symbol, add types of your own and set how new diagrams open. The right end of the status bar holds the zoom controls: **Reset**, **Fit**, zoom out, zoom in and a zoom-level menu. The mouse wheel or a trackpad pinch zooms the diagram, and a drag with the right mouse button pans it in either mode. The browser's zoom keys, <kbd>Ctrl</kbd> with <kbd>+</kbd>, <kbd>-</kbd> or <kbd>0</kbd>, zoom the diagram and leave the page at its size. A pinch over the toolbar or a panel does nothing. Click a node to focus it and its connections, and right-click an entity to isolate it with its fields. Nodes stay in place in View mode. To move a node, double-click it: Nexus switches to Edit with that node selected.
 
@@ -164,7 +164,7 @@ To copy fields from another entity, pick it from **Copy from**. Its fields land 
 
 ## Undo and history
 
-**Undo** and **Redo** in the toolbar step back and forward through your changes, and so do `Ctrl+Z` and `Ctrl+Shift+Z` or `Ctrl+Y` (`⌘Z` and `⇧⌘Z` on a Mac). Every change to the diagram counts: adding, renaming and deleting entities, fields, references and annotations, editing them in the Inspector, hiding or showing a field from the **Table**, dragging nodes, **Tidy**, re-running the layout with the **Layout** button and renaming the diagram. Typing into a field is 1 step, however many characters it takes. While a text box has the focus, the shortcuts undo your typing there instead.
+**Undo** and **Redo** in the toolbar step back and forward through your changes, and so do `Ctrl+Z` and `Ctrl+Shift+Z` or `Ctrl+Y` (`⌘Z` and `⇧⌘Z` on a Mac). Every change to the diagram counts: adding, renaming and deleting entities, fields, references and annotations, editing them in the Inspector, hiding or showing a field from the **Table**, dragging nodes, **Tidy up**, re-running the layout with the **Layout** button and renaming the diagram. Typing into a field is 1 step, however many characters it takes. While a text box has the focus, the shortcuts undo your typing there instead.
 
 **History** opens a panel listing the versions of the diagram since you opened it, newest first, with the time of each change. It keeps your last 200 changes, so in a longer session the oldest ones leave the list. Click a version to go back to it. The versions after it stay in the list, greyed out, so you can jump forward again until your next edit replaces them.
 
@@ -172,7 +172,13 @@ Undo covers what the diagram holds, not how it's shown, so it leaves the **Field
 
 ## Saving diagrams
 
-**Save** downloads the diagram as a `.nexus.json` document holding the model, its layout, the fields you've hidden, the entity colours and symbols, any custom types and the panel arrangement, and **Open** brings it back with every node where you left it. The title box at the top left names the diagram and the files it saves and exports. **New** starts an empty model, and **Import** returns to the import screen to load another config folder or template.
+**Save** downloads the diagram as a `.nexus.json` document holding the model, its layout, the fields you've hidden, the entity colours and symbols, any custom types and the panel arrangement, and **Open** brings it back with every node where you left it. The title box at the top left names the diagram and the files it saves. **New** starts an empty model.
+
+The arrow beside **Open** opens a menu with 3 items:
+
+- **Saved diagram…** opens a `.nexus.json` document, as **Open** does.
+- **Config folder or template…** returns to the import screen to load another config folder or template.
+- **Create with AI…** opens the dialog that [builds a diagram with an AI agent](#build-a-diagram-with-an-ai-agent).
 
 ## Keyboard shortcuts
 
@@ -186,14 +192,12 @@ The table uses the Windows and Linux names. A Mac labels the same keys with **�
 | Light / dark theme | `D` |
 | Settings | `,` |
 | New | `Alt+N` |
-| Import | `Alt+I` |
 | Open | `Ctrl+O` |
-| AI | <kbd>Alt+A</kbd> |
+| The arrow beside Open | <kbd>Shift+O</kbd> |
 | Save | `Ctrl+S` |
+| The arrow beside Save | <kbd>Ctrl+Shift+S</kbd> |
 | Undo | `Ctrl+Z` |
 | Redo | `Ctrl+Shift+Z` or `Ctrl+Y` |
-| Export | `Ctrl+E` |
-| The arrow beside Export | `Ctrl+Shift+E` |
 | View / Edit | `V` / `E` |
 | Find entity | `/` |
 | Fields | `F` |
@@ -201,7 +205,7 @@ The table uses the Windows and Linux names. A Mac labels the same keys with **�
 | Machine names | `M` |
 | Layout | `L` |
 | The arrow beside Layout | `Shift+L` |
-| Tidy | `T` |
+| Tidy up | `T` |
 | Entities | `1` |
 | Table | `2` |
 | Legend | `3` |
@@ -213,7 +217,7 @@ The table uses the Windows and Linux names. A Mac labels the same keys with **�
 | Zoom out / zoom in | <kbd>-</kbd> or <kbd>Ctrl+-</kbd> / <kbd>+</kbd>, <kbd>=</kbd> or <kbd>Ctrl+=</kbd> |
 | Zoom level | `Z` |
 
-The palette shortcuts work in Edit mode, where the palette is on screen. One that opens a form puts the cursor in its machine name, so you can type the name straight away. On the landing screen, **Choose a config folder**, **Open a saved diagram**, **Start from scratch** and **Create with AI** take the shortcuts of **Import**, **Open**, **New** and **AI**. There, `D` switches the theme, `1` and `2` load the templates in the order they're listed, and **Esc** closes the screen when there's a diagram behind it.
+The palette shortcuts work in Edit mode, where the palette is on screen. One that opens a form puts the cursor in its machine name, so you can type the name straight away. On the landing screen, **Choose a config folder** takes <kbd>Alt+I</kbd> and **Create with AI** takes <kbd>Alt+A</kbd>. **Open a saved diagram** and **Start from scratch** take the shortcuts of **Open** and **New**. There, `D` switches the theme, `1` and `2` load the templates in the order they're listed, and **Esc** closes the screen when there's a diagram behind it.
 
 The shortcuts stay out of your way while you type. A text box, a dropdown or an open menu keeps the plain keys for itself, so typing an `f` into **Find entity** doesn't hide the fields. In a text box only the **Ctrl** shortcuts work, apart from undo and redo, which undo your typing there - so **Ctrl+S** saves the diagram while you're renaming it. Hold a key down and only undo, redo and the zoom keys repeat.
 
@@ -274,7 +278,7 @@ An `attach`, an edge or a `computed_fields` entry that names an id the diagram d
 
 An AI agent can turn a content model you hold in another form into a Nexus diagram. The source can be a screenshot or photo of a diagram, a spreadsheet, a Word or PDF spec or a list of content types and fields. The agent follows the `create-nexus-diagram` skill and writes a `.nexus.json` document.
 
-To hand the skill to your agent, click **Create with AI** on the landing screen or **AI** in the toolbar. Then pick the tab that matches your agent:
+To hand the skill to your agent, click **Create with AI** on the landing screen, or **Create with AI…** in the menu beside **Open**. Then pick the tab that matches your agent:
 
 | Tab | Use it for |
 |-----|------------|

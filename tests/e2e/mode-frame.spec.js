@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-import { loadExample, slFill, exportFrom } from './helpers.js';
+import { loadExample, slFill, saveFrom } from './helpers.js';
 
 test.describe('Mode frame', { tag: '@runner-2' }, () => {
   // How the mode frame draws: its display, border width and colour, and
@@ -86,7 +86,7 @@ test.describe('Mode frame', { tag: '@runner-2' }, () => {
     await page.click('#mode-build');
     expect((await modeFrame(page)).color).toBe(AMBER);
 
-    const svg = readFileSync(await (await exportFrom(page, 'svg')).path(), 'utf8');
+    const svg = readFileSync(await (await saveFrom(page, 'svg')).path(), 'utf8');
 
     expect(svg).toContain('<svg');
     expect(svg.toLowerCase()).not.toContain('#f59e0b');

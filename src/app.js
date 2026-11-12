@@ -3,21 +3,21 @@
  *
  * Loads a Drupal config folder entirely in the browser (nothing is uploaded),
  * parses it, and renders the content-model diagram. Also handles the bundled
- * templates, the Export button and the loading overlay, and starts a history
- * for each diagram it draws.
+ * templates, the Open and Save buttons and the loading overlay, and starts a
+ * history for each diagram it draws.
  */
 
 import { isModelConfig, parseConfig } from './parser.js';
 import { ANNOTATION_FILES, applyAnnotations } from './annotations.js';
 import { render } from './render.js';
 import { exportPng, exportSvg, exportCsv, exportDocument } from './export.js';
-import { EXPORT_FORMATS, findExportFormat, loadExportFormat, saveExportFormat } from './export-formats.js';
+import { SAVE_FORMATS, findSaveFormat } from './save-formats.js';
 import { documentFromGraph, documentToModel } from './document.js';
 import { initBuilder, attachBuilder } from './builder.js';
 import { initUI } from './ui.js';
 import { initUndo, resetHistory, checkpoint } from './undo.js';
 import { initShortcuts } from './keyboard.js';
-import { initAiDialog } from './ai-dialog.js';
+import { initAiDialog, showAiDialog } from './ai-dialog.js';
 import { initIcons, icon } from './icons.js';
 import { VERSION } from './version.js';
 import { DEFAULT_TITLE } from './model.js';
@@ -28,15 +28,18 @@ import { $ } from './dom.js';
 
 const THEME_TOGGLES = '[data-theme-toggle]';
 
-const EXPORTERS = {
+const SAVERS = {
+  json: saveDocument,
   png: (controller, title) => exportPng(controller.cy, title),
   svg: (controller, title) => exportSvg(controller.cy, title),
   csv: (controller, title) => exportCsv(controller.records(), controller.typeLabel, title),
 };
 
-// The format the Export button repeats, or null until 1 is chosen from its
-// menu.
-let exportFormat = null;
+const OPENERS = {
+  document: () => $('doc-open').click(),
+  import: showLanding,
+  ai: showAiDialog,
+};
 
 function basename(path) {
   const parts = String(path).split('/');
@@ -309,7 +312,6 @@ function wireLanding() {
   $('folder-input').addEventListener('change', (evt) => loadFromFiles(evt.target.files));
   $('landing-open').addEventListener('click', () => $('doc-open').click());
   $('new-btn').addEventListener('click', newDocument);
-  $('doc-import').addEventListener('click', showLanding);
   $('landing-cancel').addEventListener('click', () => setLandingOpen(false));
 
   setLandingOpen(!$('landing').hidden);
@@ -323,23 +325,15 @@ function showLanding() {
   setLandingOpen(true);
 }
 
-function runExport(format) {
+function saveAs(format) {
   const controller = getController();
 
   if (controller) {
-    EXPORTERS[format.id](controller, $('diagram-title').value);
+    SAVERS[format.id](controller, $('diagram-title').value || DEFAULT_TITLE);
   }
 }
 
-function setExportFormat(format) {
-  const button = $('export-run');
-
-  exportFormat = format;
-  button.querySelector('.export-label').textContent = 'Export ' + format.label;
-  button.setAttribute('title', format.title);
-}
-
-function exportMenuItem(format) {
+function saveMenuItem(format) {
   const item = document.createElement('sl-menu-item');
   const glyph = document.createElement('span');
 
@@ -352,55 +346,27 @@ function exportMenuItem(format) {
   return item;
 }
 
-function wireExports() {
-  const dropdown = $('export-dropdown');
-  const saved = loadExportFormat(window);
+function wireOpenAndSave() {
+  $('save-menu').append(...SAVE_FORMATS.map(saveMenuItem));
 
-  $('export-menu').append(...EXPORT_FORMATS.map(exportMenuItem));
+  $('open-menu').addEventListener('sl-select', (evt) => {
+    const value = evt.detail.item.value;
 
-  if (saved) {
-    setExportFormat(saved);
-  }
-
-  // Clicks on the main button count as inside the dropdown, so the button can
-  // close the menu it opened.
-  customElements.whenDefined('sl-dropdown').then(() => {
-    dropdown.containingElement = $('export-group');
+    if (Object.hasOwn(OPENERS, value)) {
+      OPENERS[value]();
+    }
   });
 
-  $('export-run').addEventListener('click', () => {
-    // Until a format is chosen, the main button opens the menu as the caret
-    // does.
-    if (!exportFormat) {
-      $('export-choose').click();
-      return;
+  $('save-menu').addEventListener('sl-select', (evt) => {
+    const format = findSaveFormat(evt.detail.item.value);
+
+    if (format) {
+      saveAs(format);
     }
-
-    dropdown.hide();
-    runExport(exportFormat);
-  });
-
-  $('export-menu').addEventListener('sl-select', (evt) => {
-    const format = findExportFormat(evt.detail.item.value);
-
-    if (!format) {
-      return;
-    }
-
-    setExportFormat(format);
-    saveExportFormat(window, format);
-    runExport(format);
   });
 }
 
-function saveDocument() {
-  const controller = getController();
-
-  if (!controller) {
-    return;
-  }
-
-  const title = $('diagram-title').value || DEFAULT_TITLE;
+function saveDocument(controller, title) {
   const types = controller.typeSettings();
   const doc = documentFromGraph(controller.cy, {
     title: title,
@@ -439,7 +405,7 @@ function newDocument() {
 }
 
 function wireDocument() {
-  $('doc-save').addEventListener('click', saveDocument);
+  $('doc-save').addEventListener('click', () => saveAs(SAVE_FORMATS[0]));
   $('doc-new').addEventListener('click', newDocument);
   $('doc-open-btn').addEventListener('click', () => $('doc-open').click());
   $('doc-open').addEventListener('change', (evt) => {
@@ -573,7 +539,7 @@ function initVersion() {
 }
 
 wireLanding();
-wireExports();
+wireOpenAndSave();
 wireDocument();
 initUI();
 initBuilder();

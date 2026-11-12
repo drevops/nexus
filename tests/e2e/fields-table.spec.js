@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-import { loadExample, openDocument, exportFrom } from './helpers.js';
+import { loadExample, openDocument, saveFrom } from './helpers.js';
 
 test.describe('Fields table', { tag: '@runner-2' }, () => {
   // Returns the text of each rendered line in every matched element. A character
@@ -95,7 +95,7 @@ test.describe('Fields table', { tag: '@runner-2' }, () => {
   test('exports the fields table as CSV', async ({ page }) => {
     await loadExample(page);
 
-    const download = await exportFrom(page, 'csv');
+    const download = await saveFrom(page, 'csv');
     expect(download.suggestedFilename()).toBe('example-content-model-fields.csv');
 
     const csv = readFileSync(await download.path(), 'utf8');
@@ -119,7 +119,7 @@ test.describe('Fields table', { tag: '@runner-2' }, () => {
       ],
     });
 
-    const download = await exportFrom(page, 'csv');
+    const download = await saveFrom(page, 'csv');
     const csv = readFileSync(await download.path(), 'utf8');
 
     for (const cell of ['"Comma, label"', '"Quote ""label"""', '"Line\nfeed"', '"Carriage\rreturn"']) {

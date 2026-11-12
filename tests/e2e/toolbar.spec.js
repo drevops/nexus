@@ -27,7 +27,8 @@ test.describe('Toolbar', { tag: '@runner-2' }, () => {
   function dataProviderDropdownTriggers() {
     return [
       ['layout menu caret', '#layout-run', '#layout-choose'],
-      ['export menu caret', '#export-run', '#export-choose'],
+      ['open menu caret', '#doc-open-btn', '#open-choose'],
+      ['save menu caret', '#doc-save', '#save-choose'],
       ['zoom level menu', '#zoom-in', '#zoom-level'],
     ];
   }
@@ -114,7 +115,7 @@ test.describe('Toolbar', { tag: '@runner-2' }, () => {
     await expect(page.locator('.toolbar__tools > :not(.toolbar__section)')).toHaveCount(0);
 
     expect(await toolbarSections(page)).toEqual([
-      ['doc-new', 'doc-import', 'doc-open-btn', 'doc-ai', 'doc-save', 'export-run', 'export-choose'],
+      ['doc-new', 'doc-open-btn', 'open-choose', 'doc-save', 'save-choose'],
       ['undo', 'redo'],
       ['mode-view', 'mode-build'],
       ['search', 'search-btn'],
@@ -165,13 +166,13 @@ test.describe('Toolbar', { tag: '@runner-2' }, () => {
     await expect.poll(async () => misplacedSeparators(await toolbarSeparators(page))).toEqual([]);
     const lineEnd = await firstLineEnd(page);
 
-    // Widens the Export button by the room left at the end of the first line,
+    // Widens the Layout button by the room left at the end of the first line,
     // so the last section on that line moves down.
     await page.evaluate((index) => {
       const row = document.querySelector('.toolbar__tools').getBoundingClientRect();
       const last = document.querySelectorAll('.toolbar__tools > .toolbar__section')[index].getBoundingClientRect();
 
-      document.querySelector('#export-run .export-label').style.paddingRight = row.right - last.right + 1 + 'px';
+      document.querySelector('#layout-run .layout-label').style.paddingRight = row.right - last.right + 1 + 'px';
     }, lineEnd);
 
     await expect.poll(() => firstLineEnd(page)).toBe(lineEnd - 1);

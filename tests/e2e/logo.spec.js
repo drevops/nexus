@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loadExample, DARK_MARK, markFills } from './helpers.js';
+import { loadExample, openFrom, DARK_MARK, markFills } from './helpers.js';
 
 test.describe('Logo', { tag: '@runner-1' }, () => {
   const LIGHT_MARK = { ink: ['rgb(51, 62, 67)'], ref: ['rgb(83, 180, 235)'] };
@@ -37,7 +37,7 @@ test.describe('Logo', { tag: '@runner-1' }, () => {
     await page.emulateMedia({ colorScheme: 'light' });
     expect(await markFills(page, '.toolbar__brand')).toEqual(DARK_MARK);
 
-    await page.click('#doc-import');
+    await openFrom(page, 'import');
     await expect(page.locator('#landing')).toBeVisible();
     expect(await markFills(page, '.landing__logo')).toEqual(DARK_MARK);
   });

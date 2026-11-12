@@ -6,7 +6,7 @@ test.describe('Icons', { tag: '@runner-2' }, () => {
   });
 
   test('renders toolbar icons from the icon set', async ({ page }) => {
-    await expect(page.locator('#doc-import svg.icon')).toBeVisible();
+    await expect(page.locator('#doc-open-btn svg.icon')).toBeVisible();
     await expect(page.locator('#doc-save svg.icon')).toBeVisible();
     await expect(page.locator('#layout-run svg.icon')).toBeVisible();
     await expect(page.locator('#layout-run .layout-label')).toHaveText('Layout: Columns');

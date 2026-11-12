@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { downloadFrom, entityCount, loadExample, pasteDiagram, slFill, waitForGraph } from './helpers.js';
+import { downloadFrom, entityCount, loadExample, openFrom, pasteDiagram, slFill, waitForGraph } from './helpers.js';
 
 test.describe('Create with AI', { tag: '@runner-2' }, () => {
   const SKILL = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'skills', 'create-nexus-diagram', 'SKILL.md'), 'utf8');
@@ -29,9 +29,9 @@ test.describe('Create with AI', { tag: '@runner-2' }, () => {
   }
 
   function dataProviderOpenDialog() {
-    const fromDiagram = async (page) => {
+    const fromOpenMenu = async (page) => {
       await loadExample(page);
-      await page.click('#doc-ai');
+      await openFrom(page, 'ai');
     };
     const byKey = async (page) => {
       await page.waitForFunction(() => customElements.get('sl-dialog'));
@@ -40,15 +40,8 @@ test.describe('Create with AI', { tag: '@runner-2' }, () => {
 
     return [
       ['from the landing screen', (page) => page.click('#landing-ai')],
-      ['from the toolbar', fromDiagram],
+      ['from the Open menu', fromOpenMenu],
       ['with Alt+A on the landing screen', byKey],
-      [
-        'with Alt+A over a diagram',
-        async (page) => {
-          await loadExample(page);
-          await byKey(page);
-        },
-      ],
     ];
   }
 
@@ -160,9 +153,9 @@ test.describe('Create with AI', { tag: '@runner-2' }, () => {
     ];
   }
 
-  test('replaces the open diagram with a pasted one from the toolbar', async ({ page }) => {
+  test('replaces the open diagram with one pasted from the Open menu', async ({ page }) => {
     await loadExample(page);
-    await page.click('#doc-ai');
+    await openFrom(page, 'ai');
     await slFill(page, '#ai-paste', EXAMPLE);
     await page.click('#ai-open');
 

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loadExample, DARK_MARK, markFills } from './helpers.js';
+import { loadExample, openFrom, DARK_MARK, markFills } from './helpers.js';
 
 test.describe('Theme', { tag: '@runner-1' }, () => {
   test.beforeEach(async ({ page }) => {
@@ -54,7 +54,7 @@ test.describe('Theme', { tag: '@runner-1' }, () => {
     await page.click('#theme-toggle');
     expect(await fieldFill()).toBe('rgb(43,48,57)');
 
-    await page.click('#doc-import');
+    await openFrom(page, 'import');
     await expect(page.locator('#landing-theme')).toHaveAttribute('title', 'Switch to light theme');
 
     await page.click('#landing-theme');

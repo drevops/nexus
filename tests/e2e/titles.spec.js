@@ -131,7 +131,8 @@ test.describe('Titles', { tag: '@runner-1' }, () => {
           await expect(page.locator('#inspector [data-copy-from]')).toBeVisible();
         },
       ],
-      ['the export menu', menu('#export-choose', '#export-menu')],
+      ['the open menu', menu('#open-choose', '#open-menu')],
+      ['the save menu', menu('#save-choose', '#save-menu')],
       ['the layout menu', menu('#layout-choose', '#layout-menu')],
       ['the zoom menu', menu('#zoom-level', '#zoom-menu')],
       ...['prompt', 'skill', 'install'].map((tab) => [
