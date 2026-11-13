@@ -128,6 +128,13 @@ export async function buildStoryWithField(page) {
 
 // The callback returns nothing, since Playwright is slow to serialize the
 // collection emit() returns.
+// Shows the tooltip of a node, as a pointer over it does.
+export function hoverNode(page, id) {
+  return page.evaluate((nodeId) => {
+    window.__nexus.cy.getElementById(nodeId).emit('mouseover');
+  }, id);
+}
+
 export function tapNode(page, id) {
   return page.evaluate((nodeId) => {
     window.__nexus.cy.getElementById(nodeId).emit('tap');

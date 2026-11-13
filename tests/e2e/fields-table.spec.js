@@ -506,24 +506,29 @@ test.describe('Fields table', { tag: '@runner-2' }, () => {
     expect((await firstGroupRows(page)).map((r) => r.name)).toEqual(['field_layout', 'field_summary', 'field_tags', 'title']);
   });
 
-  test('edits cells only in Edit mode, where it shows the settings columns', async ({ page }) => {
+  test('edits cells in View mode, and shows the settings columns in Edit mode', async ({ page }) => {
     await openDocument(page, EDIT_DOC);
     await page.click('#table-toggle');
 
+    // A diagram opens in View mode, where a click edits a cell all the same.
+    await expect(page.locator('#stage-root')).toHaveAttribute('data-mode', 'view');
     await expect(page.locator('#field-table')).not.toHaveClass(/has-settings/);
-    await expect(page.locator('#field-table [data-edit-cell]')).toHaveCount(0);
+    await typeInCell(page, SUMMARY, 'field', 'Teaser');
+    await page.keyboard.press('Enter');
+    expect(await fieldData(page, SUMMARY, 'label')).toBe('Teaser');
 
     await page.click('#mode-build');
     await expect(page.locator('#field-table')).toHaveClass(/has-settings/);
-    await expect(editCell(page, SUMMARY, 'description')).toHaveAttribute('title', 'Edit the help text of Summary');
+    await expect(editCell(page, SUMMARY, 'description')).toHaveAttribute('title', 'Edit the help text of Teaser');
 
-    await editCell(page, SUMMARY, 'field').click();
+    await editCell(page, SUMMARY, 'description').click();
     await expect(tableEditor(page)).toBeVisible();
 
+    // The settings column the editor sits in goes away in View mode.
     await page.click('#mode-view');
     await expect(tableEditor(page)).toHaveCount(0);
-    await expect(page.locator('#field-table [data-edit-cell]')).toHaveCount(0);
     await expect(page.locator('#field-table')).not.toHaveClass(/has-settings/);
+    await expect(editCell(page, SUMMARY, 'field')).toHaveCount(1);
   });
 
   test('edits a label in place, saves it with Enter and cancels with Escape', async ({ page }) => {

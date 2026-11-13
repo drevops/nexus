@@ -25,6 +25,7 @@ import { allowedValueLabels, allowedValuesText, parseAllowedValues, translatable
 import { numberFields, sortFields, nextSort, isDefaultSort, cellEditor, referenceChanges } from './field-table.js';
 import { setFieldCardinality, setFieldLabel, setFieldRequired, setFieldTranslatable, setFieldType, setSetting } from './field-edits.js';
 import { SelectEditor, TextEditor } from './table-editors.js';
+import { parseRichText, richTextPlain } from './rich-text.js';
 import { usedInTitle } from './shared-fields.js';
 import { RESIZE_HANDLES, resizeBox } from './panel-resize.js';
 import { goToVersion, historyState } from './undo.js';
@@ -756,6 +757,25 @@ function translatableMark(translatable) {
     : html`<span title="Not translatable: the value is the same in every language">✕</span>`;
 }
 
+// Draws markup from config through the allowlist of parseRichText(), as
+// elements, so no text reaches innerHTML.
+function richText(text) {
+  const draw = (nodes) =>
+    nodes.map((node) => {
+      if (typeof node === 'string') {
+        return node;
+      }
+
+      if (node.tag === 'a') {
+        return h('span', { class: 'rich-text__link', title: node.href || null }, draw(node.children));
+      }
+
+      return h(node.tag, null, node.tag === 'br' ? null : draw(node.children));
+    });
+
+  return draw(parseRichText(text));
+}
+
 function referenceLinks(controller, r) {
   return r.refs.map(
     (ref, i) =>
@@ -782,7 +802,7 @@ const CELL_CONTENT = {
   required: (r) => (r.required ? html`<span title="Required: the field must have a value">✓</span>` : ''),
   references: (r, controller) => referenceLinks(controller, r),
   usedIn: (r) => (r.usedIn.length ? html`<span title=${usedInTitle(r.usedIn)}>${r.usedIn.length}</span>` : ''),
-  description: (r) => r.description,
+  description: (r) => richText(r.description),
   defaultValue: (r) => r.defaultValue,
   allowedValues: (r) => allowedValueLabels(r.allowedValues).join(', '),
   translatable: (r) => translatableMark(r.translatable),
@@ -954,11 +974,8 @@ function TableBody({ controller, filter, term, sort, editMode }) {
     reviseInspectorFor(r);
   }
 
-  useEffect(() => {
-    if (!editMode) {
-      edit(null);
-    }
-  }, [editMode]);
+  // A mode switch can hide the settings column an editor sits in.
+  useEffect(() => edit(null), [editMode]);
 
   useLayoutEffect(() => {
     const cell = refocus.current;
@@ -989,7 +1006,7 @@ function TableBody({ controller, filter, term, sort, editMode }) {
       return false;
     }
     if (term) {
-      const hay = [r.entity, r.field, r.name, r.type, ...r.refs.map((x) => x.label), r.description].join(' ').toLowerCase();
+      const hay = [r.entity, r.field, r.name, r.type, ...r.refs.map((x) => x.label), richTextPlain(parseRichText(r.description))].join(' ').toLowerCase();
       return hay.indexOf(term.toLowerCase()) !== -1;
     }
     return true;
@@ -1019,12 +1036,12 @@ function TableBody({ controller, filter, term, sort, editMode }) {
     />`;
   }
 
-  // A cell in Edit mode is a button that opens its editor, except Required,
+  // An editable cell is a button that opens its editor, except Required,
   // which is a checkbox, and References, whose links stay beside the button.
   function cell(r, column) {
     const content = CELL_CONTENT[column.key](r, controller);
     const className = CELL_CLASSES[column.key] || null;
-    const kind = editMode ? cellEditor(r, column.key) : null;
+    const kind = cellEditor(r, column.key);
     const key = cellKey(r.id, column.key);
     const name = r.field || r.name;
 
@@ -1083,7 +1100,7 @@ function TableBody({ controller, filter, term, sort, editMode }) {
         html`<tr class="is-group" key=${'group|' + r.entityId}>
           <td colspan=${columnCount}>
             ${r.entity} · ${controller.typeLabel(r.entityType)}
-            ${r.entityDescription ? html`<span class="field-table__description">${r.entityDescription}</span>` : null}
+            ${r.entityDescription ? html`<span class="field-table__description">${richText(r.entityDescription)}</span>` : null}
           </td>
         </tr>`,
       );

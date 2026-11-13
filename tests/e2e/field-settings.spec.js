@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { loadExample, saveFrom, slFill, slSelect, tapNode, waitForGraph } from './helpers.js';
+import { hoverNode, loadExample, saveFrom, slFill, slSelect, tapNode, waitForGraph } from './helpers.js';
 
 test.describe('Descriptions and field settings', { tag: '@runner-2' }, () => {
   const FIXTURE_DIR = join(dirname(fileURLToPath(import.meta.url)), 'fixtures', 'config-min');
@@ -29,12 +29,6 @@ test.describe('Descriptions and field settings', { tag: '@runner-2' }, () => {
       },
       [id, SETTING_KEYS],
     );
-  }
-
-  function hover(page, id) {
-    return page.evaluate((nodeId) => {
-      window.__nexus.cy.getElementById(nodeId).emit('mouseover');
-    }, id);
   }
 
   // The labels of the versions in the History panel, newest first.
@@ -82,17 +76,17 @@ test.describe('Descriptions and field settings', { tag: '@runner-2' }, () => {
     expect(await settingsOf(page, TAGS)).toEqual({});
   });
 
-  test('shows help text and bundle descriptions in the tooltip as written', async ({ page }) => {
+  test('draws the markup of help text and bundle descriptions in the tooltip', async ({ page }) => {
     await importFixture(page);
 
-    await hover(page, SUMMARY);
-    await expect(page.locator('#tooltip .tooltip__text')).toHaveText('A short <b>summary</b> of the article.');
-    await expect(page.locator('#tooltip b')).toHaveCount(0);
+    await hoverNode(page, SUMMARY);
+    await expect(page.locator('#tooltip .tooltip__text')).toHaveText('A short summary of the article.');
+    await expect(page.locator('#tooltip .tooltip__text b')).toHaveText('summary');
 
-    await hover(page, 'node.article');
+    await hoverNode(page, 'node.article');
     await expect(page.locator('#tooltip .tooltip__text')).toHaveText('An article.');
 
-    await hover(page, TAGS);
+    await hoverNode(page, TAGS);
     await expect(page.locator('#tooltip .tooltip__name')).toHaveText('Tags');
     await expect(page.locator('#tooltip .tooltip__text')).toHaveCount(0);
   });
@@ -126,9 +120,9 @@ test.describe('Descriptions and field settings', { tag: '@runner-2' }, () => {
     await expect(cell(layout, 'translatable').locator('span')).toHaveAttribute('title', /^Translatable/);
 
     const summary = tableRow(page, 'field_summary');
-    await expect(cell(summary, 'description')).toHaveText('A short <b>summary</b> of the article.');
+    await expect(cell(summary, 'description')).toHaveText('A short summary of the article.');
     await expect(cell(summary, 'translatable').locator('span')).toHaveAttribute('title', /^Not translatable/);
-    await expect(page.locator('#field-table b')).toHaveCount(0);
+    await expect(cell(summary, 'description').locator('b')).toHaveText('summary');
 
     await expect(cell(tableRow(page, 'field_tags'), 'translatable')).toHaveText('');
     await expect(page.locator('#field-table .is-group', { hasText: /^\s*Article ·/ }).locator('.field-table__description')).toHaveText('An article.');

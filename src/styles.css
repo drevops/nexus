@@ -1755,6 +1755,20 @@ body.is-dragging-panel * {
   word-break: break-word;
 }
 
+/* Help text and descriptions keep their own line breaks, so their paragraphs
+   and lists add no margin of their own. */
+:is(.tooltip__text, .field-table__text, .field-table__description) :is(p, ul, ol) {
+  margin: 0;
+}
+
+:is(.tooltip__text, .field-table__text, .field-table__description) :is(ul, ol) {
+  padding-left: 1.2em;
+}
+
+.rich-text__link {
+  text-decoration: underline dotted;
+}
+
 /* Landing / upload screen. */
 .landing {
   position: fixed;

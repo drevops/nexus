@@ -38,6 +38,7 @@ import { freeArea } from './free-area.js';
 import { frameSettings } from './mode-frame.js';
 import { readMarkdownSettings } from './markdown.js';
 import { nodeLookup, selectionEntity } from './inspector-trail.js';
+import { parseRichText, richTextHtml } from './rich-text.js';
 import { fieldSharing } from './shared-fields.js';
 import { SYMBOLS, customTypeList, isHexColor, isSymbol, isTypeName, typeColors, typeSymbols } from './type-styles.js';
 import { $ } from './dom.js';
@@ -733,8 +734,10 @@ function fieldReferences(field) {
   return field.outgoers('edge[group="ref"]').map((edge) => edge.target().data('label') ?? edge.target().id());
 }
 
+// richTextHtml() escapes every string, so the allowlisted tags are the only
+// markup that reaches innerHTML.
 function tooltipText(text) {
-  return text ? '<div class="tooltip__text">' + esc(text) + '</div>' : '';
+  return text ? '<div class="tooltip__text">' + richTextHtml(parseRichText(text)) + '</div>' : '';
 }
 
 function tooltipHtml(node) {
