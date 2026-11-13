@@ -48,7 +48,7 @@ Nexus is a static web app. Give it a Drupal config sync directory or a module's 
 - **Templates.** The content models of Drupal CMS and CivicTheme open in 1 click.
 - **Editable.** Add and change entities, fields, references and annotations, with undo and history.
 - **Saved as a document.** A `.nexus.json` document holds the model and its layout, and a [JSON Schema](schema/nexus.schema.json) defines the format.
-- **Exports.** PNG and SVG images of the diagram, and a CSV of its fields.
+- **Exports.** PNG and SVG images of the diagram, a CSV of its fields and a Markdown page that documents each bundle, its fields and notes, with an optional Mermaid diagram.
 - **Built by AI agents.** An agent can write a diagram from a screenshot, a spreadsheet or a spec.
 
 ## Build a diagram with an AI agent

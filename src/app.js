@@ -10,7 +10,8 @@
 import { isModelConfig, parseConfig } from './parser.js';
 import { ANNOTATION_FILES, applyAnnotations } from './annotations.js';
 import { render } from './render.js';
-import { exportPng, exportSvg, exportCsv, exportDocument } from './export.js';
+import { exportPng, exportSvg, exportCsv, exportDocument, exportMarkdown } from './export.js';
+import { documentMarkdown, includesDiagram } from './markdown.js';
 import { SAVE_FORMATS, findSaveFormat } from './save-formats.js';
 import { documentFromGraph, documentToModel } from './document.js';
 import { initBuilder, attachBuilder } from './builder.js';
@@ -33,6 +34,7 @@ const SAVERS = {
   png: (controller, title) => exportPng(controller.cy, title),
   svg: (controller, title) => exportSvg(controller.cy, title),
   csv: (controller, title) => exportCsv(controller.records(), controller.typeLabel, title),
+  md: saveMarkdown,
 };
 
 const OPENERS = {
@@ -366,17 +368,27 @@ function wireOpenAndSave() {
   });
 }
 
-function saveDocument(controller, title) {
+function currentDocument(controller, title) {
   const types = controller.typeSettings();
-  const doc = documentFromGraph(controller.cy, {
+
+  return documentFromGraph(controller.cy, {
     title: title,
     colors: types.colors,
     symbols: types.symbols,
     customTypes: types.customTypes,
     ui: exportLayout(),
   });
+}
 
-  exportDocument(doc, title);
+function saveDocument(controller, title) {
+  exportDocument(currentDocument(controller, title), title);
+}
+
+function saveMarkdown(controller, title) {
+  const doc = currentDocument(controller, title);
+  const diagram = includesDiagram(controller.markdownSettings(), doc.entities.length);
+
+  exportMarkdown(documentMarkdown(doc, { diagram: diagram }), title);
 }
 
 function showDocument(data, origin) {

@@ -36,6 +36,7 @@ import { DIAGRAM_DEFAULTS, readDiagramDefaults } from './diagram-defaults.js';
 import { keepOrder, packColumns, tidyColumns } from './packing.js';
 import { freeArea } from './free-area.js';
 import { frameSettings } from './mode-frame.js';
+import { readMarkdownSettings } from './markdown.js';
 import { nodeLookup, selectionEntity } from './inspector-trail.js';
 import { SYMBOLS, customTypeList, isHexColor, isSymbol, isTypeName, typeColors, typeSymbols } from './type-styles.js';
 import { $ } from './dom.js';
@@ -154,6 +155,12 @@ function setFrame(patch) {
   settings.frame = frameSettings({ ...frameSettings(settings.frame), ...patch });
   saveSettings();
   applyFrame();
+  bump();
+}
+
+function setMarkdown(patch) {
+  settings.markdown = readMarkdownSettings({ ...readMarkdownSettings(settings.markdown), ...patch });
+  saveSettings();
   bump();
 }
 
@@ -1505,6 +1512,7 @@ function buildController(model, options = {}) {
     delete settings.symbols;
     delete settings.newDiagrams;
     delete settings.frame;
+    delete settings.markdown;
     saveSettings();
     applyFrame();
     initColors();
@@ -1651,6 +1659,8 @@ function buildController(model, options = {}) {
     removeCustomType,
     frameSettings: () => frameSettings(settings.frame),
     setFrame,
+    markdownSettings: () => readMarkdownSettings(settings.markdown),
+    setMarkdown,
     applyTheme: () => {
       cy.style(style());
       positionCaptions();
