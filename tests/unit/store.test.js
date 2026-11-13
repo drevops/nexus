@@ -17,6 +17,8 @@ import {
   resetPanelSize,
   setTableSearch,
   setTableSort,
+  setEditMode,
+  subscribe,
   PANEL_ORDER,
 } from '../../src/store.js';
 import { DEFAULT_SORT } from '../../src/field-table.js';
@@ -321,6 +323,27 @@ test('searches and sorts the fields table', () => {
 
   setTableSearch('');
   setTableSort(DEFAULT_SORT);
+});
+
+test('starts in View mode and follows the mode, notifying only on a change', () => {
+  let notified = 0;
+  const unsubscribe = subscribe(() => notified++);
+
+  assert.equal(getState().editMode, false);
+
+  setEditMode(false);
+  assert.equal(notified, 0);
+
+  setEditMode(true);
+  setEditMode(true);
+  assert.equal(getState().editMode, true);
+  assert.equal(notified, 1);
+
+  setEditMode(false);
+  assert.equal(getState().editMode, false);
+  assert.equal(notified, 2);
+
+  unsubscribe();
 });
 
 test('floats a resized panel in its box, in whole pixels', async (t) => {

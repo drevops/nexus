@@ -23,7 +23,7 @@ import { describeNode } from './history.js';
 import { humanize, machineName } from './names.js';
 import { clearSpot } from './packing.js';
 import { checkpoint } from './undo.js';
-import { openInspector, closeInspector, setBuilder, bump, getController, getState, subscribe } from './store.js';
+import { openInspector, closeInspector, setBuilder, setEditMode, bump, getController, getState, subscribe } from './store.js';
 import { $ } from './dom.js';
 
 let cy = null;
@@ -395,6 +395,7 @@ function setMode(build) {
 
 function applyMode() {
   window.__nexusBuild = buildMode;
+  setEditMode(buildMode);
   if (!buildMode) {
     connectMode = false;
   }
@@ -831,25 +832,40 @@ function renameEntity(oldId, newBundleRaw) {
   checkpoint(change);
 }
 
+function inspecting(id) {
+  const selected = getState().selected;
+
+  return !!selected && selected.id === id;
+}
+
+// Returns the field's new id, or null when the name is blank, unchanged or
+// taken. The Inspector follows the field only when it shows it.
 function renameField(oldId, newNameRaw) {
   const field = cy.getElementById(oldId);
   if (field.empty() || field.data('group') !== 'field') {
-    return;
+    return null;
   }
+  const shown = inspecting(oldId);
   const entityId = field.data('entity');
   const newName = machineName(newNameRaw);
   const newId = fieldNodeId(entityId, newName);
   if (!newName || newId === oldId || cy.getElementById(newId).nonempty()) {
-    selectNode(oldId);
-    return;
+    if (shown) {
+      selectNode(oldId);
+    }
+    return null;
   }
 
   const change = 'Renamed field “' + field.data('name') + '” to “' + newName + '”';
   reidField(field, entityId, newName);
   getController().syncReferences({ [oldId]: newId });
-  selectNode(newId);
+  if (shown) {
+    selectNode(newId);
+  }
   bump();
   checkpoint(change);
+
+  return newId;
 }
 
 /* Mutations ------------------------------------------------------------- */
