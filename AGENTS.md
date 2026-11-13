@@ -159,7 +159,7 @@ npm run check-vendor
   - `selection.spec.js` - the canvas selection that follows the Inspector, and box selection.
   - `shortcut-hints.spec.js` - the F1 shortcut view: its labels on each platform, their placement and what hides them.
   - `status-bar.spec.js` - the status bar's hint, tips and zoom menu, and its layout in narrow windows.
-  - `templates.spec.js` - the template rows on the landing screen and loading each template.
+  - `templates.spec.js` - the template rows on the landing screen and loading each template. It reads each template's version and bundle counts from `TEMPLATES`, because `npm run update-templates` rewrites them there.
   - `theme.spec.js` - the dark theme toggle on the landing screen and in the toolbar.
   - `tidy.spec.js` - the Tidy up button, the field order it keeps and the entity it works on.
   - `titles.spec.js` - the hover title on every control, header and badge.

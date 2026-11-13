@@ -1,5 +1,23 @@
 import { test, expect } from '@playwright/test';
 import { entityCount, waitForGraph } from './helpers.js';
+import { formatCount } from '../../src/entity-types.js';
+import { TEMPLATES, summaryCounts, templateTitle } from '../../src/templates.js';
+
+// 'npm run update-templates' rewrites each template's version and counts, so
+// the tests read both from TEMPLATES.
+function template(id) {
+  return TEMPLATES.find((candidate) => candidate.id === id);
+}
+
+function countsText(id) {
+  return summaryCounts(template(id))
+    .map(({ type, count }) => formatCount(type, count))
+    .join(' · ');
+}
+
+function bundleTotal(id) {
+  return Object.values(template(id).counts).reduce((total, count) => total + count, 0);
+}
 
 test.describe('Templates', { tag: '@runner-2' }, () => {
   test.beforeEach(async ({ page }) => {
@@ -25,33 +43,35 @@ test.describe('Templates', { tag: '@runner-2' }, () => {
 
     expect(ids).toEqual(['template-drupal-cms', 'template-civictheme', 'template-umami', 'template-thunder']);
 
-    for (const [id, label, badge, counts] of dataProviderTemplateRows()) {
+    for (const [id, label] of dataProviderTemplateRows()) {
       const row = page.locator('#template-' + id);
 
       await expect(row.locator('.template-row__name')).toHaveText(label);
-      await expect(row.locator('.template-row__badge')).toHaveText(badge);
-      await expect(row.locator('.template-row__counts')).toHaveText(counts);
+      await expect(row.locator('.template-row__badge')).toHaveText(template(id).version);
+      await expect(row.locator('.template-row__counts')).toHaveText(countsText(id));
       expect(await row.locator('.template-row__mark svg.icon > *').count()).toBeGreaterThan(0);
     }
   });
 
   function dataProviderTemplateRows() {
     return [
-      ['civictheme', 'CivicTheme', '1.13.0', '3 content types · 31 paragraph types · 6 media types'],
-      ['drupal-cms', 'Drupal CMS', '2.2.2', '2 content types · 5 media types · 1 vocabulary'],
-      ['umami', 'Umami', '11.4.12', '3 content types · 5 media types · 4 block types'],
-      ['thunder', 'Thunder', '8.4.7', '3 content types · 9 paragraph types · 7 media types'],
+      ['civictheme', 'CivicTheme'],
+      ['drupal-cms', 'Drupal CMS'],
+      ['umami', 'Umami'],
+      ['thunder', 'Thunder'],
     ];
   }
 
-  for (const [id, title, entities, entityId, placeholders] of dataProviderTemplates()) {
-    test(`loads the ${title} template`, async ({ page }) => {
+  for (const [id, entityId, placeholders] of dataProviderTemplates()) {
+    test(`loads the ${template(id).label} template`, async ({ page }) => {
+      const entities = bundleTotal(id) + placeholders.length;
+
       await page.click('#template-' + id);
       await waitForGraph(page);
 
       expect(await entityCount(page)).toBe(entities);
       expect(await page.evaluate((target) => window.__nexus.cy.getElementById(target).length, entityId)).toBe(1);
-      await expect(page.locator('#diagram-title')).toHaveJSProperty('value', title);
+      await expect(page.locator('#diagram-title')).toHaveJSProperty('value', templateTitle(template(id)));
       expect(await page.evaluate(() => window.__nexus.cy.nodes('[group="entity"][bundle="*"]').map((node) => node.id()))).toEqual(placeholders);
 
       // The document holds no layout, so the app lays the entities out on open.
@@ -63,10 +83,10 @@ test.describe('Templates', { tag: '@runner-2' }, () => {
 
   function dataProviderTemplates() {
     return [
-      ['civictheme', 'CivicTheme 1.13.0', 49, 'paragraph.civictheme_accordion', ['block.*']],
-      ['drupal-cms', 'Drupal CMS 2.2.2', 9, 'node.blog', []],
-      ['umami', 'Umami 11.4.12', 15, 'node.recipe', []],
-      ['thunder', 'Thunder 8.4.7', 22, 'paragraph.instagram', []],
+      ['civictheme', 'paragraph.civictheme_accordion', ['block.*']],
+      ['drupal-cms', 'node.blog', []],
+      ['umami', 'node.recipe', []],
+      ['thunder', 'paragraph.instagram', []],
     ];
   }
 
@@ -91,7 +111,7 @@ test.describe('Templates', { tag: '@runner-2' }, () => {
       await page.click('#template-civictheme');
 
       await expect(page.locator('#landing-error')).toHaveAttribute('open', '');
-      await expect(page.locator('#landing-error-text')).toHaveText('Could not load CivicTheme 1.13.0: ' + message);
+      await expect(page.locator('#landing-error-text')).toHaveText('Could not load ' + templateTitle(template('civictheme')) + ': ' + message);
       await expect(page.locator('#landing')).toBeVisible();
       await expect(page.locator('#loader')).toBeHidden();
     });
@@ -109,7 +129,7 @@ test.describe('Templates', { tag: '@runner-2' }, () => {
     await page.click('#template-civictheme');
 
     await expect(page.locator('#landing-error-text')).toHaveText(
-      'Could not load CivicTheme 1.13.0: civictheme.nexus.json could not be downloaded. Check your connection and try again.',
+      'Could not load ' + templateTitle(template('civictheme')) + ': civictheme.nexus.json could not be downloaded. Check your connection and try again.',
     );
     await expect(page.locator('#landing')).toBeVisible();
   });
@@ -119,6 +139,6 @@ test.describe('Templates', { tag: '@runner-2' }, () => {
     await page.keyboard.press('Enter');
     await waitForGraph(page);
 
-    await expect(page.locator('#diagram-title')).toHaveJSProperty('value', 'Drupal CMS 2.2.2');
+    await expect(page.locator('#diagram-title')).toHaveJSProperty('value', templateTitle(template('drupal-cms')));
   });
 });
