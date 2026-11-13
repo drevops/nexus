@@ -121,6 +121,16 @@ test('deploys the site only after the release is published', () => {
   assert.equal(jobs.deploy.permissions.contents, undefined);
 });
 
+test('runs Scorecard only on the default branch and CodeQL on pull requests too', () => {
+  const audit = WORKFLOWS.find(({ name }) => name === 'audit.yml').workflow;
+  const scorecard = audit.jobs.audit.steps.find((step) => String(step.uses).startsWith('ossf/scorecard-action@'));
+
+  assert.ok('pull_request' in audit.on);
+  assert.equal(audit.jobs.audit.if, "${{ github.event_name != 'pull_request' }}");
+  assert.doesNotMatch(String(audit.jobs.security.if), /pull_request/);
+  assert.equal(scorecard.with.publish_results, true);
+});
+
 test('keeps the files OpenSSF Scorecard reads in source archives', async (t) => {
   const ignored = readFileSync(join(ROOT, '.gitattributes'), 'utf8')
     .split('\n')
