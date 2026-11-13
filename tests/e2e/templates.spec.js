@@ -38,10 +38,10 @@ test.describe('Templates', { tag: '@runner-2' }, () => {
   test('lists every template with its badge, its counts and a drawn mark', async ({ page }) => {
     const rows = page.locator('.template-row');
 
-    await expect(rows).toHaveCount(4);
+    await expect(rows).toHaveCount(5);
     const ids = await rows.evaluateAll((elements) => elements.map((element) => element.id));
 
-    expect(ids).toEqual(['template-drupal-cms', 'template-civictheme', 'template-umami', 'template-thunder']);
+    expect(ids).toEqual(['template-drupal-cms', 'template-civictheme', 'template-umami', 'template-thunder', 'template-open-social']);
 
     for (const [id, label] of dataProviderTemplateRows()) {
       const row = page.locator('#template-' + id);
@@ -59,18 +59,25 @@ test.describe('Templates', { tag: '@runner-2' }, () => {
       ['drupal-cms', 'Drupal CMS'],
       ['umami', 'Umami'],
       ['thunder', 'Thunder'],
+      ['open-social', 'Open Social'],
     ];
   }
 
-  for (const [id, entityId, placeholders] of dataProviderTemplates()) {
+  // 'counts' holds built-in bundles only, so a reference target of another
+  // entity type is listed in 'targets'.
+  for (const [id, entityId, placeholders, targets] of dataProviderTemplates()) {
     test(`loads the ${template(id).label} template`, async ({ page }) => {
-      const entities = bundleTotal(id) + placeholders.length;
+      const entities = bundleTotal(id) + placeholders.length + targets.length;
 
       await page.click('#template-' + id);
       await waitForGraph(page);
 
       expect(await entityCount(page)).toBe(entities);
-      expect(await page.evaluate((target) => window.__nexus.cy.getElementById(target).length, entityId)).toBe(1);
+
+      for (const target of [entityId, ...targets]) {
+        expect(await page.evaluate((node) => window.__nexus.cy.getElementById(node).length, target), target).toBe(1);
+      }
+
       await expect(page.locator('#diagram-title')).toHaveJSProperty('value', templateTitle(template(id)));
       expect(await page.evaluate(() => window.__nexus.cy.nodes('[group="entity"][bundle="*"]').map((node) => node.id()))).toEqual(placeholders);
 
@@ -83,10 +90,16 @@ test.describe('Templates', { tag: '@runner-2' }, () => {
 
   function dataProviderTemplates() {
     return [
-      ['civictheme', 'paragraph.civictheme_accordion', ['block.*']],
-      ['drupal-cms', 'node.blog', []],
-      ['umami', 'node.recipe', []],
-      ['thunder', 'paragraph.instagram', []],
+      ['civictheme', 'paragraph.civictheme_accordion', ['block.*'], []],
+      ['drupal-cms', 'node.blog', [], []],
+      ['umami', 'node.recipe', [], []],
+      ['thunder', 'paragraph.instagram', [], []],
+      [
+        'open-social',
+        'node.topic',
+        ['user.*', 'group_type.*'],
+        ['meeting_api_meeting.big_blue_button', 'meeting_api_meeting.custom_link', 'group.flexible_group'],
+      ],
     ];
   }
 

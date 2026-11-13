@@ -68,6 +68,32 @@ test('counts the bundles a document draws, leaving out any-bundle targets', () =
   assert.deepEqual(documentCounts(buildDocument(configMin, 'Minimal 1.0.0')), { node: 2, taxonomy_term: 1, media: 1, paragraph: 2 });
 });
 
+test('counts only the bundles of built-in entity types', async (t) => {
+  for (const [name, entities, expected] of dataProviderDocumentCounts()) {
+    await t.test(name, () => {
+      assert.deepEqual(documentCounts({ entities }), expected);
+    });
+  }
+});
+
+function dataProviderDocumentCounts() {
+  return [
+    ['built-in bundles', [entity('node', 'page'), entity('node', 'event'), entity('user', 'user')], { node: 2, user: 1 }],
+    ['an any-bundle target', [entity('node', 'page'), entity('media', '*')], { node: 1 }],
+    [
+      'a target of another entity type',
+      [entity('node', 'event'), entity('group', 'flexible_group'), entity('meeting_api_meeting', 'custom_link')],
+      { node: 1 },
+    ],
+    ['an any-bundle target of another entity type', [entity('node', 'event'), entity('profile', '*')], { node: 1 }],
+    ['no entities', [], {}],
+  ];
+}
+
+function entity(entityType, bundle) {
+  return { entityType, bundle };
+}
+
 test('renders a document as indented JSON ending in a newline', () => {
   assert.equal(renderDocument({ nexus: 1, entities: [] }), '{\n  "nexus": 1,\n  "entities": []\n}\n');
 });
