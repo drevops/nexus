@@ -104,10 +104,16 @@ jobs:
           body-path: .artifacts/tmp/pr/body.md
 
       # A push made with GITHUB_TOKEN starts no 'pull_request' workflow, but a
-      # dispatched run reports its checks on the same commit.
+      # dispatched run reports its checks on the same commit. A head commit
+      # with no run yet is dispatched too, so a rerun recovers a failed one.
       - name: Run the tests on the pull request branch
-        if: steps.pr.outputs.pull-request-operation == 'created' || steps.pr.outputs.pull-request-operation == 'updated'
-        run: gh workflow run test-nodejs.yml --repo "$GITHUB_REPOSITORY" --ref "$BRANCH"
+        if: steps.pr.outputs.pull-request-number != '' && steps.pr.outputs.pull-request-operation != 'closed'
+        run: |
+          runs=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow test-nodejs.yml --commit "$SHA" --json databaseId --jq length)
+          if [ "$runs" = "0" ]; then
+            gh workflow run test-nodejs.yml --repo "$GITHUB_REPOSITORY" --ref "$BRANCH"
+          fi
         env:
           GH_TOKEN: ${{ github.token }}
           BRANCH: update-templates/${{ matrix.template }}
+          SHA: ${{ steps.pr.outputs.pull-request-head-sha }}

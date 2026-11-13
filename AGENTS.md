@@ -173,7 +173,7 @@ npm run check-vendor
 - Every workflow sets `permissions: {}` and grants permissions per job. The `Unit` job also runs `npm run check-vendor`
 - `.github/workflows/draft-release-notes.yml` - keeps a draft release up to date as pull requests merge
 - `.github/workflows/assign-author.yml` - assigns each pull request to its author
-- `.github/workflows/update-templates.yml` - daily, or on demand for every template or the 1 its `template` input names, builds its matrix from `update-templates.mjs --list` and runs `npm run update-templates -- --latest` once per template and opens or force-updates its pull request on an `update-templates/<id>` branch with `peter-evans/create-pull-request`, which deletes the branch when nothing is left to change. Pushes made with `GITHUB_TOKEN` start no `pull_request` workflows, so it dispatches `Test Node.js` on the branch, whose checks land on the pull request's head commit
+- `.github/workflows/update-templates.yml` - daily, or on demand for every template or the 1 its `template` input names, builds its matrix from `update-templates.mjs --list` and runs `npm run update-templates -- --latest` once per template and opens or force-updates its pull request on an `update-templates/<id>` branch with `peter-evans/create-pull-request`, which deletes the branch when nothing is left to change. Pushes made with `GITHUB_TOKEN` start no `pull_request` workflows, so it dispatches `Test Node.js` on the branch whenever the pull request's head commit has no run of it yet, and the checks land on that commit
 - `renovate.json` - Renovate keeps npm packages and the SHA-pinned actions up to date
 
 ## Updating from the template
