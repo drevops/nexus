@@ -315,7 +315,12 @@ function startCornerResize(id, evt, el) {
   const maxSize = { width: area.right - rect.left, height: area.bottom - rect.top };
 
   function move(e) {
-    const box = { left: rect.left - area.left, top: rect.top - area.top, width: rect.width + e.clientX - evt.clientX, height: rect.height + e.clientY - evt.clientY };
+    const box = {
+      left: rect.left - area.left,
+      top: rect.top - area.top,
+      width: rect.width + e.clientX - evt.clientX,
+      height: rect.height + e.clientY - evt.clientY,
+    };
 
     resizePanel(id, box, maxSize);
   }
@@ -394,14 +399,16 @@ function Panel({ id, panel, dragging, header, children }) {
     </div>
     <div class="panel__body">${children}</div>
     ${resizable ? html`<div class="panel__vresize" title="Drag to resize height" onMouseDown=${(e) => startVResize(id, e, ref.current)}></div>` : null}
-    ${docked
-      ? null
-      : html`<div
-          class="panel__corner"
-          title="Drag to resize, double-click to fit the content"
-          onMouseDown=${(e) => startCornerResize(id, e, ref.current)}
-          onDblClick=${() => resetPanelSize(id)}
-        ></div>`}
+    ${
+      docked
+        ? null
+        : html`<div
+            class="panel__corner"
+            title="Drag to resize, double-click to fit the content"
+            onMouseDown=${(e) => startCornerResize(id, e, ref.current)}
+            onDblClick=${() => resetPanelSize(id)}
+          ></div>`
+    }
   </section>`;
 }
 

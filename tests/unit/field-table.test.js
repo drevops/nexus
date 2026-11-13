@@ -112,7 +112,13 @@ function dataProviderSortColumn() {
       ['one', 'three', 'unlimited', 'calculated', 'system'],
       ['system', 'calculated', 'unlimited', 'three', 'one'],
     ],
-    ['required, with optional fields as blanks', [['x'], ['y', { required: true }], ['z'], ['w', { required: true }]], 'required', ['y', 'w', 'x', 'z'], ['y', 'w', 'x', 'z']],
+    [
+      'required, with optional fields as blanks',
+      [['x'], ['y', { required: true }], ['z'], ['w', { required: true }]],
+      'required',
+      ['y', 'w', 'x', 'z'],
+      ['y', 'w', 'x', 'z'],
+    ],
     [
       'references by their labels',
       [
@@ -132,46 +138,18 @@ function dataProviderSortColumn() {
       ['z', 'x', 'y'],
       ['x', 'z', 'y'],
     ],
-    [
-      'help text',
-      [
-        ['x', { description: 'Shown second.' }],
-        ['y'],
-        ['z', { description: 'A note.' }],
-      ],
-      'description',
-      ['z', 'x', 'y'],
-      ['x', 'z', 'y'],
-    ],
-    [
-      'default value',
-      [
-        ['x'],
-        ['y', { defaultValue: 'wide' }],
-        ['z', { defaultValue: 'narrow' }],
-      ],
-      'defaultValue',
-      ['z', 'y', 'x'],
-      ['y', 'z', 'x'],
-    ],
+    ['help text', [['x', { description: 'Shown second.' }], ['y'], ['z', { description: 'A note.' }]], 'description', ['z', 'x', 'y'], ['x', 'z', 'y']],
+    ['default value', [['x'], ['y', { defaultValue: 'wide' }], ['z', { defaultValue: 'narrow' }]], 'defaultValue', ['z', 'y', 'x'], ['y', 'z', 'x']],
     [
       'allowed values by their labels',
-      [
-        ['x', { allowedValues: [{ value: 'b', label: 'Beta' }] }],
-        ['y', { allowedValues: [{ value: 'a', label: 'Alpha' }] }],
-        ['z'],
-      ],
+      [['x', { allowedValues: [{ value: 'b', label: 'Beta' }] }], ['y', { allowedValues: [{ value: 'a', label: 'Alpha' }] }], ['z']],
       'allowedValues',
       ['y', 'x', 'z'],
       ['x', 'y', 'z'],
     ],
     [
       'translatability, with an unknown one as a blank',
-      [
-        ['x', { translatable: false }],
-        ['y'],
-        ['z', { translatable: true }],
-      ],
+      [['x', { translatable: false }], ['y'], ['z', { translatable: true }]],
       'translatable',
       ['z', 'x', 'y'],
       ['x', 'z', 'y'],

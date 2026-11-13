@@ -132,7 +132,17 @@ function initialState() {
   } else {
     panels.legend.open = true;
   }
-  return { panels: panels, dockWidth: dockWidth, selected: null, tableFilter: '__all__', tableSearch: '', tableSort: DEFAULT_SORT, version: 0, revision: 0, dragging: null };
+  return {
+    panels: panels,
+    dockWidth: dockWidth,
+    selected: null,
+    tableFilter: '__all__',
+    tableSearch: '',
+    tableSort: DEFAULT_SORT,
+    version: 0,
+    revision: 0,
+    dragging: null,
+  };
 }
 
 let state = initialState();

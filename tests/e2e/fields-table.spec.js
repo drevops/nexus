@@ -290,7 +290,12 @@ test.describe('Fields table', { tag: '@runner-2' }, () => {
       await expect(field).toHaveAccessibleName('Field');
 
       const rows = await firstGroupRows(page);
-      expect(rows.map((r) => r.label)).toEqual(inOrder(rows.map((r) => r.label), direction));
+      expect(rows.map((r) => r.label)).toEqual(
+        inOrder(
+          rows.map((r) => r.label),
+          direction,
+        ),
+      );
       // Each field keeps its place in its entity under any sort.
       expect(rows.map((r) => [r.name, r.position]).sort()).toEqual(initial.map((r) => [r.name, r.position]).sort());
     }
@@ -358,7 +363,12 @@ test.describe('Fields table', { tag: '@runner-2' }, () => {
     const rows = await firstGroupRows(page);
     expect(rows.length).toBeGreaterThan(1);
     expect(rows.every((r) => r.name.startsWith('field_'))).toBe(true);
-    expect(rows.map((r) => r.type)).toEqual(inOrder(rows.map((r) => r.type), 'ascending'));
+    expect(rows.map((r) => r.type)).toEqual(
+      inOrder(
+        rows.map((r) => r.type),
+        'ascending',
+      ),
+    );
   });
 
   test('scrolls the fields panel body both ways with the toolbar and header in view', async ({ page }) => {
