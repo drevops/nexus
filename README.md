@@ -46,6 +46,7 @@ Nexus is a static web app. Give it a Drupal config sync directory or a module's 
 - **Client-side.** Nexus parses and draws in the browser, with no backend, upload or install.
 - **Reads exported config.** Nexus reads only the YAML files of the folder you give it.
 - **Descriptions and field settings.** Bundle descriptions, help text, default values, allowed values and translatability show in tooltips, the Inspector, the Fields table and its CSV.
+- **Shared fields.** The Fields table and its CSV count the bundles of an entity type that have each field. The field Inspector lists the other bundles with the label each one gives the field.
 - **Templates.** The content models of Drupal CMS, CivicTheme, the Umami demo, Thunder and Open Social open in 1 click.
 - **Editable.** Add and change entities, fields, references and annotations, with undo and history.
 - **Saved as a document.** A `.nexus.json` document holds the model and its layout, and a [JSON Schema](schema/nexus.schema.json) defines the format.

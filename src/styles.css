@@ -790,7 +790,7 @@ sl-button#zoom-level::part(base) {
 }
 
 .panel--wide {
-  width: 560px;
+  width: 600px;
   max-width: calc(100% - 2rem);
 }
 
@@ -1122,7 +1122,7 @@ body.is-dragging-panel * {
 .field-table th,
 .field-table td {
   text-align: left;
-  padding: 0.35rem 0.6rem;
+  padding: 0.35rem 0.5rem;
   border-bottom: 1px solid var(--border);
   vertical-align: top;
   overflow-wrap: anywhere;
@@ -1134,23 +1134,27 @@ body.is-dragging-panel * {
 }
 
 .field-table .field-table__col--field {
-  width: 27%;
+  width: 24.5%;
 }
 
 .field-table .field-table__col--type {
-  width: 18%;
+  width: 16.5%;
 }
 
 .field-table .field-table__col--references {
-  width: 18%;
+  width: 15%;
 }
 
 .field-table .field-table__col--cardinality {
-  width: 12%;
+  width: 10%;
 }
 
 .field-table .field-table__col--required {
-  width: 10%;
+  width: 7.5%;
+}
+
+.field-table .field-table__col--usedIn {
+  width: 11.5%;
 }
 
 .field-table .field-table__action {
@@ -1159,9 +1163,9 @@ body.is-dragging-panel * {
   text-align: center;
 }
 
-/* 12 columns don't fit a docked panel, so the panel body scrolls sideways. */
+/* 13 columns don't fit a docked panel, so the panel body scrolls sideways. */
 .field-table.has-settings {
-  width: max(100%, 64rem);
+  width: max(100%, 68rem);
 }
 
 .field-table.has-settings .field-table__col--position,
@@ -1169,9 +1173,12 @@ body.is-dragging-panel * {
   width: 4%;
 }
 
-.field-table.has-settings .field-table__col--field,
+.field-table.has-settings .field-table__col--field {
+  width: 12%;
+}
+
 .field-table.has-settings .field-table__col--description {
-  width: 14%;
+  width: 11%;
 }
 
 .field-table.has-settings .field-table__col--type,
@@ -1188,12 +1195,16 @@ body.is-dragging-panel * {
   width: 6%;
 }
 
+.field-table.has-settings .field-table__col--usedIn {
+  width: 7%;
+}
+
 .field-table.has-settings .field-table__col--defaultValue {
   width: 8%;
 }
 
 .field-table.has-settings .field-table__col--allowedValues {
-  width: 12%;
+  width: 10%;
 }
 
 .field-table .field-table__col--position,
@@ -1201,9 +1212,13 @@ body.is-dragging-panel * {
   text-align: right;
 }
 
+.field-table__position,
+.field-table__used-in {
+  font-variant-numeric: tabular-nums;
+}
+
 .field-table__position {
   color: var(--muted);
-  font-variant-numeric: tabular-nums;
 }
 
 .field-table__sort {
@@ -2245,7 +2260,8 @@ html.sl-theme-dark .icon--nexus .ink {
 }
 
 .insp__field code,
-.insp__row code {
+.insp__row code,
+.insp__shared-label {
   font-size: 0.72rem;
   color: var(--muted);
 }

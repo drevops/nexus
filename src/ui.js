@@ -23,6 +23,7 @@ import { cardinalityLabel, identifierSegments, fitFontSize } from './model.js';
 import { InspectorBody } from './inspector.js';
 import { allowedValueLabels } from './field-settings.js';
 import { numberFields, sortFields, nextSort, isDefaultSort } from './field-table.js';
+import { usedInTitle } from './shared-fields.js';
 import { RESIZE_HANDLES, resizeBox } from './panel-resize.js';
 import { goToVersion, historyState } from './undo.js';
 import { MODES } from './diagram-defaults.js';
@@ -708,6 +709,7 @@ const FIELD_COLUMNS = [
   { key: 'cardinality', label: 'Card.', name: 'cardinality', title: 'Cardinality: how many values the field holds' },
   { key: 'required', label: 'Req', name: 'required', title: 'Required: whether the field must have a value' },
   { key: 'references', label: 'References', name: 'references', title: 'References: the entities a reference field points to' },
+  { key: 'usedIn', label: 'Used in', name: 'used in', title: 'Used in: how many bundles of the entity type have a field with this machine name' },
   { key: 'description', label: 'Help text', name: 'help text', title: 'Help text: the text editors see under the field', settings: true },
   { key: 'defaultValue', label: 'Default', name: 'default', title: 'Default: the value a new item starts with', settings: true },
   { key: 'allowedValues', label: 'Allowed values', name: 'allowed values', title: 'Allowed values: the values a list field offers', settings: true },
@@ -835,6 +837,7 @@ function TableBody({ controller, filter, term, sort }) {
                 >`,
           )}
         </td>
+        <td class="field-table__used-in">${r.usedIn.length ? html`<span title=${usedInTitle(r.usedIn)}>${r.usedIn.length}</span>` : ''}</td>
         ${showSettings ? settingCells(r) : null} ${fieldActions(controller, r)}
       </tr>`,
     );
