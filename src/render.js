@@ -1921,7 +1921,10 @@ function buildController(model, options = {}) {
     },
     textModel: () =>
       textModel(
-        { nodes: cy.nodes('[group="entity"], [group="field"]').map((n) => ({ data: n.data() })), edges: cy.edges('[group="ref"]').map((e) => ({ data: e.data() })) },
+        {
+          nodes: cy.nodes('[group="entity"], [group="field"]').map((n) => ({ data: n.data() })),
+          edges: cy.edges('[group="ref"]').map((e) => ({ data: e.data() })),
+        },
         { fields: fieldsMode, hiddenTypes: Object.keys(typeVisible).filter((t) => typeVisible[t] === false), colorFor: entityColor },
       ),
     presentTypes: () =>

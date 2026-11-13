@@ -219,7 +219,16 @@ function mermaidEntityLines(entity, name, withFields) {
   const attributes = entity.fields.map((field) => {
     const key = field.reference ? ' FK' : '';
 
-    return INDENT.repeat(2) + attributeWord(field.type, 't') + ' ' + attributeWord(field.name, 'f') + key + ' "' + mermaidText(field.label + ' (' + fieldDetail(field) + ')') + '"';
+    return (
+      INDENT.repeat(2) +
+      attributeWord(field.type, 't') +
+      ' ' +
+      attributeWord(field.name, 'f') +
+      key +
+      ' "' +
+      mermaidText(field.label + ' (' + fieldDetail(field) + ')') +
+      '"'
+    );
   });
 
   return [head + ' {', ...attributes, INDENT + '}'];
@@ -288,7 +297,14 @@ function dotTable(entity) {
   });
 
   return (
-    '<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">' + '<TR><TD' + fill + '><B>' + dotHtml(entity.label) + '</B></TD></TR>' + rows.join('') + '</TABLE>>'
+    '<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">' +
+    '<TR><TD' +
+    fill +
+    '><B>' +
+    dotHtml(entity.label) +
+    '</B></TD></TR>' +
+    rows.join('') +
+    '</TABLE>>'
   );
 }
 
@@ -305,7 +321,12 @@ export function toDot(model, title = '') {
   const graphLabel = graphTitle ? ', label=' + dotString(graphTitle) + ', labelloc=t' : '';
 
   lines.push(INDENT + 'graph [rankdir=LR, fontname="Helvetica"' + graphLabel + '];');
-  lines.push(INDENT + (model.fields ? 'node [shape=plain, fontname="Helvetica", fontsize=11];' : 'node [shape=box, style="rounded,filled", fillcolor="#ffffff", fontname="Helvetica", fontsize=11];'));
+  lines.push(
+    INDENT +
+      (model.fields
+        ? 'node [shape=plain, fontname="Helvetica", fontsize=11];'
+        : 'node [shape=box, style="rounded,filled", fillcolor="#ffffff", fontname="Helvetica", fontsize=11];'),
+  );
   lines.push(INDENT + 'edge [fontname="Helvetica", fontsize=9, color="#8a94a3"];');
 
   model.entities.forEach((entity) => {

@@ -2,16 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import {
-  MERMAID_LARGE_NOTE,
-  MERMAID_MAX_ENTITIES,
-  MERMAID_MAX_TEXT,
-  identifier,
-  identifiers,
-  textModel,
-  toDot,
-  toMermaid,
-} from '../../src/diagram-text.js';
+import { MERMAID_LARGE_NOTE, MERMAID_MAX_ENTITIES, MERMAID_MAX_TEXT, identifier, identifiers, textModel, toDot, toMermaid } from '../../src/diagram-text.js';
 import { ContentModel, Entity, Field, KIND_MULTI, KIND_SINGLE } from '../../src/model.js';
 import { parseConfig } from '../../src/parser.js';
 import { documentToModel } from '../../src/document.js';
@@ -152,11 +143,23 @@ function dataProviderTextModel() {
         references: [],
       },
     ],
-    ['a hidden type leaves out its entities and the references to them', articleElements(), { hiddenTypes: ['taxonomy_term'] }, { entities: [['node.article', ['field_tags', 'field_summary']]], references: [] }],
-    ['a hidden type leaves out the fields and references of its entities', articleElements(), { hiddenTypes: ['node'] }, { entities: [['taxonomy_term.tags', []]], references: [] }],
+    [
+      'a hidden type leaves out its entities and the references to them',
+      articleElements(),
+      { hiddenTypes: ['taxonomy_term'] },
+      { entities: [['node.article', ['field_tags', 'field_summary']]], references: [] },
+    ],
+    [
+      'a hidden type leaves out the fields and references of its entities',
+      articleElements(),
+      { hiddenTypes: ['node'] },
+      { entities: [['taxonomy_term.tags', []]], references: [] },
+    ],
     [
       'a reference to an entity outside the model is left out',
-      elementsOf([entity('node', 'article', 'Article', [new Field('field_tags', 'Tags', 'entity_reference', KIND_MULTI, false, 'taxonomy_term', ['tags'], -1)])]),
+      elementsOf([
+        entity('node', 'article', 'Article', [new Field('field_tags', 'Tags', 'entity_reference', KIND_MULTI, false, 'taxonomy_term', ['tags'], -1)]),
+      ]),
       {},
       { entities: [['node.article', ['field_tags']]], references: [] },
     ],
@@ -229,7 +232,12 @@ function dataProviderColors() {
 }
 
 test('labels an entity or field without a label by its id or name', () => {
-  const elements = { nodes: [{ data: { id: 'node.a', group: 'entity', entityType: 'node', label: '  ' } }, { data: { id: 'field:node.a:f', group: 'field', entity: 'node.a', name: 'f' } }] };
+  const elements = {
+    nodes: [
+      { data: { id: 'node.a', group: 'entity', entityType: 'node', label: '  ' } },
+      { data: { id: 'field:node.a:f', group: 'field', entity: 'node.a', name: 'f' } },
+    ],
+  };
   const model = textModel(elements);
 
   assert.equal(model.entities[0].label, 'node.a');
@@ -528,8 +536,14 @@ test('draws every entity and reference of each template in both formats', async 
         assert.equal(new Set(names.values()).size, model.entities.length);
 
         for (const name of names.values()) {
-          assert.ok(mermaid.some((line) => line.startsWith('  ' + name + '["')), name);
-          assert.ok(dot.some((line) => line.startsWith('  "' + name + '" [label=')), name);
+          assert.ok(
+            mermaid.some((line) => line.startsWith('  ' + name + '["')),
+            name,
+          );
+          assert.ok(
+            dot.some((line) => line.startsWith('  "' + name + '" [label=')),
+            name,
+          );
         }
 
         assert.equal(mermaid.filter((line) => / : "|-->\|"/.test(line)).length, model.references.length);
