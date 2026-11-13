@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for considering a contribution to Nexus. This guide covers setting up a local environment, hosting your own copy, running the linting and tests, checking a diagram document, updating the content-model templates and the vendored libraries, previewing a pull request on Netlify, how a release reaches GitHub Pages, and pulling in updates from the project template.
+Thank you for considering a contribution to Nexus. This guide covers setting up a local environment, hosting your own copy, running the linting and tests, submitting a change, checking a diagram document, updating the content-model templates and the vendored libraries, previewing a pull request on Netlify, how a release reaches GitHub Pages, and pulling in updates from the project template.
 
 ## Local setup
 
@@ -44,6 +44,19 @@ The icons come from [Lucide](https://lucide.dev/).
 - `npm run test-unit` - Node's built-in test runner over the pure model modules (the parser, model, annotations, document, reference elements, edit history, entity types, save formats, keyboard shortcuts, templates, name conversions and the Create with AI prompt), the label fitting that sizes entity boxes and the template update helpers, plus checks that `npm run assemble` ships every file the app loads, the skill and `llms.txt`, that each template's saved diagram carries its version and the bundles its landing row advertises, that the release workflow stamps only constants the source exports, that the page's Nexus mark matches `logo.svg`, that every icon the page names is drawn, that every shortcut on the page parses and none clash, and that the edit palette offers every built-in entity type. They also check that the document schema accepts every saved document and template, and that the `create-nexus-diagram` skill's tables and example match the code. The security tests check that the vendored libraries match `vendor.json` and that the Content Security Policy lists each inline script. They check that `src/` fetches only its own files and evaluates no code from strings. They also check that every workflow grants permissions per job and pins its actions. Property-based tests with `fast-check` feed generated input to the bulk fields parser, the name conversions and the entity type style checks.
 - `npm run test-e2e` - Playwright drives the app end to end in Chromium: importing, rendering, editing, saving and exporting. It needs its browser installed once with `npx playwright install chromium`. The suite starts the dev server on port 8000, or reuses one already listening there - so if another checkout is serving that port, stop it first or the tests run against that checkout's code.
 - `npm run test-coverage` - the unit tests with c8 coverage, written to `.logs/`.
+
+## Submit a change
+
+Submit each change as a pull request against `main`:
+
+1. Create a branch from `main`. If you can't push to this repository, fork it first.
+2. Make the change and add tests for it. A new feature gets unit or end-to-end tests for what it does, and a bug fix gets a test that fails without the fix.
+3. Run `npm run lint` and `npm run test`, and fix what they report.
+4. Open a pull request against `main` that says what changed and why.
+
+A pull request merges only after the `Lint`, `Unit`, `E2E 1` and `E2E 2` checks pass. `Lint` fails on any ESLint error or Prettier difference, and `Unit` fails when line coverage drops below 80%.
+
+To report a security vulnerability, follow [`SECURITY.md`](SECURITY.md) instead of opening an issue or a pull request.
 
 ## How the code is organized
 
