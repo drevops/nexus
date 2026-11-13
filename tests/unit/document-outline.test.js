@@ -29,7 +29,7 @@ test('outlines a saved document', () => {
     note: 'Up to 3 tags.',
     targets: ['taxonomy_term.tags'],
   });
-  assert.deepEqual(outline.entity('node.article').fields[1].targets, ['media.*']);
+  assert.deepEqual(outline.entity('node.article').fields.find((field) => field.name === 'field_media').targets, ['media.*']);
   assert.equal(outline.entity('node.missing'), null);
 });
 
