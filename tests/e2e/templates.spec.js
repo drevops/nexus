@@ -94,7 +94,12 @@ test.describe('Templates', { tag: '@runner-2' }, () => {
       ['drupal-cms', 'node.blog', [], []],
       ['umami', 'node.recipe', [], []],
       ['thunder', 'paragraph.instagram', [], []],
-      ['open-social', 'node.topic', ['user.*', 'group_type.*'], ['meeting_api_meeting.big_blue_button', 'meeting_api_meeting.custom_link', 'group.flexible_group']],
+      [
+        'open-social',
+        'node.topic',
+        ['user.*', 'group_type.*'],
+        ['meeting_api_meeting.big_blue_button', 'meeting_api_meeting.custom_link', 'group.flexible_group'],
+      ],
     ];
   }
 
