@@ -80,7 +80,11 @@ function dataProviderDocumentCounts() {
   return [
     ['built-in bundles', [entity('node', 'page'), entity('node', 'event'), entity('user', 'user')], { node: 2, user: 1 }],
     ['an any-bundle target', [entity('node', 'page'), entity('media', '*')], { node: 1 }],
-    ['a target of another entity type', [entity('node', 'event'), entity('group', 'flexible_group'), entity('meeting_api_meeting', 'custom_link')], { node: 1 }],
+    [
+      'a target of another entity type',
+      [entity('node', 'event'), entity('group', 'flexible_group'), entity('meeting_api_meeting', 'custom_link')],
+      { node: 1 },
+    ],
     ['an any-bundle target of another entity type', [entity('node', 'event'), entity('profile', '*')], { node: 1 }],
     ['no entities', [], {}],
   ];
