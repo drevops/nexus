@@ -97,7 +97,12 @@ test('lists the bundles of a type by label, then by machine name', () => {
 });
 
 test('gives each heading the anchor of the Markdown export and links the contents to it', () => {
-  const model = doc([entity('node', 'a_page', 'Page'), entity('node', 'b_page', 'Page'), entity('node', 'model', 'Model'), entity('media', 'image', 'Content types')]);
+  const model = doc([
+    entity('node', 'a_page', 'Page'),
+    entity('node', 'b_page', 'Page'),
+    entity('node', 'model', 'Model'),
+    entity('media', 'image', 'Content types'),
+  ]);
   const html = documentHtml(model);
   const markdownAnchors = captures(documentMarkdown(model), /\]\(#([^)]+)\)/g);
 
@@ -212,9 +217,7 @@ test('lists the fields that reference an entity in outline order', () => {
 test('escapes markup in the title, headings, links, machine names and cells', () => {
   const label = `<script>alert("x")</script> & 'y'`;
   const escaped = '&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt; &amp; &#39;y&#39;';
-  const html = documentHtml(
-    doc([entity('node', 'page', label, [field('field_<b>', label, { note: label, fieldType: '"type"' })], label)], { title: label }),
-  );
+  const html = documentHtml(doc([entity('node', 'page', label, [field('field_<b>', label, { note: label, fieldType: '"type"' })], label)], { title: label }));
 
   assert.doesNotMatch(html, /<script|<b>/);
   assert.ok(html.includes('<title>' + escaped + '</title>'));
@@ -224,7 +227,11 @@ test('escapes markup in the title, headings, links, machine names and cells', ()
   assert.ok(html.includes('<blockquote>\n<p>' + escaped + '</p>\n</blockquote>'));
   assert.ok(
     html.includes(
-      '<tr><td>' + escaped + '</td><td><code>field_&lt;b&gt;</code></td><td><code>&quot;type&quot;</code></td><td>1</td><td>No</td><td></td><td>' + escaped + '</td></tr>',
+      '<tr><td>' +
+        escaped +
+        '</td><td><code>field_&lt;b&gt;</code></td><td><code>&quot;type&quot;</code></td><td>1</td><td>No</td><td></td><td>' +
+        escaped +
+        '</td></tr>',
     ),
   );
 });

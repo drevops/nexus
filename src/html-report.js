@@ -233,7 +233,12 @@ export function documentHtml(doc) {
     ]);
 
   const entitySection = (entity) => {
-    const lines = ['<section>', heading(3, entity.label, entitySlugs.get(entity.id)), '<p>Machine name: ' + code(entity.bundle) + '</p>', ...noteQuote(entity.note)];
+    const lines = [
+      '<section>',
+      heading(3, entity.label, entitySlugs.get(entity.id)),
+      '<p>Machine name: ' + code(entity.bundle) + '</p>',
+      ...noteQuote(entity.note),
+    ];
 
     if (entity.fields.length > 0) {
       lines.push(

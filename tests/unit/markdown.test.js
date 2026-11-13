@@ -310,7 +310,12 @@ function dataProviderHeadingSlug() {
 
 test('gives every heading of an outline its anchor, after the title and contents', () => {
   const outline = documentOutline(
-    doc([entity('node', 'contents', 'Contents'), entity('node', 'model', 'Model'), entity('node', 'diagram', 'Diagram'), entity('media', 'image', 'Content types')]),
+    doc([
+      entity('node', 'contents', 'Contents'),
+      entity('node', 'model', 'Model'),
+      entity('node', 'diagram', 'Diagram'),
+      entity('media', 'image', 'Content types'),
+    ]),
   );
 
   for (const [diagram, diagramSlug, entitySlugs, groupSlugs] of [
