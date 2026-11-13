@@ -112,6 +112,33 @@ export function documentOutline(doc) {
 }
 
 /**
+ * Returns the paragraphs of a note, each a list of its trimmed lines. Blank
+ * lines separate paragraphs and never appear in one.
+ */
+export function noteParagraphs(note) {
+  const paragraphs = [];
+  let current = [];
+
+  String(note ?? '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .forEach((line) => {
+      if (line !== '') {
+        current.push(line);
+      } else if (current.length > 0) {
+        paragraphs.push(current);
+        current = [];
+      }
+    });
+
+  if (current.length > 0) {
+    paragraphs.push(current);
+  }
+
+  return paragraphs;
+}
+
+/**
  * Returns the text a reference target is shown with when the document has
  * no entity for it: 'Any <type label>' for every bundle of a type, otherwise
  * its id.

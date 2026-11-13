@@ -14,7 +14,7 @@
  */
 
 import { cardinalityLabel, KIND_SYSTEM } from './model.js';
-import { documentOutline, missingTargetLabel } from './document-outline.js';
+import { documentOutline, missingTargetLabel, noteParagraphs } from './document-outline.js';
 import { mermaidFlowchart } from './mermaid.js';
 
 // Mermaid's renderer slows down and GitHub's preview gives up on large
@@ -130,6 +130,31 @@ export function headingSlugger() {
   };
 }
 
+/**
+ * Returns the anchor of each heading of an outline's export, in document
+ * order: `diagramSlug` (null without a diagram), `groupSlugs` by entity type
+ * and `entitySlugs` by entity id.
+ */
+export function outlineAnchors(outline, diagram = false) {
+  const slugger = headingSlugger();
+
+  // The title and contents headings come first, so they take their anchors
+  // before any bundle with the same label.
+  slugger(outline.title);
+  slugger('Contents');
+
+  const diagramSlug = diagram ? slugger('Diagram') : null;
+  const groupSlugs = new Map();
+  const entitySlugs = new Map();
+
+  outline.groups.forEach((group) => {
+    groupSlugs.set(group.type, slugger(group.heading));
+    group.entities.forEach((entity) => entitySlugs.set(entity.id, slugger(entity.label)));
+  });
+
+  return { diagramSlug, groupSlugs, entitySlugs };
+}
+
 // The line-start characters that would open a list, a quote or a heading
 // underline are escaped as well as the inline ones.
 function noteLine(line) {
@@ -138,37 +163,14 @@ function noteLine(line) {
     .replace(/^(\d+)([.)])/, '$1\\$2');
 }
 
-function noteLines(note) {
-  return String(note ?? '')
-    .split(/\r?\n/)
-    .map((line) => line.trim());
-}
-
 function noteQuote(note) {
-  const paragraphs = [];
-  let current = [];
-
-  noteLines(note).forEach((line) => {
-    if (line !== '') {
-      current.push('> ' + noteLine(line));
-    } else if (current.length > 0) {
-      paragraphs.push(current.join('<br>\n'));
-      current = [];
-    }
-  });
-
-  if (current.length > 0) {
-    paragraphs.push(current.join('<br>\n'));
-  }
-
-  return paragraphs.join('\n>\n');
+  return noteParagraphs(note)
+    .map((lines) => lines.map((line) => '> ' + noteLine(line)).join('<br>\n'))
+    .join('\n>\n');
 }
 
 function noteCell(note) {
-  return noteLines(note)
-    .filter((line) => line !== '')
-    .map(markdownText)
-    .join('<br>');
+  return noteParagraphs(note).flat().map(markdownText).join('<br>');
 }
 
 function link(label, slug) {
@@ -191,21 +193,7 @@ export function documentMarkdown(doc, options = {}) {
   }
 
   const diagram = !!options.diagram;
-  const slugger = headingSlugger();
-
-  // The title and contents headings come first, so they take their anchors
-  // before any bundle with the same label.
-  slugger(outline.title);
-  slugger('Contents');
-
-  const diagramSlug = diagram ? slugger('Diagram') : null;
-  const groupSlugs = new Map();
-  const entitySlugs = new Map();
-
-  outline.groups.forEach((group) => {
-    groupSlugs.set(group.type, slugger(group.heading));
-    group.entities.forEach((entity) => entitySlugs.set(entity.id, slugger(entity.label)));
-  });
+  const { diagramSlug, groupSlugs, entitySlugs } = outlineAnchors(outline, diagram);
 
   const target = (id) => {
     const entity = outline.entity(id);

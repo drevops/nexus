@@ -52,6 +52,7 @@ test.describe('Save', { tag: '@runner-1' }, () => {
       ['SVG', 'content-model.svg', (page) => saveFrom(page, 'svg')],
       ['CSV', 'content-model-fields.csv', (page) => saveFrom(page, 'csv')],
       ['Markdown', 'content-model.md', (page) => saveFrom(page, 'md')],
+      ['HTML', 'content-model.html', (page) => saveFrom(page, 'html')],
       ['JSON from the Save as menu', 'content-model.nexus.json', (page) => saveFrom(page, 'json')],
       ['JSON from the Save button', 'content-model.nexus.json', (page) => downloadFrom(page, '#doc-save')],
     ];
@@ -64,7 +65,7 @@ test.describe('Save', { tag: '@runner-1' }, () => {
 
     await expect(page.locator('#save-menu')).toBeVisible();
     await expect(page.locator('#save-menu sl-menu-label')).toHaveText('Save as');
-    await expect(page.locator('#save-menu sl-menu-item')).toHaveText(['JSON', 'PNG', 'SVG', 'CSV', 'Markdown']);
+    await expect(page.locator('#save-menu sl-menu-item')).toHaveText(['JSON', 'PNG', 'SVG', 'CSV', 'Markdown', 'HTML']);
   });
 
   for (const [format, filename] of dataProviderSaveFormats()) {
@@ -85,6 +86,7 @@ test.describe('Save', { tag: '@runner-1' }, () => {
       ['svg', 'example-content-model.svg'],
       ['csv', 'example-content-model-fields.csv'],
       ['md', 'example-content-model.md'],
+      ['html', 'example-content-model.html'],
     ];
   }
 
@@ -136,6 +138,41 @@ test.describe('Save', { tag: '@runner-1' }, () => {
 
     await expect(page.locator('#settings [data-markdown="diagram"]')).toHaveJSProperty('value', 'auto');
     expect(await savedMarkdown(page)).toContain('```mermaid');
+  });
+
+  test('saves the model as an HTML report with a section per bundle', async ({ page }) => {
+    await loadExample(page);
+
+    const html = readFileSync(await (await saveFrom(page, 'html')).path(), 'utf8');
+
+    expect(html).toMatch(/^<!DOCTYPE html>\n/);
+    expect(html).toContain('<title>Example content model</title>');
+    expect(html).toContain('<li><a href="#content-types">Content types</a>');
+    expect(html).toContain('<h3 id="session">Session</h3>\n<p>Machine name: <code>session</code></p>');
+    expect(html).toContain(
+      '<tr><td>Speakers</td><td><code>field_speakers</code></td><td><code>entity_reference</code></td><td>1..n</td><td>No</td><td><a href="#speaker">Speaker</a></td><td></td></tr>',
+    );
+    expect(html).toContain('<p>Referenced by: Sessions on <a href="#event">Event</a>.</p>');
+    expect(html).not.toContain('<script');
+  });
+
+  test('opens a saved HTML report with its styles and no blocked resource', async ({ page, browser }) => {
+    await loadExample(page);
+
+    const html = readFileSync(await (await saveFrom(page, 'html')).path(), 'utf8');
+    const report = await browser.newPage();
+    const problems = [];
+
+    report.on('console', (message) => problems.push(message.text()));
+    report.on('pageerror', (error) => problems.push(error.message));
+    await report.setContent(html);
+
+    await expect(report.locator('h1')).toHaveText('Example content model');
+    await expect(report.locator('table').first()).toHaveCSS('border-collapse', 'collapse');
+    expect(await report.locator('a[href^="#"]').evaluateAll((links) => links.filter((link) => !document.getElementById(link.hash.slice(1))).length)).toBe(0);
+    expect(problems).toEqual([]);
+
+    await report.close();
   });
 
   test('ignores a save menu item that names no format', async ({ page }) => {

@@ -11,8 +11,10 @@ import {
   includesDiagram,
   markdownCode,
   markdownText,
+  outlineAnchors,
   readMarkdownSettings,
 } from '../../src/markdown.js';
+import { documentOutline } from '../../src/document-outline.js';
 import { markdownDocument } from '../fixtures/markdown/document.js';
 import { savedDocument } from '../fixtures/saved-document.js';
 
@@ -305,6 +307,25 @@ function dataProviderHeadingSlug() {
     ['surrounding spaces', '  Page  ', 'page'],
   ];
 }
+
+test('gives every heading of an outline its anchor, after the title and contents', () => {
+  const outline = documentOutline(
+    doc([entity('node', 'contents', 'Contents'), entity('node', 'model', 'Model'), entity('node', 'diagram', 'Diagram'), entity('media', 'image', 'Content types')]),
+  );
+
+  for (const [diagram, diagramSlug, entitySlugs, groupSlugs] of [
+    [false, null, ['contents-1', 'diagram', 'model-1', 'content-types-1'], ['content-types', 'media-types']],
+    [true, 'diagram', ['contents-1', 'diagram-1', 'model-1', 'content-types-1'], ['content-types', 'media-types']],
+  ]) {
+    const anchors = outlineAnchors(outline, diagram);
+
+    assert.equal(anchors.diagramSlug, diagramSlug);
+    assert.deepEqual([...anchors.entitySlugs.values()], entitySlugs);
+    assert.deepEqual([...anchors.groupSlugs.values()], groupSlugs);
+  }
+
+  assert.equal(outlineAnchors(outline).diagramSlug, null);
+});
 
 test('adds a number to an anchor already taken, as GitHub does', () => {
   const slugger = headingSlugger();

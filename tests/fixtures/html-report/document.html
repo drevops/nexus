@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Event site</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --text: #1f2328;
+  --muted: #59636e;
+  --page: #ffffff;
+  --border: #d1d9e0;
+  --stripe: #f6f8fa;
+  --code: #eff2f5;
+  --accent: #0969da;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #e6edf3;
+    --muted: #9198a1;
+    --page: #0d1117;
+    --border: #3d444d;
+    --stripe: #151b23;
+    --code: #262c36;
+    --accent: #4493f8;
+  }
+}
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--text);
+  font: 15px/1.5 system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+main {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+h1 {
+  margin: 0 0 1.5rem;
+  font-size: 2rem;
+}
+h2 {
+  margin: 2.5rem 0 1rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 1.5rem;
+}
+h3 {
+  margin: 2rem 0 0.5rem;
+  font-size: 1.15rem;
+}
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+code {
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  background: var(--code);
+  font: 0.875em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  overflow-wrap: anywhere;
+}
+blockquote {
+  margin: 0.75rem 0;
+  padding: 0 1rem;
+  border-left: 4px solid var(--border);
+  color: var(--muted);
+}
+.table {
+  overflow-x: auto;
+}
+table {
+  width: 100%;
+  margin: 0.75rem 0;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+th,
+td {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: var(--stripe);
+  font-weight: 600;
+}
+tbody tr:nth-child(even) {
+  background: var(--stripe);
+}
+.muted {
+  color: var(--muted);
+}
+@media print {
+  a {
+    color: inherit;
+  }
+  h2,
+  h3 {
+    break-after: avoid;
+  }
+  tr {
+    break-inside: avoid;
+  }
+}
+</style>
+</head>
+<body>
+<main>
+<h1>Event site</h1>
+<nav aria-label="Contents">
+<h2>Contents</h2>
+<ul>
+<li><a href="#content-types">Content types</a>
+<ul>
+<li><a href="#contents-1">Contents</a></li>
+<li><a href="#page">Page</a></li>
+<li><a href="#session--talk">Session | Talk</a></li>
+</ul>
+</li>
+<li><a href="#vocabularies">Vocabularies</a>
+<ul>
+<li><a href="#tags">Tags</a></li>
+</ul>
+</li>
+<li><a href="#paragraph-types">Paragraph types</a>
+<ul>
+<li><a href="#page-1">Page</a></li>
+</ul>
+</li>
+<li><a href="#gadget">Gadget</a>
+<ul>
+<li><a href="#any-gadget">Any Gadget</a></li>
+<li><a href="#beacon">Beacon</a></li>
+</ul>
+</li>
+<li><a href="#widget">Widget</a>
+<ul>
+<li><a href="#dial">Dial</a></li>
+</ul>
+</li>
+</ul>
+</nav>
+<section>
+<h2 id="content-types">Content types</h2>
+<section>
+<h3 id="contents-1">Contents</h3>
+<p>Machine name: <code>contents</code></p>
+<p>No fields.</p>
+</section>
+<section>
+<h3 id="page">Page</h3>
+<p>Machine name: <code>page</code></p>
+<div class="table">
+<table>
+<thead>
+<tr><th>Field</th><th>Machine name</th><th>Type</th><th>Cardinality</th><th>Required</th><th>References</th><th>Note</th></tr>
+</thead>
+<tbody>
+<tr><td>Sessions</td><td><code>field_sessions</code></td><td><code>entity_reference</code></td><td>1..n</td><td>Yes</td><td><a href="#session--talk">Session | Talk</a></td><td></td></tr>
+<tr><td>Gadget</td><td><code>field_gadget</code></td><td><code>entity_reference</code></td><td>1</td><td>No</td><td><a href="#any-gadget">Any Gadget</a></td><td></td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section>
+<h3 id="session--talk">Session | Talk</h3>
+<p>Machine name: <code>session</code></p>
+<blockquote>
+<p>Talks and *workshops*.<br>- Run on day 2</p>
+<p>1. Keep under 45 minutes</p>
+</blockquote>
+<div class="table">
+<table>
+<thead>
+<tr><th>Field</th><th>Machine name</th><th>Type</th><th>Cardinality</th><th>Required</th><th>References</th><th>Note</th></tr>
+</thead>
+<tbody>
+<tr><td>Title <span class="muted">(base field)</span></td><td><code>title</code></td><td><code>string</code></td><td>1</td><td>Yes</td><td></td><td></td></tr>
+<tr><td>Tags</td><td><code>field_tags</code></td><td><code>entity_reference</code></td><td>1..3</td><td>No</td><td><a href="#tags">Tags</a>, <code>taxonomy_term.topics</code></td><td>Pick `up to` 3.<br>Use $ prices &amp; &lt;b&gt;bold&lt;/b&gt; sparingly.</td></tr>
+<tr><td>Media</td><td><code>field_media</code></td><td><code>entity_reference</code></td><td>1</td><td>No</td><td>Any Media</td><td></td></tr>
+<tr><td>Pipe name</td><td><code>field_a|b</code></td><td><code>string</code></td><td>1</td><td>No</td><td></td><td></td></tr>
+</tbody>
+</table>
+</div>
+<p>Referenced by: Sessions on <a href="#page">Page</a>.</p>
+</section>
+</section>
+<section>
+<h2 id="vocabularies">Vocabularies</h2>
+<section>
+<h3 id="tags">Tags</h3>
+<p>Machine name: <code>tags</code></p>
+<div class="table">
+<table>
+<thead>
+<tr><th>Field</th><th>Machine name</th><th>Type</th><th>Cardinality</th><th>Required</th><th>References</th><th>Note</th></tr>
+</thead>
+<tbody>
+<tr><td>Name <span class="muted">(base field)</span></td><td><code>name</code></td><td><code>string</code></td><td>1</td><td>Yes</td><td></td><td></td></tr>
+</tbody>
+</table>
+</div>
+<p>Referenced by: Tags on <a href="#session--talk">Session | Talk</a>.</p>
+</section>
+</section>
+<section>
+<h2 id="paragraph-types">Paragraph types</h2>
+<section>
+<h3 id="page-1">Page</h3>
+<p>Machine name: <code>page</code></p>
+<div class="table">
+<table>
+<thead>
+<tr><th>Field</th><th>Machine name</th><th>Type</th><th>Cardinality</th><th>Required</th><th>References</th><th>Note</th></tr>
+</thead>
+<tbody>
+<tr><td>Items</td><td><code>field_items</code></td><td><code>entity_reference_revisions</code></td><td>1..n</td><td>No</td><td><a href="#page-1">Page</a></td><td></td></tr>
+</tbody>
+</table>
+</div>
+<p>Referenced by: Items on <a href="#page-1">Page</a>.</p>
+</section>
+</section>
+<section>
+<h2 id="gadget">Gadget</h2>
+<section>
+<h3 id="any-gadget">Any Gadget</h3>
+<p>Machine name: <code>*</code></p>
+<p>No fields.</p>
+<p>Referenced by: Gadget on <a href="#page">Page</a>.</p>
+</section>
+<section>
+<h3 id="beacon">Beacon</h3>
+<p>Machine name: <code>beacon</code></p>
+<p>No fields.</p>
+</section>
+</section>
+<section>
+<h2 id="widget">Widget</h2>
+<section>
+<h3 id="dial">Dial</h3>
+<p>Machine name: <code>dial</code></p>
+<p>No fields.</p>
+</section>
+</section>
+</main>
+</body>
+</html>

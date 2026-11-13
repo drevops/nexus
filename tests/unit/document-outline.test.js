@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { documentOutline, missingTargetLabel } from '../../src/document-outline.js';
+import { documentOutline, missingTargetLabel, noteParagraphs } from '../../src/document-outline.js';
 import { savedDocument } from '../fixtures/saved-document.js';
 
 test('outlines a saved document', () => {
@@ -29,7 +29,7 @@ test('outlines a saved document', () => {
     note: 'Up to 3 tags.',
     targets: ['taxonomy_term.tags'],
   });
-  assert.deepEqual(outline.entity('node.article').fields[1].targets, ['media.*']);
+  assert.deepEqual(outline.entity('node.article').fields.find((field) => field.name === 'field_media').targets, ['media.*']);
   assert.equal(outline.entity('node.missing'), null);
 });
 
@@ -105,5 +105,27 @@ function dataProviderMissingTargetLabel() {
     ['every bundle of a custom type', 'gadget.*', 'Any Gadget'],
     ['a missing bundle', 'node.page', 'node.page'],
     ['an id with no type', '.*', '.*'],
+  ];
+}
+
+test('splits a note into paragraphs of trimmed lines', async (t) => {
+  for (const [name, note, expected] of dataProviderNoteParagraphs()) {
+    await t.test(name, () => {
+      assert.deepEqual(noteParagraphs(note), expected);
+    });
+  }
+});
+
+function dataProviderNoteParagraphs() {
+  return [
+    ['an empty note', '', []],
+    ['null', null, []],
+    ['undefined', undefined, []],
+    ['blank lines only', ' \n \r\n ', []],
+    ['1 line', 'Line', [['Line']]],
+    ['lines of 1 paragraph', '  a  \nb', [['a', 'b']]],
+    ['Windows line endings', 'a\r\nb\r\n\r\nc', [['a', 'b'], ['c']]],
+    ['several blank lines between paragraphs', '\na\n\n\n\nb\n', [['a'], ['b']]],
+    ['a number', 42, [['42']]],
   ];
 }
