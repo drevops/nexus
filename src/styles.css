@@ -1146,7 +1146,8 @@ body.is-dragging-panel * {
   color: var(--text);
 }
 
-/* The arrow sits in the cell's right padding, so it needs no column width. */
+/* The arrow sits in the cell's right padding, so it needs no column width. It
+   has empty alternative text because aria-sort already names the direction. */
 .field-table th[aria-sort] .field-table__sort::after {
   position: absolute;
   left: 100%;
@@ -1155,11 +1156,11 @@ body.is-dragging-panel * {
 }
 
 .field-table th[aria-sort='ascending'] .field-table__sort::after {
-  content: '↑';
+  content: '↑' / '';
 }
 
 .field-table th[aria-sort='descending'] .field-table__sort::after {
-  content: '↓';
+  content: '↓' / '';
 }
 
 .field-table__text {

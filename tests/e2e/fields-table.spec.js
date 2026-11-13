@@ -286,6 +286,8 @@ test.describe('Fields table', { tag: '@runner-2' }, () => {
     for (const direction of ['ascending', 'descending']) {
       await field.click();
       expect(await sortedColumn(page)).toEqual([['field-table__col--field', direction]]);
+      // aria-sort names the direction, so the arrow stays out of the name.
+      await expect(field).toHaveAccessibleName('Field');
 
       const rows = await firstGroupRows(page);
       expect(rows.map((r) => r.label)).toEqual(inOrder(rows.map((r) => r.label), direction));
