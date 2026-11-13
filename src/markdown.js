@@ -91,7 +91,9 @@ export function markdownCode(value, inTable = false) {
   const pad = text.startsWith('`') || text.endsWith('`') ? ' ' : '';
   const span = fence + pad + text + pad + fence;
 
-  return inTable ? span.replace(/\|/g, '\\|') : span;
+  // A backslash is literal inside a code span and GFM unescapes only '\|'
+  // when it splits a row, so backslashes need no escaping here.
+  return inTable ? span.split('|').join('\\|') : span;
 }
 
 /**

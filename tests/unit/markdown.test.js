@@ -277,6 +277,8 @@ function dataProviderMarkdownCode() {
     ['a backtick at the end', 'a`', false, '`` a` ``'],
     ['a pipe outside a table', 'a|b', false, '`a|b`'],
     ['a pipe inside a table', 'a|b', true, '`a\\|b`'],
+    ['a backslash before a pipe inside a table', 'a\\|b', true, '`a\\\\|b`'],
+    ['a backslash inside a table', 'a\\b', true, '`a\\b`'],
     ['a line break', 'a\nb', false, '`a b`'],
   ];
 }
