@@ -107,17 +107,17 @@ export function exportHtml(text, title) {
 }
 
 /**
- * Export a text model as a Mermaid diagram named after the diagram title.
+ * Export a canvas graph as a Mermaid flowchart named after the diagram title.
  */
-export function exportMermaid(model, title) {
-  downloadText(toMermaid(model, title), fileName(title, '.mmd'), 'text/plain');
+export function exportMermaid(graph, title) {
+  downloadText(toMermaid(graph, title), fileName(title, '.mmd'), 'text/plain');
 }
 
 /**
- * Export a text model as a Graphviz DOT graph named after the diagram title.
+ * Export a canvas graph as a Graphviz DOT graph named after the diagram title.
  */
-export function exportDot(model, title) {
-  downloadText(toDot(model, title), fileName(title, '.dot'), 'text/vnd.graphviz');
+export function exportDot(graph, title) {
+  downloadText(toDot(graph, title), fileName(title, '.dot'), 'text/vnd.graphviz');
 }
 
 /**

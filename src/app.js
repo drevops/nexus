@@ -43,8 +43,8 @@ const SAVERS = {
   'references-csv': (controller, title) => exportCsv(referencesCsv(currentDocument(controller, title)), title, 'references'),
   md: saveMarkdown,
   html: (controller, title) => exportHtml(documentHtml(currentDocument(controller, title)), title),
-  mermaid: (controller, title) => exportMermaid(controller.textModel(), title),
-  dot: (controller, title) => exportDot(controller.textModel(), title),
+  mermaid: (controller, title) => exportMermaid(controller.canvasGraph(), title),
+  dot: (controller, title) => exportDot(controller.canvasGraph(), title),
 };
 
 const OPENERS = {

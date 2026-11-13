@@ -1,44 +1,85 @@
 /**
  * Text formats of the diagram: Mermaid and Graphviz DOT.
  *
- * textModel() reads the entities, fields and references the canvas shows from
- * graph element definitions, the { nodes, edges } shape of
- * ContentModel.toArray() and of a live graph's elements. toMermaid() and
- * toDot() write that model as text. Nothing here touches the DOM.
+ * canvasGraph() reads the nodes and edges the canvas shows from graph element
+ * definitions: each node's data, position and drawn size, and each edge's
+ * data. toMermaid() and toDot() write that graph as text, with the shapes,
+ * colours and line styles the canvas draws. Nothing here touches the DOM.
  */
 
-import { cardinalityLabel } from './model.js';
-import { ENTITY_TYPE_ORDER } from './entity-types.js';
-import { isHexColor } from './type-styles.js';
+import { isHexColor, isSymbol } from './type-styles.js';
 
-// Mermaid's default maxTextSize; a longer diagram doesn't render.
+// Mermaid's default maxTextSize and maxEdges; a diagram past either doesn't
+// render, and neither can be raised from inside the diagram.
 export const MERMAID_MAX_TEXT = 50000;
+export const MERMAID_MAX_EDGES = 500;
 
 // Above this many entities Mermaid lays a diagram out slowly and overlaps it.
 export const MERMAID_MAX_ENTITIES = 100;
 
-export const MERMAID_LARGE_NOTE = '%% This model is large for Mermaid. Save it as Graphviz DOT for a faster, readable layout.';
+export const MERMAID_LARGE_NOTE = '%% This diagram is large for Mermaid, which may draw it slowly or not at all. Save it as Graphviz DOT instead.';
 
 const INDENT = '  ';
 
-function typeRank(type) {
-  const index = ENTITY_TYPE_ORDER.indexOf(type);
+const FALLBACK_SYMBOL = 'rounded';
 
-  return index === -1 ? ENTITY_TYPE_ORDER.length : index;
-}
+const NODE_GROUPS = ['entity', 'field', 'proxy', 'annotation'];
 
-// Code point order, so the result doesn't depend on the locale.
-function compareText(a, b) {
-  if (a === b) {
-    return 0;
-  }
+const EDGE_KINDS = { has: 'has', ref: 'ref', proxyedge: 'proxy', collapsed: 'collapsed', annotation: 'annotation' };
 
-  return a < b ? -1 : 1;
-}
+// The canvas's light theme colours, which every export draws in.
+const COLORS = {
+  text: '#1f2933',
+  muted: '#6b7280',
+  nodeBorder: '#5b6470',
+  fieldBg: '#ffffff',
+  fieldBorder: '#555c66',
+  systemBorder: '#98a2b3',
+  calculatedBg: '#ffd966',
+  calculatedBorder: '#c9a227',
+  calculatedText: '#3a2f0a',
+  proxyBorder: '#8a94a3',
+  edge: '#aeb4bd',
+  refEdge: '#8a94a3',
+  proxyEdge: '#c2c8d0',
+  annotationEdge: '#b5739d',
+  annotationText: '#8a5a76',
+};
 
-function compareEntities(a, b) {
-  return typeRank(a.entityType) - typeRank(b.entityType) || compareText(String(a.entityType), String(b.entityType)) || compareText(a.id, b.id);
-}
+// Mermaid 11.3 shapes for the entity symbols. Mermaid has no ellipse, tag,
+// pentagon or octagon, so those take the nearest shape it has.
+const MERMAID_SHAPES = {
+  rounded: 'rounded',
+  rectangle: 'rect',
+  ellipse: 'stadium',
+  diamond: 'diam',
+  hexagon: 'hex',
+  tag: 'odd',
+  barrel: 'cyl',
+  cut: 'notch-rect',
+  rhomboid: 'lean-r',
+  pentagon: 'notch-pent',
+  octagon: 'hex',
+};
+
+const DOT_SHAPES = {
+  rounded: { shape: 'box', style: ['rounded'] },
+  rectangle: { shape: 'box', style: [] },
+  ellipse: { shape: 'ellipse', style: [] },
+  diamond: { shape: 'diamond', style: [] },
+  hexagon: { shape: 'hexagon', style: [] },
+  tag: { shape: 'cds', style: [] },
+  barrel: { shape: 'cylinder', style: [] },
+  cut: { shape: 'box', style: ['diagonals'] },
+  rhomboid: { shape: 'parallelogram', style: [] },
+  pentagon: { shape: 'pentagon', style: [] },
+  octagon: { shape: 'octagon', style: [] },
+};
+
+const ANNOTATION_SYMBOLS = { event: 'diamond', api: 'hexagon', callback: 'rounded' };
+
+// Words that start a Mermaid flowchart statement, so a node id can't be one.
+const MERMAID_KEYWORDS = /^(end|graph|flowchart|subgraph|direction|style|classdef|class|linkstyle|click|call|href|default)$/i;
 
 function text(value, fallback) {
   const line = value == null ? '' : String(value).replace(/\s+/g, ' ').trim();
@@ -46,81 +87,98 @@ function text(value, fallback) {
   return line === '' ? fallback : line;
 }
 
+function rounded(value, places) {
+  const scale = 10 ** places;
+  const result = Math.round((Number(value) || 0) * scale) / scale;
+
+  return Object.is(result, -0) ? 0 : result;
+}
+
+function machineNameOf(data) {
+  if (data.group === 'entity') {
+    return text(data.bundle, '');
+  }
+
+  return data.group === 'field' ? text(data.name, '') : '';
+}
+
+function nodeLabel(data) {
+  if (data.group === 'field') {
+    const label = text(data.label, text(data.name, data.id));
+
+    return data.required === true ? label + ' *' : label;
+  }
+
+  if (data.group === 'proxy') {
+    return text(data.label, text(data.target, data.id));
+  }
+
+  return text(data.label, data.id);
+}
+
 /**
- * Reads the model a text export draws from graph element definitions.
+ * Reads the graph a text export draws from graph element definitions.
+ *
+ * `elements` holds the nodes and edges the canvas shows, in canvas order. A
+ * node is `{ data, position, width, height }`, with its drawn size in model
+ * pixels, and an edge is `{ data }`.
  *
  * Options:
- * - fields: whether entities carry their fields; references are kept either
- *   way. Defaults to true.
- * - hiddenTypes: entity types left out, with their fields and references.
+ * - direction: `LR` or `TB`, the direction of the layout. Defaults to `LR`.
  * - colorFor: returns the fill colour of an entity type. Only a 6- or 8-digit
  *   hex colour is kept.
+ * - symbolFor: returns the symbol of an entity type. Only a key of SYMBOLS is
+ *   kept, and any other value draws as a rounded rectangle.
+ * - typeLabel: returns the caption of an entity type. Without it, entities
+ *   have no type caption.
+ * - machineNames: whether each entity and field carries its machine name.
  *
- * A field with `hidden: true` is left out with its references, and so is a
- * reference whose target isn't an entity of the model. Entities are sorted by
- * entity type order and id, fields keep their graph order and references
- * follow their fields, so the text changes only where the model does.
+ * Nodes of an unknown group are left out, and so is every edge of an unknown
+ * group or with an end the graph doesn't hold.
  */
-export function textModel(elements, options = {}) {
-  const hiddenTypes = new Set(options.hiddenTypes || []);
+export function canvasGraph(elements, options = {}) {
   const colorFor = options.colorFor || (() => null);
-  const nodes = (elements.nodes || []).map((node) => node.data);
-  const edges = (elements.edges || []).map((edge) => edge.data);
+  const symbolFor = options.symbolFor || (() => FALLBACK_SYMBOL);
+  const typeLabel = options.typeLabel || (() => '');
 
-  const entities = nodes
-    .filter((data) => data.group === 'entity' && !hiddenTypes.has(data.entityType))
-    .map((data) => ({
-      id: data.id,
-      label: text(data.label, data.id),
-      entityType: data.entityType,
-      color: isHexColor(colorFor(data.entityType)) ? colorFor(data.entityType) : null,
-      fields: [],
-    }))
-    .sort(compareEntities);
-  const byId = new Map(entities.map((entity) => [entity.id, entity]));
+  const nodes = (elements.nodes || [])
+    .filter((node) => NODE_GROUPS.includes(node.data.group))
+    .map((node) => {
+      const data = node.data;
+      const typed = data.group === 'entity' || data.group === 'proxy';
+      const color = typed ? colorFor(data.entityType) : null;
+      const symbol = typed ? symbolFor(data.entityType) : null;
 
-  const fields = nodes
-    .filter((data) => data.group === 'field' && data.hidden !== true && byId.has(data.entity))
-    .map((data) => ({
-      id: data.id,
-      entity: data.entity,
-      name: text(data.name, ''),
-      label: text(data.label, text(data.name, data.id)),
-      type: text(data.fieldType, ''),
-      cardinality: cardinalityLabel(data.cardinality == null ? 1 : data.cardinality),
-      required: data.required === true,
-      reference: false,
-    }));
-  const fieldsById = new Map(fields.map((field) => [field.id, field]));
+      return {
+        id: data.id,
+        group: data.group,
+        label: nodeLabel(data),
+        detail: data.group === 'annotation' ? text(data.method, '') : '',
+        caption: data.group === 'entity' ? text(typeLabel(data.entityType), '') : '',
+        machineName: options.machineNames === true ? machineNameOf(data) : '',
+        entityType: typed ? text(data.entityType, '') : '',
+        color: isHexColor(color) ? color : null,
+        symbol: typed ? (isSymbol(symbol) ? symbol : FALLBACK_SYMBOL) : null,
+        kind: data.group === 'field' || data.group === 'annotation' ? text(data.kind, '') : '',
+        x: rounded(node.position?.x, 0),
+        y: rounded(node.position?.y, 0),
+        width: rounded(node.width, 0),
+        height: rounded(node.height, 0),
+      };
+    });
+  const ids = new Set(nodes.map((node) => node.id));
 
-  const targets = new Map();
-  edges
-    .filter((data) => data.group === 'ref' && fieldsById.has(data.source) && byId.has(data.target))
-    .forEach((data) => {
-      fieldsById.get(data.source).reference = true;
-      targets.set(data.source, [...(targets.get(data.source) || []), data.target]);
+  const edges = (elements.edges || [])
+    .filter((edge) => Object.hasOwn(EDGE_KINDS, edge.data.group) && ids.has(edge.data.source) && ids.has(edge.data.target))
+    .map((edge) => {
+      const data = edge.data;
+      const kind = EDGE_KINDS[data.group];
+      const label = kind === 'ref' || kind === 'proxy' ? data.cardinality : kind === 'annotation' ? data.label : '';
+
+      return { source: data.source, target: data.target, kind: kind, label: text(label, '') };
     });
 
-  const order = new Map(entities.map((entity, index) => [entity.id, index]));
-  const references = [];
-
-  fields.forEach((field) => {
-    byId.get(field.entity).fields.push(field);
-  });
-
-  entities.forEach((entity) => {
-    entity.fields.forEach((field) => {
-      const ids = [...new Set(targets.get(field.id) || [])].sort((a, b) => order.get(a) - order.get(b));
-
-      ids.forEach((target) => references.push({ source: entity.id, target: target, field: field }));
-    });
-
-    if (options.fields === false) {
-      entity.fields = [];
-    }
-  });
-
-  return { fields: options.fields !== false, entities: entities, references: references };
+  return { direction: options.direction === 'TB' ? 'TB' : 'LR', nodes: nodes, edges: edges };
 }
 
 /**
@@ -144,8 +202,12 @@ export function identifier(value, prefix) {
  * keep their order: the first takes it and each later one takes the lowest
  * free `_2`, `_3` suffix that no other id gives on its own.
  */
-export function identifiers(ids, prefix = 'e') {
-  const bases = ids.map((id) => identifier(id, prefix));
+export function identifiers(ids, prefix = 'n') {
+  const bases = ids.map((id) => {
+    const name = identifier(id, prefix);
+
+    return MERMAID_KEYWORDS.test(name) ? prefix + '_' + name : name;
+  });
   const taken = new Set(bases);
   const used = new Set();
   const result = new Map();
@@ -171,17 +233,9 @@ export function identifiers(ids, prefix = 'e') {
   return result;
 }
 
-function fieldDetail(field) {
-  return field.cardinality + (field.required ? ', required' : '');
-}
-
-function referenceLabel(reference) {
-  return reference.field.label + ' (' + reference.field.cardinality + ')';
-}
-
 // Mermaid replaces '#name;' and '#123;' codes in the diagram before it parses
-// it, so '#' is encoded first and every other code stays literal. A backslash
-// in an erDiagram alias is a parse error.
+// it, so '#' is encoded first and every other code stays literal. Braces end
+// a shape's data and a bar ends an edge label.
 function mermaidText(value) {
   return value
     .replace(/#/g, '#35;')
@@ -190,84 +244,137 @@ function mermaidText(value) {
     .replace(/`/g, '#96;')
     .replace(/&/g, '#amp;')
     .replace(/</g, '#lt;')
-    .replace(/>/g, '#gt;');
+    .replace(/>/g, '#gt;')
+    .replace(/\{/g, '#123;')
+    .replace(/\}/g, '#125;')
+    .replace(/\|/g, '#124;');
 }
 
-// The erDiagram key markers, which the parser reads in any case and never as
-// an attribute type or name.
-function attributeWord(value, prefix) {
-  const name = identifier(value, prefix);
-
-  return /^(PK|FK|UK)$/i.test(name) ? prefix + '_' + name : name;
-}
-
-function mermaidRelationship(field) {
-  if (field.cardinality === '1') {
-    return field.required ? '||' : 'o|';
+function nodeSymbol(node) {
+  if (node.group === 'field') {
+    return 'ellipse';
   }
 
-  return field.required ? '|{' : 'o{';
-}
-
-function mermaidEntityLines(entity, name, withFields) {
-  const head = INDENT + name + '["' + mermaidText(entity.label) + '"]';
-
-  if (!withFields || entity.fields.length === 0) {
-    return [head];
+  if (node.group === 'annotation') {
+    return ANNOTATION_SYMBOLS[node.kind] || 'rectangle';
   }
 
-  const attributes = entity.fields.map((field) => {
-    const key = field.reference ? ' FK' : '';
-
-    return (
-      INDENT.repeat(2) +
-      attributeWord(field.type, 't') +
-      ' ' +
-      attributeWord(field.name, 'f') +
-      key +
-      ' "' +
-      mermaidText(field.label + ' (' + fieldDetail(field) + ')') +
-      '"'
-    );
-  });
-
-  return [head + ' {', ...attributes, INDENT + '}'];
+  return node.symbol;
 }
+
+// The canvas draws the type caption and the machine name smaller than the
+// label, so they go on lines of their own in <small>.
+function captionLines(node) {
+  return [node.caption, node.machineName].filter((line) => line !== '');
+}
+
+function mermaidLabel(node) {
+  const lines = [node.label, node.detail].filter((line) => line !== '').map(mermaidText);
+
+  return lines.concat(captionLines(node).map((line) => '<small>' + mermaidText(line) + '</small>')).join('<br>');
+}
+
+function mermaidShape(node) {
+  return node.group === 'field' ? 'stadium' : MERMAID_SHAPES[nodeSymbol(node)];
+}
+
+function fieldClass(node) {
+  return ['multi', 'system', 'calculated'].includes(node.kind) ? 'field_' + node.kind : 'field';
+}
+
+function mermaidClass(node) {
+  if (node.group === 'field') {
+    return fieldClass(node);
+  }
+
+  if (node.group === 'annotation') {
+    return 'annotation';
+  }
+
+  return node.group + '_' + identifier(node.entityType, 't');
+}
+
+function mermaidStyle(name, node) {
+  const fill = node.color ? 'fill:' + node.color + ',' : '';
+  const styles = {
+    field: 'fill:' + COLORS.fieldBg + ',stroke:' + COLORS.fieldBorder + ',color:' + COLORS.text,
+    field_multi: 'fill:' + COLORS.fieldBg + ',stroke:' + COLORS.fieldBorder + ',stroke-width:3px,color:' + COLORS.text,
+    field_system: 'fill:' + COLORS.fieldBg + ',stroke:' + COLORS.systemBorder + ',stroke-dasharray:4 3,color:' + COLORS.muted,
+    field_calculated: 'fill:' + COLORS.calculatedBg + ',stroke:' + COLORS.calculatedBorder + ',color:' + COLORS.calculatedText,
+    annotation: 'fill:' + COLORS.fieldBg + ',stroke:' + COLORS.nodeBorder + ',color:' + COLORS.text,
+  };
+
+  if (Object.hasOwn(styles, name)) {
+    return styles[name];
+  }
+
+  if (node.group === 'proxy') {
+    return fill + 'fill-opacity:0.4,stroke:' + COLORS.proxyBorder + ',stroke-dasharray:4 3,color:' + COLORS.muted + ',font-style:italic';
+  }
+
+  return fill + 'stroke:' + COLORS.nodeBorder + ',color:' + COLORS.text;
+}
+
+const MERMAID_LINKS = {
+  has: { arrow: '---', style: 'stroke:' + COLORS.edge },
+  ref: { arrow: '-->', style: 'stroke:' + COLORS.refEdge },
+  collapsed: { arrow: '-->', style: 'stroke:' + COLORS.refEdge },
+  proxy: { arrow: '-.->', style: 'stroke:' + COLORS.proxyEdge },
+  annotation: { arrow: '-.->', style: 'stroke:' + COLORS.annotationEdge + ',color:' + COLORS.annotationText },
+};
 
 /**
- * Writes a text model as a Mermaid diagram: an `erDiagram` when its entities
- * carry fields, a `flowchart` when they don't. A model Mermaid can't draw well
- * starts with MERMAID_LARGE_NOTE.
+ * Writes a canvas graph as a Mermaid flowchart in the direction of the
+ * layout: each node in the shape and colours the canvas draws it in, and
+ * each edge in its line style. Mermaid lays the flowchart out itself. A graph
+ * Mermaid can't draw well starts with MERMAID_LARGE_NOTE.
  */
-export function toMermaid(model, title = '') {
-  const names = identifiers(model.entities.map((entity) => entity.id));
+export function toMermaid(graph, title = '') {
+  const names = identifiers(graph.nodes.map((node) => node.id));
   const name = (id) => names.get(id);
-  const lines = [];
+  const lines = ['---'];
 
   // The front matter is YAML, which Mermaid reads before it decodes '#'
   // codes, and a JSON string is a valid YAML string.
   if (text(title, '') !== '') {
-    lines.push('---', 'title: ' + JSON.stringify(text(title, '')), '---');
+    lines.push('title: ' + JSON.stringify(text(title, '')));
   }
 
-  lines.push(model.fields ? 'erDiagram' : 'flowchart LR');
+  lines.push('config:', '  flowchart:', '    curve: step', '---', 'flowchart ' + graph.direction);
   const header = lines.length;
 
-  model.entities.forEach((entity) => lines.push(...mermaidEntityLines(entity, name(entity.id), model.fields)));
+  const classes = new Map();
 
-  model.references.forEach((reference) => {
-    const label = '"' + mermaidText(referenceLabel(reference)) + '"';
+  graph.nodes.forEach((node) => {
+    const className = mermaidClass(node);
 
-    if (model.fields) {
-      lines.push(INDENT + name(reference.source) + ' }o--' + mermaidRelationship(reference.field) + ' ' + name(reference.target) + ' : ' + label);
-    } else {
-      lines.push(INDENT + name(reference.source) + ' -->|' + label + '| ' + name(reference.target));
+    lines.push(INDENT + name(node.id) + '@{ shape: ' + mermaidShape(node) + ', label: "' + mermaidLabel(node) + '" }');
+
+    if (!classes.has(className)) {
+      classes.set(className, { style: mermaidStyle(className, node), members: [] });
     }
+
+    classes.get(className).members.push(name(node.id));
   });
 
-  let output = lines.join('\n') + '\n';
+  const linkStyles = new Map();
 
-  if (model.entities.length > MERMAID_MAX_ENTITIES || output.length > MERMAID_MAX_TEXT) {
+  graph.edges.forEach((edge, index) => {
+    const link = MERMAID_LINKS[edge.kind];
+    const label = edge.label ? '|"' + mermaidText(edge.label) + '"|' : '';
+
+    lines.push(INDENT + name(edge.source) + ' ' + link.arrow + label + ' ' + name(edge.target));
+    linkStyles.set(link.style, [...(linkStyles.get(link.style) || []), index]);
+  });
+
+  classes.forEach((entry, className) => lines.push(INDENT + 'classDef ' + className + ' ' + entry.style));
+  classes.forEach((entry, className) => lines.push(INDENT + 'class ' + entry.members.join(',') + ' ' + className));
+  linkStyles.forEach((indexes, style) => lines.push(INDENT + 'linkStyle ' + indexes.join(',') + ' ' + style));
+
+  let output = lines.join('\n') + '\n';
+  const entities = graph.nodes.filter((node) => node.group === 'entity').length;
+
+  if (entities > MERMAID_MAX_ENTITIES || graph.edges.length > MERMAID_MAX_EDGES || output.length > MERMAID_MAX_TEXT) {
     lines.splice(header, 0, MERMAID_LARGE_NOTE);
     output = lines.join('\n') + '\n';
   }
@@ -275,76 +382,141 @@ export function toMermaid(model, title = '') {
   return output;
 }
 
-// Graphviz decodes HTML entities in quoted labels as well as HTML-like ones.
+// Graphviz decodes HTML entities in quoted labels, so '&' is escaped too.
+function dotEscape(value) {
+  return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/&/g, '&amp;');
+}
+
 function dotString(value) {
-  return '"' + value.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/&/g, '&amp;') + '"';
+  return '"' + dotEscape(value) + '"';
+}
+
+function dotAttributes(attributes) {
+  return (
+    '[' +
+    Object.entries(attributes)
+      .filter(([, value]) => value !== null && value !== '')
+      .map(([key, value]) => key + '=' + value)
+      .join(', ') +
+    ']'
+  );
 }
 
 function dotHtml(value) {
   return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function dotPort(index) {
-  return 'f' + (index + 1);
+// A label with captions is an HTML-like label, so the captions can be smaller
+// and muted. '\n' in a quoted DOT string is a line break.
+function dotLabel(node) {
+  const captions = captionLines(node);
+
+  if (captions.length > 0) {
+    const lines = [node.label, node.detail].filter((line) => line !== '').map(dotHtml);
+    const small = captions.map((line) => '<FONT POINT-SIZE="9" COLOR="' + COLORS.muted + '">' + dotHtml(line) + '</FONT>');
+
+    return '<' + lines.concat(small).join('<BR/>') + '>';
+  }
+
+  return node.detail ? '"' + dotEscape(node.label) + '\\n' + dotEscape(node.detail) + '"' : dotString(node.label);
 }
 
-function dotTable(entity) {
-  const fill = entity.color ? ' BGCOLOR="' + entity.color + '"' : '';
-  const rows = entity.fields.map((field, index) => {
-    const meta = dotHtml([[field.name, field.type].filter(Boolean).join(': '), fieldDetail(field)].filter(Boolean).join(', '));
-
-    return '<TR><TD PORT="' + dotPort(index) + '" ALIGN="LEFT">' + dotHtml(field.label) + ' <FONT COLOR="#6b7280">' + meta + '</FONT></TD></TR>';
-  });
-
-  return (
-    '<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">' +
-    '<TR><TD' +
-    fill +
-    '><B>' +
-    dotHtml(entity.label) +
-    '</B></TD></TR>' +
-    rows.join('') +
-    '</TABLE>>'
-  );
+// A proxy's fill is its entity's colour at 40% opacity, as on the canvas.
+function proxyFill(color) {
+  return color && color.length === 7 ? color + '66' : color;
 }
 
-/**
- * Writes a text model as a Graphviz DOT digraph. With fields, each entity is
- * a table with a row per field, and each reference leaves the row of its
- * field; without, each entity is a rounded box.
- */
-export function toDot(model, title = '') {
-  const names = identifiers(model.entities.map((entity) => entity.id));
-  const name = (id) => dotString(names.get(id));
-  const graphTitle = text(title, '');
-  const lines = ['digraph ' + dotString(graphTitle || 'nexus') + ' {'];
-  const graphLabel = graphTitle ? ', label=' + dotString(graphTitle) + ', labelloc=t' : '';
+function dotNodeAttributes(node) {
+  const shape = DOT_SHAPES[nodeSymbol(node)];
+  const style = [...shape.style, 'filled'];
+  const attributes = { label: dotLabel(node), shape: shape.shape };
 
-  lines.push(INDENT + 'graph [rankdir=LR, fontname="Helvetica"' + graphLabel + '];');
-  lines.push(
-    INDENT +
-      (model.fields
-        ? 'node [shape=plain, fontname="Helvetica", fontsize=11];'
-        : 'node [shape=box, style="rounded,filled", fillcolor="#ffffff", fontname="Helvetica", fontsize=11];'),
-  );
-  lines.push(INDENT + 'edge [fontname="Helvetica", fontsize=9, color="#8a94a3"];');
+  if (node.group === 'entity') {
+    attributes.fillcolor = node.color ? '"' + node.color + '"' : null;
+  }
 
-  model.entities.forEach((entity) => {
-    if (model.fields) {
-      lines.push(INDENT + name(entity.id) + ' [label=' + dotTable(entity) + '];');
-      return;
+  if (node.group === 'proxy') {
+    style.unshift('dashed');
+    Object.assign(attributes, {
+      fillcolor: node.color ? '"' + proxyFill(node.color) + '"' : null,
+      color: '"' + COLORS.proxyBorder + '"',
+      fontcolor: '"' + COLORS.muted + '"',
+      fontname: '"Helvetica-Oblique"',
+    });
+  }
+
+  if (node.group === 'field') {
+    Object.assign(attributes, { fillcolor: '"' + COLORS.fieldBg + '"', color: '"' + COLORS.fieldBorder + '"' });
+
+    if (node.kind === 'multi') {
+      attributes.peripheries = 2;
     }
 
-    const fill = entity.color ? ', fillcolor="' + entity.color + '"' : '';
-    lines.push(INDENT + name(entity.id) + ' [label=' + dotString(entity.label) + fill + '];');
-  });
+    if (node.kind === 'system') {
+      style.unshift('dashed');
+      Object.assign(attributes, { color: '"' + COLORS.systemBorder + '"', fontcolor: '"' + COLORS.muted + '"' });
+    }
 
-  const ports = new Map(model.entities.flatMap((entity) => entity.fields.map((field, index) => [field, ':' + dotPort(index)])));
+    if (node.kind === 'calculated') {
+      Object.assign(attributes, {
+        fillcolor: '"' + COLORS.calculatedBg + '"',
+        color: '"' + COLORS.calculatedBorder + '"',
+        fontcolor: '"' + COLORS.calculatedText + '"',
+      });
+    }
+  }
 
-  model.references.forEach((reference) => {
-    const port = ports.get(reference.field) || '';
+  if (node.group === 'annotation') {
+    attributes.fillcolor = '"' + COLORS.fieldBg + '"';
 
-    lines.push(INDENT + name(reference.source) + port + ' -> ' + name(reference.target) + ' [label=' + dotString(referenceLabel(reference)) + '];');
+    if (node.kind === 'callback') {
+      attributes.fontname = '"Helvetica-Bold"';
+    }
+  }
+
+  // Graphviz's y axis points up and the canvas's points down.
+  return {
+    ...attributes,
+    style: '"' + style.join(',') + '"',
+    pos: '"' + node.x + ',' + -node.y + '!"',
+    width: node.width ? rounded(node.width / 72, 3) : null,
+    height: node.height ? rounded(node.height / 72, 3) : null,
+  };
+}
+
+const DOT_EDGES = {
+  has: { dir: 'none' },
+  ref: { color: '"' + COLORS.refEdge + '"' },
+  collapsed: { color: '"' + COLORS.refEdge + '"' },
+  proxy: { style: 'dashed', color: '"' + COLORS.proxyEdge + '"' },
+  annotation: { style: 'dashed', color: '"' + COLORS.annotationEdge + '"', fontcolor: '"' + COLORS.annotationText + '"' },
+};
+
+/**
+ * Writes a canvas graph as a Graphviz DOT digraph that keeps the canvas
+ * layout: neato pins each node at its canvas position, in points, at least as
+ * large as the canvas draws it, and draws it in the canvas's shape and
+ * colours.
+ */
+export function toDot(graph, title = '') {
+  const names = identifiers(graph.nodes.map((node) => node.id));
+  const name = (id) => dotString(names.get(id));
+  const graphTitle = text(title, '');
+  const graphLabel = graphTitle ? ', label=' + dotString(graphTitle) + ', labelloc=t' : '';
+  const lines = ['digraph ' + dotString(graphTitle || 'nexus') + ' {'];
+
+  lines.push(INDENT + 'graph [layout=neato, inputscale=72, splines=true, outputorder=edgesfirst, fontname="Helvetica"' + graphLabel + '];');
+  lines.push(
+    INDENT + 'node [fontname="Helvetica", fontsize=11, style=filled, fillcolor="#ffffff", color="' + COLORS.nodeBorder + '", fontcolor="' + COLORS.text + '"];',
+  );
+  lines.push(INDENT + 'edge [fontname="Helvetica", fontsize=9, color="' + COLORS.edge + '", fontcolor="' + COLORS.muted + '", arrowsize=0.7];');
+
+  graph.nodes.forEach((node) => lines.push(INDENT + name(node.id) + ' ' + dotAttributes(dotNodeAttributes(node)) + ';'));
+
+  graph.edges.forEach((edge) => {
+    const attributes = { ...DOT_EDGES[edge.kind], label: edge.label ? dotString(edge.label) : null };
+
+    lines.push(INDENT + name(edge.source) + ' -> ' + name(edge.target) + ' ' + dotAttributes(attributes) + ';');
   });
 
   lines.push('}');

@@ -110,36 +110,83 @@ test.describe('Save', { tag: '@runner-1' }, () => {
     ];
   }
 
-  for (const [format, withFields, withoutFields, venues, venueField] of dataProviderTextFormats()) {
-    test(`saves ${format} text of what the canvas shows`, async ({ page }) => {
+  for (const [format, text] of dataProviderTextFormats()) {
+    test(`saves ${format} text of the graph the canvas shows`, async ({ page }) => {
       await loadExample(page);
 
       const full = await savedText(page, format);
-      expect(full).toContain(withFields);
-      expect(full).toContain(venues);
-      expect(full).toContain(venueField);
+      expect(full).toContain(text.event);
+      expect(full).toContain(text.venues);
+      expect(full).toContain(text.field);
+      expect(full).toContain(text.has);
+      expect(full).toContain(text.proxy);
+      expect(full).not.toContain(text.ref);
 
-      await page.evaluate(() => {
-        window.__nexus.cy.getElementById('field:node.event:field_venue').data('hidden', true);
-      });
-      expect(await savedText(page, format)).not.toContain(venueField);
+      await page.click('#proxy-toggle');
+      const direct = await savedText(page, format);
+      expect(direct).toContain(text.ref);
+      expect(direct).not.toContain(text.proxy);
+
+      await page.click('#table-toggle');
+      await page.click('[data-field-visibility="field:node.event:field_venue"]');
+      expect(await savedText(page, format)).not.toContain(text.field);
 
       await page.click('#fields-toggle');
       await page.click('#entities-toggle');
       await page.locator('#type-filters label', { hasText: 'Vocabulary' }).locator('input').uncheck();
 
       const overview = await savedText(page, format);
-      expect(overview).toContain(withoutFields);
-      expect(overview).not.toContain(venues);
+      expect(overview).toContain(text.event);
+      expect(overview).not.toContain(text.venues);
+      expect(overview).not.toContain('field_node_event');
     });
   }
 
   function dataProviderTextFormats() {
     return [
-      ['mermaid', '\nerDiagram\n', '\nflowchart LR\n', 'taxonomy_term_venues["Venues"]', ' : "Venue (1)"'],
-      ['dot', 'node [shape=plain', 'node [shape=box', '"taxonomy_term_venues" [label=', ' -> "taxonomy_term_venues" [label="Venue (1)"]'],
+      [
+        'mermaid',
+        {
+          event: '\n  node_event@{ shape: ',
+          venues: '\n  taxonomy_term_venues@{ shape: ',
+          field: '\n  field_node_event_field_venue@{ shape: stadium, label: "Venue<br><small>field_venue</small>" }',
+          has: '\n  node_event --- field_node_event_field_venue\n',
+          proxy: '\n  field_node_event_field_venue -.->|"1"| proxy_field_node_event_field_venue_taxonomy_term_venues\n',
+          ref: '\n  field_node_event_field_venue -->|"1"| taxonomy_term_venues\n',
+        },
+      ],
+      [
+        'dot',
+        {
+          event: '\n  "node_event" [label=',
+          venues: '\n  "taxonomy_term_venues" [label=',
+          field: '\n  "field_node_event_field_venue" [label=<Venue<BR/><FONT POINT-SIZE="9" COLOR="#6b7280">field_venue</FONT>>',
+          has: '\n  "node_event" -> "field_node_event_field_venue" [dir=none];\n',
+          proxy: '\n  "field_node_event_field_venue" -> "proxy_field_node_event_field_venue_taxonomy_term_venues" [style=dashed, color="#c2c8d0", label="1"];\n',
+          ref: '\n  "field_node_event_field_venue" -> "taxonomy_term_venues" [color="#8a94a3", label="1"];\n',
+        },
+      ],
     ];
   }
+
+  test('pins each node of the DOT graph at its canvas position', async ({ page }) => {
+    await loadExample(page);
+
+    const positions = await page.evaluate(() => {
+      const cy = window.__nexus.cy;
+
+      return ['node.event', 'field:node.event:field_venue'].map((id) => ({ ...cy.getElementById(id).position() }));
+    });
+    const dot = await savedText(page, 'dot');
+
+    for (const [name, position] of [
+      ['node_event', positions[0]],
+      ['field_node_event_field_venue', positions[1]],
+    ]) {
+      expect(dot).toContain('\n  "' + name + '" [');
+      expect(dot).toMatch(new RegExp('\\n  "' + name + '" \\[[^\\n]*, pos="' + Math.round(position.x) + ',' + -Math.round(position.y) + '!"'));
+    }
+  });
 
   async function savedMarkdown(page) {
     return readFileSync(await (await saveFrom(page, 'md')).path(), 'utf8');
