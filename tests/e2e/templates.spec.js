@@ -20,10 +20,10 @@ test.describe('Templates', { tag: '@runner-2' }, () => {
   test('lists every template with its badge, its counts and a drawn mark', async ({ page }) => {
     const rows = page.locator('.template-row');
 
-    await expect(rows).toHaveCount(2);
+    await expect(rows).toHaveCount(3);
     const ids = await rows.evaluateAll((elements) => elements.map((element) => element.id));
 
-    expect(ids).toEqual(['template-drupal-cms', 'template-civictheme']);
+    expect(ids).toEqual(['template-drupal-cms', 'template-civictheme', 'template-umami']);
 
     for (const [id, label, badge, counts] of dataProviderTemplateRows()) {
       const row = page.locator('#template-' + id);
@@ -39,6 +39,7 @@ test.describe('Templates', { tag: '@runner-2' }, () => {
     return [
       ['civictheme', 'CivicTheme', '1.13.0', '3 content types · 31 paragraph types · 6 media types'],
       ['drupal-cms', 'Drupal CMS', '2.2.2', '2 content types · 5 media types · 1 vocabulary'],
+      ['umami', 'Umami', '11.4.12', '3 content types · 5 media types · 4 block types'],
     ];
   }
 
@@ -62,6 +63,7 @@ test.describe('Templates', { tag: '@runner-2' }, () => {
     return [
       ['civictheme', 'CivicTheme 1.13.0', 49, 'paragraph.civictheme_accordion'],
       ['drupal-cms', 'Drupal CMS 2.2.2', 9, 'node.blog'],
+      ['umami', 'Umami 11.4.12', 15, 'node.recipe'],
     ];
   }
 

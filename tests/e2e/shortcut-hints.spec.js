@@ -227,6 +227,7 @@ test.describe('Shortcut hints', { tag: '@runner-2' }, () => {
       ['landing-ai', 'Alt+A'],
       ['template-drupal-cms', '1'],
       ['template-civictheme', '2'],
+      ['template-umami', '3'],
     ]);
   });
 
