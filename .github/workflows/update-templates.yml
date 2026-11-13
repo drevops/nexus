@@ -1,0 +1,119 @@
+name: Update templates
+
+on:
+  schedule:
+    - cron: '41 2 * * *'
+  workflow_dispatch:
+    inputs:
+      template:
+        description: Id of 1 template to update; leave empty for all
+        type: string
+        default: ''
+
+permissions: {}
+
+# Runs never overlap, so 2 runs never push the same pull request branch.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: 26
+
+jobs:
+  templates:
+    name: List templates
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    outputs:
+      ids: ${{ steps.list.outputs.ids }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      # Every template in src/templates.js, or the 1 a manual run names.
+      - name: List the template ids
+        id: list
+        run: |
+          ids=$(node scripts/update-templates.mjs --list ${TEMPLATE:+"$TEMPLATE"})
+          echo "ids=${ids}" >> "$GITHUB_OUTPUT"
+        env:
+          TEMPLATE: ${{ inputs.template }}
+
+  update:
+    name: Update ${{ matrix.template }}
+    needs: templates
+    runs-on: ubuntu-latest
+
+    permissions:
+      actions: write # Start 'Test Node.js' on the pull request branch.
+      contents: write # Push the pull request branch.
+      pull-requests: write # Open and update the pull request.
+
+    # Each template gets its own pull request, so 1 can merge without the other.
+    strategy:
+      fail-fast: false
+      matrix:
+        template: ${{ fromJSON(needs.templates.outputs.ids) }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Rebuild the template from its latest upstream tags
+        run: npm run update-templates -- --latest --pr .artifacts/tmp/pr "$TEMPLATE"
+        env:
+          TEMPLATE: ${{ matrix.template }}
+
+      - name: Read the pull request title
+        id: title
+        run: echo "title=$(cat .artifacts/tmp/pr/title.txt)" >> "$GITHUB_OUTPUT"
+
+      # An open pull request on the branch is force-pushed and retitled; a
+      # branch with nothing left to change is deleted, which closes it.
+      - name: Open or update the pull request
+        id: pr
+        uses: peter-evans/create-pull-request@3ffccacd46053766916f087ce41d627c0b8cf2d1 # v8.1.3
+        with:
+          branch: update-templates/${{ matrix.template }}
+          delete-branch: true
+          add-paths: |
+            src/templates.js
+            templates/${{ matrix.template }}.nexus.json
+          author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          commit-message: ${{ steps.title.outputs.title }}
+          title: ${{ steps.title.outputs.title }}
+          body-path: .artifacts/tmp/pr/body.md
+
+      # A push made with GITHUB_TOKEN starts no 'pull_request' workflow, but a
+      # dispatched run reports its checks on the same commit. A head commit
+      # with no run yet is dispatched too, so a rerun recovers a failed one.
+      - name: Run the tests on the pull request branch
+        if: steps.pr.outputs.pull-request-number != '' && steps.pr.outputs.pull-request-operation != 'closed'
+        run: |
+          runs=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow test-nodejs.yml --commit "$SHA" --json databaseId --jq length)
+          if [ "$runs" = "0" ]; then
+            gh workflow run test-nodejs.yml --repo "$GITHUB_REPOSITORY" --ref "$BRANCH"
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: update-templates/${{ matrix.template }}
+          SHA: ${{ steps.pr.outputs.pull-request-head-sha }}
