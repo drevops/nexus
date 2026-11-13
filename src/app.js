@@ -3,8 +3,8 @@
  *
  * Loads a Drupal config folder entirely in the browser (nothing is uploaded),
  * parses it, and renders the content-model diagram. Also handles the bundled
- * templates, the Open and Save buttons and the loading overlay, and starts a
- * history for each diagram it draws.
+ * templates, the Open and Save buttons, links that carry a diagram and the
+ * loading overlay, and starts a history for each diagram it draws.
  */
 
 import { isModelConfig, parseConfig } from './parser.js';
@@ -20,6 +20,8 @@ import { initUI } from './ui.js';
 import { initUndo, resetHistory, checkpoint } from './undo.js';
 import { initShortcuts } from './keyboard.js';
 import { initAiDialog, showAiDialog } from './ai-dialog.js';
+import { initLinkDialog, showLinkDialog } from './link-dialog.js';
+import { decodeDocument, documentLink, encodeDocument, linkParams } from './doc-link.js';
 import { initIcons, icon } from './icons.js';
 import { VERSION } from './version.js';
 import { DEFAULT_TITLE } from './model.js';
@@ -351,7 +353,7 @@ function saveMenuItem(format) {
 }
 
 function wireOpenAndSave() {
-  $('save-menu').append(...SAVE_FORMATS.map(saveMenuItem));
+  $('save-divider').before(...SAVE_FORMATS.map(saveMenuItem));
 
   $('open-menu').addEventListener('sl-select', (evt) => {
     const value = evt.detail.item.value;
@@ -362,10 +364,13 @@ function wireOpenAndSave() {
   });
 
   $('save-menu').addEventListener('sl-select', (evt) => {
-    const format = findSaveFormat(evt.detail.item.value);
+    const value = evt.detail.item.value;
+    const format = findSaveFormat(value);
 
     if (format) {
       saveAs(format);
+    } else if (value === 'link') {
+      copyLink();
     }
   });
 }
@@ -398,6 +403,53 @@ function showDocument(data, origin) {
   showDiagram(doc.modelData, { layout: doc.layout, colors: doc.colors, symbols: doc.symbols, customTypes: doc.customTypes }, origin);
   if (doc.ui) {
     importLayout(doc.ui);
+  }
+}
+
+// The link leaves out the panel layout, so the receiver keeps their own
+// panels. It names the entity of the focused or inspected node.
+async function copyLink() {
+  const controller = getController();
+
+  if (!controller) {
+    return;
+  }
+
+  const title = $('diagram-title').value || DEFAULT_TITLE;
+  const doc = { ...currentDocument(controller, title), ui: null };
+  const target = controller.tidyTarget();
+  const page = window.location.href;
+  const link = documentLink(page, await encodeDocument(doc), target.nonempty() ? target.id() : null);
+
+  showLinkDialog(link, () => saveDocument(controller, title));
+}
+
+function focusLinkedEntity(id) {
+  const controller = getController();
+
+  if (id && controller.cy.getElementById(id).data('group') === 'entity') {
+    controller.focusEntity(id);
+  }
+}
+
+// Opens the document the page's fragment carries, if any.
+async function openLink() {
+  const params = linkParams(window.location.hash);
+
+  if (!params) {
+    return;
+  }
+
+  showError('');
+  showLoader('Opening diagram…');
+  try {
+    showDocument(await decodeDocument(params.encoded), 'Opened a link');
+    focusLinkedEntity(params.focus);
+  } catch (e) {
+    showLanding();
+    showError('Could not open that diagram: ' + e.message);
+  } finally {
+    hideLoader();
   }
 }
 
@@ -566,4 +618,7 @@ initToolbarSeparators();
 initPageZoomGuard();
 initAbout();
 initAiDialog(showDocument);
+initLinkDialog();
 initVersion();
+openLink();
+window.addEventListener('hashchange', openLink);

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loadExample, tapNode } from './helpers.js';
+import { copyLink, loadExample, tapNode } from './helpers.js';
 
 test.describe('Titles', { tag: '@runner-1' }, () => {
   // Describes each visible control, table header and badge that shows no
@@ -143,6 +143,14 @@ test.describe('Titles', { tag: '@runner-1' }, () => {
           await expect(page.locator(`sl-tab-panel[name="${tab}"]`)).toBeVisible();
         },
       ]),
+      [
+        'the Copy link dialog',
+        async (page) => {
+          await loadExample(page);
+          await copyLink(page);
+          await expect(page.locator('#link-close')).toBeVisible();
+        },
+      ],
       [
         'the About box',
         async (page) => {

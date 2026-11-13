@@ -80,6 +80,27 @@ export async function saveFrom(page, format) {
   return download;
 }
 
+// A link to the page that carries the document, built by the app's own
+// module in the browser.
+export function linkTo(page, doc, focus) {
+  return page.evaluate(
+    async ([linkedDoc, linkedFocus]) => {
+      const { documentLink, encodeDocument } = await import('./src/doc-link.js');
+
+      return documentLink(window.location.href, await encodeDocument(linkedDoc), linkedFocus);
+    },
+    [doc, focus || null],
+  );
+}
+
+// Picks Copy link from the Save button's menu and waits for its dialog.
+export async function copyLink(page) {
+  await page.click('#save-choose');
+  await page.click('#save-menu sl-menu-item[value="link"]');
+  await expect(page.locator('#save-menu')).toBeHidden();
+  await expect(page.locator('#link-dialog')).toHaveAttribute('open', '');
+}
+
 // Picks an item, by its value, from the Open button's menu and waits for the
 // menu to close.
 export async function openFrom(page, item) {
