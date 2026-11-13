@@ -10,7 +10,9 @@ export const SAVE_FORMATS = [
   { id: 'json', label: 'JSON', icon: 'download', title: 'Save the diagram as a Nexus document (.nexus.json)' },
   { id: 'png', label: 'PNG', icon: 'image', title: 'Save the diagram as a PNG image' },
   { id: 'svg', label: 'SVG', icon: 'file-down', title: 'Save the diagram as a scalable SVG' },
-  { id: 'csv', label: 'CSV', icon: 'table', title: 'Save the fields table as CSV' },
+  { id: 'csv', label: 'Fields CSV', icon: 'table', title: 'Save the fields table as CSV' },
+  { id: 'bundles-csv', label: 'Bundles CSV', icon: 'box', title: 'Save the bundles as CSV, 1 row per bundle' },
+  { id: 'references-csv', label: 'References CSV', icon: 'link', title: 'Save the references as CSV, 1 row per target bundle' },
   { id: 'md', label: 'Markdown', icon: 'file-text', title: 'Save the content model as Markdown documentation (.md)' },
   { id: 'html', label: 'HTML', icon: 'code', title: 'Save the content model as an HTML report (.html)' },
 ];

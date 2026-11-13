@@ -13,6 +13,7 @@ import { render } from './render.js';
 import { exportPng, exportSvg, exportCsv, exportDocument, exportHtml, exportMarkdown } from './export.js';
 import { documentMarkdown, includesDiagram } from './markdown.js';
 import { documentHtml } from './html-report.js';
+import { bundlesCsv, fieldsCsv, referencesCsv } from './csv.js';
 import { SAVE_FORMATS, findSaveFormat } from './save-formats.js';
 import { documentFromGraph, documentToModel } from './document.js';
 import { initBuilder, attachBuilder } from './builder.js';
@@ -36,7 +37,9 @@ const SAVERS = {
   json: saveDocument,
   png: (controller, title) => exportPng(controller.cy, title),
   svg: (controller, title) => exportSvg(controller.cy, title),
-  csv: (controller, title) => exportCsv(controller.records(), controller.typeLabel, title),
+  csv: (controller, title) => exportCsv(fieldsCsv(controller.records(), controller.typeLabel), title, 'fields'),
+  'bundles-csv': (controller, title) => exportCsv(bundlesCsv(currentDocument(controller, title)), title, 'bundles'),
+  'references-csv': (controller, title) => exportCsv(referencesCsv(currentDocument(controller, title)), title, 'references'),
   md: saveMarkdown,
   html: (controller, title) => exportHtml(documentHtml(currentDocument(controller, title)), title),
 };

@@ -3,10 +3,10 @@ import assert from 'node:assert/strict';
 import { SAVE_FORMATS, findSaveFormat } from '../../src/save-formats.js';
 import { hasIcon } from '../../src/icons.js';
 
-test('lists JSON, PNG, SVG, CSV, Markdown and HTML in menu order', () => {
+test('lists JSON, PNG, SVG, the 3 CSVs, Markdown and HTML in menu order', () => {
   assert.deepEqual(
     SAVE_FORMATS.map((format) => format.id),
-    ['json', 'png', 'svg', 'csv', 'md', 'html'],
+    ['json', 'png', 'svg', 'csv', 'bundles-csv', 'references-csv', 'md', 'html'],
   );
 });
 
@@ -33,7 +33,9 @@ function dataProviderFindSaveFormat() {
     ['JSON', 'json', 'JSON'],
     ['PNG', 'png', 'PNG'],
     ['SVG', 'svg', 'SVG'],
-    ['CSV', 'csv', 'CSV'],
+    ['Fields CSV', 'csv', 'Fields CSV'],
+    ['Bundles CSV', 'bundles-csv', 'Bundles CSV'],
+    ['References CSV', 'references-csv', 'References CSV'],
     ['Markdown', 'md', 'Markdown'],
     ['HTML', 'html', 'HTML'],
     ['an id in capitals', 'SVG', null],
