@@ -67,7 +67,17 @@ test.describe('Save', { tag: '@runner-1' }, () => {
 
     await expect(page.locator('#save-menu')).toBeVisible();
     await expect(page.locator('#save-menu sl-menu-label')).toHaveText('Save as');
-    await expect(page.locator('#save-menu sl-menu-item')).toHaveText(['JSON', 'PNG', 'SVG', 'Fields CSV', 'Bundles CSV', 'References CSV', 'Markdown', 'HTML', 'Copy link']);
+    await expect(page.locator('#save-menu sl-menu-item')).toHaveText([
+      'JSON',
+      'PNG',
+      'SVG',
+      'Fields CSV',
+      'Bundles CSV',
+      'References CSV',
+      'Markdown',
+      'HTML',
+      'Copy link',
+    ]);
     await expect(page.locator('#save-menu > sl-menu-item[value="html"] + sl-divider + sl-menu-item[value="link"]')).toHaveCount(1);
   });
 
