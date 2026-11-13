@@ -489,6 +489,7 @@ test.describe('Fields table', { tag: '@runner-2' }, () => {
       'Card.',
       'Req',
       'Refs',
+      'Used in',
     ]);
     await expect(page.locator('#field-table thead th').nth(0).locator('[data-sort]')).toHaveCount(0);
     await expect(page.locator('#field-table thead th').nth(1).locator('[data-sort]')).toHaveCount(0);

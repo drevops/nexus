@@ -141,7 +141,7 @@ test.describe('Descriptions and field settings', { tag: '@runner-2' }, () => {
     await page.click('#table-toggle');
 
     await expect(page.locator('#field-table')).not.toHaveClass(/has-settings/);
-    await expect(page.locator('#field-table thead th')).toHaveCount(9);
+    await expect(page.locator('#field-table thead th')).toHaveCount(10);
     await expect(page.locator('#field-table .is-group', { hasText: /^\s*Event ·/ }).locator('.field-table__description')).toHaveText(
       'A conference or meetup with its sessions, venue and sponsors.',
     );

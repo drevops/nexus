@@ -58,7 +58,7 @@ test.describe('Hidden fields', { tag: '@runner-2' }, () => {
     await loadExample(page);
     await page.click('#table-toggle');
 
-    await expect(page.locator('#field-table thead th')).toHaveCount(9);
+    await expect(page.locator('#field-table thead th')).toHaveCount(10);
     await expect(visibilityButton(page, EVENT_MEDIA)).toHaveAttribute('title', 'Hide Media on the canvas');
     expect(await fieldOnCanvas(page, EVENT_MEDIA)).toEqual(MEDIA_SHOWN);
 
