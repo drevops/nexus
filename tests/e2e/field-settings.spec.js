@@ -154,7 +154,9 @@ test.describe('Descriptions and field settings', { tag: '@runner-2' }, () => {
     const download = await saveFrom(page, 'csv');
     const lines = readFileSync(await download.path(), 'utf8').split('\r\n');
 
-    expect(lines[0]).toBe('Entity,Entity type,Field,Machine name,Field type,Cardinality,Required,References,Used in,Help text,Default,Allowed values,Translatable');
+    expect(lines[0]).toBe(
+      'Entity,Entity type,Field,Machine name,Field type,Cardinality,Required,References,Used in,Help text,Default,Allowed values,Translatable',
+    );
     expect(lines).toContain('Page,Content type,Layout,field_layout,list_string,1,no,,1,How wide the page is drawn.,wide,Wide (wide); Narrow (narrow),yes');
     expect(lines).toContain('Article,Content type,Summary,field_summary,string,1,yes,,1,A short <b>summary</b> of the article.,Read on,,no');
     expect(lines.find((line) => line.startsWith('Article,Content type,Tags,'))).toMatch(/,,,,$/);

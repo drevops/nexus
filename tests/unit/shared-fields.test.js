@@ -60,7 +60,11 @@ function dataProviderSharing() {
     ],
     [
       'a bundle with the machine name twice, once',
-      [record('node.article', 'field_tags'), record('node.article', 'field_tags', { id: 'field:node.article:field_tags:2' }), record('node.page', 'field_tags')],
+      [
+        record('node.article', 'field_tags'),
+        record('node.article', 'field_tags', { id: 'field:node.article:field_tags:2' }),
+        record('node.page', 'field_tags'),
+      ],
       'node.page',
       'field_tags',
       ['node.article', 'node.page'],
@@ -79,7 +83,13 @@ function dataProviderSharing() {
       'field_tags',
       ['node.a', 'node.b'],
     ],
-    ['a base field, as no bundles', [record('node.article', 'title', { kind: 'system' }), record('node.page', 'title', { kind: 'system' })], 'node.article', 'title', []],
+    [
+      'a base field, as no bundles',
+      [record('node.article', 'title', { kind: 'system' }), record('node.page', 'title', { kind: 'system' })],
+      'node.article',
+      'title',
+      [],
+    ],
     [
       'a calculated field, as no bundles',
       [record('node.article', 'path', { kind: 'calculated' }), record('node.page', 'path', { kind: 'calculated' })],

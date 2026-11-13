@@ -32,9 +32,13 @@ test.describe('Shared fields', { tag: '@runner-1' }, () => {
   // The bundle count of each field, keyed by field id, with base fields as
   // empty text.
   function usedInCounts(page) {
-    return page.locator('#field-table tbody tr:has([data-field-visibility])').evaluateAll((rows) =>
-      Object.fromEntries(rows.map((row) => [row.querySelector('[data-field-visibility]').dataset.fieldVisibility, row.querySelector('.field-table__used-in').textContent])),
-    );
+    return page
+      .locator('#field-table tbody tr:has([data-field-visibility])')
+      .evaluateAll((rows) =>
+        Object.fromEntries(
+          rows.map((row) => [row.querySelector('[data-field-visibility]').dataset.fieldVisibility, row.querySelector('.field-table__used-in').textContent]),
+        ),
+      );
   }
 
   // The machine names of the Article's rows, in table order.
@@ -43,7 +47,9 @@ test.describe('Shared fields', { tag: '@runner-1' }, () => {
   }
 
   function sharedBundles(page) {
-    return page.locator('#inspector [data-shared-bundle]').evaluateAll((buttons) => buttons.map((b) => [b.dataset.sharedBundle, b.textContent.replace(/\s+/g, ' ').trim()]));
+    return page
+      .locator('#inspector [data-shared-bundle]')
+      .evaluateAll((buttons) => buttons.map((b) => [b.dataset.sharedBundle, b.textContent.replace(/\s+/g, ' ').trim()]));
   }
 
   test.beforeEach(async ({ page }) => {
@@ -89,7 +95,9 @@ test.describe('Shared fields', { tag: '@runner-1' }, () => {
     const download = await saveFrom(page, 'csv');
     const lines = readFileSync(await download.path(), 'utf8').split('\r\n');
 
-    expect(lines[0]).toBe('Entity,Entity type,Field,Machine name,Field type,Cardinality,Required,References,Used in,Help text,Default,Allowed values,Translatable');
+    expect(lines[0]).toBe(
+      'Entity,Entity type,Field,Machine name,Field type,Cardinality,Required,References,Used in,Help text,Default,Allowed values,Translatable',
+    );
     expect(lines).toContain('Article,Content type,Title,title,string,1,no,,,,,,');
     expect(lines).toContain('Article,Content type,Tags,field_tags,string,1,no,,3,,,,');
     expect(lines).toContain('Page,Content type,Main image,field_main_image,string,1,no,,1,,,,');

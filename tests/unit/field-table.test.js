@@ -141,7 +141,12 @@ function dataProviderSortColumn() {
     ],
     [
       'bundle count, with a base field as a blank',
-      [['x', { usedIn: [{}, {}, {}] }], ['y', { kind: 'system' }], ['z', { usedIn: [{}] }], ['w', { usedIn: [{}, {}] }]],
+      [
+        ['x', { usedIn: [{}, {}, {}] }],
+        ['y', { kind: 'system' }],
+        ['z', { usedIn: [{}] }],
+        ['w', { usedIn: [{}, {}] }],
+      ],
       'usedIn',
       ['z', 'w', 'x', 'y'],
       ['x', 'w', 'z', 'y'],
