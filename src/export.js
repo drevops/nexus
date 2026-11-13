@@ -1,6 +1,6 @@
 /**
  * Client-side downloads: the diagram canvas as PNG or SVG, the fields table
- * as CSV, the model as Markdown and the diagram as a Nexus document. Nothing
+ * as CSV, the model as Markdown or HTML and the diagram as a Nexus document. Nothing
  * is uploaded - the PNG is rasterised by Cytoscape and the SVG is produced by
  * the cytoscape-svg extension entirely in the browser.
  */
@@ -107,6 +107,13 @@ export function exportCsv(records, typeLabel, title) {
  */
 export function exportMarkdown(text, title) {
   downloadText(text, fileName(title, '.md'), 'text/markdown');
+}
+
+/**
+ * Download an HTML page as a .html file named after the diagram title.
+ */
+export function exportHtml(text, title) {
+  downloadText(text, fileName(title, '.html'), 'text/html');
 }
 
 /**

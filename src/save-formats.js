@@ -12,6 +12,7 @@ export const SAVE_FORMATS = [
   { id: 'svg', label: 'SVG', icon: 'file-down', title: 'Save the diagram as a scalable SVG' },
   { id: 'csv', label: 'CSV', icon: 'table', title: 'Save the fields table as CSV' },
   { id: 'md', label: 'Markdown', icon: 'file-text', title: 'Save the content model as Markdown documentation (.md)' },
+  { id: 'html', label: 'HTML', icon: 'code', title: 'Save the content model as an HTML report (.html)' },
 ];
 
 const BY_ID = new Map(SAVE_FORMATS.map((format) => [format.id, format]));

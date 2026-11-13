@@ -10,8 +10,9 @@
 import { isModelConfig, parseConfig } from './parser.js';
 import { ANNOTATION_FILES, applyAnnotations } from './annotations.js';
 import { render } from './render.js';
-import { exportPng, exportSvg, exportCsv, exportDocument, exportMarkdown } from './export.js';
+import { exportPng, exportSvg, exportCsv, exportDocument, exportHtml, exportMarkdown } from './export.js';
 import { documentMarkdown, includesDiagram } from './markdown.js';
+import { documentHtml } from './html-report.js';
 import { SAVE_FORMATS, findSaveFormat } from './save-formats.js';
 import { documentFromGraph, documentToModel } from './document.js';
 import { initBuilder, attachBuilder } from './builder.js';
@@ -35,6 +36,7 @@ const SAVERS = {
   svg: (controller, title) => exportSvg(controller.cy, title),
   csv: (controller, title) => exportCsv(controller.records(), controller.typeLabel, title),
   md: saveMarkdown,
+  html: (controller, title) => exportHtml(documentHtml(currentDocument(controller, title)), title),
 };
 
 const OPENERS = {
