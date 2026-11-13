@@ -397,18 +397,20 @@ function Panel({ id, panel, dragging, header, children }) {
     </div>
     <div class="panel__body">${children}</div>
     ${resizable ? html`<div class="panel__vresize" title="Drag to resize height" onMouseDown=${(e) => startVResize(id, e, ref.current)}></div>` : null}
-    ${docked
-      ? null
-      : RESIZE_HANDLES.map(
-          (handle) =>
-            html`<div
-              key=${handle}
-              class=${'panel__resize panel__resize--' + handle}
-              title="Drag to resize, double-click to fit the content"
-              onMouseDown=${(e) => startPanelResize(id, handle, e, ref.current)}
-              onDblClick=${() => resetPanelSize(id)}
-            ></div>`,
-        )}
+    ${
+      docked
+        ? null
+        : RESIZE_HANDLES.map(
+            (handle) =>
+              html`<div
+                key=${handle}
+                class=${'panel__resize panel__resize--' + handle}
+                title="Drag to resize, double-click to fit the content"
+                onMouseDown=${(e) => startPanelResize(id, handle, e, ref.current)}
+                onDblClick=${() => resetPanelSize(id)}
+              ></div>`,
+          )
+    }
   </section>`;
 }
 
