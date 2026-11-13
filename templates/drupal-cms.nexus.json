@@ -10,6 +10,7 @@
       "bundle": "blog",
       "label": "Blog post",
       "note": "",
+      "description": "A simple blog entry, categorized by tags.",
       "fields": [
         {
           "name": "title",
@@ -20,7 +21,8 @@
           "required": true,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false
         },
         {
           "name": "uid",
@@ -31,7 +33,8 @@
           "required": false,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false
         },
         {
           "name": "status",
@@ -42,7 +45,8 @@
           "required": false,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false
         },
         {
           "name": "created",
@@ -53,7 +57,8 @@
           "required": false,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false
         },
         {
           "name": "field_blog__byline",
@@ -64,7 +69,9 @@
           "required": false,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": false
         },
         {
           "name": "field_content",
@@ -75,7 +82,10 @@
           "required": false,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false,
+          "description": "The content of this page.",
+          "translatable": true
         },
         {
           "name": "field_description",
@@ -86,7 +96,10 @@
           "required": false,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false,
+          "description": "Describe the page content. This appears as the description in search engine results.",
+          "translatable": true
         },
         {
           "name": "field_featured_image",
@@ -99,7 +112,10 @@
           "targetType": "media",
           "targetBundles": [
             "image"
-          ]
+          ],
+          "hidden": false,
+          "description": "Include an image. This appears as the image in search engine results.",
+          "translatable": false
         },
         {
           "name": "field_seo_analysis",
@@ -110,7 +126,10 @@
           "required": false,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false,
+          "description": "Pick the main keyword this page is about.",
+          "translatable": true
         },
         {
           "name": "field_seo_description",
@@ -121,7 +140,10 @@
           "required": false,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false,
+          "description": "Write a description for search engines and social media sites.",
+          "translatable": true
         },
         {
           "name": "field_seo_image",
@@ -134,7 +156,10 @@
           "targetType": "media",
           "targetBundles": [
             "image"
-          ]
+          ],
+          "hidden": false,
+          "description": "Upload an image to be used when the page is shared on social media sites.",
+          "translatable": true
         },
         {
           "name": "field_seo_title",
@@ -145,7 +170,10 @@
           "required": false,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false,
+          "description": "Use this field to overwrite the default HTML page title for SEO.",
+          "translatable": true
         },
         {
           "name": "field_tags",
@@ -158,7 +186,10 @@
           "targetType": "taxonomy_term",
           "targetBundles": [
             "tags"
-          ]
+          ],
+          "hidden": false,
+          "description": "Include tags for relevant topics.",
+          "translatable": false
         }
       ]
     },
@@ -167,6 +198,7 @@
       "bundle": "page",
       "label": "Utility page",
       "note": "",
+      "description": "Use <em>utility page</em> for your static content, such as a 'Privacy policy' page.",
       "fields": [
         {
           "name": "title",
@@ -177,7 +209,8 @@
           "required": true,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false
         },
         {
           "name": "uid",
@@ -188,7 +221,8 @@
           "required": false,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false
         },
         {
           "name": "status",
@@ -199,7 +233,8 @@
           "required": false,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false
         },
         {
           "name": "created",
@@ -210,7 +245,8 @@
           "required": false,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false
         },
         {
           "name": "field_content",
@@ -221,7 +257,10 @@
           "required": false,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false,
+          "description": "The content of this page.",
+          "translatable": true
         },
         {
           "name": "field_description",
@@ -232,7 +271,10 @@
           "required": true,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false,
+          "description": "Describe the page content. This appears as the description in search engine results.",
+          "translatable": true
         },
         {
           "name": "field_featured_image",
@@ -245,7 +287,10 @@
           "targetType": "media",
           "targetBundles": [
             "image"
-          ]
+          ],
+          "hidden": false,
+          "description": "Include an image. This appears as the image in search engine results.",
+          "translatable": false
         },
         {
           "name": "field_seo_analysis",
@@ -256,7 +301,10 @@
           "required": false,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false,
+          "description": "Pick the main keyword this page is about.",
+          "translatable": true
         },
         {
           "name": "field_seo_description",
@@ -267,7 +315,10 @@
           "required": false,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false,
+          "description": "Write a description for search engines and social media sites.",
+          "translatable": true
         },
         {
           "name": "field_seo_image",
@@ -280,7 +331,10 @@
           "targetType": "media",
           "targetBundles": [
             "image"
-          ]
+          ],
+          "hidden": false,
+          "description": "Upload an image to be used when the page is shared on social media sites.",
+          "translatable": true
         },
         {
           "name": "field_seo_title",
@@ -291,7 +345,10 @@
           "required": false,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false,
+          "description": "Use this field to overwrite the default HTML page title for SEO.",
+          "translatable": true
         },
         {
           "name": "field_tags",
@@ -304,7 +361,10 @@
           "targetType": "taxonomy_term",
           "targetBundles": [
             "tags"
-          ]
+          ],
+          "hidden": false,
+          "description": "Include tags for relevant topics.",
+          "translatable": false
         }
       ]
     },
@@ -313,6 +373,7 @@
       "bundle": "tags",
       "label": "Tags",
       "note": "",
+      "description": "Use tags to group articles on similar topics into categories.",
       "fields": [
         {
           "name": "name",
@@ -323,7 +384,8 @@
           "required": true,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false
         },
         {
           "name": "description",
@@ -334,7 +396,8 @@
           "required": false,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false
         }
       ]
     },
@@ -343,6 +406,7 @@
       "bundle": "document",
       "label": "Document",
       "note": "",
+      "description": "A locally hosted document, such as a PDF file.",
       "fields": [
         {
           "name": "name",
@@ -353,7 +417,8 @@
           "required": true,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false
         },
         {
           "name": "status",
@@ -364,7 +429,8 @@
           "required": false,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false
         },
         {
           "name": "field_media_document",
@@ -375,7 +441,9 @@
           "required": true,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
         }
       ]
     },
@@ -384,6 +452,7 @@
       "bundle": "image",
       "label": "Image",
       "note": "",
+      "description": "A locally hosted image file.",
       "fields": [
         {
           "name": "name",
@@ -394,7 +463,8 @@
           "required": true,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false
         },
         {
           "name": "status",
@@ -405,7 +475,8 @@
           "required": false,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false
         },
         {
           "name": "field_media_image",
@@ -416,7 +487,9 @@
           "required": true,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
         }
       ]
     },
@@ -425,6 +498,7 @@
       "bundle": "remote_video",
       "label": "Remote video",
       "note": "",
+      "description": "A video hosted on an external site (for example, YouTube or Vimeo).",
       "fields": [
         {
           "name": "name",
@@ -435,7 +509,8 @@
           "required": true,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false
         },
         {
           "name": "status",
@@ -446,7 +521,8 @@
           "required": false,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false
         },
         {
           "name": "field_media_oembed_video",
@@ -457,7 +533,9 @@
           "required": true,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
         }
       ]
     },
@@ -466,6 +544,7 @@
       "bundle": "svg_image",
       "label": "SVG Image",
       "note": "",
+      "description": "A locally hosted SVG file that can be displayed as an image.",
       "fields": [
         {
           "name": "name",
@@ -476,7 +555,8 @@
           "required": true,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false
         },
         {
           "name": "status",
@@ -487,7 +567,8 @@
           "required": false,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false
         },
         {
           "name": "field_media_svg_image",
@@ -498,7 +579,9 @@
           "required": true,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
         }
       ]
     },
@@ -507,6 +590,7 @@
       "bundle": "video",
       "label": "Video",
       "note": "",
+      "description": "A locally hosted video file.",
       "fields": [
         {
           "name": "name",
@@ -517,7 +601,8 @@
           "required": true,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false
         },
         {
           "name": "status",
@@ -528,7 +613,8 @@
           "required": false,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false
         },
         {
           "name": "field_media_video_file",
@@ -539,7 +625,9 @@
           "required": true,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
         }
       ]
     },
@@ -558,7 +646,8 @@
           "required": true,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false
         },
         {
           "name": "mail",
@@ -569,7 +658,8 @@
           "required": false,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false
         },
         {
           "name": "roles",
@@ -580,7 +670,8 @@
           "required": false,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false
         },
         {
           "name": "status",
@@ -591,7 +682,8 @@
           "required": false,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false
         },
         {
           "name": "user_picture",
@@ -602,7 +694,10 @@
           "required": false,
           "note": "",
           "targetType": null,
-          "targetBundles": []
+          "targetBundles": [],
+          "hidden": false,
+          "description": "Your virtual face or picture.",
+          "translatable": true
         }
       ]
     }
