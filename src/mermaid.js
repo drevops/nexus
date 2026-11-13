@@ -62,7 +62,9 @@ export function mermaidFlowchart(outline) {
           lines.push('  ' + node(id, missingTargetLabel(outline, target)));
         }
 
-        edges.push('  ' + ids.get(entity.id) + ' -->|"' + mermaidText(field.label + ' (' + cardinalityLabel(field.cardinality) + ')') + '"| ' + ids.get(target));
+        edges.push(
+          '  ' + ids.get(entity.id) + ' -->|"' + mermaidText(field.label + ' (' + cardinalityLabel(field.cardinality) + ')') + '"| ' + ids.get(target),
+        );
       });
     });
   });

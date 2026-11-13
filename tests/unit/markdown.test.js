@@ -104,7 +104,9 @@ test('lists the bundles of a type by label, then by machine name', () => {
 });
 
 test('links each contents entry to the anchor GitHub gives its heading', () => {
-  const markdown = documentMarkdown(doc([entity('node', 'a_page', 'Page'), entity('node', 'b_page', 'Page'), entity('node', 'model', 'Model')]), { diagram: true });
+  const markdown = documentMarkdown(doc([entity('node', 'a_page', 'Page'), entity('node', 'b_page', 'Page'), entity('node', 'model', 'Model')]), {
+    diagram: true,
+  });
 
   assert.deepEqual(linesStarting(markdown, '- ', '  - '), [
     '- [Diagram](#diagram)',
@@ -122,7 +124,9 @@ test('keeps the last copy of an entity listed twice', () => {
 });
 
 test('writes the note of an entity as a quote and the note of a field in its cell', () => {
-  const markdown = documentMarkdown(doc([entity('node', 'page', 'Page', [field('body', 'Body', { note: 'Line 1\n\n  Line 2  ' })], '\n  First\r\nSecond\n\n\nThird\n')]));
+  const markdown = documentMarkdown(
+    doc([entity('node', 'page', 'Page', [field('body', 'Body', { note: 'Line 1\n\n  Line 2  ' })], '\n  First\r\nSecond\n\n\nThird\n')]),
+  );
 
   assert.match(markdown, /\n> First<br>\n> Second\n>\n> Third\n/);
   assert.match(markdown, /\| Line 1<br>Line 2 \|\n/);
@@ -135,11 +139,18 @@ test('leaves out the quote of an entity with a blank note', () => {
 });
 
 test('fills in what a document leaves out of a field', () => {
-  const markdown = documentMarkdown(doc([entity('node', 'page', '', [{ name: 'body', kind: 'multi' }, { name: 'tags', label: 'Tags', kind: 'single' }])]));
+  const markdown = documentMarkdown(
+    doc([
+      entity('node', 'page', '', [
+        { name: 'body', kind: 'multi' },
+        { name: 'tags', label: 'Tags', kind: 'single' },
+      ]),
+    ]),
+  );
 
   assert.match(markdown, /### page\n/);
-  assert.match(markdown, /\n\| body \| `body` \|  \| 1\.\.n \| No \|  \|  \|\n/);
-  assert.match(markdown, /\n\| Tags \| `tags` \|  \| 1 \| No \|  \|  \|\n/);
+  assert.ok(markdown.includes('\n| body | `body` |  | 1..n | No |  |  |\n'));
+  assert.ok(markdown.includes('\n| Tags | `tags` |  | 1 | No |  |  |\n'));
 });
 
 test('marks base fields and writes the cardinality and required columns', () => {

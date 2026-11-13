@@ -245,7 +245,11 @@ export function documentMarkdown(doc, options = {}) {
     const referrers = outline.referencedBy(entity.id);
 
     if (referrers.length > 0) {
-      blocks.push('Referenced by: ' + referrers.map((ref) => markdownText(ref.field.label) + ' on ' + link(ref.entity.label, entitySlugs.get(ref.entity.id))).join(', ') + '.');
+      blocks.push(
+        'Referenced by: ' +
+          referrers.map((ref) => markdownText(ref.field.label) + ' on ' + link(ref.entity.label, entitySlugs.get(ref.entity.id))).join(', ') +
+          '.',
+      );
     }
 
     return blocks;

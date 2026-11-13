@@ -17,7 +17,9 @@ export const markdownDocument = {
       bundle: 'tags',
       label: 'Tags',
       note: '',
-      fields: [{ name: 'name', label: 'Name', fieldType: 'string', kind: 'system', cardinality: 1, required: true, note: '', targetType: null, targetBundles: [] }],
+      fields: [
+        { name: 'name', label: 'Name', fieldType: 'string', kind: 'system', cardinality: 1, required: true, note: '', targetType: null, targetBundles: [] },
+      ],
     },
     {
       entityType: 'paragraph',
