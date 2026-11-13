@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-import { loadExample, openDocument, saveFrom } from './helpers.js';
+import { loadExample, openDocument, saveFrom, slFill } from './helpers.js';
 
 test.describe('Fields table', { tag: '@runner-2' }, () => {
   // Returns the text of each rendered line in every matched element. A character
@@ -132,14 +132,14 @@ test.describe('Fields table', { tag: '@runner-2' }, () => {
     await page.click('#table-toggle');
     await expect(page.locator('#field-table')).toContainText('entity_reference_revisions');
 
-    const types = await renderedLines(page.locator('#field-table tbody td:nth-child(2)'));
-    const names = await renderedLines(page.locator('#field-table tbody td:nth-child(1) code'));
+    const types = await renderedLines(page.locator('#field-table tbody td:nth-child(3)'));
+    const names = await renderedLines(page.locator('#field-table tbody td:nth-child(2) code'));
     const midWord = [...types, ...names].filter((lines) => lines.slice(0, -1).some((line) => !line.endsWith('_')));
     expect(midWord).toEqual([]);
 
     // entity_reference_revisions is far wider than its column, so its cell must
     // wrap.
-    const revisions = page.locator('#field-table tbody td:nth-child(2)', { hasText: 'entity_reference_revisions' }).first();
+    const revisions = page.locator('#field-table tbody td:nth-child(3)', { hasText: 'entity_reference_revisions' }).first();
     await expect(revisions).toHaveText('entity_reference_revisions');
     const [revisionLines] = await renderedLines(revisions);
     expect(revisionLines.length).toBeGreaterThan(1);
@@ -210,5 +210,183 @@ test.describe('Fields table', { tag: '@runner-2' }, () => {
     await page.click('#theme-toggle');
     expect(await page.evaluate(() => document.documentElement.classList.contains('sl-theme-dark'))).toBe(true);
     expect(await textContrast(badge)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  // Returns the place, label, machine name and type of each field row of the
+  // first entity in the fields table, top to bottom.
+  function firstGroupRows(page) {
+    return page.locator('#field-table tbody').evaluate((tbody) => {
+      const rows = [];
+      let groups = 0;
+
+      for (const row of tbody.rows) {
+        if (row.classList.contains('is-group')) {
+          groups++;
+          continue;
+        }
+
+        if (groups > 1) {
+          break;
+        }
+
+        rows.push({
+          position: Number(row.cells[0].textContent),
+          label: row.cells[1].firstChild.textContent.trim(),
+          name: row.cells[1].querySelector('code').textContent,
+          type: row.cells[2].textContent,
+        });
+      }
+
+      return rows;
+    });
+  }
+
+  function sortedColumn(page) {
+    return page.locator('#field-table th[aria-sort]').evaluateAll((headers) => headers.map((th) => [th.className, th.getAttribute('aria-sort')]));
+  }
+
+  function inOrder(values, direction) {
+    const sorted = [...values].sort((a, b) => a.localeCompare(b, 'en', { numeric: true, sensitivity: 'base' }));
+
+    return direction === 'descending' ? sorted.reverse() : sorted;
+  }
+
+  // A diagram with 1 entity of 40 fields, 1 of which has help text, so the
+  // table shows the settings columns and is taller than the panel.
+  const MANY_FIELDS_DOC = {
+    nexus: 1,
+    title: 'Many fields',
+    entities: [
+      {
+        entityType: 'node',
+        bundle: 'article',
+        label: 'Article',
+        fields: Array.from({ length: 40 }, (_, i) => ({
+          name: 'field_item_' + i,
+          label: 'Item ' + i,
+          fieldType: 'string',
+          kind: 'single',
+          ...(i ? {} : { description: 'The first item.' }),
+        })),
+      },
+    ],
+  };
+
+  test('numbers the fields of each entity and sorts them by a column header', async ({ page }) => {
+    await loadExample(page);
+    await page.click('#table-toggle');
+
+    const initial = await firstGroupRows(page);
+    expect(initial.map((r) => r.position)).toEqual(initial.map((r, i) => i + 1));
+    expect(await sortedColumn(page)).toEqual([['field-table__col--position', 'ascending']]);
+
+    const field = page.locator('#field-table [data-sort="field"]');
+    await expect(field).toHaveAttribute('title', 'Sort by field, ascending');
+
+    for (const direction of ['ascending', 'descending']) {
+      await field.click();
+      expect(await sortedColumn(page)).toEqual([['field-table__col--field', direction]]);
+
+      const rows = await firstGroupRows(page);
+      expect(rows.map((r) => r.label)).toEqual(inOrder(rows.map((r) => r.label), direction));
+      // Each field keeps its place in its entity under any sort.
+      expect(rows.map((r) => [r.name, r.position]).sort()).toEqual(initial.map((r) => [r.name, r.position]).sort());
+    }
+
+    await expect(field).toHaveAttribute('title', 'Sort by position, as the diagram lists the fields');
+    await field.click();
+    expect(await sortedColumn(page)).toEqual([['field-table__col--position', 'ascending']]);
+    expect(await firstGroupRows(page)).toEqual(initial);
+
+    await page.click('#field-table [data-sort="position"]');
+    expect(await sortedColumn(page)).toEqual([['field-table__col--position', 'descending']]);
+    expect((await firstGroupRows(page)).map((r) => r.position)).toEqual(initial.map((r) => r.position).reverse());
+  });
+
+  // Sorts by each column in turn and returns the columns whose label runs into
+  // the right padding of its header cell, where the sort arrow is drawn.
+  async function crowdedHeaders(page) {
+    const crowded = [];
+
+    for (const column of await page.locator('#field-table [data-sort]').evaluateAll((buttons) => buttons.map((b) => b.dataset.sort))) {
+      const button = page.locator('#field-table [data-sort="' + column + '"]');
+
+      if ((await button.locator('xpath=..').getAttribute('aria-sort')) !== 'ascending') {
+        await button.click();
+      }
+
+      const fits = await button.evaluate((b) => {
+        const cell = b.closest('th');
+        const padding = parseFloat(getComputedStyle(cell).paddingRight);
+
+        return b.getBoundingClientRect().right <= cell.getBoundingClientRect().right - padding + 1;
+      });
+
+      if (!fits) {
+        crowded.push(column);
+      }
+    }
+
+    return crowded;
+  }
+
+  test('fits each header label and its sort arrow in its column', async ({ page }) => {
+    await loadExample(page);
+    await page.click('#table-toggle');
+    await expect(page.locator('#field-table')).not.toHaveClass(/has-settings/);
+    expect(await crowdedHeaders(page)).toEqual([]);
+
+    await openDocument(page, MANY_FIELDS_DOC);
+    await expect(page.locator('#field-table')).toHaveClass(/has-settings/);
+    expect(await crowdedHeaders(page)).toEqual([]);
+  });
+
+  test('keeps the search and the sort when the fields panel is docked', async ({ page }) => {
+    await loadExample(page);
+    await page.click('#table-toggle');
+    await page.click('#field-table [data-sort="type"]');
+
+    await slFill(page, '#table-search', 'field_');
+    await page.click('#table .panel__pin');
+    await expect(page.locator('#table')).toHaveClass(/is-docked/);
+
+    expect(await page.locator('#table-search').evaluate((input) => input.value)).toBe('field_');
+    expect(await sortedColumn(page)).toEqual([['field-table__col--type', 'ascending']]);
+
+    const rows = await firstGroupRows(page);
+    expect(rows.length).toBeGreaterThan(1);
+    expect(rows.every((r) => r.name.startsWith('field_'))).toBe(true);
+    expect(rows.map((r) => r.type)).toEqual(inOrder(rows.map((r) => r.type), 'ascending'));
+  });
+
+  test('scrolls the fields panel body both ways with the toolbar and header in view', async ({ page }) => {
+    await openDocument(page, MANY_FIELDS_DOC);
+    await page.click('#table-toggle');
+    await expect(page.locator('#field-table')).toHaveClass(/has-settings/);
+
+    const scroll = await page.locator('#table .panel__body').evaluate((body) => {
+      const table = body.querySelector('#field-table');
+      const overflows = { wide: body.scrollWidth > body.clientWidth, tall: body.scrollHeight > body.clientHeight };
+
+      body.scrollLeft = 200;
+      body.scrollTop = 300;
+
+      const rect = (selector) => body.querySelector(selector).getBoundingClientRect();
+
+      return {
+        ...overflows,
+        parent: table.parentElement === body,
+        bodyLeft: body.getBoundingClientRect().left,
+        bodyTop: body.getBoundingClientRect().top,
+        toolbarLeft: rect('.panel__toolbar').left,
+        tableLeft: table.getBoundingClientRect().left,
+        headerTop: rect('#field-table th').top,
+      };
+    });
+
+    expect(scroll).toMatchObject({ wide: true, tall: true, parent: true });
+    expect(Math.abs(scroll.toolbarLeft - scroll.bodyLeft)).toBeLessThanOrEqual(1);
+    expect(scroll.tableLeft).toBeLessThan(scroll.bodyLeft - 150);
+    expect(Math.abs(scroll.headerTop - scroll.bodyTop)).toBeLessThanOrEqual(1);
   });
 });

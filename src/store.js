@@ -2,10 +2,13 @@
  * Shared UI store.
  *
  * A tiny observable holding the panel windowing, the inspector target and
- * the dock widths. Each panel's `order` places it in its side rail.
+ * the dock widths. Each panel's `order` places it in its side rail, and its
+ * `size` sets its width and height while it floats.
  *
  * `revision` counts the times the history changed the graph.
  */
+
+import { DEFAULT_SORT } from './field-table.js';
 
 const listeners = new Set();
 
@@ -29,6 +32,8 @@ const PANEL_Z = 10;
 // Matches the min-height of .panel.is-docked in styles.css.
 const MIN_PANEL_HEIGHT = 90;
 
+const MIN_PANEL_WIDTH = 200;
+
 const LAYOUT_KEY = 'nexusLayout';
 
 let controller = null;
@@ -38,7 +43,7 @@ let saveTimer = null;
 function initialPanels() {
   const panels = {};
   Object.keys(DEFAULT_POS).forEach((id) => {
-    panels[id] = { open: false, dock: null, pos: { ...DEFAULT_POS[id] }, z: 4, height: null, order: PANEL_ORDER.indexOf(id) };
+    panels[id] = { open: false, dock: null, pos: { ...DEFAULT_POS[id] }, z: 4, height: null, size: null, order: PANEL_ORDER.indexOf(id) };
   });
   return panels;
 }
@@ -47,9 +52,19 @@ function layoutSnapshot() {
   const panels = {};
   Object.keys(state.panels).forEach((id) => {
     const p = state.panels[id];
-    panels[id] = { open: p.open, dock: p.dock, pos: p.pos, height: p.height, order: p.order };
+    panels[id] = { open: p.open, dock: p.dock, pos: p.pos, height: p.height, size: p.size, order: p.order };
   });
   return { panels: panels, dockWidth: state.dockWidth };
+}
+
+// A stored layout is untrusted, so a size is kept only when both sides are
+// positive numbers.
+function storedSize(size) {
+  if (!size || !Number.isFinite(size.width) || !Number.isFinite(size.height) || size.width <= 0 || size.height <= 0) {
+    return null;
+  }
+
+  return { width: Math.round(size.width), height: Math.round(size.height) };
 }
 
 function mergeLayout(panels, saved) {
@@ -64,6 +79,7 @@ function mergeLayout(panels, saved) {
         dock: entry.dock || null,
         pos: entry.pos || panels[id].pos,
         height: entry.height || panels[id].height,
+        size: entry.size === undefined ? panels[id].size : storedSize(entry.size),
         order,
       };
     }
@@ -116,7 +132,7 @@ function initialState() {
   } else {
     panels.legend.open = true;
   }
-  return { panels: panels, dockWidth: dockWidth, selected: null, tableFilter: '__all__', version: 0, revision: 0, dragging: null };
+  return { panels: panels, dockWidth: dockWidth, selected: null, tableFilter: '__all__', tableSearch: '', tableSort: DEFAULT_SORT, version: 0, revision: 0, dragging: null };
 }
 
 let state = initialState();
@@ -174,6 +190,14 @@ export function getBuilder() {
 
 export function setTableFilter(value) {
   emit({ tableFilter: value });
+}
+
+export function setTableSearch(value) {
+  emit({ tableSearch: value });
+}
+
+export function setTableSort(sort) {
+  emit({ tableSort: sort });
 }
 
 export function openTableFor(entityId) {
@@ -271,6 +295,21 @@ export function setDockWidth(side, width) {
 // The minimum wins over a maxHeight below it.
 export function setPanelHeight(id, height, maxHeight) {
   patchPanel(id, { height: Math.max(MIN_PANEL_HEIGHT, Math.round(Math.min(height, maxHeight))) });
+}
+
+// Floats a panel with its top-left corner at the box's and the box's size,
+// at most `maxSize` and at least the minimum, which wins over a smaller
+// maximum.
+export function resizePanel(id, box, maxSize) {
+  const width = Math.max(MIN_PANEL_WIDTH, Math.round(Math.min(box.width, maxSize.width)));
+  const height = Math.max(MIN_PANEL_HEIGHT, Math.round(Math.min(box.height, maxSize.height)));
+
+  patchPanel(id, { pos: { left: Math.round(box.left), top: Math.round(box.top) }, size: { width, height } });
+}
+
+// A floating panel without a size takes the size of its content.
+export function resetPanelSize(id) {
+  patchPanel(id, { size: null });
 }
 
 export function exportLayout() {

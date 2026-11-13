@@ -815,6 +815,28 @@ sl-button#zoom-level::part(base) {
   background: var(--accent);
 }
 
+.panel__corner {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 14px;
+  height: 14px;
+  cursor: nwse-resize;
+  z-index: 3;
+  background: linear-gradient(135deg, transparent 50%, var(--border) 50%, var(--border) 58%, transparent 58%, transparent 70%, var(--border) 70%, var(--border) 78%, transparent 78%);
+  border-bottom-right-radius: 10px;
+}
+
+.panel__corner:hover {
+  background: linear-gradient(135deg, transparent 50%, var(--accent) 50%, var(--accent) 58%, transparent 58%, transparent 70%, var(--accent) 70%, var(--accent) 78%, transparent 78%);
+}
+
+body.is-resizing-panel,
+body.is-resizing-panel * {
+  cursor: nwse-resize !important;
+  user-select: none;
+}
+
 .panel__body {
   flex: 1 1 auto;
   min-height: 0;
@@ -1005,9 +1027,11 @@ body.is-dragging-panel * {
   border-color: var(--accent);
 }
 
-.table-wrap {
-  overflow-x: auto;
-  overflow-y: auto;
+/* The panel body scrolls the table both ways, so the toolbar keeps its place
+   while the table scrolls sideways. */
+#table .panel__toolbar {
+  position: sticky;
+  left: 0;
 }
 
 .field-table {
@@ -1026,83 +1050,116 @@ body.is-dragging-panel * {
   overflow-wrap: anywhere;
 }
 
-.field-table th:nth-child(1),
-.field-table td:nth-child(1) {
+/* The fixed layout takes each column's width from its header cell. */
+.field-table .field-table__col--position {
+  width: 6%;
+}
+
+.field-table .field-table__col--field {
   width: 27%;
 }
 
-.field-table th:nth-child(2),
-.field-table td:nth-child(2) {
-  width: 20%;
+.field-table .field-table__col--type {
+  width: 18%;
 }
 
-.field-table th:nth-child(3),
-.field-table td:nth-child(3) {
-  width: 11%;
+.field-table .field-table__col--references {
+  width: 18%;
 }
 
-.field-table th:nth-child(4),
-.field-table td:nth-child(4) {
-  width: 8%;
+.field-table .field-table__col--cardinality {
+  width: 12%;
 }
 
-.field-table th:nth-child(5),
-.field-table td:nth-child(5) {
-  width: 20%;
+.field-table .field-table__col--required {
+  width: 10%;
 }
 
 .field-table .field-table__action {
-  width: 7%;
+  width: 4.5%;
   padding-inline: 0;
   text-align: center;
 }
 
-/* 11 columns don't fit a docked panel, so the table scrolls sideways. */
+/* 12 columns don't fit a docked panel, so the panel body scrolls sideways. */
 .field-table.has-settings {
-  width: max(100%, 60rem);
+  width: max(100%, 64rem);
 }
 
-.field-table.has-settings th:nth-child(1),
-.field-table.has-settings td:nth-child(1) {
-  width: 15%;
+.field-table.has-settings .field-table__col--position,
+.field-table.has-settings .field-table__action {
+  width: 4%;
 }
 
-.field-table.has-settings th:nth-child(2),
-.field-table.has-settings td:nth-child(2) {
-  width: 11%;
+.field-table.has-settings .field-table__col--field,
+.field-table.has-settings .field-table__col--description {
+  width: 14%;
 }
 
-.field-table.has-settings th:nth-child(3),
-.field-table.has-settings td:nth-child(3),
-.field-table.has-settings th:nth-child(9),
-.field-table.has-settings td:nth-child(9) {
+.field-table.has-settings .field-table__col--type,
+.field-table.has-settings .field-table__col--references {
+  width: 10%;
+}
+
+.field-table.has-settings .field-table__col--cardinality,
+.field-table.has-settings .field-table__col--translatable {
+  width: 7%;
+}
+
+.field-table.has-settings .field-table__col--required {
   width: 6%;
 }
 
-.field-table.has-settings th:nth-child(4),
-.field-table.has-settings td:nth-child(4) {
-  width: 5%;
+.field-table.has-settings .field-table__col--defaultValue {
+  width: 8%;
 }
 
-.field-table.has-settings th:nth-child(5),
-.field-table.has-settings td:nth-child(5),
-.field-table.has-settings th:nth-child(8),
-.field-table.has-settings td:nth-child(8) {
-  width: 11%;
+.field-table.has-settings .field-table__col--allowedValues {
+  width: 12%;
 }
 
-.field-table.has-settings th:nth-child(6),
-.field-table.has-settings td:nth-child(6) {
-  width: 18%;
+.field-table .field-table__col--position,
+.field-table .field-table__position {
+  text-align: right;
 }
 
-.field-table.has-settings th:nth-child(7),
-.field-table.has-settings td:nth-child(7) {
-  width: 9%;
+.field-table__position {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
 }
 
-.field-table.has-settings .field-table__action {
-  width: 4%;
+.field-table__sort {
+  position: relative;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.field-table__sort:hover {
+  color: var(--accent);
+}
+
+.field-table th[aria-sort] .field-table__sort {
+  color: var(--text);
+}
+
+/* The arrow sits in the cell's right padding, so it needs no column width. */
+.field-table th[aria-sort] .field-table__sort::after {
+  position: absolute;
+  left: 100%;
+  width: 0.6rem;
+  text-align: center;
+}
+
+.field-table th[aria-sort='ascending'] .field-table__sort::after {
+  content: '↑';
+}
+
+.field-table th[aria-sort='descending'] .field-table__sort::after {
+  content: '↓';
 }
 
 .field-table__text {
@@ -1158,6 +1215,7 @@ body.is-dragging-panel * {
 .field-table th {
   position: sticky;
   top: 0;
+  z-index: 1;
   background: var(--surface);
   font-weight: 600;
   color: var(--muted);

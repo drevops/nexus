@@ -13,8 +13,13 @@ import {
   dockPanel,
   dockedPanels,
   setPanelHeight,
+  resizePanel,
+  resetPanelSize,
+  setTableSearch,
+  setTableSort,
   PANEL_ORDER,
 } from '../../src/store.js';
+import { DEFAULT_SORT } from '../../src/field-table.js';
 
 // The store holds 1 state per module, so these tests share it and run in
 // order. Node has no window, so the store starts from its default layout.
@@ -295,5 +300,99 @@ function dataProviderPanelHeight() {
     ['a maximum below the minimum', 300, 60, 90],
     ['a fractional height', 300.6, 500, 301],
     ['a fractional maximum', 800, 412.4, 412],
+  ];
+}
+
+test('starts every panel without a size and the fields unsearched in diagram order', () => {
+  assert.equal(getState().tableSearch, '');
+  assert.deepEqual(getState().tableSort, DEFAULT_SORT);
+  assert.deepEqual(
+    PANELS.map((id) => getState().panels[id].size),
+    PANELS.map(() => null),
+  );
+});
+
+test('searches and sorts the fields table', () => {
+  setTableSearch('summary');
+  setTableSort({ column: 'type', direction: 'descending' });
+
+  assert.equal(getState().tableSearch, 'summary');
+  assert.deepEqual(getState().tableSort, { column: 'type', direction: 'descending' });
+
+  setTableSearch('');
+  setTableSort(DEFAULT_SORT);
+});
+
+test('floats a resized panel at its top-left corner with a size between the minimum and the maximum', async (t) => {
+  for (const [name, box, maxSize, expected] of dataProviderResizePanel()) {
+    await t.test(name, () => {
+      importLayout({ panels: { table: { open: true, dock: null, pos: { right: 16, top: 16 } } } });
+
+      resizePanel('table', box, maxSize);
+
+      const panel = getState().panels.table;
+
+      assert.deepEqual(panel.pos, { left: 100, top: 40 });
+      assert.deepEqual(panel.size, expected);
+    });
+  }
+});
+
+function dataProviderResizePanel() {
+  const max = { width: 900, height: 700 };
+
+  return [
+    ['a size within the bounds', { left: 100, top: 40, width: 500, height: 400 }, max, { width: 500, height: 400 }],
+    ['a size at the maximum', { left: 100, top: 40, width: 900, height: 700 }, max, { width: 900, height: 700 }],
+    ['a size above the maximum', { left: 100, top: 40, width: 1500, height: 1200 }, max, { width: 900, height: 700 }],
+    ['a size below the minimum', { left: 100, top: 40, width: 50, height: 20 }, max, { width: 200, height: 90 }],
+    ['a maximum below the minimum', { left: 100, top: 40, width: 500, height: 400 }, { width: 120, height: 60 }, { width: 200, height: 90 }],
+    ['a fractional box', { left: 99.6, top: 40.4, width: 500.6, height: 400.4 }, max, { width: 501, height: 400 }],
+  ];
+}
+
+test('returns a resized panel to the size of its content', () => {
+  resizePanel('legend', { left: 0, top: 0, width: 400, height: 300 }, { width: 900, height: 700 });
+  resetPanelSize('legend');
+
+  assert.equal(getState().panels.legend.size, null);
+});
+
+test('saves the size of a panel with the layout and restores it', () => {
+  resizePanel('history', { left: 20, top: 30, width: 420, height: 310 }, { width: 900, height: 700 });
+
+  const saved = exportLayout();
+
+  resetPanelSize('history');
+  importLayout(saved);
+
+  assert.deepEqual(getState().panels.history.size, { width: 420, height: 310 });
+});
+
+test('reads the size of a panel from an imported layout', async (t) => {
+  for (const [name, entry, expected] of dataProviderImportedSize()) {
+    await t.test(name, () => {
+      resizePanel('settings', { left: 0, top: 0, width: 333, height: 222 }, { width: 900, height: 700 });
+
+      importLayout({ panels: { settings: { open: true, ...entry } } });
+
+      assert.deepEqual(getState().panels.settings.size, expected);
+    });
+  }
+});
+
+function dataProviderImportedSize() {
+  const kept = { width: 333, height: 222 };
+
+  return [
+    ['a valid size', { size: { width: 410.4, height: 280 } }, { width: 410, height: 280 }],
+    ['no size key', {}, kept],
+    ['a null size', { size: null }, null],
+    ['a size with text', { size: { width: '400', height: 300 } }, null],
+    ['a size with a missing side', { size: { width: 400 } }, null],
+    ['a size of 0', { size: { width: 0, height: 300 } }, null],
+    ['a negative size', { size: { width: 400, height: -1 } }, null],
+    ['an infinite size', { size: { width: Infinity, height: 300 } }, null],
+    ['a size that is not an object', { size: 'wide' }, null],
   ];
 }

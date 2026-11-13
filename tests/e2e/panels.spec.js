@@ -510,4 +510,102 @@ test.describe('Panels', { tag: '@runner-1' }, () => {
     expect(sizes.bodyScroll).toBeLessThanOrEqual(sizes.bodyClient + 1);
     expect(sizes.content).toBeGreaterThan(sizes.bodyClient - 12);
   });
+
+  // Drags the corner handle of a floating panel by the given distances.
+  async function dragPanelCorner(page, selector, dx, dy) {
+    const handle = await page.locator(selector + ' .panel__corner').boundingBox();
+    const x = handle.x + handle.width / 2;
+    const y = handle.y + handle.height / 2;
+
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x + dx, y + dy, { steps: 6 });
+    await page.mouse.up();
+  }
+
+  test('resizes a floating panel from its corner and keeps its top-left corner in place', async ({ page }) => {
+    await loadExample(page);
+    await page.click('#table-toggle');
+
+    const panel = page.locator('#table');
+    const before = await panel.boundingBox();
+
+    await dragPanelCorner(page, '#table', -160, -120);
+
+    const after = await panel.boundingBox();
+    expect(Math.abs(after.x - before.x)).toBeLessThanOrEqual(1);
+    expect(Math.abs(after.y - before.y)).toBeLessThanOrEqual(1);
+    expect(Math.abs(after.width - (before.width - 160))).toBeLessThanOrEqual(1);
+    expect(Math.abs(after.height - (before.height - 120))).toBeLessThanOrEqual(1);
+
+    await dragPanelCorner(page, '#table', 60, 40);
+
+    const grown = await panel.boundingBox();
+    expect(Math.abs(grown.width - (after.width + 60))).toBeLessThanOrEqual(1);
+    expect(Math.abs(grown.height - (after.height + 40))).toBeLessThanOrEqual(1);
+  });
+
+  test('keeps a resized panel inside the canvas and above its minimum size', async ({ page }) => {
+    await loadExample(page);
+    await page.click('#entities-toggle');
+
+    const panel = page.locator('#entities');
+    const canvas = await page.locator('.stage__canvas').boundingBox();
+
+    await dragPanelCorner(page, '#entities', 3000, 3000);
+
+    const largest = await panel.boundingBox();
+    expect(largest.x + largest.width).toBeLessThanOrEqual(canvas.x + canvas.width);
+    expect(largest.y + largest.height).toBeLessThanOrEqual(canvas.y + canvas.height);
+
+    await dragPanelCorner(page, '#entities', -3000, -3000);
+
+    const smallest = await panel.boundingBox();
+    expect(Math.round(smallest.width)).toBe(200);
+    expect(Math.round(smallest.height)).toBe(90);
+  });
+
+  test('returns a resized panel to the size of its content on a double-click of its corner', async ({ page }) => {
+    await loadExample(page);
+    await page.click('#entities-toggle');
+
+    const panel = page.locator('#entities');
+    const natural = await panel.boundingBox();
+
+    await dragPanelCorner(page, '#entities', -60, -80);
+    expect((await panel.boundingBox()).height).toBeLessThan(natural.height - 40);
+
+    await page.locator('#entities .panel__corner').dblclick();
+
+    const reset = await panel.boundingBox();
+    expect(Math.abs(reset.width - natural.width)).toBeLessThanOrEqual(1);
+    expect(Math.abs(reset.height - natural.height)).toBeLessThanOrEqual(1);
+  });
+
+  test('remembers the size of a resized panel across reloads', async ({ page }) => {
+    await loadExample(page);
+    await page.click('#table-toggle');
+    await dragPanelCorner(page, '#table', -100, -150);
+
+    const resized = await page.locator('#table').boundingBox();
+    await page.waitForTimeout(500);
+
+    await page.reload();
+    await loadExample(page);
+    await expect(page.locator('#table')).toBeVisible();
+
+    const restored = await page.locator('#table').boundingBox();
+    expect(Math.abs(restored.width - resized.width)).toBeLessThanOrEqual(1);
+    expect(Math.abs(restored.height - resized.height)).toBeLessThanOrEqual(1);
+  });
+
+  test('draws the corner handle only on a floating panel', async ({ page }) => {
+    await loadExample(page);
+    await page.click('#entities-toggle');
+    await expect(page.locator('#entities .panel__corner')).toHaveCount(1);
+
+    await page.click('#entities .panel__pin');
+    await expect(page.locator('#entities')).toHaveClass(/is-docked/);
+    await expect(page.locator('#entities .panel__corner')).toHaveCount(0);
+  });
 });
