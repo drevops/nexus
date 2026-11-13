@@ -219,7 +219,7 @@ test('escapes markup in the title, headings, links, machine names and cells', ()
   const escaped = '&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt; &amp; &#39;y&#39;';
   const html = documentHtml(doc([entity('node', 'page', label, [field('field_<b>', label, { note: label, fieldType: '"type"' })], label)], { title: label }));
 
-  assert.doesNotMatch(html, /<script|<b>/);
+  assert.doesNotMatch(html, /<script|<b>/i);
   assert.ok(html.includes('<title>' + escaped + '</title>'));
   assert.ok(html.includes('<h1>' + escaped + '</h1>'));
   assert.ok(html.includes('<h3 id="scriptalertxscript--y-1">' + escaped + '</h3>'));

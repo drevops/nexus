@@ -153,7 +153,7 @@ test.describe('Save', { tag: '@runner-1' }, () => {
       '<tr><td>Speakers</td><td><code>field_speakers</code></td><td><code>entity_reference</code></td><td>1..n</td><td>No</td><td><a href="#speaker">Speaker</a></td><td></td></tr>',
     );
     expect(html).toContain('<p>Referenced by: Sessions on <a href="#event">Event</a>.</p>');
-    expect(html).not.toContain('<script');
+    expect(html).not.toMatch(/<script/i);
   });
 
   test('opens a saved HTML report with its styles and no blocked resource', async ({ page, browser }) => {
