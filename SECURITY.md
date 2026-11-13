@@ -23,12 +23,13 @@ You get a reply within 3 business days. After the report is confirmed, the fix s
 
 ## Verify a release
 
-Every release attaches 2 files:
+Every release attaches 3 files:
 
 - `nexus-<version>.tar.gz` holds the site exactly as GitHub Pages serves it.
 - `checksums.txt` lists the SHA-256 checksum of every file in the site.
+- `nexus-<version>.intoto.jsonl` holds the signed provenance attestation of the first 2 files.
 
-The release workflow signs a provenance attestation for both files. To check that a file was built from this repository by that workflow, run the GitHub CLI in the folder that holds it:
+GitHub also stores the attestation. To check that a file was built from this repository by that workflow, run the GitHub CLI in the folder that holds it:
 
 ```bash
 gh attestation verify nexus-1.2.3.tar.gz --repo drevops/nexus --signer-workflow drevops/nexus/.github/workflows/release.yml

@@ -58,9 +58,18 @@ jobs:
           tar --sort=name --owner=0 --group=0 --numeric-owner -czf "release/nexus-${TAG}.tar.gz" -C _site .
 
       - name: Attest build provenance
+        id: attest
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: release/*
+
+      # Scorecard counts a release as signed only when a provenance file is
+      # attached to it.
+      - name: Add the provenance bundle to the release files
+        env:
+          BUNDLE: ${{ steps.attest.outputs.bundle-path }}
+          TAG: ${{ github.ref_name }}
+        run: cp "${BUNDLE}" "release/nexus-${TAG}.intoto.jsonl"
 
       - name: Upload release files
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7

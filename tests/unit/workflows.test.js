@@ -91,6 +91,17 @@ test('builds only a tagged commit on main', () => {
   assert.ok(onMain < steps.findIndex((step) => step.name === 'Assemble static site'), 'the site is assembled before the tag is checked');
 });
 
+test('attaches the provenance bundle to the release files after attesting them', () => {
+  const steps = WORKFLOWS.find(({ name }) => name === 'release.yml').workflow.jobs.build.steps;
+  const attest = steps.findIndex((step) => step.id === 'attest');
+  const bundle = steps.findIndex((step) => step.name === 'Add the provenance bundle to the release files');
+
+  assert.ok(attest >= 0 && attest < bundle, 'the bundle is copied before it is made');
+  assert.equal(steps[bundle].env.BUNDLE, '${{ steps.attest.outputs.bundle-path }}');
+  assert.match(steps[bundle].run, /release\/nexus-\$\{TAG\}\.intoto\.jsonl/);
+  assert.ok(bundle < steps.findIndex((step) => step.name === 'Upload release files'), 'the bundle is uploaded before it is copied');
+});
+
 test('queues only the deploy, so every tag publishes its release', () => {
   const release = WORKFLOWS.find(({ name }) => name === 'release.yml').workflow;
 

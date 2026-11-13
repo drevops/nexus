@@ -168,8 +168,8 @@ To publish a release:
 
 The tag push runs `.github/workflows/release.yml` in 3 jobs:
 
-1. **Build** assembles `index.html`, `llms.txt`, `src/`, `assets/`, `templates/`, `schema/` and `skills/` with `npm run assemble` and stamps the tag as the app version. It packs the site into `nexus-<version>.tar.gz`, lists the checksum of every file in `checksums.txt` and attests the provenance of both files.
-2. **Publish** attaches both files to the draft with the same tag, or to a new draft when none matches, and publishes it.
+1. **Build** assembles `index.html`, `llms.txt`, `src/`, `assets/`, `templates/`, `schema/` and `skills/` with `npm run assemble` and stamps the tag as the app version. It packs the site into `nexus-<version>.tar.gz`, lists the checksum of every file in `checksums.txt` and attests the provenance of both files into `nexus-<version>.intoto.jsonl`.
+2. **Publish** attaches the 3 files to the draft with the same tag, or to a new draft when none matches, and publishes it.
 3. **Deploy** deploys the site to GitHub Pages, which serves it at https://nexus.drevops.com.
 
 A tag that isn't a version, such as `v1.2.3`, or a tag on a commit that isn't on `main` fails the workflow before anything is built. Releases are immutable, so a published release keeps its files and its tag. Publish a release only by pushing its tag. A release published with the draft's **Publish release** button can't take files afterward, so it ships without them, though the site still deploys. [`SECURITY.md`](SECURITY.md#verify-a-release) shows how to verify a release's files.
