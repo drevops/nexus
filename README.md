@@ -46,7 +46,7 @@ Nexus is a static web app. Give it a Drupal config sync directory or a module's 
 - **Client-side.** Nexus parses and draws in the browser, with no backend, upload or install.
 - **Reads exported config.** Nexus reads only the YAML files of the folder you give it.
 - **Descriptions and field settings.** Bundle descriptions, help text, default values, allowed values and translatability show in tooltips, the Inspector, the Fields table and its CSV.
-- **Templates.** The content models of Drupal CMS, CivicTheme and the Umami demo open in 1 click.
+- **Templates.** The content models of Drupal CMS, CivicTheme, the Umami demo and Thunder open in 1 click.
 - **Editable.** Add and change entities, fields, references and annotations, with undo and history.
 - **Saved as a document.** A `.nexus.json` document holds the model and its layout, and a [JSON Schema](schema/nexus.schema.json) defines the format.
 - **Exports.** PNG and SVG images of the diagram, a CSV of its fields, a Markdown page that documents each bundle, its fields and notes, with an optional Mermaid diagram, and the same documentation as a standalone HTML report to open in any browser.
@@ -74,13 +74,14 @@ To use the skill in every Claude Code project, put `SKILL.md` in `~/.claude/skil
 
 ## Templates
 
-Nexus ships 3 ready-made content models:
+Nexus ships 4 ready-made content models:
 
 | Template | Version | What it draws |
 |----------|---------|---------------|
 | [Drupal CMS](https://www.drupal.org/project/cms) | 2.2.2 | Drupal CMS with its Byte site template: a utility page, a blog post, tags and 5 media types |
 | [CivicTheme](https://www.drupal.org/project/civictheme) | 1.13.0 | The government design system: 3 content types built from 31 paragraph types, plus its media types, vocabularies and blocks |
 | [Umami](https://www.drupal.org/docs/umami-drupal-demonstration-installation-profile) | 11.4.12 | Drupal core's food magazine demo: articles, recipes, pages, 2 vocabularies, 5 media types and 4 block types |
+| [Thunder](https://www.thunder.org) | 8.4.7 | The Drupal distribution for professional publishers: 3 content types built from 9 paragraph types, plus 7 media types, channels and tags |
 
 Each template is drawn from the configuration of an exact release. Drupal CMS builds its landing pages with Canvas, so its diagram has no landing page content type. Umami ships with Drupal core, so its version is the core release it comes from.
 
@@ -181,7 +182,7 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) to run Nexus locally, run the tests, ho
 
 ## License
 
-Nexus is free software, released under the [GNU General Public License, version 2 or later](LICENSE) (GPL-2.0-or-later), matching the Drupal ecosystem it serves. CivicTheme, Drupal CMS and Drupal core's Umami demo, which the templates draw, are released under the same license.
+Nexus is free software, released under the [GNU General Public License, version 2 or later](LICENSE) (GPL-2.0-or-later), matching the Drupal ecosystem it serves. CivicTheme, Drupal CMS, Drupal core's Umami demo and Thunder, which the templates draw, are released under the same license.
 
 ---
 _This repository was created using the [Scaffold](https://getscaffold.dev/) project template_

@@ -228,6 +228,7 @@ test.describe('Shortcut hints', { tag: '@runner-2' }, () => {
       ['template-drupal-cms', '1'],
       ['template-civictheme', '2'],
       ['template-umami', '3'],
+      ['template-thunder', '4'],
     ]);
   });
 

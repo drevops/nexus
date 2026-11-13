@@ -82,6 +82,23 @@ export const TEMPLATES = [
       },
     ],
   },
+  {
+    id: 'thunder',
+    label: 'Thunder',
+    version: '8.4.7',
+    summary: 'Publishing distribution: articles, paragraphs, media',
+    icon: 'zap',
+    color: '#3d4fb8',
+    counts: { node: 3, taxonomy_term: 2, media: 7, paragraph: 9, user: 1 },
+    sources: [
+      {
+        name: 'Thunder',
+        repo: 'https://github.com/thunder/thunder-distribution.git',
+        ref: '8.4.7',
+        paths: ['config/install', 'config/optional', 'modules/thunder_xymatic/config/install'],
+      },
+    ],
+  },
 ];
 
 /**

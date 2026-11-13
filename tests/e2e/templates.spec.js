@@ -20,10 +20,10 @@ test.describe('Templates', { tag: '@runner-2' }, () => {
   test('lists every template with its badge, its counts and a drawn mark', async ({ page }) => {
     const rows = page.locator('.template-row');
 
-    await expect(rows).toHaveCount(3);
+    await expect(rows).toHaveCount(4);
     const ids = await rows.evaluateAll((elements) => elements.map((element) => element.id));
 
-    expect(ids).toEqual(['template-drupal-cms', 'template-civictheme', 'template-umami']);
+    expect(ids).toEqual(['template-drupal-cms', 'template-civictheme', 'template-umami', 'template-thunder']);
 
     for (const [id, label, badge, counts] of dataProviderTemplateRows()) {
       const row = page.locator('#template-' + id);
@@ -40,10 +40,11 @@ test.describe('Templates', { tag: '@runner-2' }, () => {
       ['civictheme', 'CivicTheme', '1.13.0', '3 content types · 31 paragraph types · 6 media types'],
       ['drupal-cms', 'Drupal CMS', '2.2.2', '2 content types · 5 media types · 1 vocabulary'],
       ['umami', 'Umami', '11.4.12', '3 content types · 5 media types · 4 block types'],
+      ['thunder', 'Thunder', '8.4.7', '3 content types · 9 paragraph types · 7 media types'],
     ];
   }
 
-  for (const [id, title, entities, entityId] of dataProviderTemplates()) {
+  for (const [id, title, entities, entityId, placeholders] of dataProviderTemplates()) {
     test(`loads the ${title} template`, async ({ page }) => {
       await page.click('#template-' + id);
       await waitForGraph(page);
@@ -51,6 +52,7 @@ test.describe('Templates', { tag: '@runner-2' }, () => {
       expect(await entityCount(page)).toBe(entities);
       expect(await page.evaluate((target) => window.__nexus.cy.getElementById(target).length, entityId)).toBe(1);
       await expect(page.locator('#diagram-title')).toHaveJSProperty('value', title);
+      expect(await page.evaluate(() => window.__nexus.cy.nodes('[group="entity"][bundle="*"]').map((node) => node.id()))).toEqual(placeholders);
 
       // The document holds no layout, so the app lays the entities out on open.
       const positions = await page.evaluate(() => window.__nexus.cy.nodes('[group="entity"]').map((node) => JSON.stringify(node.position())));
@@ -61,9 +63,10 @@ test.describe('Templates', { tag: '@runner-2' }, () => {
 
   function dataProviderTemplates() {
     return [
-      ['civictheme', 'CivicTheme 1.13.0', 49, 'paragraph.civictheme_accordion'],
-      ['drupal-cms', 'Drupal CMS 2.2.2', 9, 'node.blog'],
-      ['umami', 'Umami 11.4.12', 15, 'node.recipe'],
+      ['civictheme', 'CivicTheme 1.13.0', 49, 'paragraph.civictheme_accordion', ['block.*']],
+      ['drupal-cms', 'Drupal CMS 2.2.2', 9, 'node.blog', []],
+      ['umami', 'Umami 11.4.12', 15, 'node.recipe', []],
+      ['thunder', 'Thunder 8.4.7', 22, 'paragraph.instagram', []],
     ];
   }
 
