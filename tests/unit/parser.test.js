@@ -58,6 +58,50 @@ test('open-ended reference targets an Any placeholder without base fields', () =
   assert.deepEqual(model.getEntity('paragraph.*').fields, []);
 });
 
+test('targets every defined bundle but the excluded ones from a negated selection', async (t) => {
+  for (const [name, handlerSettings, targets] of dataProviderNegatedSelection()) {
+    await t.test(name, () => {
+      const config = {
+        'paragraphs.paragraphs_type.text.yml': { label: 'Text' },
+        'paragraphs.paragraphs_type.quote.yml': { label: 'Quote' },
+        'paragraphs.paragraphs_type.gallery.yml': { label: 'Gallery' },
+        'field.storage.node.field_paragraphs.yml': {
+          entity_type: 'node',
+          field_name: 'field_paragraphs',
+          type: 'entity_reference_revisions',
+          settings: { target_type: 'paragraph' },
+        },
+        'field.field.node.page.field_paragraphs.yml': {
+          entity_type: 'node',
+          bundle: 'page',
+          field_name: 'field_paragraphs',
+          field_type: 'entity_reference_revisions',
+          settings: { handler: 'default:paragraph', handler_settings: handlerSettings },
+        },
+        'field.field.paragraph.video.field_caption.yml': { entity_type: 'paragraph', bundle: 'video', field_name: 'field_caption', field_type: 'string' },
+      };
+      const model = parseConfig(config, { includeBaseFields: false });
+      const paragraphs = field(model.getEntity('node.page'), 'field_paragraphs');
+
+      assert.deepEqual(paragraphs.targetBundles, targets);
+      assert.equal(model.hasEntity('paragraph.*'), targets.length === 0);
+    });
+  }
+});
+
+function dataProviderNegatedSelection() {
+  return [
+    ['no exclusions', { target_bundles: null, negate: 1 }, ['gallery', 'quote', 'text', 'video']],
+    ['1 exclusion', { target_bundles: { gallery: 'gallery' }, negate: 1 }, ['quote', 'text', 'video']],
+    ['negate as true', { target_bundles: { gallery: 'gallery', quote: 'quote' }, negate: true }, ['text', 'video']],
+    ['negate as text', { target_bundles: { text: 'text' }, negate: '1' }, ['gallery', 'quote', 'video']],
+    ['an excluded bundle the config lacks', { target_bundles: { missing: 'missing' }, negate: 1 }, ['gallery', 'quote', 'text', 'video']],
+    ['every bundle excluded', { target_bundles: { gallery: 'gallery', quote: 'quote', text: 'text', video: 'video' }, negate: 1 }, []],
+    ['negate off', { target_bundles: { gallery: 'gallery' }, negate: 0 }, ['gallery']],
+    ['negate off as text', { target_bundles: { gallery: 'gallery' }, negate: '0' }, ['gallery']],
+  ];
+}
+
 test('injects curated base fields first', () => {
   const article = parseConfig(configMin).getEntity('node.article');
 

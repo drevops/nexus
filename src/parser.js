@@ -50,13 +50,15 @@ export function parseConfig(files, options = {}) {
   }
 
   const storages = collectStorages(files, filenames);
+  const negated = new Map();
 
   for (const filename of filenames) {
     if (filename.startsWith(FIELD_PREFIX)) {
-      addFieldInstance(model, files[filename], storages);
+      addFieldInstance(model, files[filename], storages, negated);
     }
   }
 
+  resolveNegatedTargets(model, negated);
   resolveTargets(model);
 
   if (includeBaseFields) {
@@ -120,7 +122,7 @@ function collectStorages(files, filenames) {
   return storages;
 }
 
-function addFieldInstance(model, data, storages) {
+function addFieldInstance(model, data, storages, negated) {
   const entityType = data?.entity_type != null ? String(data.entity_type) : '';
   const bundle = data?.bundle != null ? String(data.bundle) : '';
   const fieldName = data?.field_name != null ? String(data.field_name) : '';
@@ -150,9 +152,14 @@ function addFieldInstance(model, data, storages) {
   const label = data.label != null ? String(data.label) : fieldName;
   const required = Boolean(data.required);
   const targetType = isReference ? storage.targetType : null;
-  const targetBundles = isReference ? extractTargetBundles(data) : [];
+  const selection = isReference ? extractTargetBundles(data) : { bundles: [], negate: false };
+  const targetBundles = selection.negate ? [] : selection.bundles;
 
   const field = new Field(fieldName, label, fieldType, kind, required, targetType, targetBundles, storage.cardinality);
+
+  if (selection.negate) {
+    negated.set(field, selection.bundles);
+  }
 
   field.description = settingText(data.description);
   field.defaultValue = defaultValueText(data.default_value);
@@ -190,16 +197,34 @@ function defaultItemText(item) {
     .join(', ');
 }
 
+/**
+ * Returns the bundles a reference field's selection lists, and whether the
+ * selection negates them, as the Paragraphs selection handler can.
+ */
 function extractTargetBundles(data) {
   const settings = isObject(data.settings) ? data.settings : {};
   const handlerSettings = isObject(settings.handler_settings) ? settings.handler_settings : {};
   const targetBundles = handlerSettings.target_bundles;
+  const negate = [true, 1, '1'].includes(handlerSettings.negate);
 
-  if (!isObject(targetBundles)) {
-    return [];
+  return { bundles: isObject(targetBundles) ? Object.keys(targetBundles).map(String) : [], negate };
+}
+
+/**
+ * Sets the target bundles of each negated selection to every bundle of its
+ * target type the config defines, except the excluded ones.
+ *
+ * A selection that excludes every known bundle keeps no target bundles, so it
+ * points at the open-ended placeholder.
+ */
+function resolveNegatedTargets(model, negated) {
+  for (const [fieldItem, excluded] of negated) {
+    fieldItem.targetBundles = model
+      .getEntities()
+      .filter((entity) => entity.entityType === fieldItem.targetType && entity.bundle !== '*' && !excluded.includes(entity.bundle))
+      .map((entity) => entity.bundle)
+      .sort(compare);
   }
-
-  return Object.keys(targetBundles).map(String);
 }
 
 function resolveTargets(model) {
