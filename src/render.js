@@ -37,6 +37,8 @@ import { keepOrder, packColumns, tidyColumns } from './packing.js';
 import { freeArea } from './free-area.js';
 import { frameSettings } from './mode-frame.js';
 import { readMarkdownSettings } from './markdown.js';
+import { checkModel, readCheckSettings } from './model-checks.js';
+import { documentFromGraph } from './document.js';
 import { nodeLookup, selectionEntity } from './inspector-trail.js';
 import { parseRichText, richTextHtml } from './rich-text.js';
 import { fieldSharing } from './shared-fields.js';
@@ -162,6 +164,12 @@ function setFrame(patch) {
 
 function setMarkdown(patch) {
   settings.markdown = readMarkdownSettings({ ...readMarkdownSettings(settings.markdown), ...patch });
+  saveSettings();
+  bump();
+}
+
+function setChecks(patch) {
+  settings.checks = readCheckSettings({ ...readCheckSettings(settings.checks), ...patch });
   saveSettings();
   bump();
 }
@@ -1250,6 +1258,27 @@ function buildController(model, options = {}) {
     centreOn(withFields(node), Math.max(cy.zoom(), 0.8));
   }
 
+  // Focuses the node a check problem is on. A field off the canvas is
+  // reached through its entity, and an entity of a hidden type not at all.
+  function focusProblem(id) {
+    const node = cy.getElementById(id);
+
+    if (node.empty()) {
+      return;
+    }
+
+    if (node.data('group') === 'field' && hiddenBy(node) === null) {
+      focusField(id);
+      return;
+    }
+
+    const entity = node.data('group') === 'field' ? cy.getElementById(node.data('entity')) : node;
+
+    if (nodeVisible(entity)) {
+      focusEntity(entity.id());
+    }
+  }
+
   function focusField(id) {
     const node = cy.getElementById(id);
     if (node.empty()) {
@@ -1522,6 +1551,7 @@ function buildController(model, options = {}) {
     delete settings.newDiagrams;
     delete settings.frame;
     delete settings.markdown;
+    delete settings.checks;
     saveSettings();
     applyFrame();
     initColors();
@@ -1670,6 +1700,10 @@ function buildController(model, options = {}) {
     setFrame,
     markdownSettings: () => readMarkdownSettings(settings.markdown),
     setMarkdown,
+    checkSettings: () => readCheckSettings(settings.checks),
+    setChecks,
+    problems: () => checkModel(documentFromGraph(cy), settings.checks),
+    focusProblem,
     applyTheme: () => {
       cy.style(style());
       positionCaptions();

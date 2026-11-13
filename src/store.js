@@ -16,7 +16,7 @@ const listeners = new Set();
 
 // The default order of the panels, also the order of a side rail's panels
 // until they are moved.
-export const PANEL_ORDER = ['entities', 'table', 'settings', 'legend', 'history', 'inspector'];
+export const PANEL_ORDER = ['entities', 'table', 'settings', 'legend', 'history', 'checks', 'inspector'];
 
 const DEFAULT_POS = {
   entities: { left: 16, top: 16 },
@@ -25,6 +25,7 @@ const DEFAULT_POS = {
   settings: { right: 16, top: 16 },
   legend: { right: 16, bottom: 16 },
   history: { left: 16, bottom: 16 },
+  checks: { left: 16, bottom: 16 },
 };
 
 // Raised panels hold distinct z-indexes in a band from PANEL_Z up, 1 per

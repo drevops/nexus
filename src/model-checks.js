@@ -47,15 +47,22 @@ const REFERENCED_TYPES = ['paragraph', 'media', 'block_content'];
 const LIST_FIELD_TYPES = ['list_string', 'list_integer', 'list_float'];
 
 /**
+ * Returns whether a value is a field limit: a whole number from 1 to
+ * MAX_FIELD_LIMIT.
+ */
+export function isFieldLimit(value) {
+  return Number.isInteger(value) && value >= 1 && value <= MAX_FIELD_LIMIT;
+}
+
+/**
  * Returns complete check settings from saved ones, with the default for a
- * missing value or one that isn't a whole number from 1 to MAX_FIELD_LIMIT.
+ * missing value or one that isn't a field limit.
  */
 export function readCheckSettings(saved) {
   const entry = saved && typeof saved === 'object' ? saved : {};
   const limit = Object.hasOwn(entry, 'fieldLimit') ? entry.fieldLimit : null;
-  const valid = Number.isInteger(limit) && limit >= 1 && limit <= MAX_FIELD_LIMIT;
 
-  return { fieldLimit: valid ? limit : CHECK_DEFAULTS.fieldLimit };
+  return { fieldLimit: isFieldLimit(limit) ? limit : CHECK_DEFAULTS.fieldLimit };
 }
 
 function quoted(text) {

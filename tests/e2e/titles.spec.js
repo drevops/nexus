@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { copyLink, loadExample, tapNode } from './helpers.js';
+import { CHECKS_DOC, copyLink, loadExample, openDocument, tapNode } from './helpers.js';
 
 test.describe('Titles', { tag: '@runner-1' }, () => {
   // Describes each visible control, table header and badge that shows no
@@ -74,11 +74,19 @@ test.describe('Titles', { tag: '@runner-1' }, () => {
         async (page) => {
           await loadExample(page);
 
-          for (const toggle of ['#entities-toggle', '#table-toggle', '#history-toggle', '#settings-toggle']) {
+          for (const toggle of ['#entities-toggle', '#table-toggle', '#history-toggle', '#checks-toggle', '#settings-toggle']) {
             await page.click(toggle);
           }
 
           await expect(page.locator('#settings [data-default="layout"]')).toBeVisible();
+        },
+      ],
+      [
+        'the Checks panel with problems',
+        async (page) => {
+          await openDocument(page, CHECKS_DOC);
+          await page.click('#checks-toggle');
+          await expect(page.locator('#checks .checks__item')).toHaveCount(3);
         },
       ],
       [
