@@ -7,6 +7,7 @@
 
 import { cardinalityLabel, DEFAULT_TITLE } from './model.js';
 import { fileSlug } from './names.js';
+import { allowedValueLabels } from './field-settings.js';
 
 if (window.cytoscape && window.cytoscapeSvg && !window.cytoscape('core', 'svg')) {
   window.cytoscape.use(window.cytoscapeSvg);
@@ -37,7 +38,20 @@ function recordsToCsv(records, typeLabel) {
     const s = String(value == null ? '' : value);
     return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
   };
-  const headers = ['Entity', 'Entity type', 'Field', 'Machine name', 'Field type', 'Cardinality', 'Required', 'References'];
+  const headers = [
+    'Entity',
+    'Entity type',
+    'Field',
+    'Machine name',
+    'Field type',
+    'Cardinality',
+    'Required',
+    'References',
+    'Help text',
+    'Default',
+    'Allowed values',
+    'Translatable',
+  ];
   const rows = records.map((r) =>
     [
       r.entity,
@@ -48,6 +62,10 @@ function recordsToCsv(records, typeLabel) {
       cardinalityLabel(r.cardinality),
       r.required ? 'yes' : 'no',
       r.refs.map((x) => x.label).join('; '),
+      r.description,
+      r.defaultValue,
+      allowedValueLabels(r.allowedValues).join('; '),
+      r.translatable === null ? '' : r.translatable ? 'yes' : 'no',
     ]
       .map(esc)
       .join(','),

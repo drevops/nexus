@@ -45,6 +45,7 @@ function dataProviderSavedKeys() {
     ['a custom type', keysOf(DEFS.customType), keysAcross(doc.customTypes)],
     ['an entity', keysOf(DEFS.entity), keysAcross(doc.entities)],
     ['a field', keysOf(DEFS.field), keysAcross(fields)],
+    ['an allowed value', keysOf(DEFS.allowedValue), keysAcross(fields.flatMap((field) => field.allowedValues || []))],
     ['the annotations', keysOf(SCHEMA.properties.annotations), keysAcross([doc.annotations])],
     ['an annotation node', keysOf(DEFS.annotationNode), keysAcross(doc.annotations.nodes)],
     ['an annotation edge', keysOf(DEFS.annotationEdge), keysAcross(doc.annotations.edges)],
@@ -97,6 +98,7 @@ test('rejects a document that breaks the schema, at the path of the break', asyn
 
 function dataProviderSchemaBreaks() {
   const field = (doc) => doc.entities[0].fields[0];
+  const layout = (doc) => doc.entities[0].fields[1];
 
   return [
     ['no format version', (doc) => delete doc.nexus, '/'],
@@ -121,6 +123,14 @@ function dataProviderSchemaBreaks() {
     ['a single-value field with a cardinality above 1', (doc) => (doc.entities[0].fields[1].cardinality = 3), '/entities/0/fields/1/cardinality'],
     ['a required flag that is not a boolean', (doc) => (field(doc).required = 'yes'), '/entities/0/fields/0/required'],
     ['a target bundle that is not a machine name', (doc) => (field(doc).targetBundles = ['Tags']), '/entities/0/fields/0/targetBundles/0'],
+    ['an entity description that is not text', (doc) => (doc.entities[0].description = 7), '/entities/0/description'],
+    ['help text that is not text', (doc) => (field(doc).description = ['Pick']), '/entities/0/fields/0/description'],
+    ['a default value that is not text', (doc) => (field(doc).defaultValue = 1), '/entities/0/fields/0/defaultValue'],
+    ['allowed values that are not a list', (doc) => (field(doc).allowedValues = { wide: 'Wide' }), '/entities/0/fields/0/allowedValues'],
+    ['an allowed value without a value', (doc) => (layout(doc).allowedValues = [{ label: 'Wide' }]), '/entities/0/fields/1/allowedValues/0'],
+    ['an allowed value with an empty value', (doc) => (layout(doc).allowedValues = [{ value: '' }]), '/entities/0/fields/1/allowedValues/0/value'],
+    ['an allowed value with an unknown key', (doc) => (layout(doc).allowedValues = [{ value: 'wide', key: 'wide' }]), '/entities/0/fields/1/allowedValues/0'],
+    ['a translatable flag that is not a boolean', (doc) => (field(doc).translatable = 'yes'), '/entities/0/fields/0/translatable'],
     ['an annotation without an id', (doc) => delete doc.annotations.nodes[0].id, '/annotations/nodes/0'],
     ['an unknown annotation kind', (doc) => (doc.annotations.nodes[0].kind = 'webhook'), '/annotations/nodes/0/kind'],
     ['an edge without an end', (doc) => delete doc.annotations.edges[0].to, '/annotations/edges/0'],

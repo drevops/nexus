@@ -21,6 +21,7 @@ import htmBase from 'htm';
 import { icon } from './icons.js';
 import { cardinalityLabel, identifierSegments, fitFontSize } from './model.js';
 import { InspectorBody } from './inspector.js';
+import { allowedValueLabels } from './field-settings.js';
 import { goToVersion, historyState } from './undo.js';
 import { MODES } from './diagram-defaults.js';
 import { titleShoelaceHosts } from './host-titles.js';
@@ -636,6 +637,35 @@ function fieldActions(controller, r) {
     </td>`;
 }
 
+function hasSettings(r) {
+  return Boolean(r.description || r.defaultValue || r.allowedValues.length || r.translatable !== null);
+}
+
+const settingHeaders = () =>
+  html`<th title="Help text: the text editors see under the field">Help text</th>
+    <th title="Default: the value a new item starts with">Default</th>
+    <th title="Allowed values: the values a list field offers">Allowed values</th>
+    <th title="Translatable: whether the value can differ per language">Transl.</th>`;
+
+function translatableMark(translatable) {
+  if (translatable === null) {
+    return '';
+  }
+
+  return translatable
+    ? html`<span title="Translatable: the value can differ per language">✓</span>`
+    : html`<span title="Not translatable: the value is the same in every language">✕</span>`;
+}
+
+// The help text, default, allowed values and translatable cells of a field's
+// row.
+function settingCells(r) {
+  return html`<td class="field-table__text">${r.description}</td>
+    <td class="field-table__text">${r.defaultValue}</td>
+    <td class="field-table__text">${allowedValueLabels(r.allowedValues).join(', ')}</td>
+    <td>${translatableMark(r.translatable)}</td>`;
+}
+
 function TableBody({ controller, filter }) {
   const [term, setTerm] = useState('');
   const tableRef = useRef(null);
@@ -675,12 +705,17 @@ function TableBody({ controller, filter }) {
     };
   }, []);
 
-  const records = controller.records().filter((r) => {
+  const allRecords = controller.records();
+  // Taken from every field, so the columns stay put while the list is
+  // filtered.
+  const showSettings = allRecords.some(hasSettings);
+  const columnCount = showSettings ? 11 : 7;
+  const records = allRecords.filter((r) => {
     if (filter && filter !== '__all__' && r.entityId !== filter) {
       return false;
     }
     if (term) {
-      const hay = (r.entity + ' ' + r.field + ' ' + r.name + ' ' + r.type + ' ' + r.refs.map((x) => x.label).join(' ')).toLowerCase();
+      const hay = [r.entity, r.field, r.name, r.type, ...r.refs.map((x) => x.label), r.description].join(' ').toLowerCase();
       return hay.indexOf(term.toLowerCase()) !== -1;
     }
     return true;
@@ -693,7 +728,10 @@ function TableBody({ controller, filter }) {
       current = r.entityId;
       rows.push(
         html`<tr class="is-group">
-          <td colspan="7">${r.entity} · ${controller.typeLabel(r.entityType)}</td>
+          <td colspan=${columnCount}>
+            ${r.entity} · ${controller.typeLabel(r.entityType)}
+            ${r.entityDescription ? html`<span class="field-table__description">${r.entityDescription}</span>` : null}
+          </td>
         </tr>`,
       );
     }
@@ -718,7 +756,7 @@ function TableBody({ controller, filter }) {
                 >`,
           )}
         </td>
-        ${fieldActions(controller, r)}
+        ${showSettings ? settingCells(r) : null} ${fieldActions(controller, r)}
       </tr>`,
     );
   });
@@ -741,14 +779,14 @@ function TableBody({ controller, filter }) {
         size="small"
         type="search"
         placeholder="Filter fields…"
-        title="Filter the fields by entity, label, machine name, type or reference"
+        title="Filter the fields by entity, label, machine name, type, reference or help text"
         clearable
         value=${term}
         onsl-input=${(e) => setTerm(e.target.value)}
       ></sl-input>
     </div>
     <div class="table-wrap">
-      <table id="field-table" class="field-table" ref=${tableRef}>
+      <table id="field-table" class=${'field-table' + (showSettings ? ' has-settings' : '')} ref=${tableRef}>
         <thead>
           <tr>
             <th title="Field: its label and machine name">Field</th>
@@ -756,6 +794,7 @@ function TableBody({ controller, filter }) {
             <th title="Cardinality: how many values the field holds">Card.</th>
             <th title="Required: whether the field must have a value">Req</th>
             <th title="References: the entities a reference field points to">References</th>
+            ${showSettings ? settingHeaders() : null}
             <th class="field-table__action" title="Show or hide each field on the canvas">${rawIcon('eye', 14)}<span class="visually-hidden">Show</span></th>
             <th class="field-table__action" title="Go to each field on the canvas">${rawIcon('crosshair', 14)}<span class="visually-hidden">Go to</span></th>
           </tr>
@@ -765,7 +804,7 @@ function TableBody({ controller, filter }) {
             rows.length
               ? rows
               : html`<tr>
-                  <td colspan="7">No fields match.</td>
+                  <td colspan=${columnCount}>No fields match.</td>
                 </tr>`
           }
         </tbody>

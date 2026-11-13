@@ -146,6 +146,20 @@ export function fitFontSize(measure, availableWidth, fontSize, minFontSize) {
 }
 
 /**
+ * Returns the settings a field has, keyed as its node data holds them. A
+ * setting with no value has no key, so a cleared setting matches one never
+ * set.
+ */
+export function fieldSettingsData(field) {
+  return {
+    ...(field.description ? { description: field.description } : {}),
+    ...(field.defaultValue ? { defaultValue: field.defaultValue } : {}),
+    ...(field.allowedValues && field.allowedValues.length ? { allowedValues: field.allowedValues.map((item) => ({ ...item })) } : {}),
+    ...(typeof field.translatable === 'boolean' ? { translatable: field.translatable } : {}),
+  };
+}
+
+/**
  * A single field on an entity bundle.
  */
 export class Field {
@@ -160,6 +174,10 @@ export class Field {
     this.cardinality = cardinality;
     this.note = '';
     this.hidden = false;
+    this.description = '';
+    this.defaultValue = '';
+    this.allowedValues = [];
+    this.translatable = null;
   }
 
   isReference() {
@@ -176,6 +194,7 @@ export class Entity {
     this.bundle = bundle;
     this.label = label;
     this.note = '';
+    this.description = '';
     this.fields = [];
   }
 
@@ -252,6 +271,7 @@ export class ContentModel {
           bundle: entity.bundle,
           label: entity.label,
           note: entity.note || '',
+          ...(entity.description ? { description: entity.description } : {}),
         },
       });
 
@@ -273,6 +293,7 @@ export class ContentModel {
             // A shown field has no hidden key, so its data matches a field
             // shown again with removeData().
             ...(fieldItem.hidden ? { hidden: true } : {}),
+            ...fieldSettingsData(fieldItem),
           },
         });
 

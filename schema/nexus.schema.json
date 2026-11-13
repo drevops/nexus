@@ -103,6 +103,7 @@
         },
         "label": { "type": "string", "minLength": 1 },
         "note": { "description": "Free text shown as a note badge.", "type": "string" },
+        "description": { "description": "The bundle's description, as its Drupal config gives it.", "type": "string" },
         "fields": {
           "type": "array",
           "items": { "$ref": "#/$defs/field" }
@@ -141,7 +142,15 @@
           "type": "array",
           "items": { "$ref": "#/$defs/machineName" }
         },
-        "hidden": { "description": "True keeps the field off the canvas.", "type": "boolean" }
+        "hidden": { "description": "True keeps the field off the canvas.", "type": "boolean" },
+        "description": { "description": "The help text editors see under the field.", "type": "string" },
+        "defaultValue": { "description": "The value a new item starts with, as text.", "type": "string" },
+        "allowedValues": {
+          "description": "The values a list field offers, in order.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/allowedValue" }
+        },
+        "translatable": { "description": "Whether the field's value can differ per language. Leave it out when the source doesn't say.", "type": "boolean" }
       },
       "allOf": [
         {
@@ -153,6 +162,16 @@
           "then": { "properties": { "cardinality": { "not": { "const": 1 } } } }
         }
       ]
+    },
+    "allowedValue": {
+      "description": "1 value a list field offers.",
+      "type": "object",
+      "required": ["value"],
+      "additionalProperties": false,
+      "properties": {
+        "value": { "description": "The value Drupal stores.", "type": "string", "minLength": 1 },
+        "label": { "description": "The label editors pick. Defaults to the value.", "type": "string" }
+      }
     },
     "annotationNode": {
       "description": "An Event, API or Callback node. Its id is the id it's given here.",

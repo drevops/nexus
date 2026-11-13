@@ -147,6 +147,43 @@ function dataProviderHiddenField() {
   ];
 }
 
+test('opens the descriptions and field settings a document holds and leaves out the rest', async (t) => {
+  for (const [name, entity, field, expectedEntity, expectedField] of dataProviderDescriptionsAndFieldSettings()) {
+    await t.test(name, () => {
+      const doc = { entities: [{ entityType: 'node', bundle: 'page', ...entity, fields: [{ name: 'field_body', kind: 'single', ...field }] }] };
+      const { modelData } = documentToModel(doc);
+      const data = (id) => modelData.nodes.find((candidate) => candidate.data.id === id).data;
+      const pick = (source, keys) => Object.fromEntries(keys.filter((key) => Object.hasOwn(source, key)).map((key) => [key, source[key]]));
+
+      assert.deepEqual(pick(data('node.page'), ['description']), expectedEntity);
+      assert.deepEqual(pick(data('field:node.page:field_body'), ['description', 'defaultValue', 'allowedValues', 'translatable']), expectedField);
+    });
+  }
+});
+
+function dataProviderDescriptionsAndFieldSettings() {
+  return [
+    [
+      'every setting',
+      { description: 'Pages.' },
+      { description: 'Help.', defaultValue: 'wide', allowedValues: [{ value: 'wide', label: 'Wide' }, { value: 'narrow' }], translatable: false },
+      { description: 'Pages.' },
+      {
+        description: 'Help.',
+        defaultValue: 'wide',
+        allowedValues: [
+          { value: 'wide', label: 'Wide' },
+          { value: 'narrow', label: 'narrow' },
+        ],
+        translatable: false,
+      },
+    ],
+    ['no settings', {}, {}, {}, {}],
+    ['blank settings', { description: ' ' }, { description: '', defaultValue: '\n', allowedValues: [], translatable: null }, {}, {}],
+    ['settings of the wrong type', { description: 7 }, { description: ['Help.'], defaultValue: 3, allowedValues: 'wide', translatable: 'yes' }, {}, {}],
+  ];
+}
+
 test('rejects input that is not a Nexus document', () => {
   assert.throws(() => documentToModel({}));
   assert.throws(() => documentToModel(null));

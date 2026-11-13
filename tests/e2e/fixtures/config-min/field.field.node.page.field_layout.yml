@@ -1,0 +1,15 @@
+langcode: en
+status: true
+id: node.page.field_layout
+field_name: field_layout
+entity_type: node
+bundle: page
+label: Layout
+description: 'How wide the page is drawn.'
+required: false
+translatable: true
+default_value:
+  -
+    value: wide
+field_type: list_string
+settings: {  }

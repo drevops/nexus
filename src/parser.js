@@ -9,6 +9,7 @@ import { ContentModel, Entity, Field, REFERENCE_FIELD_TYPES, kindForCardinality,
 import { baseFieldsForEntityType } from './base-fields.js';
 import { ENTITY_TYPE_ORDER } from './entity-types.js';
 import { humanize } from './names.js';
+import { allowedValueList, settingText } from './field-settings.js';
 
 const BUNDLE_PREFIXES = {
   'node.type.': 'node',
@@ -80,8 +81,11 @@ function matchBundle(filename, data) {
     }
 
     const label = data?.name ?? data?.label ?? humanize(bundle);
+    const entity = new Entity(entityType, bundle, String(label));
 
-    return new Entity(entityType, bundle, String(label));
+    entity.description = settingText(data?.description);
+
+    return entity;
   }
 
   return null;
@@ -109,6 +113,7 @@ function collectStorages(files, filenames) {
       type: data.type != null ? String(data.type) : 'string',
       cardinality: data.cardinality != null ? parseInt(data.cardinality, 10) : 1,
       targetType: settings.target_type != null ? String(settings.target_type) : null,
+      allowedValues: allowedValueList(settings.allowed_values),
     };
   }
 
@@ -136,6 +141,7 @@ function addFieldInstance(model, data, storages) {
     type: data.field_type != null ? String(data.field_type) : 'string',
     cardinality: 1,
     targetType: null,
+    allowedValues: [],
   };
 
   const fieldType = data.field_type != null ? String(data.field_type) : storage.type;
@@ -146,7 +152,42 @@ function addFieldInstance(model, data, storages) {
   const targetType = isReference ? storage.targetType : null;
   const targetBundles = isReference ? extractTargetBundles(data) : [];
 
-  entity.addField(new Field(fieldName, label, fieldType, kind, required, targetType, targetBundles, storage.cardinality));
+  const field = new Field(fieldName, label, fieldType, kind, required, targetType, targetBundles, storage.cardinality);
+
+  field.description = settingText(data.description);
+  field.defaultValue = defaultValueText(data.default_value);
+  field.allowedValues = storage.allowedValues;
+  field.translatable = typeof data.translatable === 'boolean' ? data.translatable : null;
+
+  entity.addField(field);
+}
+
+/**
+ * Returns a field's default value items as text: each item's value, or its
+ * scalar properties as key: value pairs when it has no value, with items
+ * split by semicolons. No items give an empty string.
+ */
+function defaultValueText(items) {
+  if (!Array.isArray(items)) {
+    return '';
+  }
+
+  return items.map(defaultItemText).filter(Boolean).join('; ');
+}
+
+function defaultItemText(item) {
+  if (!isObject(item)) {
+    return isScalar(item) ? String(item) : '';
+  }
+
+  if (isScalar(item.value)) {
+    return String(item.value);
+  }
+
+  return Object.keys(item)
+    .filter((key) => isScalar(item[key]) && String(item[key]) !== '')
+    .map((key) => key + ': ' + item[key])
+    .join(', ');
 }
 
 function extractTargetBundles(data) {
@@ -233,4 +274,8 @@ function compare(a, b) {
 
 function isObject(value) {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isScalar(value) {
+  return typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean';
 }

@@ -19,6 +19,7 @@ import { icon } from './icons.js';
 import { cardinalityLabel, kindForCardinality, FIELD_TYPES, KIND_SYSTEM, MAX_CARDINALITY, REFERENCE_FIELD_TYPES } from './model.js';
 import { ANNOTATION_KINDS } from './annotations.js';
 import { formatFieldLine, parseFieldLines } from './bulk-fields.js';
+import { allowedValuesText, parseAllowedValues, settingText } from './field-settings.js';
 import { BULK_FIELDS_LABEL, inspectorTrail, NEW_FIELD_LABEL, nodeLookup } from './inspector-trail.js';
 import { describeNode } from './history.js';
 import { checkpoint } from './undo.js';
@@ -102,6 +103,85 @@ function NoteField({ node }) {
       }}
     ></sl-textarea>
   </div>`;
+}
+
+// Sets a description or field setting, or removes its key when the value is
+// blank, so a cleared setting matches one never set.
+function setSetting(node, key, value) {
+  const blank = Array.isArray(value) ? value.length === 0 : typeof value === 'string' ? settingText(value) === '' : value === null;
+
+  if (blank) {
+    node.removeData(key);
+  } else {
+    node.data(key, value);
+  }
+}
+
+// A text setting of a node. `toText` and `fromText` convert between the value
+// the node holds and the text the control shows.
+function TextSetting({ node, dataKey, label, title, placeholder, multiline, action, toText = (value) => value || '', fromText = (text) => text }) {
+  const [text, setText] = useState(toText(node.data(dataKey)));
+
+  function onInput(e) {
+    setText(e.target.value);
+    setSetting(node, dataKey, fromText(e.target.value));
+    bump();
+    checkpoint(action + ' ' + describeNode(node), dataKey + ':' + node.id());
+  }
+
+  if (!multiline) {
+    return html`<${Row} label=${label}
+      ><sl-input size="small" data-setting=${dataKey} title=${title} placeholder=${placeholder} value=${text} onsl-input=${onInput}></sl-input
+    ><//>`;
+  }
+
+  return html`<div class="insp__note">
+    <label>${label}</label>
+    <sl-textarea
+      size="small"
+      data-setting=${dataKey}
+      rows="2"
+      resize="auto"
+      title=${title}
+      placeholder=${placeholder}
+      value=${text}
+      onsl-input=${onInput}
+    ></sl-textarea>
+  </div>`;
+}
+
+const TRANSLATABLE_VALUES = { yes: true, no: false };
+
+function TranslatableSetting({ node }) {
+  const current = node.data('translatable');
+  const [value, setValue] = useState(current === true ? 'yes' : current === false ? 'no' : '');
+
+  function onChange(e) {
+    const picked = Object.hasOwn(TRANSLATABLE_VALUES, e.target.value) ? TRANSLATABLE_VALUES[e.target.value] : null;
+
+    setValue(e.target.value);
+    setSetting(node, 'translatable', picked);
+    bump();
+
+    if (picked === null) {
+      checkpoint('Cleared whether ' + describeNode(node) + ' is translatable');
+    } else {
+      checkpoint('Made ' + describeNode(node) + (picked ? ' translatable' : ' not translatable'));
+    }
+  }
+
+  return html`<${Row} label="Translatable"
+    ><sl-select
+      size="small"
+      data-setting="translatable"
+      clearable
+      placeholder="Not set"
+      title="Whether the field's value can differ per language. Clear it when the source doesn't say."
+      value=${value}
+      onsl-change=${onChange}
+      ><sl-option value="yes">Yes</sl-option><sl-option value="no">No</sl-option></sl-select
+    ><//
+  >`;
 }
 
 export function existingFields() {
@@ -189,6 +269,15 @@ export function EntityForm({ id }) {
         onsl-change=${(e) => getBuilder().renameEntity(id, e.target.value)}
       ></sl-input
     ><//>
+    <${TextSetting}
+      node=${node}
+      dataKey="description"
+      label="Description"
+      title="The bundle's description, as Drupal shows it to editors"
+      placeholder="Describe what this bundle is for…"
+      multiline
+      action="Edited the description of"
+    />
     <${NoteField} node=${node} />
     <div class="insp__section">
       <div class="insp__sectionhead">
@@ -221,6 +310,8 @@ export function FieldForm({ id }) {
     cardinality: node.data('cardinality') != null ? node.data('cardinality') : 1,
     required: !!node.data('required'),
   });
+  // Read once, so clearing the list doesn't remove its box mid-edit.
+  const [hasAllowedValues] = useState(Boolean(node.data('allowedValues')));
 
   function set(key, value) {
     node.data(key, value);
@@ -251,6 +342,7 @@ export function FieldForm({ id }) {
     <${Row} label="Label"
       ><sl-input
         size="small"
+        data-label
         title="The field's label"
         value=${s.label}
         onsl-input=${(e) => {
@@ -301,6 +393,38 @@ export function FieldForm({ id }) {
         }}
       ></sl-switch
     ><//>
+    <${TranslatableSetting} node=${node} />
+    <${TextSetting}
+      node=${node}
+      dataKey="description"
+      label="Help text"
+      title="The help text editors see under the field"
+      placeholder="Explain what goes in this field…"
+      multiline
+      action="Edited the help text of"
+    />
+    <${TextSetting}
+      node=${node}
+      dataKey="defaultValue"
+      label="Default value"
+      title="The value a new item starts with"
+      placeholder="No default"
+      action="Changed the default value of"
+    />
+    ${
+      (String(s.fieldType).startsWith('list_') || hasAllowedValues) &&
+      html`<${TextSetting}
+        node=${node}
+        dataKey="allowedValues"
+        label="Allowed values"
+        title="The values the list offers, 1 per line as value|label. A line without a label uses its value."
+        placeholder=${'draft|Draft\npublished|Published'}
+        multiline
+        action="Changed the allowed values of"
+        toText=${(list) => allowedValuesText(list || [])}
+        fromText=${parseAllowedValues}
+      />`
+    }
     ${
       isRef &&
       html` <div class="insp__section">

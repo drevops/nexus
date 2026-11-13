@@ -5,6 +5,11 @@ field_name: field_summary
 entity_type: node
 bundle: article
 label: Summary
+description: 'A short <b>summary</b> of the article.'
 required: true
+translatable: false
+default_value:
+  -
+    value: 'Read on'
 field_type: string
 settings: {  }

@@ -19,10 +19,11 @@ The schema is the contract. Follow this skill to fill it in from a source that w
 3. **Map each field to a field type, a kind and a cardinality** (see [Field types](#field-types) and [Kind and cardinality](#kind-and-cardinality)).
 4. **Name everything** (see [Names and ids](#names-and-ids)).
 5. **Connect the references** (see [References](#references)).
-6. **Add annotations** for events, APIs and callbacks the source shows (see [Annotations](#annotations)).
-7. **Write the document** (see [Write the document](#write-the-document)).
-8. **Check it** (see [Check the document](#check-the-document)) and fix every error.
-9. **Report** the filename, what you assumed and what you couldn't read (see [Report back](#report-back)).
+6. **Record descriptions and field settings** the source gives (see [Descriptions and field settings](#descriptions-and-field-settings)).
+7. **Add annotations** for events, APIs and callbacks the source shows (see [Annotations](#annotations)).
+8. **Write the document** (see [Write the document](#write-the-document)).
+9. **Check it** (see [Check the document](#check-the-document)) and fix every error.
+10. **Report** the filename, what you assumed and what you couldn't read (see [Report back](#report-back)).
 
 ## Entity types
 
@@ -107,6 +108,20 @@ A field that points to other entities - tags, media, related content, paragraphs
 - To point to every bundle of a type, leave `targetBundles` empty and add an entity with the bundle `*` and a label such as `Any Media`.
 - A field with no target leaves out `targetType` or sets it to `null`.
 
+## Descriptions and field settings
+
+Content model specs often describe each bundle and explain each field. Nexus shows these in its Inspector, its tooltips and its Fields table:
+
+| Key | On | What it holds |
+|-----|----|---------------|
+| `description` | An entity | What the bundle is for, such as "Time-limited news and announcements" |
+| `description` | A field | The help text editors see under the field, such as "Use the speaker's full name" |
+| `defaultValue` | A field | The value a new item starts with, as text, such as `draft` or `now` |
+| `allowedValues` | A field | The options a `list_string` field offers, in order: `[{ "value": "keynote", "label": "Keynote" }]`. Leave out `label` when it matches the value |
+| `translatable` | A field | `true` when the field's value can differ per language, `false` when it can't |
+
+Every one is optional. Leave a key out when the source doesn't say, rather than writing an empty string, an empty list or a guess. Copy the text as the source writes it, markup included.
+
 ## Annotations
 
 Annotations draw what Drupal configuration leaves out: events, external APIs and callbacks.
@@ -121,7 +136,7 @@ Leave `annotations` out when the source shows none.
 - Start with `"$schema": "https://nexus.drevops.com/schema/nexus.schema.json"` and `"nexus": 1`.
 - Set `title` to the name of the site or model the source describes.
 - List the entities in the order the source presents them, and the fields of each in the source's order.
-- Put anything the source says that the diagram can't show - help text, allowed values, an open question - in the `note` of the entity, field or annotation it belongs to.
+- Put anything the source says that the diagram can't show - a business rule, an open question - in the `note` of the entity, field or annotation it belongs to. Help text, defaults, allowed values and translatability have their own keys (see [Descriptions and field settings](#descriptions-and-field-settings)).
 - **Leave out `layout` and `ui`.** Nexus lays the diagram out when it opens.
 - Leave out `colors` and `symbols` unless the user asks for them.
 - Don't invent bundles or fields the source doesn't show. Beyond the source, add only the base fields from [Kind and cardinality](#kind-and-cardinality) and the entities your references need.
@@ -139,12 +154,34 @@ This is a complete document for a small events site:
       "entityType": "node",
       "bundle": "event",
       "label": "Event",
+      "description": "A conference, meetup or workshop.",
       "fields": [
         { "name": "title", "label": "Title", "fieldType": "string", "kind": "system", "cardinality": 1, "required": true },
         { "name": "uid", "label": "Author", "fieldType": "entity_reference", "kind": "system", "cardinality": 1 },
         { "name": "status", "label": "Published", "fieldType": "boolean", "kind": "system", "cardinality": 1 },
         { "name": "created", "label": "Authored on", "fieldType": "created", "kind": "system", "cardinality": 1 },
-        { "name": "field_date", "label": "Date", "fieldType": "datetime", "kind": "single", "cardinality": 1, "required": true },
+        {
+          "name": "field_date",
+          "label": "Date",
+          "fieldType": "datetime",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "description": "The day the event starts.",
+          "translatable": false
+        },
+        {
+          "name": "field_format",
+          "label": "Format",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "defaultValue": "in_person",
+          "allowedValues": [
+            { "value": "in_person", "label": "In person" },
+            { "value": "online", "label": "Online" }
+          ]
+        },
         {
           "name": "field_venue",
           "label": "Venue",

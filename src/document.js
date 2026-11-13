@@ -7,8 +7,9 @@
  * pure transform back to renderable model data (so it can be unit-tested).
  */
 
-import { ContentModel, Entity, Field, DEFAULT_TITLE } from './model.js';
+import { ContentModel, Entity, Field, DEFAULT_TITLE, fieldSettingsData } from './model.js';
 import { applyAnnotations } from './annotations.js';
+import { allowedValueList, settingText } from './field-settings.js';
 
 function splitId(id) {
   const index = id.indexOf('.');
@@ -41,6 +42,7 @@ function serializeField(field) {
     targetType: targetType,
     targetBundles: targetBundles,
     hidden: !!field.data('hidden'),
+    ...fieldSettingsData(field.data()),
   };
 }
 
@@ -65,7 +67,14 @@ export function documentFromGraph(cy, meta = {}) {
   const entities = cy.nodes('[group="entity"]').map((node) => {
     const fields = (fieldsByEntity[node.id()] || []).map(serializeField);
 
-    return { entityType: node.data('entityType'), bundle: node.data('bundle'), label: node.data('label'), note: node.data('note') || '', fields: fields };
+    return {
+      entityType: node.data('entityType'),
+      bundle: node.data('bundle'),
+      label: node.data('label'),
+      note: node.data('note') || '',
+      ...(node.data('description') ? { description: node.data('description') } : {}),
+      fields: fields,
+    };
   });
 
   const nodes = cy.nodes('[group="annotation"]').map((node) => {
@@ -108,6 +117,7 @@ export function documentToModel(doc) {
   doc.entities.forEach((entity) => {
     const built = new Entity(entity.entityType, entity.bundle, entity.label != null ? entity.label : entity.bundle);
     built.note = entity.note || '';
+    built.description = settingText(entity.description);
     (entity.fields || []).forEach((field) => {
       const builtField = new Field(
         field.name,
@@ -121,6 +131,10 @@ export function documentToModel(doc) {
       );
       builtField.note = field.note || '';
       builtField.hidden = field.hidden === true;
+      builtField.description = settingText(field.description);
+      builtField.defaultValue = settingText(field.defaultValue);
+      builtField.allowedValues = allowedValueList(field.allowedValues);
+      builtField.translatable = typeof field.translatable === 'boolean' ? field.translatable : null;
       built.addField(builtField);
     });
     model.addEntity(built);
