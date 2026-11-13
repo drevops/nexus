@@ -616,13 +616,37 @@ function countText(count, noun) {
   return count + ' ' + noun + (count === 1 ? '' : 's');
 }
 
-// In Edit mode the Inspector opens on the node too, so it can be fixed.
+// In Edit mode the Inspector opens on the node too, so it can be fixed. A
+// problem on an entity of a hidden type has nothing on the canvas to go to.
 function goToProblem(controller, id) {
+  if (!controller.canFocusProblem(id)) {
+    return;
+  }
+
   controller.focusProblem(id);
 
   if (window.__nexusBuild) {
     getBuilder().select(id);
   }
+}
+
+function problemRow(controller, problem, iconName, index) {
+  const reachable = controller.canFocusProblem(problem.id);
+  const action = reachable ? '. Click to go to it on the canvas' : '. Show its entity type to go to it';
+
+  return html`<li key=${problem.rule + problem.id + index}>
+    <button
+      type="button"
+      class="checks__item"
+      data-check-rule=${problem.rule}
+      data-check-id=${problem.id}
+      aria-disabled=${reachable ? null : 'true'}
+      title=${RULE_LABELS[problem.rule] + action}
+      onClick=${() => goToProblem(controller, problem.id)}
+    >
+      ${rawIcon(iconName, 14)}<span class="checks__message">${problem.message}</span>
+    </button>
+  </li>`;
 }
 
 // The problems of the open model, errors first, each a button that goes to
@@ -644,21 +668,7 @@ function ChecksBody({ controller, problems }) {
                 ${group.heading}<span class="checks__count" title=${countText(group.items.length, group.level)}>${group.items.length}</span>
               </h3>
               <ul class="checks__list">
-                ${group.items.map(
-                  (problem, index) =>
-                    html`<li key=${problem.rule + problem.id + index}>
-                      <button
-                        type="button"
-                        class="checks__item"
-                        data-check-rule=${problem.rule}
-                        data-check-id=${problem.id}
-                        title=${RULE_LABELS[problem.rule] + '. Click to go to it on the canvas'}
-                        onClick=${() => goToProblem(controller, problem.id)}
-                      >
-                        ${rawIcon(group.icon, 14)}<span class="checks__message">${problem.message}</span>
-                      </button>
-                    </li>`,
-                )}
+                ${group.items.map((problem, index) => problemRow(controller, problem, group.icon, index))}
               </ul>
             </section>`,
         )}

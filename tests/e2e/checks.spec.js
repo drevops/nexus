@@ -103,6 +103,26 @@ test.describe('Checks', { tag: '@runner-2' }, () => {
     expect(await hasClass(page, 'paragraph.hero', 'faded')).toBe(true);
   });
 
+  test('says how to reach a problem on an entity of a hidden type, and goes nowhere until it is shown', async ({ page }) => {
+    const hero = page.locator('#checks [data-check-id="paragraph.hero"]');
+    const paragraphs = page.locator('#type-filters label', { hasText: 'Paragraph' }).locator('input');
+    await openChecks(page, CHECKS_DOC);
+    await page.click('#entities-toggle');
+
+    await paragraphs.uncheck();
+    await expect(hero).toHaveAttribute('aria-disabled', 'true');
+    await expect(hero).toHaveAttribute('title', 'Paragraph, media or block type no field references. Show its entity type to go to it');
+    // Playwright clicks an aria-disabled button only when forced.
+    await hero.click({ force: true });
+    expect(await page.evaluate(() => window.__nexus.cy.elements('.faded').length)).toBe(0);
+
+    await paragraphs.check();
+    await expect(hero).not.toHaveAttribute('aria-disabled');
+    await hero.click();
+    await expect.poll(() => hasClass(page, 'paragraph.hero', 'faded')).toBe(false);
+    expect(await hasClass(page, 'node.article', 'faded')).toBe(true);
+  });
+
   test('opens the Inspector on the node a problem is on in Edit mode', async ({ page }) => {
     await openChecks(page, CHECKS_DOC);
     await page.click('#mode-build');

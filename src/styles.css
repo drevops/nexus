@@ -1553,6 +1553,12 @@ body.is-dragging-panel * {
   background: var(--surface-2);
 }
 
+.checks__item[aria-disabled='true'] {
+  color: var(--muted);
+  background: none;
+  cursor: default;
+}
+
 .checks__item:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: -2px;

@@ -1258,24 +1258,36 @@ function buildController(model, options = {}) {
     centreOn(withFields(node), Math.max(cy.zoom(), 0.8));
   }
 
-  // Focuses the node a check problem is on. A field off the canvas is
-  // reached through its entity, and an entity of a hidden type not at all.
-  function focusProblem(id) {
+  // The node a check problem on the node with the id is reached through: a
+  // field the canvas shows, else the field's entity. Null when the node is
+  // gone or its entity type is hidden.
+  function problemTarget(id) {
     const node = cy.getElementById(id);
 
     if (node.empty()) {
-      return;
+      return null;
     }
 
     if (node.data('group') === 'field' && hiddenBy(node) === null) {
-      focusField(id);
-      return;
+      return node;
     }
 
     const entity = node.data('group') === 'field' ? cy.getElementById(node.data('entity')) : node;
 
-    if (nodeVisible(entity)) {
-      focusEntity(entity.id());
+    return nodeVisible(entity) ? entity : null;
+  }
+
+  function focusProblem(id) {
+    const target = problemTarget(id);
+
+    if (!target) {
+      return;
+    }
+
+    if (target.data('group') === 'field') {
+      focusField(target.id());
+    } else {
+      focusEntity(target.id());
     }
   }
 
@@ -1704,6 +1716,7 @@ function buildController(model, options = {}) {
     setChecks,
     problems: () => checkModel(documentFromGraph(cy), settings.checks),
     focusProblem,
+    canFocusProblem: (id) => problemTarget(id) !== null,
     applyTheme: () => {
       cy.style(style());
       positionCaptions();
