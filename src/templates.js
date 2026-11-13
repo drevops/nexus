@@ -51,7 +51,7 @@ export const TEMPLATES = [
   {
     id: 'civictheme',
     label: 'CivicTheme',
-    version: '1.13.0',
+    version: '1.14.0',
     summary: 'Government design system',
     icon: 'landmark',
     color: '#00698f',
@@ -60,7 +60,7 @@ export const TEMPLATES = [
       {
         name: 'CivicTheme',
         repo: 'https://git.drupalcode.org/project/civictheme.git',
-        ref: '1.13.0',
+        ref: '1.14.0',
         paths: ['config/install', 'config/optional'],
       },
     ],
