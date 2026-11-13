@@ -109,3 +109,16 @@ test('deploys the site only after the release is published', () => {
   assert.equal(jobs.build.permissions.contents, 'read');
   assert.equal(jobs.deploy.permissions.contents, undefined);
 });
+
+test('keeps the files OpenSSF Scorecard reads in source archives', async (t) => {
+  const ignored = readFileSync(join(ROOT, '.gitattributes'), 'utf8')
+    .split('\n')
+    .filter((line) => /\bexport-ignore\b/.test(line))
+    .map((line) => line.trim().split(/\s+/)[0]);
+
+  for (const path of ['/.github', '/renovate.json', '/tests', '/package.json', '/SECURITY.md']) {
+    await t.test(path, () => {
+      assert.ok(!ignored.some((pattern) => path === pattern || path.startsWith(pattern + '/')), path + ' is export-ignored');
+    });
+  }
+});
