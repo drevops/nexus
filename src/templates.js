@@ -16,7 +16,7 @@ export const TEMPLATES = [
   {
     id: 'drupal-cms',
     label: 'Drupal CMS',
-    version: '2.2.2',
+    version: '2.2.9',
     summary: 'Byte site template: blog, pages, media',
     icon: 'droplet',
     color: '#0678be',
@@ -25,7 +25,7 @@ export const TEMPLATES = [
       {
         name: 'Drupal core',
         repo: 'https://git.drupalcode.org/project/drupal.git',
-        ref: '11.4.8',
+        ref: '11.4.12',
         paths: [
           'core/recipes/document_media_type/config',
           'core/recipes/image_media_type/config',
@@ -37,7 +37,7 @@ export const TEMPLATES = [
       {
         name: 'Drupal CMS',
         repo: 'https://git.drupalcode.org/project/drupal_cms.git',
-        ref: '2.2.2',
+        ref: '2.2.9',
         paths: ['recipes/drupal_cms_site_template_base/config', 'recipes/drupal_cms_forms/config', 'recipes/drupal_cms_search/config'],
       },
       {
