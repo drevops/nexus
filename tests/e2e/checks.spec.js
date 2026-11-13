@@ -8,9 +8,11 @@ const TAGS_FIELD = 'field:node.article:field_tags';
 test.describe('Checks', { tag: '@runner-2' }, () => {
   // The problems the panel lists, by level, each as its message.
   function listedProblems(page) {
-    return page.locator('#checks .checks__group').evaluateAll((groups) =>
-      groups.map((group) => [group.dataset.level, [...group.querySelectorAll('.checks__message')].map((message) => message.textContent)]),
-    );
+    return page
+      .locator('#checks .checks__group')
+      .evaluateAll((groups) =>
+        groups.map((group) => [group.dataset.level, [...group.querySelectorAll('.checks__message')].map((message) => message.textContent)]),
+      );
   }
 
   function badge(page) {
@@ -61,7 +63,9 @@ test.describe('Checks', { tag: '@runner-2' }, () => {
     const doc = {
       nexus: 1,
       title: 'Sound',
-      entities: [{ entityType: 'node', bundle: 'page', label: 'Page', fields: [{ name: 'field_body', label: 'Body', fieldType: 'text_long', kind: 'single' }] }],
+      entities: [
+        { entityType: 'node', bundle: 'page', label: 'Page', fields: [{ name: 'field_body', label: 'Body', fieldType: 'text_long', kind: 'single' }] },
+      ],
     };
 
     await openChecks(page, doc);

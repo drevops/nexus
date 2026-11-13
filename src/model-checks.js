@@ -140,9 +140,16 @@ function checkSharedStorage(entities, report) {
     }
 
     for (const { entity, field } of group) {
-      const others = group.filter((other) => storageLabel(other.field) !== storageLabel(field)).map((other) => storageLabel(other.field) + ' on ' + entityName(other.entity));
+      const others = group
+        .filter((other) => storageLabel(other.field) !== storageLabel(field))
+        .map((other) => storageLabel(other.field) + ' on ' + entityName(other.entity));
 
-      report('shared-storage', field, entity, fieldName(field, entity) + ' is ' + storageLabel(field) + ' but ' + others.join(', ') + ', and Drupal shares 1 storage per field name');
+      report(
+        'shared-storage',
+        field,
+        entity,
+        fieldName(field, entity) + ' is ' + storageLabel(field) + ' but ' + others.join(', ') + ', and Drupal shares 1 storage per field name',
+      );
     }
   }
 }
@@ -202,7 +209,12 @@ function checkDuplicateLabels(entities, report) {
       }
 
       if (seen.has(key)) {
-        report('duplicate-label', field, entity, fieldName(field, entity) + ' has the label ' + quoted(String(field.label).trim()) + ', as ' + seen.get(key) + ' does');
+        report(
+          'duplicate-label',
+          field,
+          entity,
+          fieldName(field, entity) + ' has the label ' + quoted(String(field.label).trim()) + ', as ' + seen.get(key) + ' does',
+        );
         continue;
       }
 
@@ -233,7 +245,12 @@ function checkUnreferenced(entities, report) {
       continue;
     }
 
-    report('unreferenced-bundle', null, entity, 'No field references the ' + findEntityType(entity.entityType).label.toLowerCase() + ' type ' + entityName(entity));
+    report(
+      'unreferenced-bundle',
+      null,
+      entity,
+      'No field references the ' + findEntityType(entity.entityType).label.toLowerCase() + ' type ' + entityName(entity),
+    );
   }
 }
 

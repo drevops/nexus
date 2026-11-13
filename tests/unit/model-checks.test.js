@@ -6,7 +6,6 @@ import { CHECK_DEFAULTS, CHECK_RULES, MAX_FIELD_LIMIT, MAX_NAME_LENGTH, checkMod
 
 const TEMPLATES = join(import.meta.dirname, '..', '..', 'templates');
 
-const ARTICLE = 'node.article';
 const TAGS_FIELD = 'field:node.article:field_tags';
 
 function field(name, label, fieldType, extra = {}) {
@@ -28,7 +27,12 @@ const BASE = {
         field('field_body', 'Body', 'entity_reference_revisions', { targetType: 'paragraph', targetBundles: ['hero'] }),
       ],
     },
-    { entityType: 'taxonomy_term', bundle: 'tags', label: 'Tags', fields: [field('name', 'Name', 'string', { kind: 'system' }), field('field_colour', 'Colour', 'string')] },
+    {
+      entityType: 'taxonomy_term',
+      bundle: 'tags',
+      label: 'Tags',
+      fields: [field('name', 'Name', 'string', { kind: 'system' }), field('field_colour', 'Colour', 'string')],
+    },
     { entityType: 'paragraph', bundle: 'hero', label: 'Hero', fields: [field('field_heading', 'Heading', 'string')] },
   ],
 };
@@ -137,7 +141,13 @@ function dataProviderProblems() {
     ],
     [
       'a field name with a different type on 2 bundles of 1 entity type',
-      (doc) => doc.entities.push({ entityType: 'node', bundle: 'page', label: 'Page', fields: [field('field_tags', 'Tags', 'string', { kind: 'multi', cardinality: -1 })] }),
+      (doc) =>
+        doc.entities.push({
+          entityType: 'node',
+          bundle: 'page',
+          label: 'Page',
+          fields: [field('field_tags', 'Tags', 'string', { kind: 'multi', cardinality: -1 })],
+        }),
       [
         problem(
           'shared-storage',
@@ -156,7 +166,10 @@ function dataProviderProblems() {
       (doc) => {
         const tagsOn = (cardinality) => field('field_tags', 'Tags', 'entity_reference', { cardinality, targetType: 'taxonomy_term', targetBundles: ['tags'] });
 
-        doc.entities.push({ entityType: 'node', bundle: 'page', label: 'Page', fields: [tagsOn(1)] }, { entityType: 'node', bundle: 'blog', label: 'Blog', fields: [tagsOn(-1)] });
+        doc.entities.push(
+          { entityType: 'node', bundle: 'page', label: 'Page', fields: [tagsOn(1)] },
+          { entityType: 'node', bundle: 'blog', label: 'Blog', fields: [tagsOn(-1)] },
+        );
       },
       [
         problem(
@@ -198,7 +211,13 @@ function dataProviderProblems() {
         entity(doc, 'tags').bundle = 'site-tags';
         tags(doc).targetBundles = ['site-tags'];
       },
-      [problem('machine-name', 'taxonomy_term.site-tags', 'The bundle site-tags of “Tags” uses characters other than lowercase letters, digits and underscores')],
+      [
+        problem(
+          'machine-name',
+          'taxonomy_term.site-tags',
+          'The bundle site-tags of “Tags” uses characters other than lowercase letters, digits and underscores',
+        ),
+      ],
     ],
     [
       'a field name with a capital',
@@ -248,7 +267,8 @@ function dataProviderProblems() {
     ],
     [
       'a paragraph type that only references itself is still referenced',
-      (doc) => entity(doc, 'hero').fields.push(field('field_items', 'Items', 'entity_reference_revisions', { targetType: 'paragraph', targetBundles: ['hero'] })),
+      (doc) =>
+        entity(doc, 'hero').fields.push(field('field_items', 'Items', 'entity_reference_revisions', { targetType: 'paragraph', targetBundles: ['hero'] })),
       [],
     ],
     [
@@ -285,7 +305,13 @@ function dataProviderProblems() {
           entity(doc, 'tags').fields.push(field('field_' + i, 'Field ' + i, 'string'));
         }
       },
-      [problem('field-limit', 'taxonomy_term.tags', '“Tags” has ' + (CHECK_DEFAULTS.fieldLimit + 1) + ' fields, more than the limit of ' + CHECK_DEFAULTS.fieldLimit)],
+      [
+        problem(
+          'field-limit',
+          'taxonomy_term.tags',
+          '“Tags” has ' + (CHECK_DEFAULTS.fieldLimit + 1) + ' fields, more than the limit of ' + CHECK_DEFAULTS.fieldLimit,
+        ),
+      ],
     ],
     [
       'errors before warnings, whatever order the rules find them in',
@@ -294,7 +320,11 @@ function dataProviderProblems() {
         fieldOf(doc, 'hero', 'field_heading').name = 'field_Heading';
       },
       [
-        problem('machine-name', 'field:paragraph.hero:field_Heading', 'The field name field_Heading on “Hero” uses characters other than lowercase letters, digits and underscores'),
+        problem(
+          'machine-name',
+          'field:paragraph.hero:field_Heading',
+          'The field name field_Heading on “Hero” uses characters other than lowercase letters, digits and underscores',
+        ),
         problem('list-values', 'field:taxonomy_term.tags:field_size', 'field_size on “Tags” is a list with no allowed values'),
       ],
     ],
@@ -338,15 +368,15 @@ function dataProviderAllowed() {
         }),
     ],
     ['the same field name with another storage on another entity type', (doc) => entity(doc, 'tags').fields.push(field('field_body', 'Body', 'text_long'))],
-    [
-      'a base field name with another type on 2 bundles',
-      (doc) => (fieldOf(doc, 'tags', 'name').fieldType = 'string_long'),
-    ],
+    ['a base field name with another type on 2 bundles', (doc) => (fieldOf(doc, 'tags', 'name').fieldType = 'string_long')],
     ['a machine name of exactly the length limit', (doc) => (fieldOf(doc, 'tags', 'field_colour').name = 'f'.repeat(MAX_NAME_LENGTH))],
     ['a wildcard bundle', (doc) => doc.entities.push({ entityType: 'taxonomy_term', bundle: '*', label: 'Any Vocabulary' })],
     ['labels that differ', (doc) => entity(doc, 'tags').fields.push(field('field_shade', 'Shade', 'string'))],
     ['fields with no label', (doc) => entity(doc, 'tags').fields.push(field('field_a', '', 'string'), field('field_b', null, 'string'))],
-    ['a list field with allowed values', (doc) => entity(doc, 'tags').fields.push(field('field_size', 'Size', 'list_string', { allowedValues: [{ value: 's', label: 'Small' }] }))],
+    [
+      'a list field with allowed values',
+      (doc) => entity(doc, 'tags').fields.push(field('field_size', 'Size', 'list_string', { allowedValues: [{ value: 's', label: 'Small' }] })),
+    ],
     [
       'a bundle with exactly the default limit of fields',
       (doc) => {
@@ -355,7 +385,10 @@ function dataProviderAllowed() {
         }
       },
     ],
-    ['an entity type no field needs to reference', (doc) => doc.entities.push({ entityType: 'user', bundle: 'user', label: 'User', fields: [field('field_bio', 'Bio', 'text_long')] })],
+    [
+      'an entity type no field needs to reference',
+      (doc) => doc.entities.push({ entityType: 'user', bundle: 'user', label: 'User', fields: [field('field_bio', 'Bio', 'text_long')] }),
+    ],
   ];
 }
 

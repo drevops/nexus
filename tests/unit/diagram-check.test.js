@@ -147,7 +147,8 @@ function dataProviderAccepted() {
     ],
     [
       'a base reference field without a target',
-      (doc) => doc.entities[0].fields.push({ name: 'uid', label: 'Author', fieldType: 'entity_reference', kind: 'system', targetType: null, targetBundles: [] }),
+      (doc) =>
+        doc.entities[0].fields.push({ name: 'uid', label: 'Author', fieldType: 'entity_reference', kind: 'system', targetType: null, targetBundles: [] }),
     ],
     [
       'an entity type listed in customTypes',
@@ -177,12 +178,18 @@ function dataProviderModelRules() {
     [
       'a reference to a bundle the document does not define',
       (doc) => tags(doc).targetBundles.push('topics'),
-      { errors: [{ path: '/entities/0/fields/1', message: 'field_tags on “Article” references taxonomy_term.topics, which the model does not have' }], warnings: [] },
+      {
+        errors: [{ path: '/entities/0/fields/1', message: 'field_tags on “Article” references taxonomy_term.topics, which the model does not have' }],
+        warnings: [],
+      },
     ],
     [
       'a reference to every bundle without a wildcard entity',
       (doc) => (tags(doc).targetBundles = []),
-      { errors: [{ path: '/entities/0/fields/1', message: 'field_tags on “Article” references taxonomy_term.*, which the model does not have' }], warnings: [] },
+      {
+        errors: [{ path: '/entities/0/fields/1', message: 'field_tags on “Article” references taxonomy_term.*, which the model does not have' }],
+        warnings: [],
+      },
     ],
     [
       'a reference field with target bundles but no target type',
