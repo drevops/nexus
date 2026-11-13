@@ -19,10 +19,12 @@ import { h, render, Component, options } from 'preact';
 import { useState, useEffect, useLayoutEffect, useRef } from 'preact/hooks';
 import htmBase from 'htm';
 import { icon } from './icons.js';
-import { cardinalityLabel, identifierSegments, fitFontSize } from './model.js';
+import { cardinalityLabel, cardinalityOptions, identifierSegments, fitFontSize, typeOptions } from './model.js';
 import { InspectorBody } from './inspector.js';
-import { allowedValueLabels } from './field-settings.js';
-import { numberFields, sortFields, nextSort, isDefaultSort } from './field-table.js';
+import { allowedValueLabels, allowedValuesText, parseAllowedValues, translatableChoice, translatableValue, TRANSLATABLE_OPTIONS } from './field-settings.js';
+import { numberFields, sortFields, nextSort, isDefaultSort, cellEditor, referenceChanges } from './field-table.js';
+import { setFieldCardinality, setFieldLabel, setFieldRequired, setFieldTranslatable, setFieldType, setSetting } from './field-edits.js';
+import { SelectEditor, TextEditor } from './table-editors.js';
 import { usedInTitle } from './shared-fields.js';
 import { RESIZE_HANDLES, resizeBox } from './panel-resize.js';
 import { goToVersion, historyState } from './undo.js';
@@ -33,6 +35,9 @@ import {
   getState,
   subscribe,
   getController,
+  getBuilder,
+  bump,
+  revise,
   togglePanel,
   closePanel,
   focusPanel,
@@ -504,7 +509,7 @@ function body(id, s) {
     return html`<${EntitiesBody} controller=${controller} />`;
   }
   if (id === 'table') {
-    return html`<${TableBody} controller=${controller} filter=${s.tableFilter} term=${s.tableSearch} sort=${s.tableSort} />`;
+    return html`<${TableBody} controller=${controller} filter=${s.tableFilter} term=${s.tableSearch} sort=${s.tableSort} editMode=${s.editMode} />`;
   }
   return html`<${SettingsBody} controller=${controller} />`;
 }
@@ -661,23 +666,12 @@ const GO_TO_TITLES = {
   type: 'Show its entity type to go to this field',
 };
 
-// The show-or-hide and go-to cells of a field's row.
+// The go-to and show-or-hide cells of a field's row.
 function fieldActions(controller, r) {
   const visibilityTitle = r.hidden ? 'Show ' + r.field + ' on the canvas' : 'Hide ' + r.field + ' on the canvas';
   const goToTitle = r.hiddenBy ? GO_TO_TITLES[r.hiddenBy] : 'Go to ' + r.field + ' on the canvas';
 
   return html`<td class="field-table__action">
-      <button
-        type="button"
-        class=${'table__action' + (r.hidden ? ' is-off' : '')}
-        data-field-visibility=${r.id}
-        title=${visibilityTitle}
-        aria-label=${visibilityTitle}
-        onClick=${() => controller.setFieldHidden(r.id, !r.hidden)}
-        dangerouslySetInnerHTML=${{ __html: icon(r.hidden ? 'eye-off' : 'eye', 14) }}
-      ></button>
-    </td>
-    <td class="field-table__action">
       <button
         type="button"
         class="table__action"
@@ -692,6 +686,17 @@ function fieldActions(controller, r) {
         }}
         dangerouslySetInnerHTML=${{ __html: icon('crosshair', 14) }}
       ></button>
+    </td>
+    <td class="field-table__action">
+      <button
+        type="button"
+        class=${'table__action' + (r.hidden ? ' is-off' : '')}
+        data-field-visibility=${r.id}
+        title=${visibilityTitle}
+        aria-label=${visibilityTitle}
+        onClick=${() => controller.setFieldHidden(r.id, !r.hidden)}
+        dangerouslySetInnerHTML=${{ __html: icon(r.hidden ? 'eye-off' : 'eye', 14) }}
+      ></button>
     </td>`;
 }
 
@@ -700,20 +705,36 @@ function hasSettings(r) {
 }
 
 // The sortable columns of the Fields table, left to right, each keyed by its
-// column in SORT_COLUMNS. A `settings` column shows only while a field of the
-// diagram has a setting.
+// column in SORT_COLUMNS. `edits` names what an edit of the column's cells
+// changes. A `settings` column shows in Edit mode, and in View mode while a
+// field of the diagram has a setting.
 const FIELD_COLUMNS = [
   { key: 'position', label: '#', name: 'position', title: '#: the place of the field in its entity' },
-  { key: 'field', label: 'Field', name: 'field', title: 'Field: its label and machine name' },
-  { key: 'type', label: 'Type', name: 'type', title: 'Type: the field type' },
-  { key: 'cardinality', label: 'Card.', name: 'cardinality', title: 'Cardinality: how many values the field holds' },
+  { key: 'field', label: 'Field', name: 'field', title: 'Field: its label', edits: 'label' },
+  { key: 'name', label: 'Machine name', name: 'machine name', title: 'Machine name: the name the field is stored under', edits: 'machine name' },
+  { key: 'type', label: 'Type', name: 'type', title: 'Type: the field type', edits: 'type' },
+  { key: 'cardinality', label: 'Card.', name: 'cardinality', title: 'Cardinality: how many values the field holds', edits: 'cardinality' },
   { key: 'required', label: 'Req', name: 'required', title: 'Required: whether the field must have a value' },
-  { key: 'references', label: 'References', name: 'references', title: 'References: the entities a reference field points to' },
+  { key: 'references', label: 'Refs', name: 'references', title: 'References: the entities a reference field points to', edits: 'references' },
   { key: 'usedIn', label: 'Used in', name: 'used in', title: 'Used in: how many bundles of the entity type have a field with this machine name' },
-  { key: 'description', label: 'Help text', name: 'help text', title: 'Help text: the text editors see under the field', settings: true },
-  { key: 'defaultValue', label: 'Default', name: 'default', title: 'Default: the value a new item starts with', settings: true },
-  { key: 'allowedValues', label: 'Allowed values', name: 'allowed values', title: 'Allowed values: the values a list field offers', settings: true },
-  { key: 'translatable', label: 'Transl.', name: 'translatable', title: 'Translatable: whether the value can differ per language', settings: true },
+  { key: 'description', label: 'Help text', name: 'help text', title: 'Help text: the text editors see under the field', edits: 'help text', settings: true },
+  { key: 'defaultValue', label: 'Default', name: 'default', title: 'Default: the value a new item starts with', edits: 'default value', settings: true },
+  {
+    key: 'allowedValues',
+    label: 'Allowed values',
+    name: 'allowed values',
+    title: 'Allowed values: the values a list field offers',
+    edits: 'allowed values',
+    settings: true,
+  },
+  {
+    key: 'translatable',
+    label: 'Transl.',
+    name: 'translatable',
+    title: 'Translatable: whether the value can differ per language',
+    edits: 'translatability',
+    settings: true,
+  },
 ];
 
 function sortHeader(column, sort) {
@@ -735,16 +756,140 @@ function translatableMark(translatable) {
     : html`<span title="Not translatable: the value is the same in every language">✕</span>`;
 }
 
-// The help text, default, allowed values and translatable cells of a field's
-// row.
-function settingCells(r) {
-  return html`<td class="field-table__text">${r.description}</td>
-    <td class="field-table__text">${r.defaultValue}</td>
-    <td class="field-table__text">${allowedValueLabels(r.allowedValues).join(', ')}</td>
-    <td>${translatableMark(r.translatable)}</td>`;
+function referenceLinks(controller, r) {
+  return r.refs.map(
+    (ref, i) =>
+      html`${i ? ', ' : ''}<a
+          class="table__reflink"
+          href="#"
+          title=${'Locate ' + ref.label + ' on the canvas'}
+          onClick=${(e) => {
+            e.preventDefault();
+            controller.focusEntity(ref.id);
+          }}
+          >${ref.label}</a
+        >`,
+  );
 }
 
-function TableBody({ controller, filter, term, sort }) {
+// What each column's cell shows for a field.
+const CELL_CONTENT = {
+  position: (r) => r.position,
+  field: (r) => r.field,
+  name: (r) => html`<code data-fit>${wrappable(r.name)}</code>`,
+  type: (r) => html`<span data-fit>${wrappable(r.type)}</span>`,
+  cardinality: (r) => cardBadge(r),
+  required: (r) => (r.required ? html`<span title="Required: the field must have a value">✓</span>` : ''),
+  references: (r, controller) => referenceLinks(controller, r),
+  usedIn: (r) => (r.usedIn.length ? html`<span title=${usedInTitle(r.usedIn)}>${r.usedIn.length}</span>` : ''),
+  description: (r) => r.description,
+  defaultValue: (r) => r.defaultValue,
+  allowedValues: (r) => allowedValueLabels(r.allowedValues).join(', '),
+  translatable: (r) => translatableMark(r.translatable),
+};
+
+const CELL_CLASSES = {
+  position: 'field-table__position',
+  usedIn: 'field-table__used-in',
+  description: 'field-table__text',
+  defaultValue: 'field-table__text',
+  allowedValues: 'field-table__text',
+};
+
+// The value, options and placeholder of each column's editor for a field.
+const EDITOR_PROPS = {
+  field: (r) => ({ value: r.field, placeholder: 'Label' }),
+  name: (r) => ({ value: r.name, placeholder: 'field_name' }),
+  type: (r) => ({ value: r.type, options: typeOptions(r.type).map((type) => [type, type]) }),
+  cardinality: (r) => ({ value: String(r.cardinality), options: cardinalityOptions(r.cardinality) }),
+  references: (r, entities) => ({
+    value: r.refs.map((ref) => ref.id),
+    options: entities.map((e) => [e.id, e.label]),
+    multiple: true,
+    placeholder: 'No references',
+  }),
+  description: (r) => ({ value: r.description, placeholder: 'Explain what goes in this field…' }),
+  defaultValue: (r) => ({ value: r.defaultValue, placeholder: 'No default' }),
+  allowedValues: (r) => ({ value: allowedValuesText(r.allowedValues), placeholder: 'draft|Draft\npublished|Published' }),
+  translatable: (r) => ({ value: translatableChoice(r.translatable), options: TRANSLATABLE_OPTIONS, clearable: true, placeholder: 'Not set' }),
+};
+
+// The hint each kind of editor adds to its title.
+const EDITOR_HINTS = {
+  text: 'Enter saves and Escape cancels.',
+  multiline: 'Enter saves, Shift+Enter starts a new line and Escape cancels.',
+  select: 'Pick a value, or press Escape to cancel.',
+  multiselect: 'Pick or unpick each entity, then press Escape to close.',
+};
+
+function applyReferences(r, picked) {
+  const { added, removed } = referenceChanges(
+    r.refs.map((ref) => ref.id),
+    picked,
+  );
+
+  removed.forEach((target) => getBuilder().removeReference(r.id, target));
+  added.forEach((target) => getBuilder().createReference(r.id, target));
+
+  if (added.length || removed.length) {
+    bump();
+  }
+}
+
+/**
+ * Writes a committed cell value to the field's node through the edits the
+ * Inspector makes. Returns the field's id after the edit, which a rename
+ * changes.
+ */
+function commitCell(controller, r, column, value) {
+  const node = controller.cy.getElementById(r.id);
+
+  if (node.empty()) {
+    return r.id;
+  }
+
+  if (column === 'field') {
+    if (value.trim() !== '') {
+      setFieldLabel(node, value.trim());
+    }
+  } else if (column === 'name') {
+    return getBuilder().renameField(r.id, value) || r.id;
+  } else if (column === 'type') {
+    setFieldType(node, value);
+  } else if (column === 'cardinality') {
+    setFieldCardinality(node, parseInt(value, 10));
+  } else if (column === 'required') {
+    setFieldRequired(node, value);
+  } else if (column === 'references') {
+    applyReferences(r, value);
+  } else if (column === 'description') {
+    setSetting(node, 'description', value, 'Edited the help text of');
+  } else if (column === 'defaultValue') {
+    setSetting(node, 'defaultValue', value, 'Changed the default value of');
+  } else if (column === 'allowedValues') {
+    setSetting(node, 'allowedValues', parseAllowedValues(value), 'Changed the allowed values of');
+  } else if (column === 'translatable') {
+    setFieldTranslatable(node, translatableValue(value));
+  }
+
+  return r.id;
+}
+
+// The Inspector's forms read the graph when they mount, so a form showing
+// the edited field or its entity remounts.
+function reviseInspectorFor(r) {
+  const selected = getState().selected;
+
+  if (selected && (selected.id === r.id || selected.id === r.entityId)) {
+    revise();
+  }
+}
+
+function cellKey(id, column) {
+  return id + '|' + column;
+}
+
+function TableBody({ controller, filter, term, sort, editMode }) {
   const tableRef = useRef(null);
   const fitKey = useRef('');
 
@@ -782,11 +927,61 @@ function TableBody({ controller, filter, term, sort }) {
     };
   }, []);
 
+  // The cell being edited, as { id, column }. The ref holds the same cell
+  // between renders, so a rename can move it to the field's new id.
+  const [editing, setEditing] = useState(null);
+  const editingRef = useRef(null);
+  const refocus = useRef(null);
+
+  function edit(cell) {
+    editingRef.current = cell;
+    setEditing(cell);
+  }
+
+  // A key press that closes an editor returns the focus to its cell.
+  function closeEditor(returnFocus) {
+    refocus.current = returnFocus ? editingRef.current : null;
+    edit(null);
+  }
+
+  function commit(r, column, value) {
+    const id = commitCell(controller, r, column, value);
+
+    if (editingRef.current && editingRef.current.id === r.id) {
+      editingRef.current = { ...editingRef.current, id };
+    }
+
+    reviseInspectorFor(r);
+  }
+
+  useEffect(() => {
+    if (!editMode) {
+      edit(null);
+    }
+  }, [editMode]);
+
+  useLayoutEffect(() => {
+    const cell = refocus.current;
+
+    if (!cell) {
+      return;
+    }
+
+    refocus.current = null;
+
+    const target = tableRef.current.querySelector('[data-edit-cell="' + CSS.escape(cellKey(cell.id, cell.column)) + '"]');
+
+    if (target) {
+      target.focus();
+    }
+  });
+
   // Numbered before the filter, so each field keeps its place in its entity.
   const allRecords = numberFields(controller.records());
+  const entities = controller.entities();
   // Taken from every field, so the columns stay put while the list is
-  // filtered.
-  const showSettings = allRecords.some(hasSettings);
+  // filtered. Edit mode shows them so a setting can be added.
+  const showSettings = editMode || allRecords.some(hasSettings);
   const columns = FIELD_COLUMNS.filter((column) => showSettings || !column.settings);
   const columnCount = columns.length + 2;
   const filtered = allRecords.filter((r) => {
@@ -801,13 +996,91 @@ function TableBody({ controller, filter, term, sort }) {
   });
   const records = sortFields(filtered, sort);
 
+  function editorCell(r, column, kind) {
+    const props = EDITOR_PROPS[column.key](r, entities);
+    const title = 'The ' + column.edits + ' of ' + (r.field || r.name) + '. ' + EDITOR_HINTS[kind];
+
+    if (kind === 'text' || kind === 'multiline') {
+      return html`<${TextEditor}
+        ...${props}
+        multiline=${kind === 'multiline'}
+        title=${title}
+        onCommit=${(value) => commit(r, column.key, value)}
+        onClose=${closeEditor}
+      />`;
+    }
+
+    return html`<${SelectEditor}
+      ...${props}
+      title=${title}
+      onShow=${alignWideList}
+      onChange=${(value) => commit(r, column.key, value)}
+      onClose=${closeEditor}
+    />`;
+  }
+
+  // A cell in Edit mode is a button that opens its editor, except Required,
+  // which is a checkbox, and References, whose links stay beside the button.
+  function cell(r, column) {
+    const content = CELL_CONTENT[column.key](r, controller);
+    const className = CELL_CLASSES[column.key] || null;
+    const kind = editMode ? cellEditor(r, column.key) : null;
+    const key = cellKey(r.id, column.key);
+    const name = r.field || r.name;
+
+    if (!kind) {
+      return html`<td class=${className} data-column=${column.key}>${content}</td>`;
+    }
+
+    if (kind === 'toggle') {
+      const toggleTitle = r.required ? 'Make ' + name + ' optional' : 'Make ' + name + ' required';
+
+      return html`<td data-column=${column.key}>
+        <input
+          type="checkbox"
+          class="field-table__check"
+          data-edit-cell=${key}
+          title=${toggleTitle}
+          checked=${r.required}
+          onChange=${(e) => commit(r, column.key, e.target.checked)}
+        />
+      </td>`;
+    }
+
+    if (editing && editing.id === r.id && editing.column === column.key) {
+      return html`<td class=${(className ? className + ' ' : '') + 'is-editing'} data-column=${column.key}>${editorCell(r, column, kind)}</td>`;
+    }
+
+    const editTitle = 'Edit the ' + column.edits + ' of ' + name;
+    const open = () => edit({ id: r.id, column: column.key });
+
+    if (column.key === 'references') {
+      return html`<td data-column=${column.key}>
+        ${content}
+        <button
+          type="button"
+          class="table__action field-table__edit-refs"
+          data-edit-cell=${key}
+          title=${editTitle}
+          aria-label=${editTitle}
+          onClick=${open}
+          dangerouslySetInnerHTML=${{ __html: icon('pencil', 12) }}
+        ></button>
+      </td>`;
+    }
+
+    return html`<td class=${className} data-column=${column.key}>
+      <button type="button" class="field-table__edit" data-edit-cell=${key} title=${editTitle} onClick=${open}>${content}</button>
+    </td>`;
+  }
+
   const rows = [];
   let current = null;
   records.forEach((r) => {
     if (r.entityId !== current) {
       current = r.entityId;
       rows.push(
-        html`<tr class="is-group">
+        html`<tr class="is-group" key=${'group|' + r.entityId}>
           <td colspan=${columnCount}>
             ${r.entity} · ${controller.typeLabel(r.entityType)}
             ${r.entityDescription ? html`<span class="field-table__description">${r.entityDescription}</span>` : null}
@@ -816,29 +1089,8 @@ function TableBody({ controller, filter, term, sort }) {
       );
     }
     rows.push(
-      html`<tr class=${r.hidden ? 'is-hidden-field' : null}>
-        <td class="field-table__position">${r.position}</td>
-        <td>${r.field}<br /><code data-fit>${wrappable(r.name)}</code></td>
-        <td data-fit>${wrappable(r.type)}</td>
-        <td>${cardBadge(r)}</td>
-        <td>${r.required ? html`<span title="Required: the field must have a value">✓</span>` : ''}</td>
-        <td>
-          ${r.refs.map(
-            (ref, i) =>
-              html`${i ? ', ' : ''}<a
-                  class="table__reflink"
-                  href="#"
-                  title=${'Locate ' + ref.label + ' on the canvas'}
-                  onClick=${(e) => {
-                    e.preventDefault();
-                    controller.focusEntity(ref.id);
-                  }}
-                  >${ref.label}</a
-                >`,
-          )}
-        </td>
-        <td class="field-table__used-in">${r.usedIn.length ? html`<span title=${usedInTitle(r.usedIn)}>${r.usedIn.length}</span>` : ''}</td>
-        ${showSettings ? settingCells(r) : null} ${fieldActions(controller, r)}
+      html`<tr class=${r.hidden ? 'is-hidden-field' : null} key=${r.id}>
+        ${fieldActions(controller, r)} ${columns.map((column) => cell(r, column))}
       </tr>`,
     );
   });
@@ -870,9 +1122,9 @@ function TableBody({ controller, filter, term, sort }) {
     <table id="field-table" class=${'field-table' + (showSettings ? ' has-settings' : '')} ref=${tableRef}>
       <thead>
         <tr>
-          ${columns.map((column) => sortHeader(column, sort))}
-          <th class="field-table__action" title="Show or hide each field on the canvas">${rawIcon('eye', 14)}<span class="visually-hidden">Show</span></th>
           <th class="field-table__action" title="Go to each field on the canvas">${rawIcon('crosshair', 14)}<span class="visually-hidden">Go to</span></th>
+          <th class="field-table__action" title="Show or hide each field on the canvas">${rawIcon('eye', 14)}<span class="visually-hidden">Show</span></th>
+          ${columns.map((column) => sortHeader(column, sort))}
         </tr>
       </thead>
       <tbody>
@@ -887,9 +1139,9 @@ function TableBody({ controller, filter, term, sort }) {
     </table>`;
 }
 
-// The list is wider than its select, so it ends under the select's right
-// edge when starting under the left edge would cross the window's edge.
-function alignSymbolList(evt) {
+// A list wider than its select ends under the select's right edge when
+// starting under the left edge would cross the window's edge.
+function alignWideList(evt) {
   const select = evt.currentTarget;
 
   if (evt.target !== select) {
@@ -915,7 +1167,7 @@ function symbolSelect(controller, type, value, color, onChange) {
     data-symbol=${type || ''}
     value=${value}
     title=${'Symbol: ' + (picked ? picked.label : value)}
-    onsl-show=${alignSymbolList}
+    onsl-show=${alignWideList}
     onsl-change=${onChange}
   >
     <span slot="prefix" class="type-row__preview" dangerouslySetInnerHTML=${{ __html: controller.symbolSvg(value, color, 20) }}></span>

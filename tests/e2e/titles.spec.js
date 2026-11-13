@@ -98,6 +98,24 @@ test.describe('Titles', { tag: '@runner-1' }, () => {
         },
       ],
       [
+        'the Fields table in Edit mode with a list open',
+        async (page) => {
+          await editing(page);
+          await page.click('#table-toggle');
+          await page.click('#field-table [data-edit-cell="field:node.event:field_media|references"]');
+          await expect(page.locator('#field-table .field-table__editor')).toHaveJSProperty('open', true);
+        },
+      ],
+      [
+        'the Fields table in Edit mode with a text box open',
+        async (page) => {
+          await editing(page);
+          await page.click('#table-toggle');
+          await page.click('#field-table [data-edit-cell="field:node.event:field_media|description"]');
+          await expect(page.locator('#field-table .field-table__editor')).toBeFocused();
+        },
+      ],
+      [
         'the annotation Inspector',
         async (page) => {
           await editing(page);

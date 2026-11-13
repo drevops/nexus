@@ -1,5 +1,5 @@
 /**
- * The order of the Fields table's rows.
+ * The order of the Fields table's rows and the editors of its cells.
  *
  * The table lists the fields of each entity under 1 group row, with the
  * groups in the order their entities' first fields come in. Each field is
@@ -9,6 +9,7 @@
  */
 
 import { allowedValueLabels } from './field-settings.js';
+import { KIND_CALCULATED, KIND_SYSTEM, REFERENCE_FIELD_TYPES } from './model.js';
 
 export const DEFAULT_SORT = { column: 'position', direction: 'ascending' };
 
@@ -23,6 +24,7 @@ function textValue(text) {
 const SORT_VALUES = {
   position: (r) => r.position,
   field: (r) => textValue(r.field || ''),
+  name: (r) => textValue(r.name || ''),
   type: (r) => textValue(r.type || ''),
   cardinality: (r) => BADGE_RANKS[r.kind] || (r.cardinality === -1 ? Number.MAX_SAFE_INTEGER - 2 : r.cardinality),
   required: (r) => (r.required ? 0 : null),
@@ -94,6 +96,59 @@ export function sortFields(records, sort = DEFAULT_SORT) {
  */
 export function isDefaultSort(sort) {
   return sort.column === DEFAULT_SORT.column && sort.direction === DEFAULT_SORT.direction;
+}
+
+// The control each editable column edits its cell with. Required is a
+// checkbox in the cell itself, so it has no editor to open.
+const EDITORS = {
+  field: 'text',
+  name: 'text',
+  type: 'select',
+  cardinality: 'select',
+  required: 'toggle',
+  references: 'multiselect',
+  description: 'multiline',
+  defaultValue: 'text',
+  allowedValues: 'multiline',
+  translatable: 'select',
+};
+
+// Columns that edit only some fields. A system or calculated field's badge
+// stands for its kind, which a new cardinality would replace.
+const EDITABLE_WHEN = {
+  cardinality: (r) => r.kind !== KIND_SYSTEM && r.kind !== KIND_CALCULATED,
+  references: (r) => REFERENCE_FIELD_TYPES.includes(r.type),
+  allowedValues: (r) => String(r.type).startsWith('list_') || r.allowedValues.length > 0,
+};
+
+export const EDITABLE_COLUMNS = Object.keys(EDITORS);
+
+/**
+ * Returns the editor a field record's cell in `column` opens: `text`,
+ * `multiline`, `select`, `multiselect` or `toggle`, or null when the cell
+ * can't be edited.
+ */
+export function cellEditor(record, column) {
+  if (!Object.hasOwn(EDITORS, column)) {
+    return null;
+  }
+
+  if (Object.hasOwn(EDITABLE_WHEN, column) && !EDITABLE_WHEN[column](record)) {
+    return null;
+  }
+
+  return EDITORS[column];
+}
+
+/**
+ * Returns the reference targets to add and to remove to turn the `current`
+ * target ids into the `picked` ones, each in the order given.
+ */
+export function referenceChanges(current, picked) {
+  return {
+    added: picked.filter((id, index) => !current.includes(id) && picked.indexOf(id) === index),
+    removed: current.filter((id) => !picked.includes(id)),
+  };
 }
 
 /**

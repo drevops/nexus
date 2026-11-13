@@ -54,6 +54,10 @@ test.describe('Descriptions and field settings', { tag: '@runner-2' }, () => {
     return page.locator('#field-table tbody tr', { has: page.locator('code', { hasText: new RegExp('^' + name + '$') }) });
   }
 
+  function cell(row, column) {
+    return row.locator('td[data-column="' + column + '"]');
+  }
+
   async function editField(page, id) {
     await importFixture(page);
     await page.click('#mode-build');
@@ -99,33 +103,34 @@ test.describe('Descriptions and field settings', { tag: '@runner-2' }, () => {
 
     await expect(page.locator('#field-table')).toHaveClass(/has-settings/);
     expect(await page.locator('#field-table thead th').allTextContents()).toEqual([
+      'Go to',
+      'Show',
       '#',
       'Field',
+      'Machine name',
       'Type',
       'Card.',
       'Req',
-      'References',
+      'Refs',
       'Used in',
       'Help text',
       'Default',
       'Allowed values',
       'Transl.',
-      'Show',
-      'Go to',
     ]);
 
-    const layout = tableRow(page, 'field_layout').locator('td');
-    await expect(layout.nth(7)).toHaveText('How wide the page is drawn.');
-    await expect(layout.nth(8)).toHaveText('wide');
-    await expect(layout.nth(9)).toHaveText('Wide (wide), Narrow (narrow)');
-    await expect(layout.nth(10).locator('span')).toHaveAttribute('title', /^Translatable/);
+    const layout = tableRow(page, 'field_layout');
+    await expect(cell(layout, 'description')).toHaveText('How wide the page is drawn.');
+    await expect(cell(layout, 'defaultValue')).toHaveText('wide');
+    await expect(cell(layout, 'allowedValues')).toHaveText('Wide (wide), Narrow (narrow)');
+    await expect(cell(layout, 'translatable').locator('span')).toHaveAttribute('title', /^Translatable/);
 
-    const summary = tableRow(page, 'field_summary').locator('td');
-    await expect(summary.nth(7)).toHaveText('A short <b>summary</b> of the article.');
-    await expect(summary.nth(10).locator('span')).toHaveAttribute('title', /^Not translatable/);
+    const summary = tableRow(page, 'field_summary');
+    await expect(cell(summary, 'description')).toHaveText('A short <b>summary</b> of the article.');
+    await expect(cell(summary, 'translatable').locator('span')).toHaveAttribute('title', /^Not translatable/);
     await expect(page.locator('#field-table b')).toHaveCount(0);
 
-    await expect(tableRow(page, 'field_tags').locator('td').nth(10)).toHaveText('');
+    await expect(cell(tableRow(page, 'field_tags'), 'translatable')).toHaveText('');
     await expect(page.locator('#field-table .is-group', { hasText: /^\s*Article ·/ }).locator('.field-table__description')).toHaveText('An article.');
   });
 

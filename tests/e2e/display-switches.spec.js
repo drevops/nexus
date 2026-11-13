@@ -23,7 +23,7 @@ test.describe('Display switches', { tag: '@runner-2' }, () => {
     await expect(page.locator('#entity-list .entity-row').first()).toBeVisible();
 
     await page.click('#table-toggle');
-    await expect(page.locator('#field-table')).toContainText('References');
+    await expect(page.locator('#field-table')).toContainText('Machine name');
     await expect(page.locator('#field-table')).toContainText('field_media');
   });
 
