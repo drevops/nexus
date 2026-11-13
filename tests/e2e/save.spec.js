@@ -58,14 +58,15 @@ test.describe('Save', { tag: '@runner-1' }, () => {
     ];
   }
 
-  test('lists every format under Save as', async ({ page }) => {
+  test('lists every format under Save as, then Copy link', async ({ page }) => {
     await loadExample(page);
 
     await page.click('#save-choose');
 
     await expect(page.locator('#save-menu')).toBeVisible();
     await expect(page.locator('#save-menu sl-menu-label')).toHaveText('Save as');
-    await expect(page.locator('#save-menu sl-menu-item')).toHaveText(['JSON', 'PNG', 'SVG', 'CSV', 'Markdown', 'HTML']);
+    await expect(page.locator('#save-menu sl-menu-item')).toHaveText(['JSON', 'PNG', 'SVG', 'CSV', 'Markdown', 'HTML', 'Copy link']);
+    await expect(page.locator('#save-menu > sl-menu-item[value="html"] + sl-divider + sl-menu-item[value="link"]')).toHaveCount(1);
   });
 
   for (const [format, filename] of dataProviderSaveFormats()) {

@@ -59,9 +59,11 @@
       <sl-button-group id="save-group" class="toolbar__group" label="Save">
         <sl-button id="doc-save" class="toolbar__button" size="small" data-icon="download" data-shortcut="Mod+S" title="Save this diagram as a Nexus document (.nexus.json)">Save</sl-button>
         <sl-dropdown id="save-dropdown" placement="bottom-end" hoist>
-          <sl-button id="save-choose" slot="trigger" class="toolbar__button" size="small" caret data-shortcut="Mod+Shift+S" title="Save the diagram as an image, its fields table as CSV or the model as Markdown or HTML" aria-label="Save as"></sl-button>
+          <sl-button id="save-choose" slot="trigger" class="toolbar__button" size="small" caret data-shortcut="Mod+Shift+S" title="Save the diagram as an image, its fields table as CSV or the model as Markdown or HTML, or copy a link to it" aria-label="Save as"></sl-button>
           <sl-menu id="save-menu">
             <sl-menu-label>Save as</sl-menu-label>
+            <sl-divider id="save-divider"></sl-divider>
+            <sl-menu-item value="link" title="Copy a link that opens this diagram, with the diagram inside the link"><span slot="prefix" data-icon="link"></span>Copy link</sl-menu-item>
           </sl-menu>
         </sl-dropdown>
       </sl-button-group>
@@ -247,6 +249,17 @@
   </div>
   <sl-button id="ai-close" slot="footer" title="Close this dialog">Close</sl-button>
   <sl-button id="ai-open" slot="footer" variant="primary" data-icon="folder-open" title="Open the pasted document as the diagram">Open diagram</sl-button>
+</sl-dialog>
+
+<sl-dialog id="link-dialog" class="link-dialog" label="Copy link">
+  <div class="link">
+    <p id="link-text" class="link__text"></p>
+    <sl-input id="link-url" class="link__url" size="small" readonly title="The link to this diagram" aria-label="Link to this diagram"></sl-input>
+    <p class="link__docs"><a id="link-protection" href="https://github.com/drevops/nexus#link-protection" target="_blank" rel="noopener" title="Read how Nexus checks a link for damage and keeps its content from running code">How links are protected</a> · <a id="link-limits" href="https://github.com/drevops/nexus#link-limits" target="_blank" rel="noopener" title="Read how long a link can be and how much diagram it holds">Link limits</a></p>
+  </div>
+  <sl-button id="link-close" slot="footer" title="Close this dialog">Close</sl-button>
+  <sl-button id="link-copy" slot="footer" variant="primary" data-icon="copy" title="Copy the link to the clipboard">Copy link</sl-button>
+  <sl-button id="link-save" slot="footer" variant="primary" data-icon="download" title="Save this diagram as a Nexus document (.nexus.json)">Save .nexus.json</sl-button>
 </sl-dialog>
 
 <script src="assets/vendor/cytoscape.min.js"></script>

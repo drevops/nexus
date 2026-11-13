@@ -335,6 +335,34 @@ sl-dropdown::part(trigger) {
   margin-top: 0.75rem;
 }
 
+.link-dialog {
+  --width: min(36rem, 100vw - 2rem);
+}
+
+.link__text {
+  margin: 0 0 0.75rem;
+  line-height: 1.5;
+}
+
+.link__url[hidden] {
+  display: none;
+}
+
+.link__docs {
+  margin: 0.75rem 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.link__docs a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.link-dialog sl-button svg.icon {
+  margin-inline-end: 0.4rem;
+}
+
 .toolbar__actions {
   display: flex;
   align-items: center;

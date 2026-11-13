@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loadExample, openDocument, openFrom, pasteDiagram, saveFrom, waitForGraph } from './helpers.js';
+import { copyLink, entityCount, linkTo, loadExample, openDocument, openFrom, pasteDiagram, saveFrom, waitForGraph } from './helpers.js';
 
 test.describe('Security', { tag: '@runner-1' }, () => {
   // Markup that runs script when a colour reaches innerHTML unchecked.
@@ -35,6 +35,11 @@ test.describe('Security', { tag: '@runner-1' }, () => {
       await saveFrom(page, format);
     }
 
+    await copyLink(page);
+    await page.click('#link-close');
+    await page.goto(await linkTo(page, CRAFTED));
+    await expect.poll(() => entityCount(page)).toBe(1);
+
     await openFrom(page, 'ai');
     await expect(page.locator('#ai-skill')).toContainText('create-nexus-diagram');
 
@@ -61,6 +66,13 @@ test.describe('Security', { tag: '@runner-1' }, () => {
         'a pasted reply',
         async (page, doc) => {
           await pasteDiagram(page, JSON.stringify(doc));
+          await waitForGraph(page);
+        },
+      ],
+      [
+        'a link',
+        async (page, doc) => {
+          await page.goto(await linkTo(page, doc, 'node.article'));
           await waitForGraph(page);
         },
       ],
