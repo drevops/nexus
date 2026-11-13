@@ -53,7 +53,10 @@ function dataProviderRoundTrip() {
   return [
     ['the full saved document', savedDocument],
     ['an empty diagram', { nexus: 1, entities: [] }],
-    ['labels outside ASCII', { nexus: 1, title: 'Événements ✓ 日本語 🚀', entities: [{ entityType: 'node', bundle: 'a', label: 'Ä "quoted" <b>', fields: [] }] }],
+    [
+      'labels outside ASCII',
+      { nexus: 1, title: 'Événements ✓ 日本語 🚀', entities: [{ entityType: 'node', bundle: 'a', label: 'Ä "quoted" <b>', fields: [] }] },
+    ],
     ...TEMPLATES.map((template) => ['the ' + template.id + ' template', templateDocument(template)]),
   ];
 }
