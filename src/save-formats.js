@@ -22,6 +22,8 @@ export const SAVE_MENU = [
   },
   { id: 'md', label: 'Markdown', icon: 'file-text', title: 'Save the content model as Markdown documentation (.md)' },
   { id: 'html', label: 'HTML', icon: 'code', title: 'Save the content model as an HTML report (.html)' },
+  { id: 'mermaid', label: 'Mermaid', icon: 'file-code', title: 'Save the diagram as Mermaid text (.mmd); for a large site, DOT lays out better' },
+  { id: 'dot', label: 'Graphviz DOT', icon: 'network', title: 'Save the diagram as Graphviz DOT text (.dot)' },
 ];
 
 /**

@@ -41,6 +41,7 @@ import { readMarkdownSettings } from './markdown.js';
 import { checkModel, readCheckSettings } from './model-checks.js';
 import { documentFromGraph } from './document.js';
 import { LINE_OPTIONS, lineOption, lineStyle, readLineSettings } from './connection-lines.js';
+import { textModel } from './diagram-text.js';
 import { nodeLookup, selectionEntity } from './inspector-trail.js';
 import { parseRichText, richTextHtml } from './rich-text.js';
 import { NOTE_KIND } from './annotations.js';
@@ -1918,6 +1919,11 @@ function buildController(model, options = {}) {
 
       return records.map((r) => ({ ...r, usedIn: sharing.get(r.id) }));
     },
+    textModel: () =>
+      textModel(
+        { nodes: cy.nodes('[group="entity"], [group="field"]').map((n) => ({ data: n.data() })), edges: cy.edges('[group="ref"]').map((e) => ({ data: e.data() })) },
+        { fields: fieldsMode, hiddenTypes: Object.keys(typeVisible).filter((t) => typeVisible[t] === false), colorFor: entityColor },
+      ),
     presentTypes: () =>
       allTypeKeys()
         .filter((t) => cy.nodes('[group="entity"][entityType="' + t + '"]').nonempty())

@@ -3,10 +3,10 @@ import assert from 'node:assert/strict';
 import { SAVE_FORMATS, SAVE_MENU, findSaveFormat } from '../../src/save-formats.js';
 import { hasIcon } from '../../src/icons.js';
 
-test('lists JSON, PNG, SVG, a CSV submenu, Markdown and HTML in menu order', () => {
+test('lists JSON, PNG, SVG, a CSV submenu, Markdown, HTML, Mermaid and DOT in menu order', () => {
   assert.deepEqual(
     SAVE_MENU.map((entry) => entry.label),
-    ['JSON', 'PNG', 'SVG', 'CSV', 'Markdown', 'HTML'],
+    ['JSON', 'PNG', 'SVG', 'CSV', 'Markdown', 'HTML', 'Mermaid', 'Graphviz DOT'],
   );
   assert.deepEqual(
     SAVE_MENU[3].formats.map((format) => format.label),
@@ -17,7 +17,7 @@ test('lists JSON, PNG, SVG, a CSV submenu, Markdown and HTML in menu order', () 
 test('lists every format in menu order with the submenu in place', () => {
   assert.deepEqual(
     SAVE_FORMATS.map((format) => format.id),
-    ['json', 'png', 'svg', 'csv', 'bundles-csv', 'references-csv', 'md', 'html'],
+    ['json', 'png', 'svg', 'csv', 'bundles-csv', 'references-csv', 'md', 'html', 'mermaid', 'dot'],
   );
 });
 
@@ -63,6 +63,8 @@ function dataProviderFindSaveFormat() {
     ['the references CSV', 'references-csv', 'References'],
     ['Markdown', 'md', 'Markdown'],
     ['HTML', 'html', 'HTML'],
+    ['Mermaid', 'mermaid', 'Mermaid'],
+    ['DOT', 'dot', 'Graphviz DOT'],
     ['an id in capitals', 'SVG', null],
     ['an unknown id', 'pdf', null],
     ['an inherited object property', 'constructor', null],

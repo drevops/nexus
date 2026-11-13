@@ -10,7 +10,7 @@
 import { isModelConfig, parseConfig } from './parser.js';
 import { ANNOTATION_FILES, applyAnnotations } from './annotations.js';
 import { render } from './render.js';
-import { exportPng, exportSvg, exportCsv, exportCsvTemplate, exportDocument, exportHtml, exportMarkdown } from './export.js';
+import { exportPng, exportSvg, exportCsv, exportCsvTemplate, exportMermaid, exportDot, exportDocument, exportHtml, exportMarkdown } from './export.js';
 import { csvDocument, csvErrorLines, csvTitle, fieldsCsv } from './fields-csv.js';
 import { documentMarkdown, includesDiagram } from './markdown.js';
 import { documentHtml } from './html-report.js';
@@ -43,6 +43,8 @@ const SAVERS = {
   'references-csv': (controller, title) => exportCsv(referencesCsv(currentDocument(controller, title)), title, 'references'),
   md: saveMarkdown,
   html: (controller, title) => exportHtml(documentHtml(currentDocument(controller, title)), title),
+  mermaid: (controller, title) => exportMermaid(controller.textModel(), title),
+  dot: (controller, title) => exportDot(controller.textModel(), title),
 };
 
 const OPENERS = {

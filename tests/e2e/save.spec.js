@@ -1,6 +1,11 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { loadExample, openDocument, openSaveSubmenu, slFill, slSelect, downloadFrom, saveFrom, topmostOf } from './helpers.js';
+
+async function savedText(page, format) {
+  return readFile(await (await saveFrom(page, format)).path(), 'utf8');
+}
 
 test.describe('Save', { tag: '@runner-1' }, () => {
   test.beforeEach(async ({ page }) => {
@@ -55,6 +60,8 @@ test.describe('Save', { tag: '@runner-1' }, () => {
       ['references CSV', 'content-model-references.csv', (page) => saveFrom(page, 'references-csv')],
       ['Markdown', 'content-model.md', (page) => saveFrom(page, 'md')],
       ['HTML', 'content-model.html', (page) => saveFrom(page, 'html')],
+      ['Mermaid', 'content-model.mmd', (page) => saveFrom(page, 'mermaid')],
+      ['DOT', 'content-model.dot', (page) => saveFrom(page, 'dot')],
       ['JSON from the Save as menu', 'content-model.nexus.json', (page) => saveFrom(page, 'json')],
       ['JSON from the Save button', 'content-model.nexus.json', (page) => downloadFrom(page, '#doc-save')],
     ];
@@ -68,13 +75,13 @@ test.describe('Save', { tag: '@runner-1' }, () => {
     await expect(page.locator('#save-menu')).toBeVisible();
     await expect(page.locator('#save-menu sl-menu-label')).toHaveText('Save as');
     // The CSV item's text includes its submenu's.
-    await expect(page.locator('#save-menu > sl-menu-item')).toHaveText(['JSON', 'PNG', 'SVG', /^CSV/, 'Markdown', 'HTML', 'Copy link']);
+    await expect(page.locator('#save-menu > sl-menu-item')).toHaveText(['JSON', 'PNG', 'SVG', /^CSV/, 'Markdown', 'HTML', 'Mermaid', 'Graphviz DOT', 'Copy link']);
     await expect(page.locator('#save-menu > sl-menu-item').nth(3).locator('> sl-menu[slot="submenu"] > sl-menu-item')).toHaveText([
       'Fields',
       'Bundles',
       'References',
     ]);
-    await expect(page.locator('#save-menu > sl-menu-item[value="html"] + sl-divider + sl-menu-item[value="link"]')).toHaveCount(1);
+    await expect(page.locator('#save-menu > sl-menu-item[value="dot"] + sl-divider + sl-menu-item[value="link"]')).toHaveCount(1);
   });
 
   for (const [format, filename] of dataProviderSaveFormats()) {
@@ -98,6 +105,39 @@ test.describe('Save', { tag: '@runner-1' }, () => {
       ['references-csv', 'example-content-model-references.csv'],
       ['md', 'example-content-model.md'],
       ['html', 'example-content-model.html'],
+      ['mermaid', 'example-content-model.mmd'],
+      ['dot', 'example-content-model.dot'],
+    ];
+  }
+
+  for (const [format, withFields, withoutFields, venues, venueField] of dataProviderTextFormats()) {
+    test(`saves ${format} text of what the canvas shows`, async ({ page }) => {
+      await loadExample(page);
+
+      const full = await savedText(page, format);
+      expect(full).toContain(withFields);
+      expect(full).toContain(venues);
+      expect(full).toContain(venueField);
+
+      await page.evaluate(() => {
+        window.__nexus.cy.getElementById('field:node.event:field_venue').data('hidden', true);
+      });
+      expect(await savedText(page, format)).not.toContain(venueField);
+
+      await page.click('#fields-toggle');
+      await page.click('#entities-toggle');
+      await page.locator('#type-filters label', { hasText: 'Vocabulary' }).locator('input').uncheck();
+
+      const overview = await savedText(page, format);
+      expect(overview).toContain(withoutFields);
+      expect(overview).not.toContain(venues);
+    });
+  }
+
+  function dataProviderTextFormats() {
+    return [
+      ['mermaid', '\nerDiagram\n', '\nflowchart LR\n', 'taxonomy_term_venues["Venues"]', ' : "Venue (1)"'],
+      ['dot', 'node [shape=plain', 'node [shape=box', '"taxonomy_term_venues" [label=', ' -> "taxonomy_term_venues" [label="Venue (1)"]'],
     ];
   }
 
