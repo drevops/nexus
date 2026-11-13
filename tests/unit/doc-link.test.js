@@ -13,6 +13,18 @@ const PAGE = 'https://nexus.drevops.com/index.html';
 
 const DAMAGED = 'The link is incomplete or damaged.';
 
+const INDEX = readFileSync(join(ROOT, 'index.html'), 'utf8');
+
+const README = readFileSync(join(ROOT, 'README.md'), 'utf8');
+
+// The anchor GitHub gives a README heading.
+function anchor(heading) {
+  return heading
+    .toLowerCase()
+    .replace(/[^\w\- ]/g, '')
+    .replace(/ /g, '-');
+}
+
 function templateDocument(template) {
   return JSON.parse(readFileSync(join(ROOT, templatePath(template)), 'utf8'));
 }
@@ -195,3 +207,26 @@ test('reads back the link it builds', async () => {
   assert.deepEqual(params, { encoded: encoded, focus: 'node.a&b=c #d' });
   assert.deepEqual(await decodeDocument(params.encoded), savedDocument);
 });
+
+test('links the Copy link dialog to the README sections on protection and limits', async (t) => {
+  const headings = [...README.matchAll(/^#+ (.+)$/gm)].map((match) => anchor(match[1]));
+
+  for (const [id, section] of dataProviderDialogDocs()) {
+    await t.test(id, () => {
+      const link = INDEX.match(new RegExp('<a id="' + id + '" ([^>]*)>'));
+
+      assert.ok(link, 'index.html has no #' + id + ' link');
+      assert.ok(link[1].includes('href="https://github.com/drevops/nexus#' + section + '"'), '#' + id + ' does not link #' + section);
+      assert.match(link[1], /target="_blank"/);
+      assert.match(link[1], /rel="noopener"/);
+      assert.ok(headings.includes(section), 'README.md has no heading for #' + section);
+    });
+  }
+});
+
+function dataProviderDialogDocs() {
+  return [
+    ['link-protection', 'link-protection'],
+    ['link-limits', 'link-limits'],
+  ];
+}

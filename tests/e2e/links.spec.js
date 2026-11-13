@@ -82,7 +82,9 @@ test.describe('Links', { tag: '@runner-2' }, () => {
 
     await copyLink(page);
 
-    await expect(page.locator('#link-text')).toContainText('Copied a link to this diagram.');
+    await expect(page.locator('#link-text')).toHaveText('Copied a link to this diagram. The diagram travels inside the link.');
+    await expect(page.locator('#link-protection')).toBeVisible();
+    await expect(page.locator('#link-limits')).toBeVisible();
     const link = await page.locator('#link-url').evaluate((input) => input.value);
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(link);
     expect(link.startsWith(new URL('/index.html#doc=', page.url()).href)).toBe(true);
@@ -212,6 +214,8 @@ test.describe('Links', { tag: '@runner-2' }, () => {
     await expect(page.locator('#link-text')).toContainText('longer than the 32,000 a link can hold');
     await expect(page.locator('#link-url')).toBeHidden();
     await expect(page.locator('#link-copy')).toBeHidden();
+    await expect(page.locator('#link-limits')).toBeVisible();
+    await expect(page.locator('#link-protection')).toBeVisible();
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('unchanged');
 
     const [download] = await Promise.all([page.waitForEvent('download'), page.click('#link-save')]);

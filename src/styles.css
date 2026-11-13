@@ -348,6 +348,17 @@ sl-dropdown::part(trigger) {
   display: none;
 }
 
+.link__docs {
+  margin: 0.75rem 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.link__docs a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
 .link-dialog sl-button svg.icon {
   margin-inline-end: 0.4rem;
 }

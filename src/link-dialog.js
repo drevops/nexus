@@ -9,7 +9,7 @@
 import { MAX_LINK_LENGTH } from './doc-link.js';
 import { $ } from './dom.js';
 
-const PRIVACY = 'The diagram travels inside the link, so opening it sends nothing to a server.';
+const PRIVACY = 'The diagram travels inside the link.';
 
 const TOO_LONG_ADVICE = 'Save it as a .nexus.json file and share the file instead.';
 

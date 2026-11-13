@@ -50,7 +50,7 @@ Nexus is a static web app. Give it a Drupal config sync directory or a module's 
 - **Editable.** Add and change entities, fields, references and annotations, with undo and history.
 - **Saved as a document.** A `.nexus.json` document holds the model and its layout, and a [JSON Schema](schema/nexus.schema.json) defines the format.
 - **Exports.** PNG and SVG images of the diagram, a CSV of its fields, a Markdown page that documents each bundle, its fields and notes, with an optional Mermaid diagram, and the same documentation as a standalone HTML report to open in any browser.
-- **Shared as a link.** **Copy link** in the Save menu packs the whole diagram, compressed, into the link. Whoever opens the link sees the same model, layout and colors. Add `&focus=<entity id>`, such as `&focus=node.event`, to center the diagram on 1 bundle. A link holds up to 32,000 characters, and Nexus offers the `.nexus.json` file for a bigger diagram.
+- **Shared as a link.** **Copy link** puts the whole diagram inside a link. See [Shared links](#shared-links).
 - **Built by AI agents.** An agent can write a diagram from a screenshot, a spreadsheet or a spec.
 
 ## Build a diagram with an AI agent
@@ -157,9 +157,35 @@ Every key is optional. The following table lists what each key draws:
 
 An `attach`, an edge or a `computed_fields` entry that names an id the diagram doesn't have draws nothing. `computed_fields` takes entity ids only.
 
+## Shared links
+
+**Copy link** in the Save menu puts the whole diagram inside the link, after `#doc=`. The diagram travels in the link itself. Anyone who opens the link sees the same model, layout and colors. Add `&focus=<entity id>`, such as `&focus=node.event`, to center the diagram on 1 bundle.
+
+### Link protection
+
+Nexus compresses the diagram with `deflate`, which ends the data with an Adler-32 checksum of the diagram. A chat app or a bad copy can change a character of the link, and the checksum then stops matching. Nexus shows "Could not open that diagram: The link is incomplete or damaged." and opens nothing.
+
+The checksum catches only accidental damage, because anyone can write a new link with a matching checksum. Treat a link like a file from the person who sent it. Nexus reads every link's diagram as data and runs none of it:
+
+- Labels, notes and descriptions are drawn as text, so markup in them shows as written.
+- An entity type's color, symbol and name go through the checks listed under [Security](#security). Any other value falls back to the default.
+- The Content Security Policy runs only Nexus's own scripts, so a link can't run code in your browser.
+- Unpacking stops at 5 MB, so a crafted link can't fill the page's memory.
+- A `focus` that names anything but an entity is ignored.
+- Opening a link changes none of your stored settings, and the link carries no panel layout.
+
+### Link limits
+
+A link has these limits:
+
+- Copy link hands out links of up to 32,000 characters, counting the page address. For a bigger diagram, the dialog shows the link's length and offers **Save .nexus.json** instead.
+- Each character of a link holds about 10 bytes of diagram, and each node's position adds about 17 characters. The CivicTheme template, with 49 entities and 270 fields, makes a link of about 14,000 characters with its layout.
+- Chat apps, ticket trackers and email clients can cut or wrap a long link. If a link fails to open, send the `.nexus.json` file.
+- A link someone else built can be longer than 32,000 characters and still opens. Its diagram can unpack to at most 5 MB.
+
 ## Privacy
 
-Nexus has no backend. The configuration you import and the diagrams you build stay in your browser's memory. They leave it only when you save or export a file, or copy a link. A link carries the diagram after its `#`, and browsers never send that part of a URL to a server. Your preferences, such as the theme, the panel layout and the entity colors, stay in the browser's `localStorage`.
+Nexus has no backend. The configuration you import and the diagrams you build stay in your browser's memory. They leave it only when you save or export a file, or copy a link, which carries the diagram inside it. Your preferences, such as the theme, the panel layout and the entity colors, stay in the browser's `localStorage`.
 
 Nexus is provided as is, without warranty of any kind, and the authors accept no responsibility or liability for any data you load into it or create with it.
 
@@ -168,7 +194,6 @@ Nexus is provided as is, without warranty of any kind, and the authors accept no
 Nexus opens files from anywhere: config folders, `.nexus.json` documents, links and replies pasted into **Create with AI**. It reads each one as data and runs none of it:
 
 - Text from a file is drawn as text, so markup in a label shows as written.
-- Nexus unpacks a link's diagram in the browser and stops at 5 MB, so a crafted link can't fill the page's memory.
 - An entity type's color must be a 6- or 8-digit hex value, its symbol 1 of the listed shapes and its name a machine name. Any other value falls back to the default. The same checks apply to the settings stored in your browser.
 - A Content Security Policy in `index.html` lets the page run only its own scripts and fetch only its own files and the `data:` icons Shoelace draws.
 
