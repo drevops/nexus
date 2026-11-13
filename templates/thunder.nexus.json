@@ -1,0 +1,1438 @@
+{
+  "nexus": 1,
+  "title": "Thunder 8.4.7",
+  "colors": {},
+  "symbols": {},
+  "customTypes": [],
+  "entities": [
+    {
+      "entityType": "node",
+      "bundle": "article",
+      "label": "Article",
+      "note": "",
+      "description": "Use <em>articles</em> for evergreen content.",
+      "fields": [
+        {
+          "name": "title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "uid",
+          "label": "Author",
+          "fieldType": "entity_reference",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "created",
+          "label": "Authored on",
+          "fieldType": "created",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "field_channel",
+          "label": "Channel",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": "taxonomy_term",
+          "targetBundles": [
+            "channel"
+          ],
+          "hidden": false,
+          "description": "Channels represent the site hierarchy. Create new and change existing channels <a href=\"/admin/structure/taxonomy/manage/channel/overview\" target=\"_blank\">here</a>.",
+          "translatable": false
+        },
+        {
+          "name": "field_ivw",
+          "label": "IVW settings",
+          "fieldType": "ivw_integration_settings",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_meta_tags",
+          "label": "Meta Tags",
+          "fieldType": "metatag",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "defaultValue": "a:0:{}",
+          "translatable": true
+        },
+        {
+          "name": "field_paragraphs",
+          "label": "Paragraphs",
+          "fieldType": "entity_reference_revisions",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "paragraph",
+          "targetBundles": [
+            "gallery",
+            "image",
+            "instagram",
+            "link",
+            "pinterest",
+            "quote",
+            "text",
+            "twitter",
+            "video"
+          ],
+          "hidden": false,
+          "description": "Add different types of content with various paragraphs.",
+          "translatable": false
+        },
+        {
+          "name": "field_seo_title",
+          "label": "SEO Title",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "The SEO Title is used for the automatic generation of the Url. It's best to put the major keywords at the beginning.",
+          "translatable": true
+        },
+        {
+          "name": "field_tags",
+          "label": "Tags",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "taxonomy_term",
+          "targetBundles": [
+            "tags"
+          ],
+          "hidden": false,
+          "description": "Multiple tags can be separated with (,) comma. Tags can be modified <a href=\"/admin/structure/taxonomy/manage/tags/overview\" target=\"_blank\">here</a>.",
+          "translatable": false
+        },
+        {
+          "name": "field_teaser_media",
+          "label": "Teaser Media",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": "media",
+          "targetBundles": [
+            "image"
+          ],
+          "hidden": false,
+          "description": "The teaser image is displayed on overview pages.",
+          "translatable": false
+        },
+        {
+          "name": "field_teaser_text",
+          "label": "Teaser Text",
+          "fieldType": "string_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "The teaser text is displayed on overview pages. Additionally, it is used for Facebook and Google snippets.",
+          "translatable": true
+        }
+      ]
+    },
+    {
+      "entityType": "node",
+      "bundle": "news_article",
+      "label": "News Article",
+      "note": "",
+      "description": "Use <em>news articles</em> for time-sensitive content like news, press releases or blog posts.",
+      "fields": [
+        {
+          "name": "title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "uid",
+          "label": "Author",
+          "fieldType": "entity_reference",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "created",
+          "label": "Authored on",
+          "fieldType": "created",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "field_channel",
+          "label": "Channel",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": "taxonomy_term",
+          "targetBundles": [
+            "channel"
+          ],
+          "hidden": false,
+          "description": "Channels represent the site hierarchy. Create new and change existing channels <a href=\"/admin/structure/taxonomy/manage/channel/overview\" target=\"_blank\">here</a>.",
+          "translatable": false
+        },
+        {
+          "name": "field_ivw",
+          "label": "IVW settings",
+          "fieldType": "ivw_integration_settings",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_meta_tags",
+          "label": "Meta Tags",
+          "fieldType": "metatag",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "defaultValue": "a:0:{}",
+          "translatable": true
+        },
+        {
+          "name": "field_paragraphs",
+          "label": "Paragraphs",
+          "fieldType": "entity_reference_revisions",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "paragraph",
+          "targetBundles": [
+            "gallery",
+            "image",
+            "instagram",
+            "link",
+            "pinterest",
+            "quote",
+            "text",
+            "twitter",
+            "video"
+          ],
+          "hidden": false,
+          "description": "Add different types of content with various paragraphs.",
+          "translatable": false
+        },
+        {
+          "name": "field_seo_title",
+          "label": "SEO Title",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "The SEO Title is used for the automatic generation of the Url. It's best to put the major keywords at the beginning.",
+          "translatable": true
+        },
+        {
+          "name": "field_tags",
+          "label": "Tags",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "taxonomy_term",
+          "targetBundles": [
+            "tags"
+          ],
+          "hidden": false,
+          "description": "Multiple tags can be separated with (,) comma. Tags can be modified <a href=\"/admin/structure/taxonomy/manage/tags/overview\" target=\"_blank\">here</a>.",
+          "translatable": false
+        },
+        {
+          "name": "field_teaser_media",
+          "label": "Teaser Media",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": "media",
+          "targetBundles": [
+            "image"
+          ],
+          "hidden": false,
+          "description": "The teaser image is displayed on overview pages.",
+          "translatable": false
+        },
+        {
+          "name": "field_teaser_text",
+          "label": "Teaser Text",
+          "fieldType": "string_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "The teaser text is displayed on overview pages. Additionally, it is used for Facebook and Google snippets.",
+          "translatable": true
+        }
+      ]
+    },
+    {
+      "entityType": "node",
+      "bundle": "page",
+      "label": "Basic page",
+      "note": "",
+      "description": "Use <em>basic pages</em> for your static content, such as an 'About us' page.",
+      "fields": [
+        {
+          "name": "title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "uid",
+          "label": "Author",
+          "fieldType": "entity_reference",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "created",
+          "label": "Authored on",
+          "fieldType": "created",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "field_meta_tags",
+          "label": "Meta Tags",
+          "fieldType": "metatag",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_paragraphs",
+          "label": "Paragraphs",
+          "fieldType": "entity_reference_revisions",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "paragraph",
+          "targetBundles": [
+            "gallery",
+            "image",
+            "instagram",
+            "link",
+            "pinterest",
+            "quote",
+            "text",
+            "twitter",
+            "video"
+          ],
+          "hidden": false,
+          "description": "Add different types of content with various paragraphs.",
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "taxonomy_term",
+      "bundle": "channel",
+      "label": "Channel",
+      "note": "",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "description",
+          "label": "Description",
+          "fieldType": "text_long",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "field_ivw",
+          "label": "IVW settings",
+          "fieldType": "ivw_integration_settings",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_meta_tags",
+          "label": "Meta Tags",
+          "fieldType": "metatag",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "defaultValue": "a:0:{}",
+          "translatable": true
+        },
+        {
+          "name": "field_paragraphs",
+          "label": "Paragraphs",
+          "fieldType": "entity_reference_revisions",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "paragraph",
+          "targetBundles": [
+            "gallery",
+            "image",
+            "instagram",
+            "link",
+            "pinterest",
+            "quote",
+            "text",
+            "twitter",
+            "video"
+          ],
+          "hidden": false,
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "taxonomy_term",
+      "bundle": "tags",
+      "label": "Tags",
+      "note": "",
+      "description": "Use tags to group articles on similar topics into categories.",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "description",
+          "label": "Description",
+          "fieldType": "text_long",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "field_meta_tags",
+          "label": "Meta Tags",
+          "fieldType": "metatag",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "defaultValue": "a:0:{}",
+          "translatable": true
+        },
+        {
+          "name": "field_paragraphs",
+          "label": "Paragraphs",
+          "fieldType": "entity_reference_revisions",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "paragraph",
+          "targetBundles": [
+            "gallery",
+            "image",
+            "instagram",
+            "link",
+            "pinterest",
+            "quote",
+            "text",
+            "twitter",
+            "video"
+          ],
+          "hidden": false,
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "media",
+      "bundle": "gallery",
+      "label": "Gallery",
+      "note": "",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "field_media_images",
+          "label": "Media Images",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": true,
+          "note": "",
+          "targetType": "media",
+          "targetBundles": [
+            "image"
+          ],
+          "hidden": false,
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "media",
+      "bundle": "image",
+      "label": "Image",
+      "note": "",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "field_copyright",
+          "label": "Copyright",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_description",
+          "label": "Description",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_digital_source_type",
+          "label": "AI disclosure",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "If this image was created or edited with the help of AI, select which applies. This is embedded into the image file as IPTC/XMP metadata on save.",
+          "allowedValues": [
+            {
+              "value": "trainedAlgorithmicMedia",
+              "label": "Created with AI"
+            },
+            {
+              "value": "compositeWithTrainedAlgorithmicMedia",
+              "label": "Edited with AI"
+            }
+          ],
+          "translatable": false
+        },
+        {
+          "name": "field_expires",
+          "label": "Expires",
+          "fieldType": "datetime",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": false
+        },
+        {
+          "name": "field_image",
+          "label": "Image",
+          "fieldType": "image",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": false
+        },
+        {
+          "name": "field_source",
+          "label": "Source",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_tags",
+          "label": "Tags",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "taxonomy_term",
+          "targetBundles": [
+            "tags"
+          ],
+          "hidden": false,
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "media",
+      "bundle": "instagram",
+      "label": "Instagram",
+      "note": "",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "field_author",
+          "label": "Author",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_content",
+          "label": "Content",
+          "fieldType": "string_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_url",
+          "label": "Instagram url",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "media",
+      "bundle": "pinterest",
+      "label": "Pinterest",
+      "note": "",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "field_url",
+          "label": "Pinterest url",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "media",
+      "bundle": "twitter",
+      "label": "Twitter",
+      "note": "",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "field_author",
+          "label": "Author",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": false
+        },
+        {
+          "name": "field_content",
+          "label": "Content",
+          "fieldType": "string_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": false
+        },
+        {
+          "name": "field_url",
+          "label": "Twitter url",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "media",
+      "bundle": "video",
+      "label": "Video",
+      "note": "",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "field_author",
+          "label": "Author",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_caption",
+          "label": "Caption",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_copyright",
+          "label": "Copyright",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_description",
+          "label": "Description",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_media_video_embed_field",
+          "label": "Video URL",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_source",
+          "label": "Source",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        }
+      ]
+    },
+    {
+      "entityType": "media",
+      "bundle": "xymatic",
+      "label": "Xymatic",
+      "note": "",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "field_description",
+          "label": "Description",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_media_xymatic",
+          "label": "Xymatic",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "gallery",
+      "label": "Gallery",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_media",
+          "label": "Media",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": "media",
+          "targetBundles": [
+            "gallery"
+          ],
+          "hidden": false,
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "image",
+      "label": "Image",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_image",
+          "label": "Image",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": "media",
+          "targetBundles": [
+            "image"
+          ],
+          "hidden": false,
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "instagram",
+      "label": "Instagram",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_media",
+          "label": "Media",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": "media",
+          "targetBundles": [
+            "instagram"
+          ],
+          "hidden": false,
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "link",
+      "label": "Link",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_link",
+          "label": "Link",
+          "fieldType": "link",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "pinterest",
+      "label": "Pinterest",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_media",
+          "label": "Media",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": "media",
+          "targetBundles": [
+            "pinterest"
+          ],
+          "hidden": false,
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "quote",
+      "label": "Quote",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_text",
+          "label": "Quote",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "text",
+      "label": "Text",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_text",
+          "label": "Text",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "twitter",
+      "label": "Twitter",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_media",
+          "label": "Media",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": "media",
+          "targetBundles": [
+            "twitter"
+          ],
+          "hidden": false,
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "video",
+      "label": "Video",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_video",
+          "label": "Video",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": "media",
+          "targetBundles": [
+            "video"
+          ],
+          "hidden": false,
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "user",
+      "bundle": "user",
+      "label": "User",
+      "note": "",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Username",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "mail",
+          "label": "Email",
+          "fieldType": "email",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "roles",
+          "label": "Roles",
+          "fieldType": "entity_reference",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "status",
+          "label": "Status",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "user_picture",
+          "label": "Picture",
+          "fieldType": "image",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "Your virtual face or picture.",
+          "translatable": false
+        }
+      ]
+    }
+  ],
+  "annotations": {
+    "nodes": [],
+    "edges": []
+  },
+  "layout": {},
+  "ui": null
+}

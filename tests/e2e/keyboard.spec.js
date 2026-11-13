@@ -300,6 +300,7 @@ test.describe('Keyboard', { tag: '@runner-2' }, () => {
       ['1', /^Drupal CMS /],
       ['2', /^CivicTheme /],
       ['3', /^Umami /],
+      ['4', /^Thunder /],
     ];
   }
 
