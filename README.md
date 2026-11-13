@@ -20,57 +20,69 @@ Draw a Drupal site's content model as an interactive diagram - entirely in your 
 
 ---
 
-Nexus is a static web app. Drop a Drupal **exported configuration folder** onto the page and it reconstructs the site's logical content model - bundles, fields and entity-reference relationships - and draws it on an infinite, pannable canvas. From there you can edit the model, or start one from scratch or from a template, and save it as a document to open again later. **Everything runs client-side: your configuration never leaves the browser.** None of it is uploaded to any server, which makes it safe to point at client work.
+## Why
+
+A Drupal content model has a shape of its own. Entity types hold bundles, and bundles hold fields. Some fields come with the entity type, and entity references tie bundles together with a cardinality. Teams that plan or document a Drupal site hit 2 problems:
+
+1. **There's no established way to draw a Drupal content model.** ER diagrams, UML and whiteboards have no symbol for a bundle, a base field, a paragraph or a reference's cardinality. Each team invents a notation of its own, and the next team has to learn it.
+2. **There's no easy way to build the diagram from a site that exists.** The model is spread across the site's exported configuration, 1 YAML file per bundle, field storage and field instance. Drawing it means reading those files by hand, and the drawing goes stale when the site changes.
+
+Nexus answers both. It gives a Drupal content model 1 [visual language](#the-visual-language): a color and shape per entity type and a symbol per kind of field. It also reads a site's exported configuration and draws the model from it, so the diagram follows the site's own config. When the model lives in a spreadsheet, a screenshot or a spec instead, an [AI agent](#build-a-diagram-with-an-ai-agent) can write the diagram.
+
+Nexus reads the fields of content types, vocabularies, media, paragraphs, blocks and users. It skips fields on other entity types. It draws base fields from a curated list per entity type. Review a diagram of a site with custom entity types for what it leaves out.
+
+## What Nexus is
+
+Nexus is a static web app. Give it a Drupal config sync directory or a module's `config/install`, and it draws the site's bundles, fields and entity references. You can also start from a [template](#templates), from scratch or from a document an AI agent wrote, then edit the model and save it as a `.nexus.json` document. **Everything runs in your browser, so your configuration never leaves it.**
 
 **[Open the app →](https://nexus.drevops.com/)**
-
-To try changes before they're released, open the [development version](https://drevops-nexus.netlify.app). It runs the latest code merged into `main`.
 
 ![Nexus in Edit mode on a conference site's content model, with the Inspector open on the Session content type and its fields and references drawn beside it](screenshot.png)
 
 ## Features
 
-- **100% client-side.** Parsing and rendering happen in the browser; no backend, no upload, no install.
-- **Drop a folder.** Choose or drag a config sync directory (or a module's `config/install`). Nexus reads only its YAML files, locally.
-- **Start from a template.** Load the content model of Drupal CMS or CivicTheme in 1 click, each pinned to a release (see [Templates](#templates)).
-- **Faithful visual language.** Each entity type has its own colour and shape, and single / multi / system / calculated fields and Event / API / Callback annotations each have their own symbol (see the [legend](#the-visual-language)).
-- **Browsable.** Opens with every field and machine name on show, with tools to collapse it to an entity-only overview, filter by entity type, find and focus an entity, and read a searchable field table.
-- **Editable.** Add entities, fields, references, events, APIs and callbacks in Edit mode, rename machine names and attach notes - or build a model from scratch.
-- **Undo and history.** Undo and redo your edits, and step back to an earlier version of the diagram from the History panel.
-- **Keyboard shortcuts.** Most buttons have a keyboard shortcut, and pressing **F1** labels every button on screen with its shortcut at once (see [Keyboard shortcuts](#keyboard-shortcuts)).
-- **Saved as a document.** Save the diagram, layout and all, as a `.nexus.json` file and open it again later.
-- **Built by an AI agent.** An AI agent can write a diagram from a screenshot, a spreadsheet or a spec. **Create with AI** hands the agent its skill and opens the diagram you paste back (see [Build a diagram with an AI agent](#build-a-diagram-with-an-ai-agent)).
-- **Customisable & remembered.** Switch between light and dark themes, recolour entity types, swap their symbols or add types of your own; the choices persist in your browser and apply to every diagram you open.
-- **Export.** **Save as** saves the whole canvas as **PNG** or **SVG**, or the field table as **CSV** - all client-side.
+- **Client-side.** Nexus parses and draws in the browser, with no backend, upload or install.
+- **Reads exported config.** Nexus reads only the YAML files of the folder you give it.
+- **Templates.** The content models of Drupal CMS and CivicTheme open in 1 click.
+- **Editable.** Add and change entities, fields, references and annotations, with undo and history.
+- **Saved as a document.** A `.nexus.json` document holds the model and its layout, and a [JSON Schema](schema/nexus.schema.json) defines the format.
+- **Exports.** PNG and SVG images of the diagram, and a CSV of its fields.
+- **Built by AI agents.** An agent can write a diagram from a screenshot, a spreadsheet or a spec.
 
-## Installation
+## Build a diagram with an AI agent
 
-There's nothing to install: [open the app](https://nexus.drevops.com/) in a modern browser.
+An AI agent can turn a content model you hold in another form into a Nexus diagram. The source can be a screenshot or photo of a diagram, a spreadsheet, a Word or PDF spec or a list of content types and fields. The agent follows the `create-nexus-diagram` skill and writes a `.nexus.json` document that Nexus opens.
 
-To host your own copy, run `npm run assemble` and serve the `_site/` folder it fills from any static web server. Opening `index.html` straight from disk won't work, because browsers don't load ES modules over `file://`.
+The site serves 3 files for agents:
 
-## Usage
+- The [`create-nexus-diagram` skill](skills/create-nexus-diagram/SKILL.md), at `https://nexus.drevops.com/skills/create-nexus-diagram/SKILL.md`, maps a source onto entity types, fields and references. It includes a complete example document.
+- The [JSON Schema](schema/nexus.schema.json), at `https://nexus.drevops.com/schema/nexus.schema.json`, defines the `.nexus.json` format.
+- [`llms.txt`](llms.txt), at `https://nexus.drevops.com/llms.txt`, links both, so an agent given only the site's address finds them.
 
-1. Open the app (or your own copy - see [Installation](#installation)). The light/dark theme toggle sits in the top-right corner of the landing screen too, so you can pick a theme before loading anything.
-2. **Choose a config folder** or drag one onto the drop zone - the folder of `*.yml` files exported from a Drupal site (its config sync directory), or a module's `config/install`. Or pick one of the [templates](#templates) beside it, **Open a saved diagram**, **Start from scratch** or [**Create with AI**](#build-a-diagram-with-an-ai-agent).
-3. Explore with the toolbar, switch to **Edit** to change the model, then **Save** it. **Save as** also saves it as PNG, SVG or CSV.
+An agent that can read web pages, such as Claude Code, Codex or Cursor, needs only a prompt that links the skill. To keep the skill in a project for Claude Code, download it into `.claude/skills/`:
 
-Add an `annotations.yml` file to the folder to overlay [events, APIs and callbacks](#annotation-overlay).
+```bash
+curl -sSL --create-dirs -o .claude/skills/create-nexus-diagram/SKILL.md https://nexus.drevops.com/skills/create-nexus-diagram/SKILL.md
+```
+
+To use the skill in every Claude Code project, put `SKILL.md` in `~/.claude/skills/create-nexus-diagram/` instead.
+
+**Create with AI** in the app copies the prompt, the skill or this command for you, and opens the document the agent writes. The agent leaves the layout out, so Nexus lays the diagram out when it opens. To check a document from the command line, see [Check a diagram document](CONTRIBUTING.md#check-a-diagram-document).
 
 ## Templates
 
-No config export to hand? The landing screen offers 2 ready-made content models:
+Nexus ships 2 ready-made content models:
 
 | Template | Version | What it draws |
 |----------|---------|---------------|
 | [Drupal CMS](https://www.drupal.org/project/cms) | 2.2.2 | Drupal CMS with its Byte site template: a utility page, a blog post, tags and 5 media types |
 | [CivicTheme](https://www.drupal.org/project/civictheme) | 1.13.0 | The government design system: 3 content types built from 31 paragraph types, plus its media types, vocabularies and blocks |
 
-Each template is drawn from the configuration of an exact release and ships as a saved diagram in `templates/`, so it opens just like a diagram you've saved yourself. Drupal CMS builds its landing pages with Canvas rather than a content type, so those pages don't appear in its diagram. CivicTheme and Drupal CMS are released under GPL-2.0-or-later, like Nexus.
+Each template is drawn from the configuration of an exact release. Drupal CMS builds its landing pages with Canvas, so its diagram has no landing page content type.
 
 ## The visual language
 
-The page renders a legend describing every symbol. Nexus derives entities, fields and references from configuration. Event, API, Callback and Calculated symbols come from an optional [annotation overlay](#annotation-overlay), and Edit mode can add events, APIs and callbacks too.
+Nexus draws entities, fields and references from configuration. Events, APIs, callbacks and calculated fields come from an [annotation overlay](#annotation-overlay).
 
 | Symbol | Meaning | Source |
 |--------|---------|--------|
@@ -82,148 +94,13 @@ The page renders a legend describing every symbol. Nexus derives entities, field
 | Ellipse, yellow fill | Calculated field | Annotation |
 | Diamond | Event | Annotation |
 | Hexagon | API | Annotation |
-| Rectangle with a method | Callback | Annotation |
+| Rounded rectangle with a method | Callback | Annotation |
 
-By default, content types are rounded rectangles, vocabularies are tags, media are barrels, paragraphs are cut rectangles, blocks are rectangles, users are ellipses and external entities are hexagons; **Settings** changes the color and shape of any type. A field label ending in `*` marks a required field, and reference arrows carry the field's cardinality: `1`, `1..N` for a limit of N, or `1..n` for unlimited.
-
-## Navigating the diagram
-
-By default the diagram opens in View mode with its entities stacked in columns that fill the screen, with every field, proxy and machine name on show. **Settings** changes how every new diagram opens (see [New diagrams](#new-diagrams)). 3 switches at the left end of the status bar choose what the open diagram shows:
-
-- **Fields** - turn it off to collapse the diagram to an entity-only overview.
-- **Proxies** - draw each reference as a faded copy of its target beside the field, or as an edge to the entity itself.
-- **Machine names** - show each bundle/field machine name in monospace beneath its symbol.
-
-The toolbar offers:
-
-- **Find entity** - type a name, then press Enter or the search button to fade everything else and zoom to the matches. Each match and its fields land in the middle of the part of the canvas the open panels leave free.
-- **Layout** - re-run the current layout, or pick another from the arrow beside it: **Columns** stacks each entity and its fields in columns that fill the screen, grouped by entity type, while **LR** and **TB** lay the whole diagram out as 1 flow, left to right or top to bottom. Your pick applies to the open diagram, and the next diagram opens in the layout **Settings** sets.
-- **Tidy up** - straighten each entity's fields and line the entities up in columns near where they already are, so a diagram you've dragged around or edited gets neat without being rearranged. Drag an entity roughly into place and **Tidy up** slots it in. Fields keep their order, so a field you drag to a new place among its entity's fields stays there. With an entity, or one of its fields or proxies, selected, **Tidy up** straightens only that entity and leaves the rest of the diagram where it is.
-- **Entities** - an index with per-type filters and field counts; click a bundle to focus it or open its fields.
-- **Table** - a searchable table of all fields (or a single entity's) with type, cardinality, requiredness and references. The eye at the end of a row hides that field and its proxies on the canvas, and a second click shows them again. The field stays in the model and in the table. The target beside the eye goes to the field on the canvas. A hidden field stays hidden when **Fields** is turned back on, and a layout keeps it beside its entity.
-- **Legend** - what each symbol means.
-- **History** - the versions of the diagram since you opened it, up to your last 200 changes (see [Undo and history](#undo-and-history)).
-- **Undo / Redo** - step back and forward through your changes.
-- **Save** - save the diagram as a `.nexus.json` document (see [Saving diagrams](#saving-diagrams)). The arrow beside it opens **Save as**, which saves the document as **JSON**, the whole canvas as **PNG** or **SVG**, or the field table as **CSV**.
-
-The top-right corner holds the About box, a link to this repository, the light/dark theme toggle and **Settings**, where you choose each entity type's color and symbol, add types of your own and set how new diagrams open. The right end of the status bar holds the zoom controls: **Reset**, **Fit**, zoom out, zoom in and a zoom-level menu. The mouse wheel or a trackpad pinch zooms the diagram, and a drag with the right mouse button pans it in either mode. The browser's zoom keys, <kbd>Ctrl</kbd> with <kbd>+</kbd>, <kbd>-</kbd> or <kbd>0</kbd>, zoom the diagram and leave the page at its size. A pinch over the toolbar or a panel does nothing. Click a node to focus it and its connections, and right-click an entity to isolate it with its fields. Nodes stay in place in View mode. To move a node, double-click it: Nexus switches to Edit with that node selected.
-
-Panels float over the canvas. Drag one by its header, or drop it at the left or right edge (or click its pin) to dock it in a side rail that you can resize. The pin stands upright in blue on a docked panel and leans over on a floating one. To move a docked panel up or down its rail, or to the other rail, drag the grip at the left of its header. To move a docked panel out onto the canvas, drag the rest of its header.
-
-A docked panel grows only as tall as its content, and you can drag its bottom edge to make it shorter. The Inspector always takes the height of its form, and the other panels in its rail shrink or move further down the rail to make room.
-
-### New diagrams
-
-The **New diagrams** section of **Settings** sets how each diagram opens:
-
-| Setting | Default | What it sets |
-|---------|---------|--------------|
-| **Layout** | Columns | The layout the diagram is drawn in |
-| **Mode** | View | View or Edit |
-| **Fields** | On | The **Fields** switch |
-| **Proxies** | On | The **Proxies** switch |
-| **Machine names** | On | The **Machine names** switch |
-
-The settings apply to every config folder you import, every template and **Start from scratch**. A saved diagram opens with its nodes where you saved them, and the other 4 settings still apply. Edit mode needs fields, so a diagram that opens in Edit mode shows them whatever **Fields** says. A layout picked from the toolbar or a flipped switch changes the open diagram only. **Reset to defaults** restores the settings in this table, along with the colors and symbols.
-
-## Editing
-
-Switch to **Edit** and an amber frame appears inside the canvas edge, so you can tell the modes apart at a glance. To change the frame's color for each mode or turn it off, use the **Mode frame** section of **Settings**. **Reset to defaults** restores it with the type colors and symbols.
-
-Edit mode also shows a palette under the toolbar:
-
-- **Content**, **Vocab**, **Media**, **Para**, **Block**, **User** and **External** add an entity. Each button shows its type's symbol and color from **Settings**. Click one to fill in a form, and the new entity lands in the clear spot nearest the middle of the view. Drag one onto the canvas to drop it in place.
-- **Field** adds a field to an entity and can reuse the definition of a field that already exists. The **+** handles around a selected entity add a field in a single click.
-- **Event**, **API** and **Callback** place an annotation: click one and then the canvas, or drag it into place.
-- **Connect** lets you drag from a field to an entity to create a reference.
-
-In Edit mode, drag a node with the left mouse button to move it. To move several nodes at once, drag on the empty canvas to draw a box around them, then drag any of them. A box selects every node it touches, and each move is 1 step in the history. After you right-click an entity to isolate it, dragging any of its fields moves the entity and all its fields.
-
-Select a node to edit or delete it in the **Inspector**: an entity's label and machine name; a field's label, machine name, type, cardinality, required flag and references; or an annotation's label, kind and method. Any node can also carry a free-text note, shown as a badge on the canvas.
-
-A screen that belongs to an entity shows a breadcrumb at the top of the **Inspector**, such as **Blog post › Featured image**. That covers a field, a new field and the bulk form. Click the entity's name to go back to its form.
-
-To add several fields at once, select an entity and click **Bulk** in the **Inspector**. Type 1 field per line, and the **Inspector** previews each field under the text box:
-
-```text
-Body, text_with_summary, required
-field_tags, entity_reference, unlimited, taxonomy_term.tags
-Summary (field_summary), text_long
-```
-
-Start each line with a label, a machine name or both, as `Label (machine_name)`. A label alone gets a `field_` machine name. The rest of the line holds any of these, split by commas or tabs:
-
-- A field type, such as `string` or `entity_reference`.
-- A cardinality: `1` to `10`, or `unlimited`.
-- `required`.
-- The id of each entity a reference field targets, such as `taxonomy_term.tags`.
-
-A machine name that another entity already uses takes that field's label, type and cardinality. While any line has an error, the button counts the lines to fix and adds nothing. Undo removes a whole bulk add in 1 step.
-
-To copy fields from another entity, pick it from **Copy from**. Its fields land in the text box as lines you can edit before you add them. Base fields such as `title` belong to their entity type, so they stay behind, and so do the fields this entity already has.
-
-## Undo and history
-
-**Undo** and **Redo** in the toolbar step back and forward through your changes, and so do `Ctrl+Z` and `Ctrl+Shift+Z` or `Ctrl+Y` (`⌘Z` and `⇧⌘Z` on a Mac). Every change to the diagram counts: adding, renaming and deleting entities, fields, references and annotations, editing them in the Inspector, hiding or showing a field from the **Table**, dragging nodes, **Tidy up**, re-running the layout with the **Layout** button and renaming the diagram. Typing into a field is 1 step, however many characters it takes. While a text box has the focus, the shortcuts undo your typing there instead.
-
-**History** opens a panel listing the versions of the diagram since you opened it, newest first, with the time of each change. It keeps your last 200 changes, so in a longer session the oldest ones leave the list. Click a version to go back to it. The versions after it stay in the list, greyed out, so you can jump forward again until your next edit replaces them.
-
-Undo covers what the diagram holds, not how it's shown, so it leaves the **Fields** and **Proxies** switches, the layout you pick from the **Layout** menu and the entity type filters alone, along with your colors, symbols and custom types. The history lives in memory only: it isn't saved with the document, and it starts over when you open, import or start another diagram.
-
-## Saving diagrams
-
-**Save** downloads the diagram as a `.nexus.json` document holding the model, its layout, the fields you've hidden, the entity colours and symbols, any custom types and the panel arrangement, and **Open** brings it back with every node where you left it. The title box at the top left names the diagram and the files it saves. **New** starts an empty model.
-
-The arrow beside **Open** opens a menu with 3 items:
-
-- **Saved diagram…** opens a `.nexus.json` document, as **Open** does.
-- **Config folder or template…** returns to the import screen to load another config folder or template.
-- **Create with AI…** opens the dialog that [builds a diagram with an AI agent](#build-a-diagram-with-an-ai-agent).
-
-## Keyboard shortcuts
-
-Press **F1** and every button on screen shows its keyboard shortcut in a small label. Press F1 again or **Esc** to hide the labels. They also go as soon as you use a shortcut, click, scroll or resize the window, since any of those can move the buttons. On a Mac keyboard whose top row sets the brightness and volume, hold **Fn** as you press F1.
-
-The table uses the Windows and Linux names. A Mac labels the same keys with **⌘** for Ctrl, **⌥** for Alt and **⇧** for Shift, so **Save** reads `⌘S` there.
-
-| Button | Shortcut |
-|--------|----------|
-| About | `?` |
-| Light / dark theme | `D` |
-| Settings | `,` |
-| New | `Alt+N` |
-| Open | `Ctrl+O` |
-| The arrow beside Open | <kbd>Shift+O</kbd> |
-| Save | `Ctrl+S` |
-| The arrow beside Save | <kbd>Ctrl+Shift+S</kbd> |
-| Undo | `Ctrl+Z` |
-| Redo | `Ctrl+Shift+Z` or `Ctrl+Y` |
-| View / Edit | `V` / `E` |
-| Find entity | `/` |
-| Fields | `F` |
-| Proxies | `P` |
-| Machine names | `M` |
-| Layout | `L` |
-| The arrow beside Layout | `Shift+L` |
-| Tidy up | `T` |
-| Entities | `1` |
-| Table | `2` |
-| Legend | `3` |
-| History | `4` |
-| Content, Vocab, Media, Para, Block, User, External | `Shift+C`, `Shift+V`, `Shift+M`, `Shift+P`, `Shift+B`, `Shift+U`, `Shift+X` |
-| Field, Event, API, Callback | `Shift+F`, `Shift+E`, `Shift+A`, `Shift+K` |
-| Connect | `C` |
-| Reset / Fit | <kbd>0</kbd> or <kbd>Ctrl+0</kbd> / <kbd>Shift+1</kbd> |
-| Zoom out / zoom in | <kbd>-</kbd> or <kbd>Ctrl+-</kbd> / <kbd>+</kbd>, <kbd>=</kbd> or <kbd>Ctrl+=</kbd> |
-| Zoom level | `Z` |
-
-The palette shortcuts work in Edit mode, where the palette is on screen. One that opens a form puts the cursor in its machine name, so you can type the name straight away. On the landing screen, **Choose a config folder** takes <kbd>Alt+I</kbd> and **Create with AI** takes <kbd>Alt+A</kbd>. **Open a saved diagram** and **Start from scratch** take the shortcuts of **Open** and **New**. There, `D` switches the theme, `1` and `2` load the templates in the order they're listed, and **Esc** closes the screen when there's a diagram behind it.
-
-The shortcuts stay out of your way while you type. A text box, a dropdown or an open menu keeps the plain keys for itself, so typing an `f` into **Find entity** doesn't hide the fields. In a text box only the **Ctrl** shortcuts work, apart from undo and redo, which undo your typing there - so **Ctrl+S** saves the diagram while you're renaming it. Hold a key down and only undo, redo and the zoom keys repeat.
+Content types are rounded rectangles, vocabularies are tags, media are barrels, paragraphs are cut rectangles, blocks are rectangles, users are ellipses and external entities are hexagons. A field label ending in `*` marks a required field. A reference arrow carries the field's cardinality: `1`, `1..N` for a limit of N or `1..n` for unlimited.
 
 ## Annotation overlay
 
-An annotation overlay draws the parts of a site's architecture that Drupal configuration leaves out, such as domain events, external APIs and integration callbacks. It's a YAML file named `annotations.yml` or `nexus.annotations.yml`, anywhere in the config folder you import. Nexus reads 1 overlay per import, so keep 1 in the folder. This one describes a conference site:
+An annotation overlay draws the parts of a site that Drupal configuration leaves out, such as domain events, external APIs and integration callbacks. It's a YAML file named `annotations.yml` or `nexus.annotations.yml`, anywhere in the config folder you import. Nexus reads 1 overlay per import, so keep 1 in the folder. This one describes a conference site:
 
 ```yaml
 title: 'Example content model'
@@ -274,65 +151,19 @@ Every key is optional. The following table lists what each key draws:
 
 An `attach`, an edge or a `computed_fields` entry that names an id the diagram doesn't have draws nothing. `computed_fields` takes entity ids only.
 
-## Build a diagram with an AI agent
-
-An AI agent can turn a content model you hold in another form into a Nexus diagram. The source can be a screenshot or photo of a diagram, a spreadsheet, a Word or PDF spec or a list of content types and fields. The agent follows the `create-nexus-diagram` skill and writes a `.nexus.json` document.
-
-To hand the skill to your agent, click **Create with AI** on the landing screen, or **Create with AI…** in the menu beside **Open**. Then pick the tab that matches your agent:
-
-| Tab | Use it for |
-|-----|------------|
-| **Prompt** | An agent that can read web pages, such as Claude Code, Codex or Cursor. The prompt links the skill this site serves |
-| **Skill** | A chat that can't read web pages. Copy the whole skill, or download it as `SKILL.md` |
-| **Install** | Keeping the skill in a project. The command downloads it into `.claude/skills/create-nexus-diagram/`, where Claude Code reads it |
-
-To use the skill in every Claude Code project, put `SKILL.md` in `~/.claude/skills/create-nexus-diagram/` instead. Then hand the agent your source and ask for a Nexus diagram.
-
-To open the diagram the agent writes:
-
-1. Paste the document into **Paste the diagram**. The agent's whole reply works too, when it holds the document in a code block.
-2. Click **Open diagram**. When the document can't open, the dialog stays open and shows the reason.
-
-A document the agent saved as a file opens with **Open a saved diagram**. The agent leaves the layout out, so Nexus lays the diagram out when you open it.
-
-The site serves 3 files for agents:
-
-- The [`create-nexus-diagram` skill](skills/create-nexus-diagram/SKILL.md), at `https://nexus.drevops.com/skills/create-nexus-diagram/SKILL.md`, holds the steps for mapping a source onto entity types, fields and references. It also covers checking the result and includes a complete example document.
-- The [JSON Schema](schema/nexus.schema.json), at `https://nexus.drevops.com/schema/nexus.schema.json`, defines the `.nexus.json` format.
-- [`llms.txt`](llms.txt), at `https://nexus.drevops.com/llms.txt`, links both, so an agent given only the site's address finds them.
-
-To check a document before you open it, run this command in a clone of this repository:
-
-```bash
-npm run check-diagram -- path/to/diagram.nexus.json
-```
-
-The command prints each error and warning with the JSON Pointer of the part it's about, and `OK` for a document with neither. An error marks a break in the format or a part of the model that gets lost, such as 2 entities with the same id. A warning marks a part that opens but isn't drawn, such as a reference to an entity the document doesn't define. The command exits with 1 when any document has an error.
-
-## Built with
-
-Nexus has no backend and no build step. The page loads its own ES modules from `src/` and these libraries from `assets/vendor/`:
-
-- [Preact](https://preactjs.com/) and [htm](https://github.com/developit/htm) render the interface.
-- [Shoelace](https://shoelace.style/) supplies the buttons, menus and form controls.
-- [Cytoscape.js](https://js.cytoscape.org/) draws the diagram, with [Dagre](https://github.com/dagrejs/dagre) and [cytoscape-dagre](https://github.com/cytoscape/cytoscape.js-dagre) for the layouts and [cytoscape-svg](https://github.com/kinimesi/cytoscape-svg) for the SVG export.
-- [js-yaml](https://github.com/nodeca/js-yaml) reads the configuration files.
-
-The icons come from [Lucide](https://lucide.dev/).
-
-## Contributing
-
-See [`CONTRIBUTING.md`](CONTRIBUTING.md) for local development setup, the linting and testing commands, the Netlify previews for pull requests, how a release deploys to GitHub Pages and how to pull in template updates.
-
 ## Privacy
 
-Nexus has no backend. The configuration you import and the diagrams you build stay in your browser's memory and leave it only when you save or export a file; nothing is uploaded to or processed by any server. Your preferences - theme, panel layout, the settings new diagrams open with, entity colours and symbols, custom entity types and the last export format - are kept in the browser's `localStorage`.
+Nexus has no backend. The configuration you import and the diagrams you build stay in your browser's memory. They leave it only when you save or export a file. Your preferences, such as the theme, the panel layout and the entity colors, stay in the browser's `localStorage`.
 
 Nexus is provided as is, without warranty of any kind, and the authors accept no responsibility or liability for any data you load into it or create with it.
 
+## Contributing
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) to run Nexus locally, run the tests, host your own copy or check a diagram document.
+
 ## License
 
-Nexus is free software, released under the [GNU General Public License, version 2 or later](LICENSE) (GPL-2.0-or-later), matching the Drupal ecosystem it serves.
+Nexus is free software, released under the [GNU General Public License, version 2 or later](LICENSE) (GPL-2.0-or-later), matching the Drupal ecosystem it serves. CivicTheme and Drupal CMS, which the templates draw, are released under the same license.
 
 ---
 _This repository was created using the [Scaffold](https://getscaffold.dev/) project template_
