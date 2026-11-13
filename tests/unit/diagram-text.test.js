@@ -347,7 +347,9 @@ test('marks each relationship by its cardinality and whether it is required', as
         entity('node', 'b', 'B'),
       ]);
 
-      assert.match(toMermaid(textModel(elements)), new RegExp('  node_a ' + expected.replace(/[|{}]/g, '\\$&') + ' node_b : "B \\('));
+      const output = toMermaid(textModel(elements));
+
+      assert.ok(output.includes('\n  node_a ' + expected + ' node_b : "B ('), output);
     });
   }
 });
