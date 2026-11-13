@@ -725,6 +725,10 @@ function fieldReferences(field) {
   return field.outgoers('edge[group="ref"]').map((edge) => edge.target().data('label') ?? edge.target().id());
 }
 
+function tooltipText(text) {
+  return text ? '<div class="tooltip__text">' + esc(text) + '</div>' : '';
+}
+
 function tooltipHtml(node) {
   const group = node.data('group');
   const name = esc(node.data('label'));
@@ -738,7 +742,8 @@ function tooltipHtml(node) {
       esc(typeLabel(node.data('entityType'))) +
       ' · ' +
       esc(node.data('bundle')) +
-      '</div>'
+      '</div>' +
+      tooltipText(node.data('description'))
     );
   }
 
@@ -748,7 +753,7 @@ function tooltipHtml(node) {
     if (refs.length) {
       meta.push('→ ' + esc(refs.join(', ')));
     }
-    return '<div class="tooltip__name">' + name + '</div><div class="tooltip__meta">' + meta.join(' · ') + '</div>';
+    return '<div class="tooltip__name">' + name + '</div><div class="tooltip__meta">' + meta.join(' · ') + '</div>' + tooltipText(node.data('description'));
   }
 
   const extra = node.data('method') ? ' · ' + esc(node.data('method')) : '';
@@ -1687,6 +1692,7 @@ function buildController(model, options = {}) {
           entityId: f.data('entity'),
           entity: owner.nonempty() ? owner.data('label') : f.data('entity'),
           entityType: owner.nonempty() ? owner.data('entityType') : '',
+          entityDescription: owner.nonempty() ? owner.data('description') || '' : '',
           field: f.data('label'),
           name: f.data('name') || '',
           type: f.data('fieldType'),
@@ -1694,6 +1700,10 @@ function buildController(model, options = {}) {
           cardinality: f.data('cardinality') != null ? f.data('cardinality') : 1,
           required: !!f.data('required'),
           refs: refs,
+          description: f.data('description') || '',
+          defaultValue: f.data('defaultValue') || '',
+          allowedValues: f.data('allowedValues') || [],
+          translatable: typeof f.data('translatable') === 'boolean' ? f.data('translatable') : null,
         };
       }),
     presentTypes: () =>

@@ -96,6 +96,171 @@ function dataProviderFieldEntityType() {
   ];
 }
 
+test('reads bundle descriptions and leaves out a blank or missing one', async (t) => {
+  for (const [name, id, description] of dataProviderBundleDescription()) {
+    await t.test(name, () => {
+      const model = parseConfig(configMin);
+      const node = model.toArray().nodes.find((candidate) => candidate.data.id === id);
+
+      assert.equal(model.getEntity(id).description, description);
+      assert.equal(node.data.description, description || undefined);
+    });
+  }
+});
+
+function dataProviderBundleDescription() {
+  return [
+    ['a bundle with a description', 'node.article', 'Long-form news.'],
+    ['a bundle with an empty description', 'taxonomy_term.tags', ''],
+    ['a bundle without the key', 'node.page', ''],
+  ];
+}
+
+test('reads the help text, default value, allowed values and translatability of a field', () => {
+  const page = parseConfig(configMin).getEntity('node.page');
+  const layout = field(page, 'field_layout');
+
+  assert.equal(layout.description, 'Pick a <b>layout</b>.');
+  assert.equal(layout.defaultValue, 'wide');
+  assert.deepEqual(layout.allowedValues, [
+    { value: 'wide', label: 'Wide' },
+    { value: 'narrow', label: 'Narrow' },
+  ]);
+  assert.equal(layout.translatable, true);
+
+  const summary = field(parseConfig(configMin).getEntity('node.article'), 'field_summary');
+
+  assert.equal(summary.description, 'A short summary.');
+  assert.equal(summary.defaultValue, 'Read on');
+  assert.deepEqual(summary.allowedValues, []);
+  assert.equal(summary.translatable, true);
+});
+
+test('leaves out every field setting the config has no value for', () => {
+  const nodes = parseConfig(configMin).toArray().nodes;
+  const data = (id) => nodes.find((node) => node.data.id === id).data;
+  const keys = ['description', 'defaultValue', 'allowedValues', 'translatable'];
+  const present = (id) => keys.filter((key) => Object.hasOwn(data(id), key));
+
+  assert.deepEqual(present('field:node.article:field_tags'), ['translatable']);
+  assert.equal(data('field:node.article:field_tags').translatable, false);
+  assert.deepEqual(present('field:node.article:field_image'), []);
+  assert.deepEqual(present('field:node.article:title'), []);
+  assert.deepEqual(present('field:node.page:field_layout'), keys);
+});
+
+test('writes a default value as text', async (t) => {
+  for (const [name, defaultValue, expected] of dataProviderDefaultValue()) {
+    await t.test(name, () => {
+      const config = {
+        'field.field.node.page.field_thing.yml': {
+          entity_type: 'node',
+          bundle: 'page',
+          field_name: 'field_thing',
+          field_type: 'string',
+          default_value: defaultValue,
+        },
+      };
+      const thing = field(parseConfig(config, { includeBaseFields: false }).getEntity('node.page'), 'field_thing');
+
+      assert.equal(thing.defaultValue, expected);
+    });
+  }
+});
+
+function dataProviderDefaultValue() {
+  return [
+    ['a text value', [{ value: 'Draft' }], 'Draft'],
+    ['a number', [{ value: 3 }], '3'],
+    ['a boolean stored as 1', [{ value: 1 }], '1'],
+    ['a value of false', [{ value: false }], 'false'],
+    ['several values', [{ value: 'a' }, { value: 'b' }], 'a; b'],
+    ['an item without a value', [{ uri: 'https://example.com', title: 'Example', options: {} }], 'uri: https://example.com, title: Example'],
+    ['a relative date', [{ default_date_type: 'relative', default_date: '+1 day' }], 'default_date_type: relative, default_date: +1 day'],
+    ['an item with only empty properties', [{ value: '' }, { uri: '' }], ''],
+    ['scalar items', ['a', 2], 'a; 2'],
+    ['items that are not values', [null, ['a']], ''],
+    ['markup', [{ value: '<b>Bold</b>' }], '<b>Bold</b>'],
+    ['no items', [], ''],
+    ['a value that is not a list', 'Draft', ''],
+    ['no key', undefined, ''],
+  ];
+}
+
+test('reads translatability only from a boolean', async (t) => {
+  for (const [name, translatable, expected] of dataProviderTranslatable()) {
+    await t.test(name, () => {
+      const config = {
+        'field.field.node.page.field_thing.yml': {
+          entity_type: 'node',
+          bundle: 'page',
+          field_name: 'field_thing',
+          field_type: 'string',
+          translatable: translatable,
+        },
+      };
+      const thing = field(parseConfig(config, { includeBaseFields: false }).getEntity('node.page'), 'field_thing');
+
+      assert.equal(thing.translatable, expected);
+    });
+  }
+});
+
+function dataProviderTranslatable() {
+  return [
+    ['true', true, true],
+    ['false', false, false],
+    ['text', 'true', null],
+    ['a number', 1, null],
+    ['no key', undefined, null],
+  ];
+}
+
+test('reads allowed values from the field storage in either config shape', async (t) => {
+  for (const [name, allowedValues, expected] of dataProviderStorageAllowedValues()) {
+    await t.test(name, () => {
+      const config = {
+        'field.storage.node.field_size.yml': {
+          entity_type: 'node',
+          field_name: 'field_size',
+          type: 'list_integer',
+          settings: { allowed_values: allowedValues },
+        },
+        'field.field.node.page.field_size.yml': { entity_type: 'node', bundle: 'page', field_name: 'field_size', field_type: 'list_integer' },
+      };
+      const size = field(parseConfig(config, { includeBaseFields: false }).getEntity('node.page'), 'field_size');
+
+      assert.deepEqual(size.allowedValues, expected);
+    });
+  }
+});
+
+function dataProviderStorageAllowedValues() {
+  return [
+    [
+      'a list of values and labels',
+      [
+        { value: 1, label: 'Small' },
+        { value: 2, label: 'Large' },
+      ],
+      [
+        { value: '1', label: 'Small' },
+        { value: '2', label: 'Large' },
+      ],
+    ],
+    [
+      'a map of values to labels',
+      { 1: 'Small', 2: 'Large' },
+      [
+        { value: '1', label: 'Small' },
+        { value: '2', label: 'Large' },
+      ],
+    ],
+    ['an empty list', [], []],
+    ['no key', undefined, []],
+  ];
+}
+
 test('produces deterministic output', () => {
   assert.deepEqual(parseConfig(configMin).toArray(), parseConfig(configMin).toArray());
 });

@@ -100,7 +100,7 @@ test.describe('Fields table', { tag: '@runner-2' }, () => {
 
     const csv = readFileSync(await download.path(), 'utf8');
     const lines = csv.split('\r\n');
-    expect(lines[0]).toBe('Entity,Entity type,Field,Machine name,Field type,Cardinality,Required,References');
+    expect(lines[0]).toBe('Entity,Entity type,Field,Machine name,Field type,Cardinality,Required,References,Help text,Default,Allowed values,Translatable');
     expect(lines.some((l) => l.startsWith('Session,Content type,'))).toBe(true);
   });
 

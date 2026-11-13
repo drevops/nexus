@@ -67,7 +67,7 @@ test.describe('Breadcrumb', { tag: '@runner-2' }, () => {
   test('relabels the breadcrumb with the field it shows', async ({ page }) => {
     await buildStoryWithField(page);
 
-    await slFill(page, '#inspector sl-input:not([data-machine-name])', 'Subtitle');
+    await slFill(page, '#inspector [data-label]', 'Subtitle');
 
     await expect(page.locator('#inspector .insp__crumbs li')).toHaveText(['Story', 'Subtitle']);
   });

@@ -155,7 +155,7 @@ test.describe('Selection', { tag: '@runner-1' }, () => {
       [
         'a relabel is undone and redone',
         async (page) => {
-          await slFill(page, '#inspector sl-input:not([data-machine-name])', 'Stream');
+          await slFill(page, '#inspector [data-label]', 'Stream');
           await page.click('#undo');
           await page.click('#redo');
         },

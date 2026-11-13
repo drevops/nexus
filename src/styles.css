@@ -1006,7 +1006,7 @@ body.is-dragging-panel * {
 }
 
 .table-wrap {
-  overflow-x: hidden;
+  overflow-x: auto;
   overflow-y: auto;
 }
 
@@ -1051,13 +1051,69 @@ body.is-dragging-panel * {
   width: 20%;
 }
 
-.field-table th:nth-child(6),
-.field-table td:nth-child(6),
-.field-table th:nth-child(7),
-.field-table td:nth-child(7) {
+.field-table .field-table__action {
   width: 7%;
   padding-inline: 0;
   text-align: center;
+}
+
+/* 11 columns don't fit a docked panel, so the table scrolls sideways. */
+.field-table.has-settings {
+  width: max(100%, 60rem);
+}
+
+.field-table.has-settings th:nth-child(1),
+.field-table.has-settings td:nth-child(1) {
+  width: 15%;
+}
+
+.field-table.has-settings th:nth-child(2),
+.field-table.has-settings td:nth-child(2) {
+  width: 11%;
+}
+
+.field-table.has-settings th:nth-child(3),
+.field-table.has-settings td:nth-child(3),
+.field-table.has-settings th:nth-child(9),
+.field-table.has-settings td:nth-child(9) {
+  width: 6%;
+}
+
+.field-table.has-settings th:nth-child(4),
+.field-table.has-settings td:nth-child(4) {
+  width: 5%;
+}
+
+.field-table.has-settings th:nth-child(5),
+.field-table.has-settings td:nth-child(5),
+.field-table.has-settings th:nth-child(8),
+.field-table.has-settings td:nth-child(8) {
+  width: 11%;
+}
+
+.field-table.has-settings th:nth-child(6),
+.field-table.has-settings td:nth-child(6) {
+  width: 18%;
+}
+
+.field-table.has-settings th:nth-child(7),
+.field-table.has-settings td:nth-child(7) {
+  width: 9%;
+}
+
+.field-table.has-settings .field-table__action {
+  width: 4%;
+}
+
+.field-table__text {
+  white-space: pre-wrap;
+}
+
+.field-table__description {
+  display: block;
+  font-weight: 400;
+  color: var(--muted);
+  white-space: pre-wrap;
 }
 
 .table__action {
@@ -1477,6 +1533,12 @@ body.is-dragging-panel * {
 
 .tooltip__meta {
   color: #b9c2cf;
+}
+
+.tooltip__text {
+  margin-top: 0.3rem;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 /* Landing / upload screen. */

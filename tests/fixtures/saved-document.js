@@ -14,6 +14,7 @@ export const savedDocument = {
       bundle: 'article',
       label: 'Article',
       note: 'Long-form content.',
+      description: 'Use <em>articles</em> for news.',
       fields: [
         {
           name: 'field_tags',
@@ -26,6 +27,26 @@ export const savedDocument = {
           targetType: 'taxonomy_term',
           targetBundles: ['tags'],
           hidden: false,
+          description: 'Pick the topics this article covers.',
+          translatable: false,
+        },
+        {
+          name: 'field_layout',
+          label: 'Layout',
+          fieldType: 'list_string',
+          kind: 'single',
+          cardinality: 1,
+          required: false,
+          note: '',
+          targetType: null,
+          targetBundles: [],
+          hidden: false,
+          defaultValue: 'wide',
+          allowedValues: [
+            { value: 'wide', label: 'Wide' },
+            { value: 'narrow', label: 'narrow' },
+          ],
+          translatable: true,
         },
         {
           name: 'field_media',
@@ -54,6 +75,7 @@ export const savedDocument = {
   layout: {
     'node.article': { x: 0, y: 0 },
     'field:node.article:field_tags': { x: 200, y: -40 },
+    'field:node.article:field_layout': { x: 200, y: 0 },
     'field:node.article:field_media': { x: 200, y: 40 },
     'taxonomy_term.tags': { x: 400, y: -40 },
     'media.*': { x: 400, y: 40 },

@@ -79,6 +79,30 @@ test('gives an example document that opens with every reference drawn', () => {
   assert.deepEqual(layout, {});
 });
 
+test('documents each description and field setting, and uses each in its example', async (t) => {
+  const doc = example();
+  const fields = doc.entities.flatMap((entity) => entity.fields || []);
+
+  for (const [name, key, items] of [
+    ['an entity description', 'description', doc.entities],
+    ['help text', 'description', fields],
+    ['a default value', 'defaultValue', fields],
+    ['allowed values', 'allowedValues', fields],
+    ['translatability', 'translatable', fields],
+  ]) {
+    await t.test(name, () => {
+      assert.ok(
+        tableRows('Key').some(([cell]) => cell === '`' + key + '`'),
+        key + ' is not in the settings table',
+      );
+      assert.ok(
+        items.some((item) => Object.hasOwn(item, key)),
+        key + ' is not in the example',
+      );
+    });
+  }
+});
+
 test('lists every built-in entity type in order', () => {
   const rows = tableRows('Entity type').map(([type, label]) => ({ type: type.replaceAll('`', ''), label: label }));
 

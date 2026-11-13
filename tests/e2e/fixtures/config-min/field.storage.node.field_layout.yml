@@ -1,0 +1,18 @@
+langcode: en
+status: true
+id: node.field_layout
+field_name: field_layout
+entity_type: node
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: wide
+      label: Wide
+    -
+      value: narrow
+      label: Narrow
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
