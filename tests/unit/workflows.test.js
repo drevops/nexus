@@ -91,6 +91,17 @@ test('builds only a tagged commit on main', () => {
   assert.ok(onMain < steps.findIndex((step) => step.name === 'Assemble static site'), 'the site is assembled before the tag is checked');
 });
 
+test('attaches the provenance bundle to the release files after attesting them', () => {
+  const steps = WORKFLOWS.find(({ name }) => name === 'release.yml').workflow.jobs.build.steps;
+  const attest = steps.findIndex((step) => step.id === 'attest');
+  const bundle = steps.findIndex((step) => step.name === 'Add the provenance bundle to the release files');
+
+  assert.ok(attest >= 0 && attest < bundle, 'the bundle is copied before it is made');
+  assert.equal(steps[bundle].env.BUNDLE, '${{ steps.attest.outputs.bundle-path }}');
+  assert.match(steps[bundle].run, /release\/nexus-\$\{TAG\}\.intoto\.jsonl/);
+  assert.ok(bundle < steps.findIndex((step) => step.name === 'Upload release files'), 'the bundle is uploaded before it is copied');
+});
+
 test('queues only the deploy, so every tag publishes its release', () => {
   const release = WORKFLOWS.find(({ name }) => name === 'release.yml').workflow;
 
@@ -108,4 +119,17 @@ test('deploys the site only after the release is published', () => {
   assert.deepEqual(jobs.publish.permissions, { contents: 'write' });
   assert.equal(jobs.build.permissions.contents, 'read');
   assert.equal(jobs.deploy.permissions.contents, undefined);
+});
+
+test('keeps the files OpenSSF Scorecard reads in source archives', async (t) => {
+  const ignored = readFileSync(join(ROOT, '.gitattributes'), 'utf8')
+    .split('\n')
+    .filter((line) => /\bexport-ignore\b/.test(line))
+    .map((line) => line.trim().split(/\s+/)[0]);
+
+  for (const path of ['/.github', '/renovate.json', '/tests', '/package.json', '/SECURITY.md']) {
+    await t.test(path, () => {
+      assert.ok(!ignored.some((pattern) => path === pattern || path.startsWith(pattern + '/')), path + ' is export-ignored');
+    });
+  }
 });
