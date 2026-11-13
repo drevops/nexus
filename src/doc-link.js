@@ -2,11 +2,13 @@
  * Links that carry a whole Nexus document in the URL fragment.
  *
  * The fragment reads `#doc=<data>&focus=<entity id>`, where `<data>` is the
- * document's JSON compressed with `deflate-raw` and encoded as base64url, and
+ * document's JSON compressed with `deflate` and encoded as base64url, and
  * `focus` is optional. Browsers never send the fragment to a server.
  */
 
-const FORMAT = 'deflate-raw';
+// `deflate` adds an Adler-32 checksum that `deflate-raw` lacks, so a link
+// altered in transit fails to decode instead of opening with other content.
+const FORMAT = 'deflate';
 
 const DOC_PARAM = 'doc';
 

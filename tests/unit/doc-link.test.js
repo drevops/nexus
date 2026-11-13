@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { deflateRawSync } from 'node:zlib';
+import { deflateRawSync, deflateSync } from 'node:zlib';
 import { MAX_DOCUMENT_BYTES, MAX_LINK_LENGTH, decodeDocument, documentLink, encodeDocument, linkParams } from '../../src/doc-link.js';
 import { TEMPLATES, templatePath } from '../../src/templates.js';
 import { savedDocument } from '../fixtures/saved-document.js';
@@ -80,8 +80,12 @@ test('rejects text that does not decode to a document', async (t) => {
 });
 
 function dataProviderBrokenText() {
-  const deflated = (text) => base64Url(deflateRawSync(Buffer.from(text)));
-  const valid = base64Url(deflateRawSync(Buffer.from('{"nexus":1,"entities":[]}')));
+  const deflated = (text) => base64Url(deflateSync(Buffer.from(text)));
+  const json = Buffer.from('{"nexus":1,"entities":[]}');
+  const valid = base64Url(deflateSync(json));
+  const badChecksum = deflateSync(json);
+
+  badChecksum[badChecksum.length - 1] ^= 0x01;
 
   return [
     ['empty text', '', DAMAGED],
@@ -94,21 +98,47 @@ function dataProviderBrokenText() {
     ['a length no base64 has', 'abcde', DAMAGED],
     ['bytes that are not deflate', base64Url(Buffer.from([0xff, 0xff, 0xff, 0xff])), DAMAGED],
     ['a truncated stream', valid.slice(0, valid.length - 4), DAMAGED],
+    ['raw deflate without a checksum', base64Url(deflateRawSync(json)), DAMAGED],
+    ['a checksum that does not match the data', base64Url(badChecksum), DAMAGED],
     ['deflate of text that is not JSON', deflated('not json'), DAMAGED],
-    ['deflate of bytes that are not UTF-8', base64Url(deflateRawSync(Buffer.from([0x22, 0xc3, 0x28, 0x22]))), DAMAGED],
+    ['deflate of bytes that are not UTF-8', base64Url(deflateSync(Buffer.from([0x22, 0xc3, 0x28, 0x22]))), DAMAGED],
     ['deflate of a document larger than the limit', deflated(' '.repeat(MAX_DOCUMENT_BYTES) + '{}'), 'The diagram in the link is larger than 5 MB.'],
   ];
 }
 
+// Each character of the link is swapped for 2 other base64url characters. A
+// swap in the last character can touch only its unused low bits, so the
+// document decodes unchanged.
+test('rejects a link with any 1 character changed, or decodes it unchanged', async () => {
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+  const encoded = await encodeDocument(savedDocument);
+  const changed = [];
+
+  for (let i = 0; i < encoded.length; i++) {
+    const at = alphabet.indexOf(encoded[i]);
+
+    for (const shift of [1, 17]) {
+      const text = encoded.slice(0, i) + alphabet[(at + shift) % alphabet.length] + encoded.slice(i + 1);
+      const decoded = await decodeDocument(text).catch(() => savedDocument);
+
+      if (JSON.stringify(decoded) !== JSON.stringify(savedDocument)) {
+        changed.push(i + '+' + shift);
+      }
+    }
+  }
+
+  assert.deepEqual(changed, []);
+});
+
 test('decodes a document exactly at the size limit', async () => {
   const doc = '"' + 'a'.repeat(MAX_DOCUMENT_BYTES - 2) + '"';
 
-  assert.equal((await decodeDocument(base64Url(deflateRawSync(Buffer.from(doc))))).length, MAX_DOCUMENT_BYTES - 2);
+  assert.equal((await decodeDocument(base64Url(deflateSync(Buffer.from(doc))))).length, MAX_DOCUMENT_BYTES - 2);
 });
 
 test('decodes JSON that is not a document, which opening then rejects', async () => {
-  assert.deepEqual(await decodeDocument(base64Url(deflateRawSync(Buffer.from('[1,2]')))), [1, 2]);
-  assert.equal(await decodeDocument(base64Url(deflateRawSync(Buffer.from('null')))), null);
+  assert.deepEqual(await decodeDocument(base64Url(deflateSync(Buffer.from('[1,2]')))), [1, 2]);
+  assert.equal(await decodeDocument(base64Url(deflateSync(Buffer.from('null')))), null);
 });
 
 test('builds a link to the page that carries the document', async (t) => {
