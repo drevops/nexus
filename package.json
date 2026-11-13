@@ -21,6 +21,7 @@
         "start": "node tests/server.mjs",
         "assemble": "rm -rf _site && mkdir _site && cp -R index.html llms.txt src assets templates schema skills _site/",
         "check-diagram": "node scripts/check-diagram.mjs",
+        "check-vendor": "node scripts/check-vendor.mjs",
         "lint": "eslint src scripts tests eslint.config.js playwright.config.js && prettier --check \"src/*.js\" \"scripts/**/*.mjs\" \"tests/**/*.{js,mjs}\" eslint.config.js playwright.config.js",
         "lint-fix": "eslint --fix src scripts tests eslint.config.js playwright.config.js && prettier --write \"src/*.js\" \"scripts/**/*.mjs\" \"tests/**/*.{js,mjs}\" eslint.config.js playwright.config.js",
         "test": "npm run test-unit && npm run test-e2e",

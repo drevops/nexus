@@ -6,6 +6,7 @@ import { SCHEMA, checkDiagram } from '../../scripts/lib/diagram-check.mjs';
 import { TEMPLATES, templatePath } from '../../src/templates.js';
 import { ANNOTATION_KINDS } from '../../src/annotations.js';
 import { KIND_CALCULATED, KIND_MULTI, KIND_SINGLE, KIND_SYSTEM } from '../../src/model.js';
+import { SYMBOLS, isHexColor, isTypeName } from '../../src/type-styles.js';
 import { savedDocument } from '../fixtures/saved-document.js';
 
 const ROOT = join(import.meta.dirname, '..', '..');
@@ -162,12 +163,27 @@ test('lists the annotation kinds the overlay draws', () => {
 });
 
 test('lists the symbols the renderer draws', () => {
-  const source = readFileSync(join(ROOT, 'src', 'render.js'), 'utf8');
-  const block = source.match(/const SYMBOLS = \{([\s\S]*?)\n\};/);
-
-  assert.ok(block, 'render.js defines no SYMBOLS');
-  assert.deepEqual(
-    DEFS.symbol.enum,
-    [...block[1].matchAll(/^\s+(\w+): \{/gm)].map((match) => match[1]),
-  );
+  assert.deepEqual(DEFS.symbol.enum, Object.keys(SYMBOLS));
 });
+
+test('describes colours and type names as the app accepts them', async (t) => {
+  for (const [name, value] of dataProviderStyleValues()) {
+    await t.test(name, () => {
+      assert.equal(new RegExp(DEFS.color.pattern).test(value), isHexColor(value), 'colour');
+      assert.equal(new RegExp(DEFS.machineName.pattern).test(value), isTypeName(value), 'type name');
+    });
+  }
+});
+
+function dataProviderStyleValues() {
+  return [
+    ['a 6-digit hex colour', '#a1B2c3'],
+    ['an 8-digit hex colour', '#a1b2c3d4'],
+    ['a 3-digit hex colour', '#abc'],
+    ['a colour carrying markup', '#a1b2c3"/><img>'],
+    ['a machine name', 'taxonomy_term'],
+    ['a name with a capital', 'Node'],
+    ['a name with a quote', 'node"'],
+    ['an empty string', ''],
+  ];
+}

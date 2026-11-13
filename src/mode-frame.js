@@ -6,14 +6,14 @@
  * `{ enabled, view, edit }`, each colour a 6- or 8-digit hex value.
  */
 
-export const FRAME_DEFAULTS = { enabled: true, view: '#00000000', edit: '#f59e0b' };
+import { isHexColor } from './type-styles.js';
 
-const HEX_COLOR = /^#(?:[0-9a-f]{6}|[0-9a-f]{8})$/i;
+export const FRAME_DEFAULTS = { enabled: true, view: '#00000000', edit: '#f59e0b' };
 
 // A stored colour reaches a CSS custom property, so anything but a hex value
 // falls back to the default.
 function color(value, fallback) {
-  return typeof value === 'string' && HEX_COLOR.test(value) ? value : fallback;
+  return isHexColor(value) ? value : fallback;
 }
 
 /**

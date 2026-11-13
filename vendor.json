@@ -1,0 +1,13 @@
+{
+  "libraries": [
+    { "path": "assets/vendor/cytoscape.min.js", "package": "cytoscape", "version": "3.30.4", "source": "dist/cytoscape.min.js", "sha256": "1bb5340e549511e111b31e5684872c949ad33d40ea5dba0ad8e7d90c62c7b3b9" },
+    { "path": "assets/vendor/dagre.min.js", "package": "dagre", "version": "0.8.5", "source": "dist/dagre.min.js", "sha256": "62eb9787ccfdbdf4148d4d99d31dbf9ee4770eafee81e637d759b52aac22cd51" },
+    { "path": "assets/vendor/cytoscape-dagre.js", "package": "cytoscape-dagre", "version": "2.5.0", "source": "cytoscape-dagre.js", "sha256": "bf70fe402991dcbff33e05a7e4a5271c78020bb75e85d1c80ab7538e4157112e" },
+    { "path": "assets/vendor/cytoscape-svg.js", "package": "cytoscape-svg", "version": "0.4.0", "source": "cytoscape-svg.js", "sha256": "530cfaeba7aaa11214ddd6cc5603413f51e39afa691173bb5efbd6a13b3e42c3" },
+    { "path": "assets/vendor/js-yaml.min.js", "package": "js-yaml", "version": "4.1.0", "source": "dist/js-yaml.min.js", "sha256": "45dc3dd03dc07a06705a2c2989b8c7f709013f04bd5386e3279d4e447f07ebd7" },
+    { "path": "assets/vendor/preact.module.js", "package": "preact", "version": "10.24.3", "source": "dist/preact.module.js", "sha256": "9ba8bb591b0c9a72132ff65a76e69c5a4e49cf71721b47b659f3243658bde05b" },
+    { "path": "assets/vendor/hooks.module.js", "package": "preact", "version": "10.24.3", "source": "hooks/dist/hooks.module.js", "sha256": "896fc8e546b96c3fca29743b493293820ad4e76396fd36ff05f18a52eaf303e1" },
+    { "path": "assets/vendor/htm.module.js", "package": "htm", "version": "3.1.1", "source": "dist/htm.module.js", "sha256": "ab33dd3f38059b9be4d5f5350128eefb2356639c4e0bbe9d9e8b3ba75847e9e4" },
+    { "path": "assets/vendor/shoelace", "package": "@shoelace-style/shoelace", "version": "2.20.1", "source": "cdn", "sha256": "86690be68ceae0458b6e824cb345c3cd8edaac5082cee14070c90a6cc0d5207c" }
+  ]
+}

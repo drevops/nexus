@@ -11,12 +11,8 @@ on:
       - main
       - 'feature/**'
   workflow_dispatch:
-    inputs:
-      enable_terminal:
-        type: boolean
-        description: 'Enable terminal session.'
-        required: false
-        default: false
+
+permissions: {}
 
 # A pull request push cancels its superseded run; pushes and manual runs on a
 # branch share 1 queue, so the newest commit deploys last. Scheduled runs get
@@ -49,7 +45,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Check coding standards
         run: npm run lint
@@ -75,7 +71,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Run tests
         run: npm run test-coverage
@@ -114,10 +110,8 @@ jobs:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
-      - name: Setup tmate session
-        if: ${{ !cancelled() && github.event.inputs.enable_terminal == 'true' }}
-        uses: mxschmitt/action-tmate@35b54afac29c97fb54faba5b513f8fbd1882f113 # v3
-        timeout-minutes: 30
+      - name: Check vendored libraries against npm
+        run: npm run check-vendor
 
   test-e2e:
     name: E2E ${{ matrix.runner }}
@@ -145,7 +139,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium

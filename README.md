@@ -15,6 +15,7 @@ Draw a Drupal site's content model as an interactive diagram - entirely in your 
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/drevops/nexus)
 ![LICENSE](https://img.shields.io/github/license/drevops/nexus)
 ![Renovate](https://img.shields.io/badge/renovate-enabled-green?logo=renovatebot)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/drevops/nexus/badge)](https://scorecard.dev/viewer/?uri=github.com/drevops/nexus)
 
 </div>
 
@@ -156,6 +157,20 @@ An `attach`, an edge or a `computed_fields` entry that names an id the diagram d
 Nexus has no backend. The configuration you import and the diagrams you build stay in your browser's memory. They leave it only when you save or export a file. Your preferences, such as the theme, the panel layout and the entity colors, stay in the browser's `localStorage`.
 
 Nexus is provided as is, without warranty of any kind, and the authors accept no responsibility or liability for any data you load into it or create with it.
+
+## Security
+
+Nexus opens files from anywhere: config folders, `.nexus.json` documents and replies pasted into **Create with AI**. It reads each one as data and runs none of it:
+
+- Text from a file is drawn as text, so markup in a label shows as written.
+- An entity type's color must be a 6- or 8-digit hex value, its symbol 1 of the listed shapes and its name a machine name. Any other value falls back to the default. The same checks apply to the settings stored in your browser.
+- A Content Security Policy in `index.html` lets the page run only its own scripts and fetch only its own files and the `data:` icons Shoelace draws.
+
+The page sets no cookies and keeps only your preferences in `localStorage` (see [Privacy](#privacy)).
+
+Each library in `assets/vendor/` is the published npm build that [`vendor.json`](vendor.json) names, byte for byte. CI checks the files against npm on every run.
+
+[`SECURITY.md`](SECURITY.md) explains how to report a vulnerability and how to verify a release.
 
 ## Contributing
 
