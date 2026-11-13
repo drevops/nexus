@@ -20,7 +20,7 @@ const BASE = {
         { name: 'field_tags', label: 'Tags', fieldType: 'entity_reference', kind: 'multi', targetType: 'taxonomy_term', targetBundles: ['tags'] },
       ],
     },
-    { entityType: 'taxonomy_term', bundle: 'tags', label: 'Tags', fields: [] },
+    { entityType: 'taxonomy_term', bundle: 'tags', label: 'Tags', fields: [{ name: 'field_colour', label: 'Colour', fieldType: 'string', kind: 'single' }] },
   ],
   annotations: { nodes: [{ id: 'published', kind: 'event', label: 'Published' }], edges: [{ from: 'node.article', to: 'published' }] },
 };
@@ -31,6 +31,12 @@ function changed(change) {
   change(doc);
 
   return doc;
+}
+
+// An entity of the custom 'product' type, with 1 field so it has fields of
+// its own.
+function product(bundle, label) {
+  return { entityType: 'product', bundle, label, fields: [{ name: 'field_size', label: 'Size', fieldType: 'string', kind: 'single' }] };
 }
 
 function runCheck(...files) {
@@ -92,18 +98,11 @@ function dataProviderWarnings() {
 
   return [
     [
-      'a reference to a bundle the document does not define',
-      (doc) => tags(doc).targetBundles.push('topics'),
-      [{ path: '/entities/0/fields/1', message: 'references taxonomy_term.topics, which the document does not define, so the reference is not drawn' }],
-    ],
-    [
-      'a reference to every bundle without a wildcard entity',
-      (doc) => (tags(doc).targetBundles = []),
-      [{ path: '/entities/0/fields/1', message: 'references taxonomy_term.*, which the document does not define, so the reference is not drawn' }],
-    ],
-    [
-      'target bundles without a target type',
-      (doc) => (tags(doc).targetType = null),
+      'target bundles without a target type on a field that is not a reference',
+      (doc) => {
+        tags(doc).targetType = null;
+        tags(doc).fieldType = 'string';
+      },
       [{ path: '/entities/0/fields/1', message: 'lists targetBundles without a targetType, so it references nothing' }],
     ],
     [
@@ -118,7 +117,7 @@ function dataProviderWarnings() {
     ],
     [
       'an entity type that is not built in, once per type',
-      (doc) => doc.entities.push({ entityType: 'product', bundle: 'shirt', label: 'Shirt' }, { entityType: 'product', bundle: 'hat', label: 'Hat' }),
+      (doc) => doc.entities.push(product('shirt', 'Shirt'), product('hat', 'Hat')),
       [
         {
           path: '/entities/2/entityType',
@@ -147,31 +146,74 @@ function dataProviderAccepted() {
       },
     ],
     [
-      'a field that references nothing',
-      (doc) => {
-        delete doc.entities[0].fields[1].targetType;
-        doc.entities[0].fields[1].targetBundles = [];
-      },
+      'a base reference field without a target',
+      (doc) => doc.entities[0].fields.push({ name: 'uid', label: 'Author', fieldType: 'entity_reference', kind: 'system', targetType: null, targetBundles: [] }),
     ],
     [
       'an entity type listed in customTypes',
       (doc) => {
         doc.customTypes = [{ type: 'product', label: 'Product' }];
-        doc.entities.push({ entityType: 'product', bundle: 'shirt', label: 'Shirt' });
+        doc.entities.push(product('shirt', 'Shirt'));
       },
     ],
     ['an edge between 2 fields', (doc) => doc.annotations.edges.push({ from: 'field:node.article:title', to: 'field:node.article:field_tags' })],
     ['the same field name on 2 entities', (doc) => doc.entities[1].fields.push({ name: 'title', label: 'Title', fieldType: 'string', kind: 'system' })],
     ['a document without annotations', (doc) => delete doc.annotations],
+  ];
+}
+
+test('reports the model rules at the path of the entity or field each is on', async (t) => {
+  for (const [name, change, expected] of dataProviderModelRules()) {
+    await t.test(name, () => {
+      assert.deepEqual(checkDiagram(changed(change)), expected);
+    });
+  }
+});
+
+function dataProviderModelRules() {
+  const tags = (doc) => doc.entities[0].fields[1];
+
+  return [
     [
-      'entities without fields',
-      (doc) => {
-        doc.entities = [{ entityType: 'node', bundle: 'page', label: 'Page' }];
-        delete doc.annotations;
+      'a reference to a bundle the document does not define',
+      (doc) => tags(doc).targetBundles.push('topics'),
+      { errors: [{ path: '/entities/0/fields/1', message: 'field_tags on “Article” references taxonomy_term.topics, which the model does not have' }], warnings: [] },
+    ],
+    [
+      'a reference to every bundle without a wildcard entity',
+      (doc) => (tags(doc).targetBundles = []),
+      { errors: [{ path: '/entities/0/fields/1', message: 'field_tags on “Article” references taxonomy_term.*, which the model does not have' }], warnings: [] },
+    ],
+    [
+      'a reference field with target bundles but no target type',
+      (doc) => (tags(doc).targetType = null),
+      {
+        errors: [{ path: '/entities/0/fields/1', message: 'field_tags on “Article” references no entity' }],
+        warnings: [{ path: '/entities/0/fields/1', message: 'lists targetBundles without a targetType, so it references nothing' }],
       },
+    ],
+    [
+      'a field name longer than Drupal allows',
+      (doc) => (tags(doc).name = 'field_tags_from_the_site_vocabulary'),
+      {
+        errors: [{ path: '/entities/0/fields/1', message: 'The field name field_tags_from_the_site_vocabulary on “Article” is longer than 32 characters' }],
+        warnings: [],
+      },
+    ],
+    [
+      'an entity without fields',
+      (doc) => doc.entities.push({ entityType: 'node', bundle: 'page', label: 'Page' }),
+      { errors: [], warnings: [{ path: '/entities/2', message: '“Page” has no fields of its own' }] },
     ],
   ];
 }
+
+test('leaves the model rules out while an entity or field repeats', () => {
+  const { errors, warnings } = checkDiagram(changed((doc) => doc.entities.push({ entityType: 'node', bundle: 'article', label: 'Article again' })));
+
+  assert.deepEqual(errors, [{ path: '/entities/2', message: 'repeats the entity node.article from /entities/0' }]);
+  assert.deepEqual(warnings, []);
+});
 
 test('leaves the rules out until the document matches the schema', () => {
   const { errors, warnings } = checkDiagram(changed((doc) => doc.entities.push({ entityType: 'taxonomy_term', bundle: 'tags' })));
@@ -195,13 +237,16 @@ test('prints the problems of each file and exits by the worst of them', async (t
 });
 
 function dataProviderCommand() {
-  const warning =
-    'warning.nexus.json: warning: /entities/0/fields/0 references taxonomy_term.tags, which the document does not define, so the reference is not drawn';
-
   return [
     ['a clean document', ['clean.nexus.json'], 0, ['clean.nexus.json: OK']],
-    ['a document with a warning', ['warning.nexus.json'], 0, [warning]],
+    ['a document with a warning', ['warning.nexus.json'], 0, ['warning.nexus.json: warning: /entities/1 “Tags” has no fields of its own']],
     ['a document with an error', ['error.nexus.json'], 1, ['error.nexus.json: error: /entities/1 repeats the entity node.page from /entities/0']],
+    [
+      'a document that breaks a model rule',
+      ['missing-target.nexus.json'],
+      1,
+      ['missing-target.nexus.json: error: /entities/0/fields/0 field_tags on “Page” references taxonomy_term.tags, which the model does not have'],
+    ],
     ['a document that is not JSON', ['broken.nexus.json'], 1, ['broken.nexus.json: error: ' + jsonError()]],
     ['a missing file', ['missing.nexus.json'], 1, ['missing.nexus.json: error: ' + missingError()]],
     [

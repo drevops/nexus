@@ -1,0 +1,12 @@
+{
+  "nexus": 1,
+  "title": "Missing target",
+  "entities": [
+    {
+      "entityType": "node",
+      "bundle": "page",
+      "label": "Page",
+      "fields": [{ "name": "field_tags", "label": "Tags", "fieldType": "entity_reference", "kind": "multi", "targetType": "taxonomy_term", "targetBundles": ["tags"] }]
+    }
+  ]
+}

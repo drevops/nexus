@@ -5,14 +5,19 @@
  * checkDiagram() returns { errors, warnings }, each a list of { path,
  * message } with a JSON Pointer path into the document. An error loses data
  * or stops the document opening. A warning flags a part of the document that
- * opens but draws less than it says, such as a reference to an entity the
+ * opens but draws less than it says, such as an annotation edge to an id the
  * document doesn't define.
+ *
+ * Once the document's entities, fields and annotation ids are sound, the
+ * rules of checkModel() in src/model-checks.js run too, at the path of the
+ * entity or field each problem is on.
  */
 
 import { readFileSync } from 'node:fs';
 import Ajv2020 from 'ajv/dist/2020.js';
 import { findEntityType } from '../../src/entity-types.js';
 import { entityNodeId, fieldNodeId } from '../../src/model.js';
+import { LEVEL_ERROR, checkModel } from '../../src/model-checks.js';
 
 export const SCHEMA_PATH = new URL('../../schema/nexus.schema.json', import.meta.url);
 
@@ -36,14 +41,6 @@ function schemaProblem(error) {
   }
 
   return problem(path, error.message);
-}
-
-// The ids of the targets a reference field points to: 1 per target bundle,
-// or the '<targetType>.*' entity when it lists none.
-function referenceTargets(field) {
-  const bundles = field.targetBundles && field.targetBundles.length > 0 ? field.targetBundles : ['*'];
-
-  return bundles.map((bundle) => entityNodeId(field.targetType, bundle));
 }
 
 function checkEntities(doc, ids, errors) {
@@ -87,26 +84,20 @@ function checkAnnotationNodes(nodes, ids, errors) {
   });
 }
 
-function checkReferences(doc, ids, warnings) {
+function checkTargetTypes(doc, warnings) {
   doc.entities.forEach((entity, index) => {
     (entity.fields || []).forEach((field, fieldIndex) => {
-      const path = '/entities/' + index + '/fields/' + fieldIndex;
-
-      if (field.targetType == null) {
-        if (field.targetBundles && field.targetBundles.length > 0) {
-          warnings.push(problem(path, 'lists targetBundles without a targetType, so it references nothing'));
-        }
-
-        return;
-      }
-
-      for (const target of referenceTargets(field)) {
-        if (!ids.has(target)) {
-          warnings.push(problem(path, 'references ' + target + ', which the document does not define, so the reference is not drawn'));
-        }
+      if (field.targetType == null && field.targetBundles && field.targetBundles.length > 0) {
+        warnings.push(problem('/entities/' + index + '/fields/' + fieldIndex, 'lists targetBundles without a targetType, so it references nothing'));
       }
     });
   });
+}
+
+function checkModelRules(doc, ids, errors, warnings) {
+  for (const { level, message, id } of checkModel(doc)) {
+    (level === LEVEL_ERROR ? errors : warnings).push(problem(ids.get(id), message));
+  }
 }
 
 function checkAnnotationEdges(edges, ids, warnings) {
@@ -153,9 +144,14 @@ export function checkDiagram(doc) {
 
   checkEntities(doc, ids, errors);
   checkAnnotationNodes(annotations.nodes || [], ids, errors);
-  checkReferences(doc, ids, warnings);
+  checkTargetTypes(doc, warnings);
   checkAnnotationEdges(annotations.edges || [], ids, warnings);
   checkEntityTypes(doc, warnings);
+
+  // A repeated entity or field id would give 2 problems the same path.
+  if (errors.length === 0) {
+    checkModelRules(doc, ids, errors, warnings);
+  }
 
   return { errors: errors, warnings: warnings };
 }
