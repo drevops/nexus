@@ -7,11 +7,11 @@ import { ENTITY_TYPE_ORDER } from '../../src/entity-types.js';
 import { templatePath } from '../../src/templates.js';
 import { renderCounts } from './template-sources.mjs';
 
-const STABLE_TAG = /^(\d+)\.(\d+)\.(\d+)$/;
+const STABLE_TAG = /^v?(\d+)\.(\d+)\.(\d+)$/;
 
 /**
  * Reads the output of 'git ls-remote --tags --refs' and returns the stable
- * release tags in it, such as '11.4.12'.
+ * release tags in it, such as '11.4.12' or 'v2.1.0'.
  *
  * Pre-releases ('12.0.0-beta1') and legacy contrib tags ('8.x-1.0') are
  * left out.
@@ -92,54 +92,54 @@ export function orderCounts(counts) {
   return Object.fromEntries(types.map((type) => [type, counts[type]]));
 }
 
-// The lines of 1 template's entry in TEMPLATES, from its id to the next
-// entry or the end of the list.
-function templateBlock(text, id) {
-  const start = text.indexOf("\n    id: '" + id + "',\n");
+const ID_LINE = /^[ \t]*id: '([^'\n]*)',?[ \t]*$/gm;
+const VERSION_LINE = /^([ \t]*version: ')[^'\n]*(',?[ \t]*)$/gm;
+const COUNTS_LINES = /^([ \t]*counts: )\{[^}]*\}(,?[ \t]*)$/gm;
+const REF_LINE = /^([ \t]*ref: ')[^'\n]*(',?[ \t]*)$/gm;
 
-  if (start === -1) {
+// The text of 1 template's entry in TEMPLATES, from its id line to the next
+// id line or the end of the file.
+function templateBlock(text, id) {
+  const lines = [...text.matchAll(ID_LINE)];
+  const index = lines.findIndex((match) => match[1] === id);
+
+  if (index === -1) {
     throw new Error('No template ' + id + ' in src/templates.js');
   }
 
-  const ends = ["\n  {\n    id: '", '\n];\n'].map((marker) => text.indexOf(marker, start + 1)).filter((index) => index !== -1);
+  const next = lines[index + 1];
 
-  return { start, end: Math.min(...ends) };
+  return { start: lines[index].index, end: next ? next.index : text.length };
 }
 
-function replaceOnce(block, pattern, value, what) {
-  const matches = block.match(new RegExp(pattern.source, 'gm')) || [];
+function replaceAll(block, pattern, values, what) {
+  const found = (block.match(pattern) || []).length;
 
-  if (matches.length !== 1) {
-    throw new Error('Expected 1 ' + what + ' line, found ' + matches.length);
+  if (found !== values.length) {
+    throw new Error('Expected ' + values.length + ' ' + what + ', found ' + found);
   }
 
-  return block.replace(new RegExp(pattern.source, 'm'), (match, head, tail) => head + value + tail);
+  let index = 0;
+
+  return block.replace(pattern, (match, head, tail) => head + values[index++] + tail);
 }
 
 /**
  * Rewrites the version, the tag of each source, in order, and the bundle
  * counts of 1 template in the source of src/templates.js.
  *
- * The entry must hold 1 version line, 1 counts line and 1 ref line per
- * source, as Prettier formats them, or the rewrite throws.
+ * The entry must start with its id and hold 1 version line, 1 counts object
+ * and 1 ref line per source, at any indentation, or the rewrite throws. The
+ * counts are written on 1 line.
  */
 export function rewriteTemplates(text, id, { version, refs, counts }) {
   const { start, end } = templateBlock(text, id);
   let block = text.slice(start, end);
 
   try {
-    block = replaceOnce(block, /^( {4}version: ')[^'\n]*(',)$/, version, 'version');
-    block = replaceOnce(block, /^( {4}counts: )\{[^}\n]*\}(,)$/, renderCounts(orderCounts(counts)), 'counts');
-
-    const refLines = block.match(/^ {8}ref: '[^'\n]*',$/gm) || [];
-
-    if (refLines.length !== refs.length) {
-      throw new Error('Expected ' + refs.length + ' ref lines, found ' + refLines.length);
-    }
-
-    let index = 0;
-
-    block = block.replace(/^( {8}ref: ')[^'\n]*(',)$/gm, (match, head, tail) => head + refs[index++] + tail);
+    block = replaceAll(block, VERSION_LINE, [version], 'version line');
+    block = replaceAll(block, COUNTS_LINES, [renderCounts(orderCounts(counts))], 'counts object');
+    block = replaceAll(block, REF_LINE, refs, 'ref lines');
   } catch (e) {
     throw new Error(id + ' in src/templates.js: ' + e.message);
   }

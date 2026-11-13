@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: '41 2 * * *'
   workflow_dispatch:
+    inputs:
+      template:
+        description: Id of 1 template to update; leave empty for all
+        type: string
+        default: ''
 
 permissions: {}
 
@@ -16,8 +21,39 @@ env:
   NODE_VERSION: 26
 
 jobs:
+  templates:
+    name: List templates
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    outputs:
+      ids: ${{ steps.list.outputs.ids }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      # Every template in src/templates.js, or the 1 a manual run names.
+      - name: List the template ids
+        id: list
+        run: |
+          ids=$(node scripts/update-templates.mjs --list ${TEMPLATE:+"$TEMPLATE"})
+          echo "ids=${ids}" >> "$GITHUB_OUTPUT"
+        env:
+          TEMPLATE: ${{ inputs.template }}
+
   update:
     name: Update ${{ matrix.template }}
+    needs: templates
     runs-on: ubuntu-latest
 
     permissions:
@@ -29,7 +65,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        template: [drupal-cms, civictheme]
+        template: ${{ fromJSON(needs.templates.outputs.ids) }}
 
     steps:
       - name: Checkout code

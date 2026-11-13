@@ -117,9 +117,15 @@ The command writes the bundle counts of each rebuilt diagram into `src/templates
 
     npm run update-templates -- --latest civictheme
 
-With `--latest`, the command moves each source to its highest stable `X.Y.Z` tag and writes the tags and the template's version into `src/templates.js`. A source never moves to an older tag. `npm run test-unit` fails while a diagram's title names another version, so commit the rebuilt diagram together with `src/templates.js`.
+With `--latest`, the command moves each source to its highest stable `X.Y.Z` or `vX.Y.Z` tag and writes the tags and the template's version into `src/templates.js`. A source never moves to an older tag. `npm run test-unit` fails while a diagram's title names another version, so commit the rebuilt diagram together with `src/templates.js`.
 
-The **Update templates** workflow runs `--latest` every day, and you can run it from the **Actions** tab. Each template gets its own pull request on an `update-templates/<id>` branch. A later run force-pushes that branch while the pull request is open, so the pull request always holds the latest tags. Pushes from the workflow start no `pull_request` workflows, so the workflow starts **Test Node.js** on the branch itself. It takes the pull request's title and body from `--pr <dir>`, which writes them to `title.txt` and `body.md`.
+The **Update templates** workflow runs `--latest` every day for every template in `src/templates.js`. To update 1 template on demand, run the workflow from the **Actions** tab and enter its id. Each template gets its own pull request on an `update-templates/<id>` branch. A later run force-pushes that branch while the pull request is open, so the pull request always holds the latest tags. Pushes from the workflow start no `pull_request` workflows, so the workflow starts **Test Node.js** on the branch itself. It takes the pull request's title and body from `--pr <dir>`, which writes them to `title.txt` and `body.md`.
+
+To add a template, add its entry to `TEMPLATES` in `src/templates.js` and run `npm run update-templates -- <id>` to build its diagram and counts. The workflow updates it from the next run, with no change to the workflow. Follow 3 rules in the entry, because the update rewrites it in place:
+
+- Put `id` first.
+- Name 1 source after the template's `label`. That source's tag is the template's `version`.
+- Give each source its own `ref` line. A source can ship config in any folders, and `paths` lists them.
 
 A template's sources are listed in the order Drupal installs them. A recipe never overwrites config that an earlier one created, so when 2 folders ship the same file the first copy wins, and the command reports each copy it skips. Drupal CMS keeps its content model in recipes rather than 1 config folder, so its template merges Drupal core's media type and user picture recipes, then the Drupal CMS base, forms and search recipes, then the Byte site template that installs them. The rest of its recipe tree adds roles, settings and email config but no bundles or fields, so it's left out.
 

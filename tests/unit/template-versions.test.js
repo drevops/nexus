@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
@@ -17,6 +18,7 @@ import { TEMPLATES } from '../../src/templates.js';
 const ROOT = join(import.meta.dirname, '..', '..');
 const TEMPLATES_SOURCE = readFileSync(join(ROOT, 'src', 'templates.js'), 'utf8');
 const WORKFLOW = readFileSync(join(ROOT, '.github', 'workflows', 'update-templates.yml'), 'utf8');
+const UPDATE_SCRIPT = join(ROOT, 'scripts', 'update-templates.mjs');
 
 const TEMPLATE = {
   id: 'cms',
@@ -52,7 +54,7 @@ test('reads the stable release tags from ls-remote output', () => {
     'ggg\trefs/tags/1.10.0',
   ].join('\n');
 
-  assert.deepEqual(stableTags(output), ['11.4.12', '1.10.0']);
+  assert.deepEqual(stableTags(output), ['11.4.12', 'v1.2.3', '1.10.0']);
 });
 
 test('reads no tags from empty output', () => {
@@ -73,6 +75,8 @@ function dataProviderCompareVersions() {
     ['a higher patch', '1.2.10', '1.2.9', 1],
     ['a lower minor', '1.9.0', '1.10.0', -1],
     ['a higher major', '12.0.0', '11.99.99', 1],
+    ['a v prefix on 1 side', 'v1.2.3', '1.2.3', 0],
+    ['v prefixes on both sides', 'v2.0.0', 'v1.9.9', 1],
   ];
 }
 
@@ -98,6 +102,7 @@ function dataProviderLatestTag() {
     ['no tags', [], '1.13.0', '1.13.0'],
     ['a current pre-release', ['1.0.0', '1.1.0'], '1.1.0-rc1', '1.1.0'],
     ['a stable tag beside pre-releases', ['12.0.0-beta1', '11.4.12'], '11.4.8', '11.4.12'],
+    ['v-prefixed tags', ['v2.0.0', 'v2.1.0', 'v2.1.0-rc1'], 'v2.0.0', 'v2.1.0'],
   ];
 }
 
@@ -155,15 +160,41 @@ function dataProviderRewriteErrors() {
   return [
     ['an unknown template', entry([version, counts, ref]), 'other', ['1.0.0'], /^Error: No template other in src\/templates\.js$/],
     ['a missing version', entry([counts, ref]), 'cms', ['1.0.0'], /^Error: cms in src\/templates\.js: Expected 1 version line, found 0$/],
-    ['2 counts lines', entry([version, counts, counts, ref]), 'cms', ['1.0.0'], /^Error: cms in src\/templates\.js: Expected 1 counts line, found 2$/],
-    [
-      'a counts object over several lines',
-      entry([version, '    counts: {', '      node: 1,', '    },', ref]),
-      'cms',
-      ['1.0.0'],
-      /Expected 1 counts line, found 0$/,
-    ],
+    ['2 counts objects', entry([version, counts, counts, ref]), 'cms', ['1.0.0'], /^Error: cms in src\/templates\.js: Expected 1 counts object, found 2$/],
+    ['a missing counts object', entry([version, ref]), 'cms', ['1.0.0'], /^Error: cms in src\/templates\.js: Expected 1 counts object, found 0$/],
     ['fewer refs than sources', entry([version, counts, ref]), 'cms', ['1.0.0', '2.0.0'], /^Error: cms in src\/templates\.js: Expected 2 ref lines, found 1$/],
+    ['more refs than sources', entry([version, counts, ref, ref]), 'cms', ['1.0.0'], /^Error: cms in src\/templates\.js: Expected 1 ref lines, found 2$/],
+  ];
+}
+
+test('rewrites an entry at any indentation, with counts over several lines and keys in any order after the id', async (t) => {
+  for (const [name, lines, expected] of dataProviderRewriteShapes()) {
+    await t.test(name, () => {
+      const text = ['export const TEMPLATES = [', ...lines, '];', ''].join('\n');
+      const rewritten = rewriteTemplates(text, 'cms', { version: '2.0.0', refs: ['11.1.0', '2.0.0'], counts: { paragraph: 4, node: 2 } });
+
+      assert.equal(rewritten, ['export const TEMPLATES = [', ...expected, '];', ''].join('\n'));
+    });
+  }
+});
+
+function dataProviderRewriteShapes() {
+  return [
+    [
+      'tabs',
+      ['\t{', "\t\tid: 'cms',", "\t\tversion: '1.0.0',", '\t\tcounts: { node: 1 },', "\t\t\tref: '11.0.0',", "\t\t\tref: '1.0.0',", '\t},'],
+      ['\t{', "\t\tid: 'cms',", "\t\tversion: '2.0.0',", '\t\tcounts: { node: 2, paragraph: 4 },', "\t\t\tref: '11.1.0',", "\t\t\tref: '2.0.0',", '\t},'],
+    ],
+    [
+      'counts over several lines before the version',
+      ['  {', "    id: 'cms',", '    counts: {', '      node: 1,', '    },', "    version: '1.0.0',", "      ref: '11.0.0',", "      ref: '1.0.0'", '  },'],
+      ['  {', "    id: 'cms',", '    counts: { node: 2, paragraph: 4 },', "    version: '2.0.0',", "      ref: '11.1.0',", "      ref: '2.0.0'", '  },'],
+    ],
+    [
+      'the entry after another template',
+      ["  { id: 'other', version: '9.9.9' },", '  {', "    id: 'cms',", "    version: '1.0.0',", '    counts: {},', "    ref: '11.0.0',", "    ref: '1.0.0',", '  },'],
+      ["  { id: 'other', version: '9.9.9' },", '  {', "    id: 'cms',", "    version: '2.0.0',", '    counts: { node: 2, paragraph: 4 },', "    ref: '11.1.0',", "    ref: '2.0.0',", '  },'],
+    ],
   ];
 }
 
@@ -229,10 +260,35 @@ test('describes an unchanged diagram with counts only', () => {
   assert.doesNotMatch(body, /^- (Added|Removed|Changed):/m);
 });
 
-test('runs the update workflow for every template', () => {
-  const match = WORKFLOW.match(/^ {8}template: \[([a-z0-9_, -]+)\]$/m);
-  const ids = match ? match[1].split(',').map((id) => id.trim()) : [];
-
-  assert.deepEqual(ids.sort(), TEMPLATES.map((template) => template.id).sort());
+test('runs the update workflow for the templates the script lists, naming none of them', () => {
+  assert.match(WORKFLOW, /ids=\$\(node scripts\/update-templates\.mjs --list \$\{TEMPLATE:\+"\$TEMPLATE"\}\)/);
+  assert.match(WORKFLOW, /^ {8}template: \$\{\{ fromJSON\(needs\.templates\.outputs\.ids\) \}\}$/m);
   assert.match(WORKFLOW, /npm run update-templates -- --latest --pr \.artifacts\/tmp\/pr "\$TEMPLATE"/);
+
+  for (const template of TEMPLATES) {
+    assert.doesNotMatch(WORKFLOW, new RegExp('\\b' + template.id + '\\b'), template.id);
+  }
+});
+
+test('lists the template ids as JSON for the workflow matrix', async (t) => {
+  for (const [name, args, expected] of dataProviderListTemplates()) {
+    await t.test(name, () => {
+      const output = execFileSync('node', [UPDATE_SCRIPT, '--list', ...args], { encoding: 'utf8' });
+
+      assert.deepEqual(JSON.parse(output), expected);
+    });
+  }
+});
+
+function dataProviderListTemplates() {
+  const ids = TEMPLATES.map((template) => template.id);
+
+  return [
+    ['every template', [], ids],
+    ['1 named template', [ids[ids.length - 1]], [ids[ids.length - 1]]],
+  ];
+}
+
+test('refuses to list a template it does not have', () => {
+  assert.throws(() => execFileSync('node', [UPDATE_SCRIPT, '--list', 'missing'], { encoding: 'utf8', stdio: 'pipe' }), /Unknown template: missing/);
 });

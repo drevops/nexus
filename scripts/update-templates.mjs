@@ -1,7 +1,7 @@
 /**
  * Rebuilds the saved-diagram document of each content-model template.
  *
- * Usage: npm run update-templates [-- [--latest] [--pr <dir>] <id> ...]
+ * Usage: npm run update-templates [-- [--latest] [--pr <dir>] [--list] <id> ...]
  *
  * Each source of a template is cloned at its tag into a temporary folder. The
  * config files the parser reads are merged and drawn into
@@ -13,6 +13,9 @@
  *
  * --pr writes a pull request title to <dir>/title.txt and a Markdown body to
  * <dir>/body.md.
+ *
+ * --list prints the ids of the selected templates as a JSON array and builds
+ * nothing.
  */
 
 import { execFileSync } from 'node:child_process';
@@ -125,7 +128,7 @@ function updateTemplate(template, clones, latest) {
 }
 
 function main(argv) {
-  const { values, positionals: ids } = parseArgs({ args: argv, allowPositionals: true, options: { latest: { type: 'boolean' }, pr: { type: 'string' } } });
+  const { values, positionals: ids } = parseArgs({ args: argv, allowPositionals: true, options: { latest: { type: 'boolean' }, list: { type: 'boolean' }, pr: { type: 'string' } } });
   const unknown = ids.filter((id) => !TEMPLATES.some((template) => template.id === id));
 
   if (unknown.length > 0) {
@@ -133,6 +136,13 @@ function main(argv) {
   }
 
   const selected = ids.length > 0 ? TEMPLATES.filter((template) => ids.includes(template.id)) : TEMPLATES;
+
+  if (values.list) {
+    console.log(JSON.stringify(selected.map((template) => template.id)));
+
+    return;
+  }
+
   const changes = [];
 
   mkdirSync(TMP, { recursive: true });
