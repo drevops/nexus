@@ -2,8 +2,8 @@
  * Preact UI layer: toolbar-driven panels rendered over the Cytoscape canvas.
  *
  * The whole stage (side docks + canvas host + floating panels) is 1 Preact
- * tree driven by the shared store. Panels float and are dragged by their
- * header.
+ * tree driven by the shared store. Panels float, are dragged by their header
+ * and are resized from their left, right and bottom edges and bottom corners.
  *
  * Dropping a panel near an edge, or clicking its pin, docks it into a side
  * rail. Any number of docked panels stack, each at most as tall as its
@@ -22,6 +22,8 @@ import { icon } from './icons.js';
 import { cardinalityLabel, identifierSegments, fitFontSize } from './model.js';
 import { InspectorBody } from './inspector.js';
 import { allowedValueLabels } from './field-settings.js';
+import { numberFields, sortFields, nextSort, isDefaultSort } from './field-table.js';
+import { RESIZE_HANDLES, resizeBox } from './panel-resize.js';
 import { goToVersion, historyState } from './undo.js';
 import { MODES } from './diagram-defaults.js';
 import { MARKDOWN_DIAGRAM_OPTIONS } from './markdown.js';
@@ -41,7 +43,11 @@ import {
   setDragging,
   setDockWidth,
   setPanelHeight,
+  resizePanel,
+  resetPanelSize,
   setTableFilter,
+  setTableSearch,
+  setTableSort,
   openTableFor,
   PANEL_ORDER,
 } from './store.js';
@@ -94,13 +100,21 @@ function rawIcon(name, size) {
   return html`<span dangerouslySetInnerHTML=${{ __html: icon(name, size) }}></span>`;
 }
 
+// A resized panel is capped at the canvas beyond its left and top edges, so it
+// shrinks with the window rather than leaving the canvas.
 function floatStyle(panel) {
   const p = panel.pos;
+  const size = panel.size;
+
   return {
     left: p.left != null ? p.left + 'px' : '',
     top: p.top != null ? p.top + 'px' : '',
     right: p.right != null ? p.right + 'px' : '',
     bottom: p.bottom != null ? p.bottom + 'px' : '',
+    width: size ? size.width + 'px' : '',
+    height: size ? size.height + 'px' : '',
+    maxWidth: size && p.left != null ? 'calc(100% - ' + p.left + 'px)' : '',
+    maxHeight: size && p.top != null ? 'calc(100% - ' + p.top + 'px)' : '',
     zIndex: panel.z,
   };
 }
@@ -293,6 +307,34 @@ function startVResize(id, evt, el) {
   evt.stopPropagation();
 }
 
+// Resizes a floating panel from 1 of its RESIZE_HANDLES within the canvas. A
+// panel placed from the right or bottom edge is anchored at its top-left
+// corner first, so the edges the handle doesn't move stay put. The handle's
+// cursor stays on the whole page while the pointer is down.
+function startPanelResize(id, handle, evt, el) {
+  const rect = el.getBoundingClientRect();
+  const area = el.closest('.stage__canvas').getBoundingClientRect();
+  const start = { left: rect.left - area.left, top: rect.top - area.top, width: rect.width, height: rect.height };
+  const frame = { width: area.width, height: area.height };
+
+  function move(e) {
+    resizePanel(id, resizeBox(start, handle, e.clientX - evt.clientX, e.clientY - evt.clientY, frame));
+  }
+
+  function up() {
+    document.removeEventListener('mousemove', move);
+    document.removeEventListener('mouseup', up);
+    document.body.classList.remove('is-resizing-panel');
+    document.body.style.removeProperty('--resize-cursor');
+  }
+
+  document.body.style.setProperty('--resize-cursor', getComputedStyle(evt.currentTarget).cursor);
+  document.body.classList.add('is-resizing-panel');
+  document.addEventListener('mousemove', move);
+  document.addEventListener('mouseup', up);
+  evt.preventDefault();
+}
+
 /* Shell ------------------------------------------------------------------- */
 
 const FLOAT_DRAG_TITLE = 'Drag to move, drop at an edge to dock';
@@ -355,6 +397,20 @@ function Panel({ id, panel, dragging, header, children }) {
     </div>
     <div class="panel__body">${children}</div>
     ${resizable ? html`<div class="panel__vresize" title="Drag to resize height" onMouseDown=${(e) => startVResize(id, e, ref.current)}></div>` : null}
+    ${
+      docked
+        ? null
+        : RESIZE_HANDLES.map(
+            (handle) =>
+              html`<div
+                key=${handle}
+                class=${'panel__resize panel__resize--' + handle}
+                title="Drag to resize, double-click to fit the content"
+                onMouseDown=${(e) => startPanelResize(id, handle, e, ref.current)}
+                onDblClick=${() => resetPanelSize(id)}
+              ></div>`,
+          )
+    }
   </section>`;
 }
 
@@ -447,7 +503,7 @@ function body(id, s) {
     return html`<${EntitiesBody} controller=${controller} />`;
   }
   if (id === 'table') {
-    return html`<${TableBody} controller=${controller} filter=${s.tableFilter} />`;
+    return html`<${TableBody} controller=${controller} filter=${s.tableFilter} term=${s.tableSearch} sort=${s.tableSort} />`;
   }
   return html`<${SettingsBody} controller=${controller} />`;
 }
@@ -642,11 +698,30 @@ function hasSettings(r) {
   return Boolean(r.description || r.defaultValue || r.allowedValues.length || r.translatable !== null);
 }
 
-const settingHeaders = () =>
-  html`<th title="Help text: the text editors see under the field">Help text</th>
-    <th title="Default: the value a new item starts with">Default</th>
-    <th title="Allowed values: the values a list field offers">Allowed values</th>
-    <th title="Translatable: whether the value can differ per language">Transl.</th>`;
+// The sortable columns of the Fields table, left to right, each keyed by its
+// column in SORT_COLUMNS. A `settings` column shows only while a field of the
+// diagram has a setting.
+const FIELD_COLUMNS = [
+  { key: 'position', label: '#', name: 'position', title: '#: the place of the field in its entity' },
+  { key: 'field', label: 'Field', name: 'field', title: 'Field: its label and machine name' },
+  { key: 'type', label: 'Type', name: 'type', title: 'Type: the field type' },
+  { key: 'cardinality', label: 'Card.', name: 'cardinality', title: 'Cardinality: how many values the field holds' },
+  { key: 'required', label: 'Req', name: 'required', title: 'Required: whether the field must have a value' },
+  { key: 'references', label: 'References', name: 'references', title: 'References: the entities a reference field points to' },
+  { key: 'description', label: 'Help text', name: 'help text', title: 'Help text: the text editors see under the field', settings: true },
+  { key: 'defaultValue', label: 'Default', name: 'default', title: 'Default: the value a new item starts with', settings: true },
+  { key: 'allowedValues', label: 'Allowed values', name: 'allowed values', title: 'Allowed values: the values a list field offers', settings: true },
+  { key: 'translatable', label: 'Transl.', name: 'translatable', title: 'Translatable: whether the value can differ per language', settings: true },
+];
+
+function sortHeader(column, sort) {
+  const next = nextSort(sort, column.key);
+  const buttonTitle = isDefaultSort(next) ? 'Sort by position, as the diagram lists the fields' : 'Sort by ' + column.name + ', ' + next.direction;
+
+  return html`<th class=${'field-table__col--' + column.key} title=${column.title} aria-sort=${sort.column === column.key ? sort.direction : null}>
+    <button type="button" class="field-table__sort" data-sort=${column.key} title=${buttonTitle} onClick=${() => setTableSort(next)}>${column.label}</button>
+  </th>`;
+}
 
 function translatableMark(translatable) {
   if (translatable === null) {
@@ -667,8 +742,7 @@ function settingCells(r) {
     <td>${translatableMark(r.translatable)}</td>`;
 }
 
-function TableBody({ controller, filter }) {
-  const [term, setTerm] = useState('');
+function TableBody({ controller, filter, term, sort }) {
   const tableRef = useRef(null);
   const fitKey = useRef('');
 
@@ -706,12 +780,14 @@ function TableBody({ controller, filter }) {
     };
   }, []);
 
-  const allRecords = controller.records();
+  // Numbered before the filter, so each field keeps its place in its entity.
+  const allRecords = numberFields(controller.records());
   // Taken from every field, so the columns stay put while the list is
   // filtered.
   const showSettings = allRecords.some(hasSettings);
-  const columnCount = showSettings ? 11 : 7;
-  const records = allRecords.filter((r) => {
+  const columns = FIELD_COLUMNS.filter((column) => showSettings || !column.settings);
+  const columnCount = columns.length + 2;
+  const filtered = allRecords.filter((r) => {
     if (filter && filter !== '__all__' && r.entityId !== filter) {
       return false;
     }
@@ -721,6 +797,7 @@ function TableBody({ controller, filter }) {
     }
     return true;
   });
+  const records = sortFields(filtered, sort);
 
   const rows = [];
   let current = null;
@@ -738,6 +815,7 @@ function TableBody({ controller, filter }) {
     }
     rows.push(
       html`<tr class=${r.hidden ? 'is-hidden-field' : null}>
+        <td class="field-table__position">${r.position}</td>
         <td>${r.field}<br /><code data-fit>${wrappable(r.name)}</code></td>
         <td data-fit>${wrappable(r.type)}</td>
         <td>${cardBadge(r)}</td>
@@ -783,34 +861,27 @@ function TableBody({ controller, filter }) {
         title="Filter the fields by entity, label, machine name, type, reference or help text"
         clearable
         value=${term}
-        onsl-input=${(e) => setTerm(e.target.value)}
+        onsl-input=${(e) => setTableSearch(e.target.value)}
       ></sl-input>
     </div>
-    <div class="table-wrap">
-      <table id="field-table" class=${'field-table' + (showSettings ? ' has-settings' : '')} ref=${tableRef}>
-        <thead>
-          <tr>
-            <th title="Field: its label and machine name">Field</th>
-            <th title="Type: the field type">Type</th>
-            <th title="Cardinality: how many values the field holds">Card.</th>
-            <th title="Required: whether the field must have a value">Req</th>
-            <th title="References: the entities a reference field points to">References</th>
-            ${showSettings ? settingHeaders() : null}
-            <th class="field-table__action" title="Show or hide each field on the canvas">${rawIcon('eye', 14)}<span class="visually-hidden">Show</span></th>
-            <th class="field-table__action" title="Go to each field on the canvas">${rawIcon('crosshair', 14)}<span class="visually-hidden">Go to</span></th>
-          </tr>
-        </thead>
-        <tbody>
-          ${
-            rows.length
-              ? rows
-              : html`<tr>
-                  <td colspan=${columnCount}>No fields match.</td>
-                </tr>`
-          }
-        </tbody>
-      </table>
-    </div>`;
+    <table id="field-table" class=${'field-table' + (showSettings ? ' has-settings' : '')} ref=${tableRef}>
+      <thead>
+        <tr>
+          ${columns.map((column) => sortHeader(column, sort))}
+          <th class="field-table__action" title="Show or hide each field on the canvas">${rawIcon('eye', 14)}<span class="visually-hidden">Show</span></th>
+          <th class="field-table__action" title="Go to each field on the canvas">${rawIcon('crosshair', 14)}<span class="visually-hidden">Go to</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        ${
+          rows.length
+            ? rows
+            : html`<tr>
+                <td colspan=${columnCount}>No fields match.</td>
+              </tr>`
+        }
+      </tbody>
+    </table>`;
 }
 
 // The list is wider than its select, so it ends under the select's right

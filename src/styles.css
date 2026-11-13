@@ -746,12 +746,19 @@ sl-button#zoom-level::part(base) {
   display: flex;
   flex-direction: column;
   width: 320px;
+  max-width: calc(100% - 2rem);
   max-height: calc(100% - 2rem);
   background: var(--panel-bg);
   border: 1px solid var(--border);
   border-radius: 10px;
   box-shadow: 0 8px 26px rgba(0, 0, 0, 0.14);
-  overflow: hidden;
+}
+
+/* A floating panel leaves its resize handles unclipped, so the body clips its
+   own corners. */
+.panel:not(.is-docked) .panel__body {
+  border-bottom-left-radius: inherit;
+  border-bottom-right-radius: inherit;
 }
 
 .panel--wide {
@@ -778,6 +785,7 @@ sl-button#zoom-level::part(base) {
   min-height: 90px;
   box-shadow: none;
   border-radius: 8px;
+  overflow: hidden;
 }
 
 .panel.is-docked .panel__body {
@@ -813,6 +821,70 @@ sl-button#zoom-level::part(base) {
 
 .panel__vresize:hover::after {
   background: var(--accent);
+}
+
+/* The edge handles straddle a floating panel's border, mostly outside it, so
+   they leave the body's scrollbars free. The corner grips sit inside. */
+.panel__resize {
+  position: absolute;
+  z-index: 3;
+  --grip: var(--border);
+}
+
+.panel__resize:hover {
+  --grip: var(--accent);
+}
+
+.panel__resize--left,
+.panel__resize--right {
+  top: 0;
+  bottom: 14px;
+  width: 7px;
+  cursor: ew-resize;
+}
+
+.panel__resize--left {
+  left: -5px;
+}
+
+.panel__resize--right {
+  right: -5px;
+}
+
+.panel__resize--bottom {
+  left: 14px;
+  right: 14px;
+  bottom: -5px;
+  height: 7px;
+  cursor: ns-resize;
+}
+
+.panel__resize--bottom-left,
+.panel__resize--bottom-right {
+  bottom: 0;
+  width: 14px;
+  height: 14px;
+  z-index: 4;
+}
+
+.panel__resize--bottom-left {
+  left: 0;
+  cursor: nesw-resize;
+  background: linear-gradient(225deg, transparent 50%, var(--grip) 50%, var(--grip) 58%, transparent 58%, transparent 70%, var(--grip) 70%, var(--grip) 78%, transparent 78%);
+  border-bottom-left-radius: 10px;
+}
+
+.panel__resize--bottom-right {
+  right: 0;
+  cursor: nwse-resize;
+  background: linear-gradient(135deg, transparent 50%, var(--grip) 50%, var(--grip) 58%, transparent 58%, transparent 70%, var(--grip) 70%, var(--grip) 78%, transparent 78%);
+  border-bottom-right-radius: 10px;
+}
+
+body.is-resizing-panel,
+body.is-resizing-panel * {
+  cursor: var(--resize-cursor, nwse-resize) !important;
+  user-select: none;
 }
 
 .panel__body {
@@ -1005,9 +1077,11 @@ body.is-dragging-panel * {
   border-color: var(--accent);
 }
 
-.table-wrap {
-  overflow-x: auto;
-  overflow-y: auto;
+/* The panel body scrolls the table both ways, so the toolbar keeps its place
+   while the table scrolls sideways. */
+#table .panel__toolbar {
+  position: sticky;
+  left: 0;
 }
 
 .field-table {
@@ -1026,83 +1100,117 @@ body.is-dragging-panel * {
   overflow-wrap: anywhere;
 }
 
-.field-table th:nth-child(1),
-.field-table td:nth-child(1) {
+/* The fixed layout takes each column's width from its header cell. */
+.field-table .field-table__col--position {
+  width: 6%;
+}
+
+.field-table .field-table__col--field {
   width: 27%;
 }
 
-.field-table th:nth-child(2),
-.field-table td:nth-child(2) {
-  width: 20%;
+.field-table .field-table__col--type {
+  width: 18%;
 }
 
-.field-table th:nth-child(3),
-.field-table td:nth-child(3) {
-  width: 11%;
+.field-table .field-table__col--references {
+  width: 18%;
 }
 
-.field-table th:nth-child(4),
-.field-table td:nth-child(4) {
-  width: 8%;
+.field-table .field-table__col--cardinality {
+  width: 12%;
 }
 
-.field-table th:nth-child(5),
-.field-table td:nth-child(5) {
-  width: 20%;
+.field-table .field-table__col--required {
+  width: 10%;
 }
 
 .field-table .field-table__action {
-  width: 7%;
+  width: 4.5%;
   padding-inline: 0;
   text-align: center;
 }
 
-/* 11 columns don't fit a docked panel, so the table scrolls sideways. */
+/* 12 columns don't fit a docked panel, so the panel body scrolls sideways. */
 .field-table.has-settings {
-  width: max(100%, 60rem);
+  width: max(100%, 64rem);
 }
 
-.field-table.has-settings th:nth-child(1),
-.field-table.has-settings td:nth-child(1) {
-  width: 15%;
+.field-table.has-settings .field-table__col--position,
+.field-table.has-settings .field-table__action {
+  width: 4%;
 }
 
-.field-table.has-settings th:nth-child(2),
-.field-table.has-settings td:nth-child(2) {
-  width: 11%;
+.field-table.has-settings .field-table__col--field,
+.field-table.has-settings .field-table__col--description {
+  width: 14%;
 }
 
-.field-table.has-settings th:nth-child(3),
-.field-table.has-settings td:nth-child(3),
-.field-table.has-settings th:nth-child(9),
-.field-table.has-settings td:nth-child(9) {
+.field-table.has-settings .field-table__col--type,
+.field-table.has-settings .field-table__col--references {
+  width: 10%;
+}
+
+.field-table.has-settings .field-table__col--cardinality,
+.field-table.has-settings .field-table__col--translatable {
+  width: 7%;
+}
+
+.field-table.has-settings .field-table__col--required {
   width: 6%;
 }
 
-.field-table.has-settings th:nth-child(4),
-.field-table.has-settings td:nth-child(4) {
-  width: 5%;
+.field-table.has-settings .field-table__col--defaultValue {
+  width: 8%;
 }
 
-.field-table.has-settings th:nth-child(5),
-.field-table.has-settings td:nth-child(5),
-.field-table.has-settings th:nth-child(8),
-.field-table.has-settings td:nth-child(8) {
-  width: 11%;
+.field-table.has-settings .field-table__col--allowedValues {
+  width: 12%;
 }
 
-.field-table.has-settings th:nth-child(6),
-.field-table.has-settings td:nth-child(6) {
-  width: 18%;
+.field-table .field-table__col--position,
+.field-table .field-table__position {
+  text-align: right;
 }
 
-.field-table.has-settings th:nth-child(7),
-.field-table.has-settings td:nth-child(7) {
-  width: 9%;
+.field-table__position {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
 }
 
-.field-table.has-settings .field-table__action {
-  width: 4%;
+.field-table__sort {
+  position: relative;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.field-table__sort:hover {
+  color: var(--accent);
+}
+
+.field-table th[aria-sort] .field-table__sort {
+  color: var(--text);
+}
+
+/* The arrow sits in the cell's right padding, so it needs no column width. It
+   has empty alternative text because aria-sort already names the direction. */
+.field-table th[aria-sort] .field-table__sort::after {
+  position: absolute;
+  left: 100%;
+  width: 0.6rem;
+  text-align: center;
+}
+
+.field-table th[aria-sort='ascending'] .field-table__sort::after {
+  content: '↑' / '';
+}
+
+.field-table th[aria-sort='descending'] .field-table__sort::after {
+  content: '↓' / '';
 }
 
 .field-table__text {
@@ -1158,6 +1266,7 @@ body.is-dragging-panel * {
 .field-table th {
   position: sticky;
   top: 0;
+  z-index: 1;
   background: var(--surface);
   font-weight: 600;
   color: var(--muted);

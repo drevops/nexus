@@ -99,6 +99,7 @@ test.describe('Descriptions and field settings', { tag: '@runner-2' }, () => {
 
     await expect(page.locator('#field-table')).toHaveClass(/has-settings/);
     expect(await page.locator('#field-table thead th').allTextContents()).toEqual([
+      '#',
       'Field',
       'Type',
       'Card.',
@@ -113,17 +114,17 @@ test.describe('Descriptions and field settings', { tag: '@runner-2' }, () => {
     ]);
 
     const layout = tableRow(page, 'field_layout').locator('td');
-    await expect(layout.nth(5)).toHaveText('How wide the page is drawn.');
-    await expect(layout.nth(6)).toHaveText('wide');
-    await expect(layout.nth(7)).toHaveText('Wide (wide), Narrow (narrow)');
-    await expect(layout.nth(8).locator('span')).toHaveAttribute('title', /^Translatable/);
+    await expect(layout.nth(6)).toHaveText('How wide the page is drawn.');
+    await expect(layout.nth(7)).toHaveText('wide');
+    await expect(layout.nth(8)).toHaveText('Wide (wide), Narrow (narrow)');
+    await expect(layout.nth(9).locator('span')).toHaveAttribute('title', /^Translatable/);
 
     const summary = tableRow(page, 'field_summary').locator('td');
-    await expect(summary.nth(5)).toHaveText('A short <b>summary</b> of the article.');
-    await expect(summary.nth(8).locator('span')).toHaveAttribute('title', /^Not translatable/);
+    await expect(summary.nth(6)).toHaveText('A short <b>summary</b> of the article.');
+    await expect(summary.nth(9).locator('span')).toHaveAttribute('title', /^Not translatable/);
     await expect(page.locator('#field-table b')).toHaveCount(0);
 
-    await expect(tableRow(page, 'field_tags').locator('td').nth(8)).toHaveText('');
+    await expect(tableRow(page, 'field_tags').locator('td').nth(9)).toHaveText('');
     await expect(page.locator('#field-table .is-group', { hasText: /^\s*Article ·/ }).locator('.field-table__description')).toHaveText('An article.');
   });
 
@@ -140,7 +141,7 @@ test.describe('Descriptions and field settings', { tag: '@runner-2' }, () => {
     await page.click('#table-toggle');
 
     await expect(page.locator('#field-table')).not.toHaveClass(/has-settings/);
-    await expect(page.locator('#field-table thead th')).toHaveCount(7);
+    await expect(page.locator('#field-table thead th')).toHaveCount(8);
     await expect(page.locator('#field-table .is-group', { hasText: /^\s*Event ·/ }).locator('.field-table__description')).toHaveText(
       'A conference or meetup with its sessions, venue and sponsors.',
     );

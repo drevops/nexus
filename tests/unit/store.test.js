@@ -13,8 +13,13 @@ import {
   dockPanel,
   dockedPanels,
   setPanelHeight,
+  resizePanel,
+  resetPanelSize,
+  setTableSearch,
+  setTableSort,
   PANEL_ORDER,
 } from '../../src/store.js';
+import { DEFAULT_SORT } from '../../src/field-table.js';
 
 // The store holds 1 state per module, so these tests share it and run in
 // order. Node has no window, so the store starts from its default layout.
@@ -295,5 +300,92 @@ function dataProviderPanelHeight() {
     ['a maximum below the minimum', 300, 60, 90],
     ['a fractional height', 300.6, 500, 301],
     ['a fractional maximum', 800, 412.4, 412],
+  ];
+}
+
+test('starts every panel without a size and the fields unsearched in diagram order', () => {
+  assert.equal(getState().tableSearch, '');
+  assert.deepEqual(getState().tableSort, DEFAULT_SORT);
+  assert.deepEqual(
+    PANELS.map((id) => getState().panels[id].size),
+    PANELS.map(() => null),
+  );
+});
+
+test('searches and sorts the fields table', () => {
+  setTableSearch('summary');
+  setTableSort({ column: 'type', direction: 'descending' });
+
+  assert.equal(getState().tableSearch, 'summary');
+  assert.deepEqual(getState().tableSort, { column: 'type', direction: 'descending' });
+
+  setTableSearch('');
+  setTableSort(DEFAULT_SORT);
+});
+
+test('floats a resized panel in its box, in whole pixels', async (t) => {
+  for (const [name, box, expected] of dataProviderResizePanel()) {
+    await t.test(name, () => {
+      importLayout({ panels: { table: { open: true, dock: null, pos: { right: 16, top: 16 } } } });
+
+      resizePanel('table', box);
+
+      const panel = getState().panels.table;
+
+      assert.deepEqual({ ...panel.pos, ...panel.size }, expected);
+    });
+  }
+});
+
+function dataProviderResizePanel() {
+  return [
+    ['a whole box', { left: 100, top: 40, width: 500, height: 400 }, { left: 100, top: 40, width: 500, height: 400 }],
+    ['a fractional box', { left: 99.6, top: 40.4, width: 500.6, height: 400.4 }, { left: 100, top: 40, width: 501, height: 400 }],
+  ];
+}
+
+test('returns a resized panel to the size of its content', () => {
+  resizePanel('legend', { left: 0, top: 0, width: 400, height: 300 });
+  resetPanelSize('legend');
+
+  assert.equal(getState().panels.legend.size, null);
+});
+
+test('saves the size of a panel with the layout and restores it', () => {
+  resizePanel('history', { left: 20, top: 30, width: 420, height: 310 });
+
+  const saved = exportLayout();
+
+  resetPanelSize('history');
+  importLayout(saved);
+
+  assert.deepEqual(getState().panels.history.size, { width: 420, height: 310 });
+});
+
+test('reads the size of a panel from an imported layout', async (t) => {
+  for (const [name, entry, expected] of dataProviderImportedSize()) {
+    await t.test(name, () => {
+      resizePanel('settings', { left: 0, top: 0, width: 333, height: 222 });
+
+      importLayout({ panels: { settings: { open: true, ...entry } } });
+
+      assert.deepEqual(getState().panels.settings.size, expected);
+    });
+  }
+});
+
+function dataProviderImportedSize() {
+  const kept = { width: 333, height: 222 };
+
+  return [
+    ['a valid size', { size: { width: 410.4, height: 280 } }, { width: 410, height: 280 }],
+    ['no size key', {}, kept],
+    ['a null size', { size: null }, null],
+    ['a size with text', { size: { width: '400', height: 300 } }, null],
+    ['a size with a missing side', { size: { width: 400 } }, null],
+    ['a size of 0', { size: { width: 0, height: 300 } }, null],
+    ['a negative size', { size: { width: 400, height: -1 } }, null],
+    ['an infinite size', { size: { width: Infinity, height: 300 } }, null],
+    ['a size that is not an object', { size: 'wide' }, null],
   ];
 }

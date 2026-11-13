@@ -510,4 +510,186 @@ test.describe('Panels', { tag: '@runner-1' }, () => {
     expect(sizes.bodyScroll).toBeLessThanOrEqual(sizes.bodyClient + 1);
     expect(sizes.content).toBeGreaterThan(sizes.bodyClient - 12);
   });
+
+  // Drags a resize handle of a floating panel by the given distances.
+  async function dragPanelHandle(page, selector, handle, dx, dy) {
+    const box = await page.locator(selector + ' .panel__resize--' + handle).boundingBox();
+    const x = box.x + box.width / 2;
+    const y = box.y + box.height / 2;
+
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x + dx, y + dy, { steps: 6 });
+    await page.mouse.up();
+  }
+
+  // The edges of an element's box.
+  async function edgesOf(locator) {
+    const box = await locator.boundingBox();
+
+    return { left: box.x, top: box.y, right: box.x + box.width, bottom: box.y + box.height };
+  }
+
+  function expectEdges(actual, expected) {
+    for (const edge of Object.keys(expected)) {
+      expect(Math.abs(actual[edge] - expected[edge]), edge).toBeLessThanOrEqual(1);
+    }
+  }
+
+  for (const [handle, dx, dy, moved] of dataProviderPanelHandles()) {
+    test('resizes a floating panel from its ' + handle + ' handle and keeps the other edges in place', async ({ page }) => {
+      await loadExample(page);
+      await page.click('#table-toggle');
+
+      const panel = page.locator('#table');
+      const before = await edgesOf(panel);
+
+      await dragPanelHandle(page, '#table', handle, dx, dy);
+
+      const expected = { ...before };
+      moved.forEach((edge) => {
+        expected[edge] += edge === 'bottom' ? dy : dx;
+      });
+
+      expectEdges(await edgesOf(panel), expected);
+    });
+  }
+
+  // Each case shrinks the fields panel, which starts at the canvas's right
+  // edge, and names the edges that move.
+  function dataProviderPanelHandles() {
+    return [
+      ['left', 120, 30, ['left']],
+      ['right', -120, 30, ['right']],
+      ['bottom', 30, -100, ['bottom']],
+      ['bottom-left', 120, -100, ['left', 'bottom']],
+      ['bottom-right', -120, -100, ['right', 'bottom']],
+    ];
+  }
+
+  test('grows a floating panel from its left edge and its bottom-right corner', async ({ page }) => {
+    await loadExample(page);
+    await page.click('#table-toggle');
+
+    const panel = page.locator('#table');
+    const before = await edgesOf(panel);
+
+    await dragPanelHandle(page, '#table', 'left', -60, 0);
+    expectEdges(await edgesOf(panel), { ...before, left: before.left - 60 });
+
+    await dragPanelHandle(page, '#table', 'bottom-right', -160, -120);
+    const shrunk = await edgesOf(panel);
+    await dragPanelHandle(page, '#table', 'bottom-right', 60, 40);
+    expectEdges(await edgesOf(panel), { ...shrunk, right: shrunk.right + 60, bottom: shrunk.bottom + 40 });
+  });
+
+  test('keeps a resized panel inside the canvas and above its minimum size', async ({ page }) => {
+    await loadExample(page);
+    await page.click('#entities-toggle');
+
+    const panel = page.locator('#entities');
+    const canvas = await edgesOf(page.locator('.stage__canvas'));
+
+    await dragPanelHandle(page, '#entities', 'bottom-right', 3000, 3000);
+
+    const largest = await edgesOf(panel);
+    expect(largest.right).toBeLessThanOrEqual(canvas.right);
+    expect(largest.bottom).toBeLessThanOrEqual(canvas.bottom);
+
+    await dragPanelHandle(page, '#entities', 'left', -3000, 0);
+    expect(Math.abs((await edgesOf(panel)).left - canvas.left)).toBeLessThanOrEqual(1);
+
+    // The panel shrinks with the window, so its handles stay in reach.
+    await page.setViewportSize({ width: 760, height: 560 });
+
+    const shrunkCanvas = await edgesOf(page.locator('.stage__canvas'));
+    const shrunk = await edgesOf(panel);
+    expect(shrunk.right).toBeLessThanOrEqual(shrunkCanvas.right + 1);
+    expect(shrunk.bottom).toBeLessThanOrEqual(shrunkCanvas.bottom + 1);
+
+    await dragPanelHandle(page, '#entities', 'bottom-right', -3000, -3000);
+
+    const smallest = await panel.boundingBox();
+    expect(Math.round(smallest.width)).toBe(200);
+    expect(Math.round(smallest.height)).toBe(90);
+
+    const right = (await edgesOf(panel)).right;
+    await dragPanelHandle(page, '#entities', 'left', 3000, 0);
+    expect(Math.round((await panel.boundingBox()).width)).toBe(200);
+    expect(Math.abs((await edgesOf(panel)).right - right)).toBeLessThanOrEqual(1);
+  });
+
+  test('returns a resized panel to the size of its content on a double-click of a handle', async ({ page }) => {
+    await loadExample(page);
+    await page.click('#entities-toggle');
+
+    const panel = page.locator('#entities');
+    const natural = await panel.boundingBox();
+
+    for (const handle of ['bottom-right', 'left']) {
+      await dragPanelHandle(page, '#entities', 'bottom-right', -60, -80);
+      expect((await panel.boundingBox()).height).toBeLessThan(natural.height - 40);
+
+      await page.locator('#entities .panel__resize--' + handle).dblclick();
+
+      const reset = await panel.boundingBox();
+      expect(Math.abs(reset.width - natural.width)).toBeLessThanOrEqual(1);
+      expect(Math.abs(reset.height - natural.height)).toBeLessThanOrEqual(1);
+    }
+  });
+
+  test('remembers the size of a resized panel across reloads', async ({ page }) => {
+    await loadExample(page);
+    await page.click('#table-toggle');
+    await dragPanelHandle(page, '#table', 'bottom-left', 100, -150);
+
+    const resized = await page.locator('#table').boundingBox();
+    await page.waitForTimeout(500);
+
+    await page.reload();
+    await loadExample(page);
+    await expect(page.locator('#table')).toBeVisible();
+
+    const restored = await page.locator('#table').boundingBox();
+    expect(Math.abs(restored.x - resized.x)).toBeLessThanOrEqual(1);
+    expect(Math.abs(restored.width - resized.width)).toBeLessThanOrEqual(1);
+    expect(Math.abs(restored.height - resized.height)).toBeLessThanOrEqual(1);
+  });
+
+  test('draws the resize handles only on a floating panel, with a matching cursor each', async ({ page }) => {
+    await loadExample(page);
+    await page.click('#entities-toggle');
+
+    const cursors = await page
+      .locator('#entities .panel__resize')
+      .evaluateAll((handles) => handles.map((handle) => [handle.className.replace('panel__resize panel__resize--', ''), getComputedStyle(handle).cursor]));
+    expect(cursors).toEqual([
+      ['left', 'ew-resize'],
+      ['right', 'ew-resize'],
+      ['bottom', 'ns-resize'],
+      ['bottom-left', 'nesw-resize'],
+      ['bottom-right', 'nwse-resize'],
+    ]);
+
+    await page.click('#entities .panel__pin');
+    await expect(page.locator('#entities')).toHaveClass(/is-docked/);
+    await expect(page.locator('#entities .panel__resize')).toHaveCount(0);
+  });
+
+  test('leaves the scrollbars of a floating panel clear of its resize handles', async ({ page }) => {
+    await loadExample(page);
+    await page.click('#entities-toggle');
+
+    // How far each edge handle reaches into the panel body.
+    const overlaps = await page.locator('#entities').evaluate((panel) => {
+      const body = panel.querySelector('.panel__body').getBoundingClientRect();
+      const box = (handle) => panel.querySelector('.panel__resize--' + handle).getBoundingClientRect();
+
+      return { left: box('left').right - body.left, right: body.right - box('right').left, bottom: body.bottom - box('bottom').top };
+    });
+
+    expect(overlaps.left).toBeLessThanOrEqual(3);
+    expect(overlaps.right).toBeLessThanOrEqual(3);
+    expect(overlaps.bottom).toBeLessThanOrEqual(3);
+  });
 });
