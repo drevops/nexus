@@ -1,0 +1,3359 @@
+{
+  "nexus": 1,
+  "title": "Open Social 13.1.0",
+  "colors": {},
+  "symbols": {},
+  "customTypes": [],
+  "entities": [
+    {
+      "entityType": "node",
+      "bundle": "album",
+      "label": "Album",
+      "note": "",
+      "fields": [
+        {
+          "name": "title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "uid",
+          "label": "Author",
+          "fieldType": "entity_reference",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "created",
+          "label": "Authored on",
+          "fieldType": "created",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "field_album_comments",
+          "label": "Comments",
+          "fieldType": "comment",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "defaultValue": "status: 2, cid: 0, last_comment_timestamp: 0, last_comment_uid: 0, comment_count: 0",
+          "translatable": false
+        },
+        {
+          "name": "field_album_creators",
+          "label": "Allow members of the same group to add images to this album",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "defaultValue": "0",
+          "translatable": false
+        },
+        {
+          "name": "field_content_visibility",
+          "label": "Visibility",
+          "fieldType": "entity_access_field",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "defaultValue": "public",
+          "allowedValues": [
+            {
+              "value": "public",
+              "label": "Public"
+            },
+            {
+              "value": "community",
+              "label": "Community"
+            },
+            {
+              "value": "group",
+              "label": "Group members"
+            }
+          ],
+          "translatable": true
+        }
+      ]
+    },
+    {
+      "entityType": "node",
+      "bundle": "course_article",
+      "label": "Article",
+      "note": "",
+      "fields": [
+        {
+          "name": "title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "uid",
+          "label": "Author",
+          "fieldType": "entity_reference",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "created",
+          "label": "Authored on",
+          "fieldType": "created",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "field_course_article_content",
+          "label": "Content",
+          "fieldType": "entity_reference_revisions",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "paragraph",
+          "targetBundles": [
+            "attachment",
+            "image_text",
+            "images",
+            "text",
+            "text_image"
+          ],
+          "hidden": false,
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "node",
+      "bundle": "course_section",
+      "label": "Section",
+      "note": "",
+      "fields": [
+        {
+          "name": "title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "uid",
+          "label": "Author",
+          "fieldType": "entity_reference",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "created",
+          "label": "Authored on",
+          "fieldType": "created",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "field_course_section_content",
+          "label": "Parts",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "node",
+          "targetBundles": [
+            "course_article",
+            "course_video"
+          ],
+          "hidden": false,
+          "translatable": false
+        },
+        {
+          "name": "field_course_section_description",
+          "label": "Description",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_course_section_redirect",
+          "label": "Redirect URL",
+          "fieldType": "link",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "Redirect people to this URL after they finished a section. Text of the next button may be customized.\r\nWorks only for non-sequential courses.",
+          "translatable": true
+        },
+        {
+          "name": "field_course_section_weight",
+          "label": "Weight",
+          "fieldType": "weight",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "defaultValue": "0",
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "node",
+      "bundle": "course_video",
+      "label": "Video",
+      "note": "",
+      "fields": [
+        {
+          "name": "title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "uid",
+          "label": "Author",
+          "fieldType": "entity_reference",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "created",
+          "label": "Authored on",
+          "fieldType": "created",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "field_course_video_description",
+          "label": "Description",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_course_video_video",
+          "label": "Video",
+          "fieldType": "video_embed_field",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "Enter a URL to video on Vimeo internet media provider, e.g. https://vimeo.com/1234567",
+          "translatable": true
+        }
+      ]
+    },
+    {
+      "entityType": "node",
+      "bundle": "event",
+      "label": "Event",
+      "note": "",
+      "fields": [
+        {
+          "name": "title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "uid",
+          "label": "Author",
+          "fieldType": "entity_reference",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "created",
+          "label": "Authored on",
+          "fieldType": "created",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "body",
+          "label": "Description",
+          "fieldType": "text_with_summary",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_content_visibility",
+          "label": "Visibility",
+          "fieldType": "entity_access_field",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "allowedValues": [
+            {
+              "value": "public",
+              "label": "Public"
+            },
+            {
+              "value": "community",
+              "label": "Community"
+            },
+            {
+              "value": "group",
+              "label": "Group members"
+            }
+          ],
+          "translatable": true
+        },
+        {
+          "name": "field_enroll_method",
+          "label": "Enroll method",
+          "fieldType": "list_integer",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "defaultValue": "1",
+          "allowedValues": [
+            {
+              "value": "1",
+              "label": "Open to enroll"
+            },
+            {
+              "value": "2",
+              "label": "Request to enroll"
+            },
+            {
+              "value": "3",
+              "label": "Invite-only"
+            }
+          ],
+          "translatable": false
+        },
+        {
+          "name": "field_event_address",
+          "label": "Address",
+          "fieldType": "address",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_event_all_day",
+          "label": "All day",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "defaultValue": "0",
+          "translatable": false
+        },
+        {
+          "name": "field_event_an_enroll",
+          "label": "Allow users to enroll to this event without an account",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "To allow users to enroll in this event without an account, this event must be visible to the public and open for all users.",
+          "defaultValue": "0",
+          "translatable": false
+        },
+        {
+          "name": "field_event_comments",
+          "label": "Comments",
+          "fieldType": "comment",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "defaultValue": "status: 2, cid: 0, last_comment_timestamp: 0, last_comment_uid: 0, comment_count: 0",
+          "translatable": false
+        },
+        {
+          "name": "field_event_date",
+          "label": "Start",
+          "fieldType": "datetime",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": false
+        },
+        {
+          "name": "field_event_date_end",
+          "label": "End",
+          "fieldType": "datetime",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": false
+        },
+        {
+          "name": "field_event_enroll",
+          "label": "Enable event enrollment",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "defaultValue": "1",
+          "translatable": false
+        },
+        {
+          "name": "field_event_enroll_outside_group",
+          "label": "Allow non-group members to enroll or request to enroll",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "To allow users who have not join the group of this event to enroll or send request to enroll",
+          "defaultValue": "0",
+          "translatable": false
+        },
+        {
+          "name": "field_event_image",
+          "label": "Image",
+          "fieldType": "image",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "Crop your image to select which part of your image to show on display.",
+          "translatable": true
+        },
+        {
+          "name": "field_event_location",
+          "label": "Location name",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_event_managers",
+          "label": "Organizers",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "user",
+          "targetBundles": [],
+          "hidden": false,
+          "description": "Assign event organisers to this event.",
+          "translatable": false
+        },
+        {
+          "name": "field_event_max_enroll",
+          "label": "Set a limit to number of enrollees",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "defaultValue": "0",
+          "translatable": false
+        },
+        {
+          "name": "field_event_max_enroll_num",
+          "label": "Maximum number of enrollees",
+          "fieldType": "integer",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "Set a limit for event enrollments. Users are not able to enroll once the maximum number of enrollees is reached.",
+          "translatable": false
+        },
+        {
+          "name": "field_event_meeting",
+          "label": "Meeting",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": "meeting_api_meeting",
+          "targetBundles": [
+            "big_blue_button",
+            "custom_link"
+          ],
+          "hidden": false,
+          "translatable": false
+        },
+        {
+          "name": "field_event_recording",
+          "label": "Resources",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": "media",
+          "targetBundles": [
+            "video_recording_link"
+          ],
+          "hidden": false,
+          "translatable": false
+        },
+        {
+          "name": "field_event_send_confirmation",
+          "label": "Send confirmation after standalone enrolment",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "Send a confirmation email when a member enrolls in an event",
+          "defaultValue": "0",
+          "translatable": false
+        },
+        {
+          "name": "field_event_send_invite_by_user",
+          "label": "Allow users to share the event with others",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "defaultValue": "0",
+          "translatable": false
+        },
+        {
+          "name": "field_event_type",
+          "label": "Type",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": "taxonomy_term",
+          "targetBundles": [
+            "event_types"
+          ],
+          "hidden": false,
+          "translatable": false
+        },
+        {
+          "name": "field_files",
+          "label": "Attachment",
+          "fieldType": "file",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_hide_enrollments",
+          "label": "Hide enrollments",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "Hide the list of enrollees from other members",
+          "defaultValue": "0",
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "node",
+      "bundle": "landing_page",
+      "label": "Landing page",
+      "note": "",
+      "description": "Use landing pages for your dynamic content, such as a home page.",
+      "fields": [
+        {
+          "name": "title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "uid",
+          "label": "Author",
+          "fieldType": "entity_reference",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "created",
+          "label": "Authored on",
+          "fieldType": "created",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "field_content_visibility",
+          "label": "Visibility",
+          "fieldType": "entity_access_field",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "allowedValues": [
+            {
+              "value": "public",
+              "label": "Public"
+            },
+            {
+              "value": "community",
+              "label": "Community"
+            },
+            {
+              "value": "group",
+              "label": "Group members"
+            }
+          ],
+          "translatable": false
+        },
+        {
+          "name": "field_landing_page_section",
+          "label": "Sections",
+          "fieldType": "entity_reference_revisions",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "paragraph",
+          "targetBundles": [
+            "section"
+          ],
+          "hidden": false,
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "node",
+      "bundle": "page",
+      "label": "Page",
+      "note": "",
+      "description": "Use pages for your static content, such as an 'About us' page.",
+      "fields": [
+        {
+          "name": "title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "uid",
+          "label": "Author",
+          "fieldType": "entity_reference",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "created",
+          "label": "Authored on",
+          "fieldType": "created",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "body",
+          "label": "Description",
+          "fieldType": "text_with_summary",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_content_visibility",
+          "label": "Visibility",
+          "fieldType": "entity_access_field",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "allowedValues": [
+            {
+              "value": "public",
+              "label": "Public"
+            },
+            {
+              "value": "community",
+              "label": "Community"
+            },
+            {
+              "value": "group",
+              "label": "Group members"
+            }
+          ],
+          "translatable": true
+        },
+        {
+          "name": "field_files",
+          "label": "Attachment",
+          "fieldType": "file",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_page_comments",
+          "label": "Comments",
+          "fieldType": "comment",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "defaultValue": "status: 1, cid: 0, last_comment_timestamp: 0, last_comment_uid: 0, comment_count: 0",
+          "translatable": false
+        },
+        {
+          "name": "field_page_image",
+          "label": "Image",
+          "fieldType": "image",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "Crop your image to select which part of your image to show on display.",
+          "translatable": true
+        }
+      ]
+    },
+    {
+      "entityType": "node",
+      "bundle": "topic",
+      "label": "Topic",
+      "note": "",
+      "fields": [
+        {
+          "name": "title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "uid",
+          "label": "Author",
+          "fieldType": "entity_reference",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "created",
+          "label": "Authored on",
+          "fieldType": "created",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "body",
+          "label": "Description",
+          "fieldType": "text_with_summary",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_content_visibility",
+          "label": "Visibility",
+          "fieldType": "entity_access_field",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "allowedValues": [
+            {
+              "value": "public",
+              "label": "Public"
+            },
+            {
+              "value": "community",
+              "label": "Community"
+            },
+            {
+              "value": "group",
+              "label": "Group members"
+            }
+          ],
+          "translatable": false
+        },
+        {
+          "name": "field_files",
+          "label": "Attachment",
+          "fieldType": "file",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_topic_comments",
+          "label": "Comments",
+          "fieldType": "comment",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "defaultValue": "status: 2, cid: 0, last_comment_timestamp: 0, last_comment_uid: 0, comment_count: 0",
+          "translatable": false
+        },
+        {
+          "name": "field_topic_image",
+          "label": "Image",
+          "fieldType": "image",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "Crop your image to select which part of your image to show on display.",
+          "translatable": true
+        },
+        {
+          "name": "field_topic_type",
+          "label": "Type",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": true,
+          "note": "",
+          "targetType": "taxonomy_term",
+          "targetBundles": [
+            "topic_types"
+          ],
+          "hidden": false,
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "taxonomy_term",
+      "bundle": "course_type",
+      "label": "Course type",
+      "note": "",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "description",
+          "label": "Description",
+          "fieldType": "text_long",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "entityType": "taxonomy_term",
+      "bundle": "event_types",
+      "label": "Event types",
+      "note": "",
+      "description": "Event types",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "description",
+          "label": "Description",
+          "fieldType": "text_long",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "field_event_type_icon",
+          "label": "Icon",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "taxonomy_term",
+      "bundle": "expertise",
+      "label": "Expertise",
+      "note": "",
+      "description": "A users expertises",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "description",
+          "label": "Description",
+          "fieldType": "text_long",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "entityType": "taxonomy_term",
+      "bundle": "group_type",
+      "label": "Group type",
+      "note": "",
+      "description": "Group types",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "description",
+          "label": "Description",
+          "fieldType": "text_long",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "field_group_type_icon",
+          "label": "Icon",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "taxonomy_term",
+      "bundle": "interests",
+      "label": "Interests",
+      "note": "",
+      "description": "A users interests for their profile.",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "description",
+          "label": "Description",
+          "fieldType": "text_long",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "entityType": "taxonomy_term",
+      "bundle": "nationality",
+      "label": "Nationality",
+      "note": "",
+      "description": "Nationalities",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "description",
+          "label": "Description",
+          "fieldType": "text_long",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "entityType": "taxonomy_term",
+      "bundle": "profile_organization_tag",
+      "label": "Profile organization tag",
+      "note": "",
+      "description": "CM can tag a user and indicate that user is part of an organization.",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "description",
+          "label": "Description",
+          "fieldType": "text_long",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "entityType": "taxonomy_term",
+      "bundle": "profile_tag",
+      "label": "Profile tag",
+      "note": "",
+      "description": "CM can tag a user, giving options on filtering / searching users.",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "description",
+          "label": "Description",
+          "fieldType": "text_long",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "entityType": "taxonomy_term",
+      "bundle": "report_reasons",
+      "label": "Report reasons",
+      "note": "",
+      "description": "A list of reasons users can choose from for reporting content.",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "description",
+          "label": "Description",
+          "fieldType": "text_long",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "entityType": "taxonomy_term",
+      "bundle": "social_tagging",
+      "label": "Content tags",
+      "note": "",
+      "description": "Categories and terms used to tag content",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "description",
+          "label": "Description",
+          "fieldType": "text_long",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "field_category_usage",
+          "label": "Placement",
+          "fieldType": "string_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "Where this term will be available within the platform",
+          "translatable": false
+        },
+        {
+          "name": "field_term_page_url",
+          "label": "URL",
+          "fieldType": "link",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "Choose a URL link to help members find your tag’s custom page. The URL will be used in different blocks across the platform to improve the user experience. <p>If left blank/on default, members can still find the content related to the tag but there will be no custom page linked.</p>",
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "taxonomy_term",
+      "bundle": "topic_types",
+      "label": "Topic types",
+      "note": "",
+      "description": "Topic types",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "description",
+          "label": "Description",
+          "fieldType": "text_long",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "field_topic_type_icon",
+          "label": "Icon",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "media",
+      "bundle": "video_recording_link",
+      "label": "Video Recording",
+      "note": "",
+      "description": "Event recording link media item used to display a recap video for ended events.",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "status",
+          "label": "Published",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "field_media_links",
+          "label": "Links",
+          "fieldType": "link",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "accordion",
+      "label": "Accordion",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_accord_description",
+          "label": "Description",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_accord_item",
+          "label": "Accordion item",
+          "fieldType": "entity_reference_revisions",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "paragraph",
+          "targetBundles": [
+            "accordion_item"
+          ],
+          "hidden": false,
+          "translatable": false
+        },
+        {
+          "name": "field_accord_title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "accordion_item",
+      "label": "Accordion item",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_accord_item_description",
+          "label": "Description",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_accord_item_title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "attachment",
+      "label": "Attachment",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_files",
+          "label": "Files",
+          "fieldType": "file",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "block",
+      "label": "Block",
+      "note": "",
+      "description": "Reference some block",
+      "fields": [
+        {
+          "name": "field_block_link",
+          "label": "Link",
+          "fieldType": "link",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "Optional link. Sometimes blocks already contain more link.",
+          "translatable": true
+        },
+        {
+          "name": "field_block_reference",
+          "label": "Primary",
+          "fieldType": "block_field",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "Select a Block from a list to include",
+          "translatable": false
+        },
+        {
+          "name": "field_block_reference_secondary",
+          "label": "Secondary",
+          "fieldType": "block_field",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "A secondary block will be printed in a side column, keep in mind it will take 1/3",
+          "translatable": false
+        },
+        {
+          "name": "field_block_title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "Optional field, title can be printed from block or overridden here. Uncheck <em>Display title</em> if using this field",
+          "translatable": true
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "button",
+      "label": "Button",
+      "note": "",
+      "description": "Contain one link field for Logged in user and one for Anonymous, button style can be selected.",
+      "fields": [
+        {
+          "name": "field_button_link_an",
+          "label": "Link for Anonymous User",
+          "fieldType": "link",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_button_link_lu",
+          "label": "Link for Logged In User",
+          "fieldType": "link",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_button_style",
+          "label": "Style",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "Style for button see:<a href=\"http://styleguide.getopensocial.com/section-atoms.html#kssref-atoms-button-style\">styleguide</a>.",
+          "defaultValue": "btn-default",
+          "allowedValues": [
+            {
+              "value": "btn-default",
+              "label": "Default style"
+            },
+            {
+              "value": "btn-primary",
+              "label": "Primary style"
+            },
+            {
+              "value": "btn-accent",
+              "label": "Accent style"
+            },
+            {
+              "value": "btn-flat",
+              "label": "Flat style"
+            }
+          ],
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "custom_content_list",
+      "label": "Custom content list block",
+      "note": "",
+      "description": "Contain the \"Custom content list block\" custom block.",
+      "fields": [
+        {
+          "name": "field_custom_content_list",
+          "label": "Block",
+          "fieldType": "entity_reference",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": "block_content",
+          "targetBundles": [
+            "custom_content_list"
+          ],
+          "hidden": false,
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "custom_multiple_content_list",
+      "label": "Custom multiple content list",
+      "note": "",
+      "description": "Contain the \"Custom multiple content list block\" custom block.",
+      "fields": [
+        {
+          "name": "field_multiple_content_block",
+          "label": "Block",
+          "fieldType": "block_field",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "defaultValue": "plugin_id: multiple_content_block",
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "featured",
+      "label": "Featured Content",
+      "note": "",
+      "description": "Create featured items block, editor will be able to provide title, items to show and a link like see all.",
+      "fields": [
+        {
+          "name": "field_featured_description",
+          "label": "Description",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_featured_items",
+          "label": "Items",
+          "fieldType": "dynamic_entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": false
+        },
+        {
+          "name": "field_featured_link",
+          "label": "Link",
+          "fieldType": "link",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_featured_title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "Section title",
+          "translatable": true
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "featured_item",
+      "label": "Featured Item",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_featured_item_description",
+          "label": "Description",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_featured_item_image",
+          "label": "Image",
+          "fieldType": "image",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_featured_item_link",
+          "label": "Link",
+          "fieldType": "link",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_featured_item_title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "featured_items",
+      "label": "Featured Items",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_featured_items_description",
+          "label": "Description",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_featured_items_items",
+          "label": "Items",
+          "fieldType": "entity_reference_revisions",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "paragraph",
+          "targetBundles": [
+            "featured_item"
+          ],
+          "hidden": false,
+          "translatable": false
+        },
+        {
+          "name": "field_featured_items_title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "hero",
+      "label": "Hero",
+      "note": "",
+      "description": "A section with a background image and buttons (optional). Looks good on top of each page. Also nice as a seperator.",
+      "fields": [
+        {
+          "name": "field_hero_buttons",
+          "label": "Buttons",
+          "fieldType": "entity_reference_revisions",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "paragraph",
+          "targetBundles": [
+            "button"
+          ],
+          "hidden": false,
+          "translatable": false
+        },
+        {
+          "name": "field_hero_image",
+          "label": "Image",
+          "fieldType": "image",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_hero_subtitle",
+          "label": "Subtitle",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_hero_title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "hero_small",
+      "label": "Hero small",
+      "note": "",
+      "description": "A section similiar to the Hero, but a bit smaller, so it takes up less room in the view port",
+      "fields": [
+        {
+          "name": "field_hero_small_buttons",
+          "label": "Buttons",
+          "fieldType": "entity_reference_revisions",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "paragraph",
+          "targetBundles": [
+            "button"
+          ],
+          "hidden": false,
+          "translatable": false
+        },
+        {
+          "name": "field_hero_small_image",
+          "label": "Image",
+          "fieldType": "image",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_hero_small_subtitle",
+          "label": "Subtitle",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_hero_small_title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "image_text",
+      "label": "Image + Text",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_image",
+          "label": "Image",
+          "fieldType": "image",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_text",
+          "label": "Text",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "images",
+      "label": "Images",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_images",
+          "label": "Images",
+          "fieldType": "image",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "introduction",
+      "label": "Introduction",
+      "note": "",
+      "description": "Provide textual block with some link.",
+      "fields": [
+        {
+          "name": "field_introduction_link_an",
+          "label": "Link for Anonymous User",
+          "fieldType": "link",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_introduction_link_lu",
+          "label": "Link for Logged In User",
+          "fieldType": "link",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_introduction_text",
+          "label": "Text",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_introduction_title",
+          "label": "Title",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "other_affiliations",
+      "label": "Non-platform affiliations",
+      "note": "",
+      "description": "Affiliation is a feature, that allows members to determine which organization they represent in the community. Users can define this through their the profile settings and this paragraph type is used to add non-platform affiliations.",
+      "fields": [
+        {
+          "name": "field_affiliation_org_function",
+          "label": "Function in affiliated organization",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": false
+        },
+        {
+          "name": "field_affiliation_org_name",
+          "label": "Name of the affiliated organization",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "section",
+      "label": "Section",
+      "note": "",
+      "description": "A block section where can be selected a block or a paragraph",
+      "fields": [
+        {
+          "name": "field_section_paragraph",
+          "label": "Reference",
+          "fieldType": "entity_reference_revisions",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": "paragraph",
+          "targetBundles": [
+            "featured",
+            "featured_items",
+            "block",
+            "hero",
+            "hero_small",
+            "introduction",
+            "accordion"
+          ],
+          "hidden": false,
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "tag",
+      "label": "Tag",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_tag",
+          "label": "Tag",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "taxonomy_term",
+          "targetBundles": [
+            "social_tagging"
+          ],
+          "hidden": false,
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "text",
+      "label": "Text",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_text",
+          "label": "Text",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        }
+      ]
+    },
+    {
+      "entityType": "paragraph",
+      "bundle": "text_image",
+      "label": "Text + Image",
+      "note": "",
+      "fields": [
+        {
+          "name": "field_image",
+          "label": "Image",
+          "fieldType": "image",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_text",
+          "label": "Text",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        }
+      ]
+    },
+    {
+      "entityType": "block_content",
+      "bundle": "basic",
+      "label": "Basic block",
+      "note": "",
+      "description": "A basic block contains a title and a body.",
+      "fields": [
+        {
+          "name": "info",
+          "label": "Block description",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "field_basic_link",
+          "label": "Read more link",
+          "fieldType": "link",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_text_block",
+          "label": "Text block",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        }
+      ]
+    },
+    {
+      "entityType": "block_content",
+      "bundle": "custom_content_list",
+      "label": "Custom content list block",
+      "note": "",
+      "description": "A custom block to generate a list of content dynamically according to specific filters.",
+      "fields": [
+        {
+          "name": "info",
+          "label": "Block description",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "field_content_tags",
+          "label": "Content tags",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "taxonomy_term",
+          "targetBundles": [
+            "social_tagging"
+          ],
+          "hidden": false,
+          "translatable": false
+        },
+        {
+          "name": "field_duration",
+          "label": "Amount of days",
+          "fieldType": "integer",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "defaultValue": "90",
+          "translatable": false
+        },
+        {
+          "name": "field_event_content_tag",
+          "label": "Content tags",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "taxonomy_term",
+          "targetBundles": [
+            "social_tagging"
+          ],
+          "hidden": false,
+          "translatable": false
+        },
+        {
+          "name": "field_event_date",
+          "label": "Date period",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "defaultValue": "future",
+          "allowedValues": [
+            {
+              "value": "future",
+              "label": "Future Events"
+            },
+            {
+              "value": "past",
+              "label": "Past Events"
+            },
+            {
+              "value": "last_month",
+              "label": "Last Month"
+            },
+            {
+              "value": "current_month",
+              "label": "This month"
+            },
+            {
+              "value": "next_month",
+              "label": "Next month"
+            },
+            {
+              "value": "ongoing",
+              "label": "Ongoing"
+            },
+            {
+              "value": "future_ongoing",
+              "label": "Future and ongoing"
+            },
+            {
+              "value": "last_30",
+              "label": "Last 30 days"
+            },
+            {
+              "value": "next_30",
+              "label": "Next 30 days"
+            },
+            {
+              "value": "last_14",
+              "label": "Last 14 days"
+            },
+            {
+              "value": "next_14",
+              "label": "Next 14 days"
+            },
+            {
+              "value": "last_7",
+              "label": "Last 7 days"
+            },
+            {
+              "value": "next_7",
+              "label": "Next 7 days"
+            }
+          ],
+          "translatable": false
+        },
+        {
+          "name": "field_event_group",
+          "label": "Groups",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "group",
+          "targetBundles": [
+            "flexible_group"
+          ],
+          "hidden": false,
+          "translatable": false
+        },
+        {
+          "name": "field_event_type",
+          "label": "Event types",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "taxonomy_term",
+          "targetBundles": [
+            "event_types"
+          ],
+          "hidden": false,
+          "translatable": false
+        },
+        {
+          "name": "field_group",
+          "label": "Group",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "group",
+          "targetBundles": [
+            "flexible_group"
+          ],
+          "hidden": false,
+          "translatable": false
+        },
+        {
+          "name": "field_group_content_tag",
+          "label": "Content tags",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "taxonomy_term",
+          "targetBundles": [
+            "social_tagging"
+          ],
+          "hidden": false,
+          "translatable": false
+        },
+        {
+          "name": "field_group_type",
+          "label": "Group types",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "group_type",
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": false
+        },
+        {
+          "name": "field_item_amount",
+          "label": "Number of items",
+          "fieldType": "integer",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "defaultValue": "5",
+          "translatable": false
+        },
+        {
+          "name": "field_link",
+          "label": "Read more link",
+          "fieldType": "link",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_plugin_field",
+          "label": "Content selection",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "Further specify how the content should be selected",
+          "translatable": false
+        },
+        {
+          "name": "field_plugin_id",
+          "label": "Type of content",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "Select the type of content which will be shown in this block",
+          "translatable": false
+        },
+        {
+          "name": "field_sorting",
+          "label": "Sorting",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "Select in what order selected content should be displayed",
+          "defaultValue": "changed",
+          "translatable": false
+        },
+        {
+          "name": "field_subtitle",
+          "label": "Subtitle",
+          "fieldType": "string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_topic_type",
+          "label": "Topic type",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": false,
+          "note": "",
+          "targetType": "taxonomy_term",
+          "targetBundles": [
+            "topic_types"
+          ],
+          "hidden": false,
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "block_content",
+      "bundle": "featured",
+      "label": "Featured Content",
+      "note": "",
+      "description": "A list of featured content that can have a title, link, group/node/profile, and description.",
+      "fields": [
+        {
+          "name": "info",
+          "label": "Block description",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "field_featured",
+          "label": "Featured Content",
+          "fieldType": "entity_reference_revisions",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": "paragraph",
+          "targetBundles": [
+            "featured"
+          ],
+          "hidden": false,
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "block_content",
+      "bundle": "featured_items",
+      "label": "Featured Items",
+      "note": "",
+      "description": "A list of featured items that can have a title, link, image/icon, and description.",
+      "fields": [
+        {
+          "name": "info",
+          "label": "Block description",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "field_featured_items",
+          "label": "Featured Items",
+          "fieldType": "entity_reference_revisions",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": true,
+          "note": "",
+          "targetType": "paragraph",
+          "targetBundles": [
+            "featured_item"
+          ],
+          "hidden": false,
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "block_content",
+      "bundle": "follow_tags",
+      "label": "Follow tags",
+      "note": "",
+      "fields": [
+        {
+          "name": "info",
+          "label": "Block description",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "field_tags",
+          "label": "Tags",
+          "fieldType": "entity_reference_revisions",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": "paragraph",
+          "targetBundles": [
+            "tag"
+          ],
+          "hidden": false,
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "block_content",
+      "bundle": "hero_call_to_action_block",
+      "label": "Hero call to action block",
+      "note": "",
+      "description": "Hero block with a call to action (for example on the AN homepage)",
+      "fields": [
+        {
+          "name": "info",
+          "label": "Block description",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "field_call_to_action_link",
+          "label": "Call to action link",
+          "fieldType": "link",
+          "kind": "multi",
+          "cardinality": 2,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "Creates a call to action link in a block",
+          "translatable": true
+        },
+        {
+          "name": "field_hero_image",
+          "label": "Hero image",
+          "fieldType": "image",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "This image will be displayed on the block",
+          "translatable": true
+        },
+        {
+          "name": "field_text_block",
+          "label": "Text block",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "This input text will be displayed in the block",
+          "translatable": true
+        }
+      ]
+    },
+    {
+      "entityType": "block_content",
+      "bundle": "kpi_analytics",
+      "label": "KPI Analytics block",
+      "note": "",
+      "description": "Block type to create KPI blocks for analytics. Combines multiple plugins (datasource, data formatter and visualization)",
+      "fields": [
+        {
+          "name": "info",
+          "label": "Block description",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "body",
+          "label": "Body",
+          "fieldType": "text_with_summary",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_kpi_chart_colors",
+          "label": "KPI Chart colors",
+          "fieldType": "string",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": false
+        },
+        {
+          "name": "field_kpi_chart_labels",
+          "label": "KPI Chart labels",
+          "fieldType": "string",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": true
+        },
+        {
+          "name": "field_kpi_configuration",
+          "label": "KPI Configuration",
+          "fieldType": "string_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": false
+        },
+        {
+          "name": "field_kpi_data_formatter",
+          "label": "KPI Data formatter",
+          "fieldType": "list_string",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": false
+        },
+        {
+          "name": "field_kpi_datasource",
+          "label": "KPI Datasource",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": false
+        },
+        {
+          "name": "field_kpi_query",
+          "label": "KPI Query",
+          "fieldType": "string_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": false
+        },
+        {
+          "name": "field_kpi_visualization",
+          "label": "KPI visualization",
+          "fieldType": "list_string",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "block_content",
+      "bundle": "most_followed_tags",
+      "label": "Most followed tags",
+      "note": "",
+      "fields": [
+        {
+          "name": "info",
+          "label": "Block description",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "field_terms",
+          "label": "Terms",
+          "fieldType": "entity_reference",
+          "kind": "multi",
+          "cardinality": -1,
+          "required": true,
+          "note": "",
+          "targetType": "taxonomy_term",
+          "targetBundles": [
+            "social_tagging"
+          ],
+          "hidden": false,
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "block_content",
+      "bundle": "platform_intro",
+      "label": "Platform introduction",
+      "note": "",
+      "description": "Platform introduction block, meant for use in content regions.",
+      "fields": [
+        {
+          "name": "info",
+          "label": "Block description",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "field_text_block",
+          "label": "Text block",
+          "fieldType": "text_long",
+          "kind": "single",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "The text to show in this block.",
+          "translatable": true
+        }
+      ]
+    },
+    {
+      "entityType": "user",
+      "bundle": "*",
+      "label": "Any User",
+      "note": "",
+      "fields": []
+    },
+    {
+      "entityType": "user",
+      "bundle": "user",
+      "label": "User",
+      "note": "",
+      "fields": [
+        {
+          "name": "name",
+          "label": "Username",
+          "fieldType": "string",
+          "kind": "system",
+          "cardinality": 1,
+          "required": true,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "mail",
+          "label": "Email",
+          "fieldType": "email",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "roles",
+          "label": "Roles",
+          "fieldType": "entity_reference",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "status",
+          "label": "Status",
+          "fieldType": "boolean",
+          "kind": "system",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false
+        },
+        {
+          "name": "field_allow_following",
+          "label": "Allow members to follow me",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "This selection allows you to turn on the ability for members to follow your activity and receive notifications about new content you create.",
+          "defaultValue": "1",
+          "translatable": false
+        },
+        {
+          "name": "field_external_identifier",
+          "label": "External Identifier",
+          "fieldType": "social_external_identifier",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "translatable": false
+        },
+        {
+          "name": "field_user_embed_content_consent",
+          "label": "Enforce consent for all embedded content",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "This options enables you to provide consent for embedded content before it is displayed in your stream. For example, YouTube videos.",
+          "defaultValue": "1",
+          "translatable": false
+        }
+      ]
+    },
+    {
+      "entityType": "group_type",
+      "bundle": "*",
+      "label": "Any Group Type",
+      "note": "",
+      "fields": []
+    },
+    {
+      "entityType": "meeting_api_meeting",
+      "bundle": "big_blue_button",
+      "label": "Big Blue Button",
+      "note": "",
+      "fields": []
+    },
+    {
+      "entityType": "meeting_api_meeting",
+      "bundle": "custom_link",
+      "label": "Custom Link",
+      "note": "",
+      "fields": []
+    },
+    {
+      "entityType": "group",
+      "bundle": "flexible_group",
+      "label": "Flexible Group",
+      "note": "",
+      "fields": []
+    }
+  ],
+  "annotations": {
+    "nodes": [],
+    "edges": []
+  },
+  "layout": {},
+  "ui": null
+}

@@ -7,6 +7,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseConfig } from '../../src/parser.js';
 import { documentFromGraph } from '../../src/document.js';
+import { ENTITY_TYPE_ORDER } from '../../src/entity-types.js';
 
 // The vendored UMD build exports nothing to an ES module import and sets
 // globalThis.cytoscape instead.
@@ -80,15 +81,16 @@ export function buildDocument(files, title) {
 }
 
 /**
- * Counts the bundles a document draws, by entity type.
+ * Counts the bundles a document draws, by built-in entity type.
  *
- * A '*' bundle stands for any bundle of its type, so it is not counted.
+ * A '*' bundle stands for any bundle of its type, and an entity of another
+ * type is only a reference target, so neither is counted.
  */
 export function documentCounts(doc) {
   const counts = {};
 
   for (const { entityType, bundle } of doc.entities) {
-    if (bundle !== '*') {
+    if (bundle !== '*' && ENTITY_TYPE_ORDER.includes(entityType)) {
       counts[entityType] = (counts[entityType] || 0) + 1;
     }
   }
