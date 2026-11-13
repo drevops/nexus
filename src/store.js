@@ -32,8 +32,6 @@ const PANEL_Z = 10;
 // Matches the min-height of .panel.is-docked in styles.css.
 const MIN_PANEL_HEIGHT = 90;
 
-const MIN_PANEL_WIDTH = 200;
-
 const LAYOUT_KEY = 'nexusLayout';
 
 let controller = null;
@@ -307,14 +305,9 @@ export function setPanelHeight(id, height, maxHeight) {
   patchPanel(id, { height: Math.max(MIN_PANEL_HEIGHT, Math.round(Math.min(height, maxHeight))) });
 }
 
-// Floats a panel with its top-left corner at the box's and the box's size,
-// at most `maxSize` and at least the minimum, which wins over a smaller
-// maximum.
-export function resizePanel(id, box, maxSize) {
-  const width = Math.max(MIN_PANEL_WIDTH, Math.round(Math.min(box.width, maxSize.width)));
-  const height = Math.max(MIN_PANEL_HEIGHT, Math.round(Math.min(box.height, maxSize.height)));
-
-  patchPanel(id, { pos: { left: Math.round(box.left), top: Math.round(box.top) }, size: { width, height } });
+// Floats a panel in the box, as resizeBox() in panel-resize.js returns it.
+export function resizePanel(id, box) {
+  patchPanel(id, { pos: { left: Math.round(box.left), top: Math.round(box.top) }, size: { width: Math.round(box.width), height: Math.round(box.height) } });
 }
 
 // A floating panel without a size takes the size of its content.

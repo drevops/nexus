@@ -3,7 +3,7 @@
  *
  * The whole stage (side docks + canvas host + floating panels) is 1 Preact
  * tree driven by the shared store. Panels float, are dragged by their header
- * and are resized from their bottom-right corner.
+ * and are resized from their left, right and bottom edges and bottom corners.
  *
  * Dropping a panel near an edge, or clicking its pin, docks it into a side
  * rail. Any number of docked panels stack, each at most as tall as its
@@ -23,6 +23,7 @@ import { cardinalityLabel, identifierSegments, fitFontSize } from './model.js';
 import { InspectorBody } from './inspector.js';
 import { allowedValueLabels } from './field-settings.js';
 import { numberFields, sortFields, nextSort, isDefaultSort } from './field-table.js';
+import { RESIZE_HANDLES, resizeBox } from './panel-resize.js';
 import { goToVersion, historyState } from './undo.js';
 import { MODES } from './diagram-defaults.js';
 import { MARKDOWN_DIAGRAM_OPTIONS } from './markdown.js';
@@ -306,31 +307,28 @@ function startVResize(id, evt, el) {
   evt.stopPropagation();
 }
 
-// Resizes a floating panel from its bottom-right corner within the canvas. A
+// Resizes a floating panel from 1 of its RESIZE_HANDLES within the canvas. A
 // panel placed from the right or bottom edge is anchored at its top-left
-// corner first, so that corner stays put while the other one moves.
-function startCornerResize(id, evt, el) {
+// corner first, so the edges the handle doesn't move stay put. The handle's
+// cursor stays on the whole page while the pointer is down.
+function startPanelResize(id, handle, evt, el) {
   const rect = el.getBoundingClientRect();
   const area = el.closest('.stage__canvas').getBoundingClientRect();
-  const maxSize = { width: area.right - rect.left, height: area.bottom - rect.top };
+  const start = { left: rect.left - area.left, top: rect.top - area.top, width: rect.width, height: rect.height };
+  const frame = { width: area.width, height: area.height };
 
   function move(e) {
-    const box = {
-      left: rect.left - area.left,
-      top: rect.top - area.top,
-      width: rect.width + e.clientX - evt.clientX,
-      height: rect.height + e.clientY - evt.clientY,
-    };
-
-    resizePanel(id, box, maxSize);
+    resizePanel(id, resizeBox(start, handle, e.clientX - evt.clientX, e.clientY - evt.clientY, frame));
   }
 
   function up() {
     document.removeEventListener('mousemove', move);
     document.removeEventListener('mouseup', up);
     document.body.classList.remove('is-resizing-panel');
+    document.body.style.removeProperty('--resize-cursor');
   }
 
+  document.body.style.setProperty('--resize-cursor', getComputedStyle(evt.currentTarget).cursor);
   document.body.classList.add('is-resizing-panel');
   document.addEventListener('mousemove', move);
   document.addEventListener('mouseup', up);
@@ -399,16 +397,18 @@ function Panel({ id, panel, dragging, header, children }) {
     </div>
     <div class="panel__body">${children}</div>
     ${resizable ? html`<div class="panel__vresize" title="Drag to resize height" onMouseDown=${(e) => startVResize(id, e, ref.current)}></div>` : null}
-    ${
-      docked
-        ? null
-        : html`<div
-            class="panel__corner"
-            title="Drag to resize, double-click to fit the content"
-            onMouseDown=${(e) => startCornerResize(id, e, ref.current)}
-            onDblClick=${() => resetPanelSize(id)}
-          ></div>`
-    }
+    ${docked
+      ? null
+      : RESIZE_HANDLES.map(
+          (handle) =>
+            html`<div
+              key=${handle}
+              class=${'panel__resize panel__resize--' + handle}
+              title="Drag to resize, double-click to fit the content"
+              onMouseDown=${(e) => startPanelResize(id, handle, e, ref.current)}
+              onDblClick=${() => resetPanelSize(id)}
+            ></div>`,
+        )}
   </section>`;
 }
 
