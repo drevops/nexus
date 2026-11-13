@@ -58,7 +58,7 @@ test('releases only a version tag', async (t) => {
   const check = steps.findIndex((step) => step.name === 'Check the tag');
   const pattern = new RegExp(steps[check].run.match(/=~ (\S+) \]\]/)[1]);
 
-  assert.deepEqual(Object.keys(release.on), ['push']);
+  assert.deepEqual(release.on, { push: { tags: ['*'] } });
   assert.ok(check < steps.findIndex((step) => step.name === 'Stamp the release version'), 'the tag is stamped before it is checked');
 
   for (const [tag, expected] of dataProviderTags()) {
@@ -80,6 +80,25 @@ function dataProviderTags() {
     ['latest', false],
   ];
 }
+
+test('builds only a tagged commit on main', () => {
+  const steps = WORKFLOWS.find(({ name }) => name === 'release.yml').workflow.jobs.build.steps;
+  const checkout = steps.find((step) => String(step.uses).startsWith('actions/checkout@'));
+  const onMain = steps.findIndex((step) => step.name === 'Check the tag is on main');
+
+  assert.equal(checkout.with['fetch-depth'], 0);
+  assert.match(steps[onMain].run, /git merge-base --is-ancestor "\$\{GITHUB_SHA\}" origin\/main/);
+  assert.ok(onMain < steps.findIndex((step) => step.name === 'Assemble static site'), 'the site is assembled before the tag is checked');
+});
+
+test('queues only the deploy, so every tag publishes its release', () => {
+  const release = WORKFLOWS.find(({ name }) => name === 'release.yml').workflow;
+
+  assert.equal(release.concurrency, undefined);
+  assert.equal(release.jobs.build.concurrency, undefined);
+  assert.equal(release.jobs.publish.concurrency, undefined);
+  assert.deepEqual(release.jobs.deploy.concurrency, { group: 'pages', 'cancel-in-progress': false });
+});
 
 test('deploys the site only after the release is published', () => {
   const jobs = WORKFLOWS.find(({ name }) => name === 'release.yml').workflow.jobs;

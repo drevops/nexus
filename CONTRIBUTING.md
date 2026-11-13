@@ -115,7 +115,15 @@ To move a library to a new version:
        npm pack cytoscape@3.31.0
        tar -xzf cytoscape-3.31.0.tgz
 
-2. Copy the file that `source` names in `vendor.json` from `package/` over the vendored file. For Shoelace, replace each file in `assets/vendor/shoelace` with its copy from `package/cdn/`.
+2. Copy the file that `source` names in `vendor.json` from `package/` over the vendored file.
+
+    Shoelace's components import chunks whose names change between versions, so replace its whole folder. Copy the loaders and the 5 folders the page uses from `package/cdn/`, then delete the type declarations:
+
+       rm -rf assets/vendor/shoelace
+       mkdir assets/vendor/shoelace
+       cp -R package/cdn/chunks package/cdn/components package/cdn/themes package/cdn/translations package/cdn/utilities package/cdn/shoelace.js package/cdn/shoelace-autoloader.js assets/vendor/shoelace/
+       find assets/vendor/shoelace -name '*.d.ts' -delete
+
 3. Set the library's `version` in `vendor.json`, and its `source` if the path in the package changed.
 4. Check the vendored files against npm:
 
@@ -152,9 +160,10 @@ Every push to `main` updates a draft release that lists the pull requests merged
 To publish a release:
 
 1. Open the draft release on GitHub and note its tag, such as `1.2.3`.
-2. Tag the commit on `main` with that version and push the tag:
+2. Fetch `main`, tag its latest commit with that version and push the tag:
 
-       git tag 1.2.3
+       git fetch origin main
+       git tag 1.2.3 origin/main
        git push origin 1.2.3
 
 The tag push runs `.github/workflows/release.yml` in 3 jobs:
@@ -163,7 +172,7 @@ The tag push runs `.github/workflows/release.yml` in 3 jobs:
 2. **Publish** attaches both files to the draft with the same tag, or to a new draft when none matches, and publishes it.
 3. **Deploy** deploys the site to GitHub Pages, which serves it at https://nexus.drevops.com.
 
-A tag that isn't a version, such as `v1.2.3`, fails the workflow before anything is built. Releases are immutable, so a published release keeps its files and its tag. Publish a release only by pushing its tag. A release published with the draft's **Publish release** button can't take files afterward, so it ships without them, though the site still deploys. [`SECURITY.md`](SECURITY.md#verify-a-release) shows how to verify a release's files.
+A tag that isn't a version, such as `v1.2.3`, or a tag on a commit that isn't on `main` fails the workflow before anything is built. Releases are immutable, so a published release keeps its files and its tag. Publish a release only by pushing its tag. A release published with the draft's **Publish release** button can't take files afterward, so it ships without them, though the site still deploys. [`SECURITY.md`](SECURITY.md#verify-a-release) shows how to verify a release's files.
 
 Pushes to `main` never touch GitHub Pages: they run the tests and update the Netlify project's main address.
 

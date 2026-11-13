@@ -4,7 +4,7 @@ Follow this page to report a security vulnerability in Nexus or to check that a 
 
 ## Supported versions
 
-Security fixes go into the latest release only, which https://nexus.drevops.com serves. Upgrade a self-hosted copy to the [latest release](https://github.com/drevops/nexus/releases/latest).
+Security fixes go into the newest release only, prereleases included. https://nexus.drevops.com always serves the newest release, and its **About** dialog shows the version. Upgrade a self-hosted copy to the newest entry on the [releases page](https://github.com/drevops/nexus/releases).
 
 ## Report a vulnerability
 
@@ -36,9 +36,10 @@ gh attestation verify nexus-1.2.3.tar.gz --repo drevops/nexus --signer-workflow 
 
 Replace `1.2.3` with the release version.
 
-To check a file that https://nexus.drevops.com serves, download it and compare it with `checksums.txt`. The paths in `checksums.txt` are relative to the site root:
+To check a file that https://nexus.drevops.com serves, download `checksums.txt` from the release and verify its attestation first. Then download the file and compare it with its line in `checksums.txt`, where paths are relative to the site root:
 
 ```bash
+gh attestation verify checksums.txt --repo drevops/nexus --signer-workflow drevops/nexus/.github/workflows/release.yml
 curl -sSO https://nexus.drevops.com/src/app.js
 grep '  src/app.js$' checksums.txt
 shasum -a 256 app.js

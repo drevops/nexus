@@ -95,8 +95,8 @@ const NAME_CAPTION = 'caption';
 const TYPE_CAPTION = 'caption caption--type';
 
 let settings = loadSettings();
-const activeColors = {};
-const activeSymbols = {};
+const activeColors = Object.create(null);
+const activeSymbols = Object.create(null);
 
 let measureContext = null;
 const textWidths = new Map();
@@ -163,8 +163,8 @@ function initColors() {
 
   allTypeKeys().forEach((type) => {
     const builtIn = findEntityType(type);
-    activeColors[type] = colors[type] || (builtIn ? builtIn.color : FALLBACK_COLOR);
-    activeSymbols[type] = symbols[type] || (builtIn ? builtIn.symbol : FALLBACK_SYMBOL);
+    activeColors[type] = Object.hasOwn(colors, type) ? colors[type] : builtIn ? builtIn.color : FALLBACK_COLOR;
+    activeSymbols[type] = Object.hasOwn(symbols, type) ? symbols[type] : builtIn ? builtIn.symbol : FALLBACK_SYMBOL;
   });
 }
 

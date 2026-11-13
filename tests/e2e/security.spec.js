@@ -78,4 +78,20 @@ test.describe('Security', { tag: '@runner-1' }, () => {
     await expect(page.locator('.legend__swatch img')).toHaveCount(0);
     expect(await page.evaluate(() => window.__injected)).toBeUndefined();
   });
+
+  for (const [name, customTypes] of dataProviderInheritedTypeNames()) {
+    test(`draws the fallback colour for an entity type named after an object property ${name}`, async ({ page }) => {
+      await openDocument(page, { nexus: 1, customTypes: customTypes, entities: [{ entityType: 'constructor', bundle: 'event', label: 'Event', fields: [] }] });
+
+      const fill = await page.evaluate(() => window.__nexus.cy.getElementById('constructor.event').style('background-color'));
+      expect(fill).toBe('rgb(236,239,243)');
+    });
+  }
+
+  function dataProviderInheritedTypeNames() {
+    return [
+      ['as a custom type', [{ type: 'constructor', label: 'Constructor' }]],
+      ['with no custom type', []],
+    ];
+  }
 });
