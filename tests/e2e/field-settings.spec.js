@@ -105,6 +105,7 @@ test.describe('Descriptions and field settings', { tag: '@runner-2' }, () => {
       'Card.',
       'Req',
       'References',
+      'Used in',
       'Help text',
       'Default',
       'Allowed values',
@@ -114,17 +115,17 @@ test.describe('Descriptions and field settings', { tag: '@runner-2' }, () => {
     ]);
 
     const layout = tableRow(page, 'field_layout').locator('td');
-    await expect(layout.nth(6)).toHaveText('How wide the page is drawn.');
-    await expect(layout.nth(7)).toHaveText('wide');
-    await expect(layout.nth(8)).toHaveText('Wide (wide), Narrow (narrow)');
-    await expect(layout.nth(9).locator('span')).toHaveAttribute('title', /^Translatable/);
+    await expect(layout.nth(7)).toHaveText('How wide the page is drawn.');
+    await expect(layout.nth(8)).toHaveText('wide');
+    await expect(layout.nth(9)).toHaveText('Wide (wide), Narrow (narrow)');
+    await expect(layout.nth(10).locator('span')).toHaveAttribute('title', /^Translatable/);
 
     const summary = tableRow(page, 'field_summary').locator('td');
-    await expect(summary.nth(6)).toHaveText('A short <b>summary</b> of the article.');
-    await expect(summary.nth(9).locator('span')).toHaveAttribute('title', /^Not translatable/);
+    await expect(summary.nth(7)).toHaveText('A short <b>summary</b> of the article.');
+    await expect(summary.nth(10).locator('span')).toHaveAttribute('title', /^Not translatable/);
     await expect(page.locator('#field-table b')).toHaveCount(0);
 
-    await expect(tableRow(page, 'field_tags').locator('td').nth(9)).toHaveText('');
+    await expect(tableRow(page, 'field_tags').locator('td').nth(10)).toHaveText('');
     await expect(page.locator('#field-table .is-group', { hasText: /^\s*Article ·/ }).locator('.field-table__description')).toHaveText('An article.');
   });
 
@@ -141,7 +142,7 @@ test.describe('Descriptions and field settings', { tag: '@runner-2' }, () => {
     await page.click('#table-toggle');
 
     await expect(page.locator('#field-table')).not.toHaveClass(/has-settings/);
-    await expect(page.locator('#field-table thead th')).toHaveCount(8);
+    await expect(page.locator('#field-table thead th')).toHaveCount(9);
     await expect(page.locator('#field-table .is-group', { hasText: /^\s*Event ·/ }).locator('.field-table__description')).toHaveText(
       'A conference or meetup with its sessions, venue and sponsors.',
     );
@@ -153,9 +154,11 @@ test.describe('Descriptions and field settings', { tag: '@runner-2' }, () => {
     const download = await saveFrom(page, 'csv');
     const lines = readFileSync(await download.path(), 'utf8').split('\r\n');
 
-    expect(lines[0]).toBe('Entity,Entity type,Field,Machine name,Field type,Cardinality,Required,References,Help text,Default,Allowed values,Translatable');
-    expect(lines).toContain('Page,Content type,Layout,field_layout,list_string,1,no,,How wide the page is drawn.,wide,Wide (wide); Narrow (narrow),yes');
-    expect(lines).toContain('Article,Content type,Summary,field_summary,string,1,yes,,A short <b>summary</b> of the article.,Read on,,no');
+    expect(lines[0]).toBe(
+      'Entity,Entity type,Field,Machine name,Field type,Cardinality,Required,References,Used in,Help text,Default,Allowed values,Translatable',
+    );
+    expect(lines).toContain('Page,Content type,Layout,field_layout,list_string,1,no,,1,How wide the page is drawn.,wide,Wide (wide); Narrow (narrow),yes');
+    expect(lines).toContain('Article,Content type,Summary,field_summary,string,1,yes,,1,A short <b>summary</b> of the article.,Read on,,no');
     expect(lines.find((line) => line.startsWith('Article,Content type,Tags,'))).toMatch(/,,,,$/);
   });
 

@@ -27,6 +27,7 @@ const SORT_VALUES = {
   cardinality: (r) => BADGE_RANKS[r.kind] || (r.cardinality === -1 ? Number.MAX_SAFE_INTEGER - 2 : r.cardinality),
   required: (r) => (r.required ? 0 : null),
   references: (r) => textValue(r.refs.map((ref) => ref.label).join(', ')),
+  usedIn: (r) => r.usedIn.length || null,
   description: (r) => textValue(r.description),
   defaultValue: (r) => textValue(r.defaultValue),
   allowedValues: (r) => textValue(allowedValueLabels(r.allowedValues).join(', ')),

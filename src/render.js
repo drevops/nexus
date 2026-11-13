@@ -38,6 +38,7 @@ import { freeArea } from './free-area.js';
 import { frameSettings } from './mode-frame.js';
 import { readMarkdownSettings } from './markdown.js';
 import { nodeLookup, selectionEntity } from './inspector-trail.js';
+import { fieldSharing } from './shared-fields.js';
 import { SYMBOLS, customTypeList, isHexColor, isSymbol, isTypeName, typeColors, typeSymbols } from './type-styles.js';
 import { $ } from './dom.js';
 
@@ -1685,8 +1686,8 @@ function buildController(model, options = {}) {
         entityType: e.data('entityType'),
         fieldCount: cy.nodes('[group="field"][entity="' + e.id() + '"]').length,
       })),
-    records: () =>
-      cy.nodes('[group="field"]').map((f) => {
+    records: () => {
+      const records = cy.nodes('[group="field"]').map((f) => {
         const owner = cy.getElementById(f.data('entity'));
         const refs = f
           .connectedEdges('[group="ref"]')
@@ -1715,7 +1716,11 @@ function buildController(model, options = {}) {
           allowedValues: f.data('allowedValues') || [],
           translatable: typeof f.data('translatable') === 'boolean' ? f.data('translatable') : null,
         };
-      }),
+      });
+      const sharing = fieldSharing(records);
+
+      return records.map((r) => ({ ...r, usedIn: sharing.get(r.id) }));
+    },
     presentTypes: () =>
       allTypeKeys()
         .filter((t) => cy.nodes('[group="entity"][entityType="' + t + '"]').nonempty())

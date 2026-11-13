@@ -302,6 +302,40 @@ export function EntityForm({ id }) {
   </div>`;
 }
 
+// The other bundles that share the field's storage, each with its own label
+// for the field. A base or calculated field has no storage to share.
+function SharedWith({ id, entityId }) {
+  const record = getController()
+    .records()
+    .find((r) => r.id === id);
+
+  if (!record || !record.usedIn.length) {
+    return null;
+  }
+
+  const others = record.usedIn.filter((bundle) => bundle.entityId !== entityId);
+  const buttons = others.map(
+    (bundle) =>
+      html`<button
+        type="button"
+        class="insp__field"
+        data-shared-bundle=${bundle.entityId}
+        title=${'Open ' + bundle.entity + ', which labels this field ' + bundle.field}
+        onClick=${() => {
+          focusEntityForm = true;
+          getBuilder().select(bundle.entityId);
+        }}
+      >
+        ${bundle.entity} <span class="insp__shared-label">${bundle.field}</span>
+      </button>`,
+  );
+
+  return html`<div class="insp__section" data-shared-with>
+    <div class="insp__sectionhead"><span>Also used in</span></div>
+    ${buttons.length ? buttons : html`<p class="insp__empty">No other bundle has this field.</p>`}
+  </div>`;
+}
+
 export function FieldForm({ id }) {
   const node = cy().getElementById(id);
   const [s, setS] = useState({
@@ -463,6 +497,7 @@ export function FieldForm({ id }) {
         >
       </div>`
     }
+    <${SharedWith} id=${id} entityId=${node.data('entity')} />
     <${NoteField} node=${node} />
     <sl-button size="small" variant="danger" outline class="insp__delete" title="Delete this field" onClick=${() => getBuilder().deleteNode(id)}
       >${rawIcon('trash')}Delete field</sl-button
