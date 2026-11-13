@@ -558,6 +558,14 @@ test.describe('Panels', { tag: '@runner-1' }, () => {
     expect(largest.x + largest.width).toBeLessThanOrEqual(canvas.x + canvas.width);
     expect(largest.y + largest.height).toBeLessThanOrEqual(canvas.y + canvas.height);
 
+    // The panel shrinks with the window, so its corner handle stays in reach.
+    await page.setViewportSize({ width: 760, height: 560 });
+
+    const shrunkCanvas = await page.locator('.stage__canvas').boundingBox();
+    const shrunk = await panel.boundingBox();
+    expect(shrunk.x + shrunk.width).toBeLessThanOrEqual(shrunkCanvas.x + shrunkCanvas.width + 1);
+    expect(shrunk.y + shrunk.height).toBeLessThanOrEqual(shrunkCanvas.y + shrunkCanvas.height + 1);
+
     await dragPanelCorner(page, '#entities', -3000, -3000);
 
     const smallest = await panel.boundingBox();

@@ -99,15 +99,21 @@ function rawIcon(name, size) {
   return html`<span dangerouslySetInnerHTML=${{ __html: icon(name, size) }}></span>`;
 }
 
+// A resized panel is capped at the canvas beyond its left and top edges, so it
+// shrinks with the window rather than leaving the canvas.
 function floatStyle(panel) {
   const p = panel.pos;
+  const size = panel.size;
+
   return {
     left: p.left != null ? p.left + 'px' : '',
     top: p.top != null ? p.top + 'px' : '',
     right: p.right != null ? p.right + 'px' : '',
     bottom: p.bottom != null ? p.bottom + 'px' : '',
-    width: panel.size ? panel.size.width + 'px' : '',
-    height: panel.size ? panel.size.height + 'px' : '',
+    width: size ? size.width + 'px' : '',
+    height: size ? size.height + 'px' : '',
+    maxWidth: size && p.left != null ? 'calc(100% - ' + p.left + 'px)' : '',
+    maxHeight: size && p.top != null ? 'calc(100% - ' + p.top + 'px)' : '',
     zIndex: panel.z,
   };
 }

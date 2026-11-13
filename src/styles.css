@@ -746,6 +746,7 @@ sl-button#zoom-level::part(base) {
   display: flex;
   flex-direction: column;
   width: 320px;
+  max-width: calc(100% - 2rem);
   max-height: calc(100% - 2rem);
   background: var(--panel-bg);
   border: 1px solid var(--border);
