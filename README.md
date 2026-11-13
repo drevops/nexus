@@ -49,6 +49,7 @@ Nexus is a static web app. Give it a Drupal config sync directory or a module's 
 - **Shared fields.** The Fields table and its CSV count the bundles of an entity type that have each field. The field Inspector lists the other bundles with the label each one gives the field.
 - **Templates.** The content models of Drupal CMS, CivicTheme, the Umami demo, Thunder and Open Social open in 1 click.
 - **Editable.** Add and change entities, fields, references and annotations, with undo and history.
+- **Field editing in the Fields table.** In Edit mode, click a cell to change a field's label, machine name, type, cardinality, references, help text, default value, allowed values or translatability. Tick **Req** to make a field required.
 - **Saved as a document.** A `.nexus.json` document holds the model and its layout, and a [JSON Schema](schema/nexus.schema.json) defines the format.
 - **Exports.** PNG and SVG images of the diagram, a CSV of its fields, a Markdown page that documents each bundle, its fields and notes, with an optional Mermaid diagram, and the same documentation as a standalone HTML report to open in any browser.
 - **Shared as a link.** **Copy link** puts the whole diagram inside a link. See [Shared links](#shared-links).
