@@ -260,7 +260,7 @@ In a clone of the [Nexus repository](https://github.com/drevops/nexus), after `n
 npm run check-diagram -- path/to/diagram.nexus.json
 ```
 
-The command checks the document against the schema and the rules the schema can't express. It prints each problem with the JSON Pointer of the part it's about. Fix every error. A warning means the document opens but draws less than it says, such as a reference to an entity the document doesn't define. Fix each warning, or say in your report why it stays.
+The command checks the document against the schema and the rules the schema can't express, including the rules of the Nexus Checks panel. It prints each problem with the JSON Pointer of the part it's about. Fix every error. A warning means the document opens but draws less than it says, or breaks common Drupal practice, such as a vocabulary with no fields of its own. Fix each warning, or say in your report why it stays.
 
 Without the repository, validate the document against the published schema with any JSON Schema draft 2020-12 validator, then go through these checks yourself:
 
@@ -268,6 +268,9 @@ Without the repository, validate the document against the published schema with 
 - No 2 fields of an entity share a name.
 - No annotation id matches an entity id, a field id or another annotation id.
 - Every reference target - `<targetType>.<bundle>` for each target bundle, or `<targetType>.*` when `targetBundles` is empty - is an entity in the document.
+- Every `entity_reference` or `entity_reference_revisions` field has a `targetType`, except a base field of kind `system`.
+- 2 fields with the same name on 2 bundles of 1 entity type have the same `fieldType` and `cardinality`.
+- Every entity type, bundle and field name is 32 characters or fewer.
 - Every annotation edge's `from` and `to` is the id of an entity, a field or an annotation in the document.
 - Every entity type is a built-in one or listed in `customTypes`.
 
