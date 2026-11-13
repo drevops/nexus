@@ -1,0 +1,112 @@
+/**
+ * A saved document for the Markdown export: entity types out of diagram
+ * order, a custom and an unknown type, labels that need escaping or share an
+ * anchor, base fields, notes and every kind of reference target.
+ */
+export const markdownDocument = {
+  nexus: 1,
+  title: 'Event site',
+  colors: {},
+  symbols: {},
+  customTypes: [{ type: 'gadget', label: 'Gadget' }],
+  entities: [
+    { entityType: 'widget', bundle: 'dial', label: 'Dial', note: '', fields: [] },
+    { entityType: 'gadget', bundle: 'beacon', label: 'Beacon', note: '', fields: [] },
+    {
+      entityType: 'taxonomy_term',
+      bundle: 'tags',
+      label: 'Tags',
+      note: '',
+      fields: [
+        { name: 'name', label: 'Name', fieldType: 'string', kind: 'system', cardinality: 1, required: true, note: '', targetType: null, targetBundles: [] },
+      ],
+    },
+    {
+      entityType: 'paragraph',
+      bundle: 'page',
+      label: 'Page',
+      note: '',
+      fields: [
+        {
+          name: 'field_items',
+          label: 'Items',
+          fieldType: 'entity_reference_revisions',
+          kind: 'multi',
+          cardinality: -1,
+          required: false,
+          note: '',
+          targetType: 'paragraph',
+          targetBundles: ['page'],
+        },
+      ],
+    },
+    {
+      entityType: 'node',
+      bundle: 'session',
+      label: 'Session | Talk',
+      note: 'Talks and *workshops*.\n- Run on day 2\n\n1. Keep under 45 minutes',
+      fields: [
+        { name: 'title', label: 'Title', fieldType: 'string', kind: 'system', cardinality: 1, required: true, note: '', targetType: null, targetBundles: [] },
+        {
+          name: 'field_tags',
+          label: 'Tags',
+          fieldType: 'entity_reference',
+          kind: 'multi',
+          cardinality: 3,
+          required: false,
+          note: 'Pick `up to` 3.\nUse $ prices & <b>bold</b> sparingly.',
+          targetType: 'taxonomy_term',
+          targetBundles: ['tags', 'topics'],
+        },
+        {
+          name: 'field_media',
+          label: 'Media',
+          fieldType: 'entity_reference',
+          kind: 'single',
+          cardinality: 1,
+          required: false,
+          note: '',
+          targetType: 'media',
+          targetBundles: [],
+          hidden: true,
+        },
+        { name: 'field_a|b', label: 'Pipe name', fieldType: 'string', kind: 'single', required: false, note: '', targetType: null, targetBundles: [] },
+      ],
+    },
+    {
+      entityType: 'node',
+      bundle: 'page',
+      label: 'Page',
+      note: '',
+      fields: [
+        {
+          name: 'field_sessions',
+          label: 'Sessions',
+          fieldType: 'entity_reference',
+          kind: 'multi',
+          cardinality: -1,
+          required: true,
+          note: '',
+          targetType: 'node',
+          targetBundles: ['session'],
+        },
+        {
+          name: 'field_gadget',
+          label: 'Gadget',
+          fieldType: 'entity_reference',
+          kind: 'single',
+          cardinality: 1,
+          required: false,
+          note: '',
+          targetType: 'gadget',
+          targetBundles: [],
+        },
+      ],
+    },
+    { entityType: 'node', bundle: 'contents', label: 'Contents', note: '', fields: [] },
+    { entityType: 'gadget', bundle: '*', label: 'Any Gadget', note: '', fields: [] },
+  ],
+  annotations: { nodes: [], edges: [] },
+  layout: {},
+  ui: null,
+};

@@ -24,6 +24,7 @@ import { InspectorBody } from './inspector.js';
 import { allowedValueLabels } from './field-settings.js';
 import { goToVersion, historyState } from './undo.js';
 import { MODES } from './diagram-defaults.js';
+import { MARKDOWN_DIAGRAM_OPTIONS } from './markdown.js';
 import { titleShoelaceHosts } from './host-titles.js';
 import {
   getState,
@@ -1019,11 +1020,12 @@ function SettingsBody({ controller }) {
     </div>
     <${DiagramDefaults} controller=${controller} />
     <${FrameSettings} controller=${controller} />
+    <${MarkdownSettings} controller=${controller} />
     <sl-button
       id="settings-reset"
       class="settings-reset"
       size="small"
-      title="Restore the default colours, symbols, new diagram settings and mode frame"
+      title="Restore the default colours, symbols, new diagram settings, mode frame and Markdown export"
       onClick=${() => controller.resetSettings()}
       >${rawIcon('rotate-ccw')}Reset to defaults</sl-button
     >
@@ -1069,6 +1071,24 @@ function FrameSettings({ controller }) {
           </div>`,
       )}
     </div>`;
+}
+
+function MarkdownSettings({ controller }) {
+  const markdown = controller.markdownSettings();
+
+  return html`<h3 class="settings-section__title settings-section__title--spaced">Markdown export</h3>
+    <sl-select
+      class="default-row"
+      size="small"
+      hoist
+      label="Diagram"
+      data-markdown="diagram"
+      title="When a Markdown export starts with a Mermaid diagram of the model"
+      value=${markdown.diagram}
+      onsl-change=${(e) => controller.setMarkdown({ diagram: e.target.value })}
+    >
+      ${MARKDOWN_DIAGRAM_OPTIONS.map((option) => html`<sl-option value=${option.id}>${option.label}</sl-option>`)}
+    </sl-select>`;
 }
 
 /* Boot -------------------------------------------------------------------- */

@@ -49,3 +49,17 @@ export function formatCount(type, count) {
 
   return count + ' ' + nouns[count === 1 ? 0 : 1];
 }
+
+/**
+ * Returns the plural name of a built-in entity type's bundles, capitalised,
+ * such as 'Vocabularies', or null for any other type.
+ */
+export function pluralLabel(type) {
+  const nouns = COUNT_NOUNS.get(type);
+
+  if (!nouns) {
+    return null;
+  }
+
+  return nouns[1].charAt(0).toUpperCase() + nouns[1].slice(1);
+}

@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { loadExample, slFill, downloadFrom, saveFrom, topmostOf } from './helpers.js';
+import { readFileSync } from 'node:fs';
+import { loadExample, slFill, slSelect, downloadFrom, saveFrom, topmostOf } from './helpers.js';
 
 test.describe('Save', { tag: '@runner-1' }, () => {
   test.beforeEach(async ({ page }) => {
@@ -50,6 +51,7 @@ test.describe('Save', { tag: '@runner-1' }, () => {
       ['PNG', 'content-model.png', (page) => saveFrom(page, 'png')],
       ['SVG', 'content-model.svg', (page) => saveFrom(page, 'svg')],
       ['CSV', 'content-model-fields.csv', (page) => saveFrom(page, 'csv')],
+      ['Markdown', 'content-model.md', (page) => saveFrom(page, 'md')],
       ['JSON from the Save as menu', 'content-model.nexus.json', (page) => saveFrom(page, 'json')],
       ['JSON from the Save button', 'content-model.nexus.json', (page) => downloadFrom(page, '#doc-save')],
     ];
@@ -62,7 +64,7 @@ test.describe('Save', { tag: '@runner-1' }, () => {
 
     await expect(page.locator('#save-menu')).toBeVisible();
     await expect(page.locator('#save-menu sl-menu-label')).toHaveText('Save as');
-    await expect(page.locator('#save-menu sl-menu-item')).toHaveText(['JSON', 'PNG', 'SVG', 'CSV']);
+    await expect(page.locator('#save-menu sl-menu-item')).toHaveText(['JSON', 'PNG', 'SVG', 'CSV', 'Markdown']);
   });
 
   for (const [format, filename] of dataProviderSaveFormats()) {
@@ -82,8 +84,59 @@ test.describe('Save', { tag: '@runner-1' }, () => {
       ['png', 'example-content-model.png'],
       ['svg', 'example-content-model.svg'],
       ['csv', 'example-content-model-fields.csv'],
+      ['md', 'example-content-model.md'],
     ];
   }
+
+  async function savedMarkdown(page) {
+    return readFileSync(await (await saveFrom(page, 'md')).path(), 'utf8');
+  }
+
+  async function openSettings(page) {
+    if (!(await page.locator('#settings').isVisible())) {
+      await page.click('#settings-toggle');
+    }
+
+    await expect(page.locator('#settings [data-markdown="diagram"]')).toBeVisible();
+  }
+
+  test('saves the model as Markdown with its diagram and a section per bundle', async ({ page }) => {
+    await loadExample(page);
+
+    const markdown = await savedMarkdown(page);
+
+    expect(markdown).toMatch(/^# Example content model\n\n## Contents\n\n- \[Diagram\]\(#diagram\)\n- \[Content types\]\(#content-types\)\n/);
+    expect(markdown).toContain('\n```mermaid\nflowchart LR\n');
+    expect(markdown).toContain('\n### Session\n\nMachine name: `session`\n');
+    expect(markdown).toContain('\n| Speakers | `field_speakers` | `entity_reference` | 1..n | No | [Speaker](#speaker) |  |\n');
+    expect(markdown).toContain('\nReferenced by: Sessions on [Event](#event).\n');
+  });
+
+  test('leaves the diagram out of the Markdown when the setting says Never, across reloads', async ({ page }) => {
+    await loadExample(page);
+    await openSettings(page);
+    await slSelect(page, '#settings [data-markdown="diagram"]', 'never');
+
+    expect(await savedMarkdown(page)).not.toContain('```mermaid');
+
+    await page.reload();
+    await loadExample(page);
+    await openSettings(page);
+
+    await expect(page.locator('#settings [data-markdown="diagram"]')).toHaveJSProperty('value', 'never');
+    expect(await savedMarkdown(page)).not.toContain('```mermaid');
+  });
+
+  test('puts the diagram back in the Markdown with Reset to defaults', async ({ page }) => {
+    await loadExample(page);
+    await openSettings(page);
+    await slSelect(page, '#settings [data-markdown="diagram"]', 'never');
+
+    await page.click('#settings-reset');
+
+    await expect(page.locator('#settings [data-markdown="diagram"]')).toHaveJSProperty('value', 'auto');
+    expect(await savedMarkdown(page)).toContain('```mermaid');
+  });
 
   test('ignores a save menu item that names no format', async ({ page }) => {
     await loadExample(page);

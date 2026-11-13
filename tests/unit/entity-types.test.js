@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { ENTITY_TYPES, ENTITY_TYPE_ORDER, findEntityType, formatCount } from '../../src/entity-types.js';
+import { ENTITY_TYPES, ENTITY_TYPE_ORDER, findEntityType, formatCount, pluralLabel } from '../../src/entity-types.js';
 import { machineName } from '../../src/names.js';
 
 const ROOT = join(import.meta.dirname, '..', '..');
@@ -88,6 +88,25 @@ function dataProviderUnknownCountType() {
     ['a custom type', 'widget'],
     ['an inherited object property', 'constructor'],
     ['an empty string', ''],
+  ];
+}
+
+test('names the bundles of a type in the plural', async (t) => {
+  for (const [name, type, expected] of dataProviderPluralLabel()) {
+    await t.test(name, () => {
+      assert.equal(pluralLabel(type), expected);
+    });
+  }
+});
+
+function dataProviderPluralLabel() {
+  return [
+    ['content types', 'node', 'Content types'],
+    ['vocabularies', 'taxonomy_term', 'Vocabularies'],
+    ['external entity types', 'external', 'External entity types'],
+    ['a custom type', 'widget', null],
+    ['an inherited object property', 'constructor', null],
+    ['undefined', undefined, null],
   ];
 }
 
