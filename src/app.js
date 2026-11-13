@@ -540,7 +540,7 @@ function newDocument() {
 }
 
 function wireDocument() {
-  $('doc-save').addEventListener('click', () => saveAs(SAVE_FORMATS[0]));
+  $('doc-save').addEventListener('click', () => saveAs(findSaveFormat('json')));
   $('doc-new').addEventListener('click', newDocument);
   $('doc-open-btn').addEventListener('click', () => $('doc-open').click());
   $('doc-open').addEventListener('change', (evt) => {
