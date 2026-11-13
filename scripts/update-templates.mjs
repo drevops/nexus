@@ -128,7 +128,11 @@ function updateTemplate(template, clones, latest) {
 }
 
 function main(argv) {
-  const { values, positionals: ids } = parseArgs({ args: argv, allowPositionals: true, options: { latest: { type: 'boolean' }, list: { type: 'boolean' }, pr: { type: 'string' } } });
+  const { values, positionals: ids } = parseArgs({
+    args: argv,
+    allowPositionals: true,
+    options: { latest: { type: 'boolean' }, list: { type: 'boolean' }, pr: { type: 'string' } },
+  });
   const unknown = ids.filter((id) => !TEMPLATES.some((template) => template.id === id));
 
   if (unknown.length > 0) {

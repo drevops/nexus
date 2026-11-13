@@ -192,8 +192,26 @@ function dataProviderRewriteShapes() {
     ],
     [
       'the entry after another template',
-      ["  { id: 'other', version: '9.9.9' },", '  {', "    id: 'cms',", "    version: '1.0.0',", '    counts: {},', "    ref: '11.0.0',", "    ref: '1.0.0',", '  },'],
-      ["  { id: 'other', version: '9.9.9' },", '  {', "    id: 'cms',", "    version: '2.0.0',", '    counts: { node: 2, paragraph: 4 },', "    ref: '11.1.0',", "    ref: '2.0.0',", '  },'],
+      [
+        "  { id: 'other', version: '9.9.9' },",
+        '  {',
+        "    id: 'cms',",
+        "    version: '1.0.0',",
+        '    counts: {},',
+        "    ref: '11.0.0',",
+        "    ref: '1.0.0',",
+        '  },',
+      ],
+      [
+        "  { id: 'other', version: '9.9.9' },",
+        '  {',
+        "    id: 'cms',",
+        "    version: '2.0.0',",
+        '    counts: { node: 2, paragraph: 4 },',
+        "    ref: '11.1.0',",
+        "    ref: '2.0.0',",
+        '  },',
+      ],
     ],
   ];
 }
