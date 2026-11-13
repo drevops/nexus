@@ -1307,8 +1307,11 @@ body.is-dragging-panel * {
   padding: 0.15rem 0.3rem;
 }
 
+/* A help text cell sets white-space: pre-wrap, which the editor's shadow DOM
+   inherits, so the whitespace in its template would draw as blank lines. */
 .field-table__editor {
   width: 100%;
+  white-space: normal;
 }
 
 .field-table__editor::part(listbox) {

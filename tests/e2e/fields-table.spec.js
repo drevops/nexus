@@ -565,6 +565,17 @@ test.describe('Fields table', { tag: '@runner-2' }, () => {
     await editDiagram(page);
 
     await typeInCell(page, SUMMARY, 'description', 'Line one');
+
+    // The help text cell keeps line breaks, and the box draws at the top of
+    // the cell all the same.
+    const offset = await tableEditor(page).evaluate((editor) => {
+      const box = editor.shadowRoot.querySelector('[part~="base"]').getBoundingClientRect();
+
+      return [box.top - editor.closest('td').getBoundingClientRect().top, editor.getBoundingClientRect().height - box.height];
+    });
+    expect(offset[0]).toBeLessThan(8);
+    expect(offset[1]).toBeLessThan(2);
+
     await page.keyboard.press('Shift+Enter');
     await page.keyboard.type('Line two');
     await page.keyboard.press('Enter');
