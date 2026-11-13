@@ -16,6 +16,7 @@ Draw a Drupal site's content model as an interactive diagram - entirely in your 
 ![LICENSE](https://img.shields.io/github/license/drevops/nexus)
 ![Renovate](https://img.shields.io/badge/renovate-enabled-green?logo=renovatebot)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/drevops/nexus/badge)](https://scorecard.dev/viewer/?uri=github.com/drevops/nexus)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/16651/badge)](https://www.bestpractices.dev/projects/16651)
 
 </div>
 
