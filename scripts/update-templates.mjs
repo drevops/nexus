@@ -1,23 +1,28 @@
 /**
  * Rebuilds the saved-diagram document of each content-model template.
  *
- * Usage: npm run update-templates [-- <id> ...]
+ * Usage: npm run update-templates [-- [--latest] [--pr <dir>] <id> ...]
  *
  * Each source of a template is cloned at its tag into a temporary folder. The
  * config files the parser reads are merged and drawn into
- * templates/<id>.nexus.json, and the clones are deleted.
+ * templates/<id>.nexus.json, and the clones are deleted. The bundle counts of
+ * the rebuilt diagram are written into src/templates.js.
  *
- * The command fails when a template's bundles no longer match the counts in
- * src/templates.js, and prints the counts to use.
+ * --latest moves each source to its latest stable tag first and writes the
+ * new tags and version into src/templates.js.
+ *
+ * --pr writes a pull request title to <dir>/title.txt and a Markdown body to
+ * <dir>/body.md.
  */
 
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { isDeepStrictEqual } from 'node:util';
+import { parseArgs } from 'node:util';
 import { TEMPLATES, templatePath, templateTitle } from '../src/templates.js';
 import { isModelConfig } from '../src/parser.js';
 import { buildDocument, documentCounts, mergeConfig, readConfigFolder, renderCounts, renderDocument } from './lib/template-sources.mjs';
+import { changeSummary, changeTitle, latestTag, ownRef, rewriteTemplates, stableTags } from './lib/template-versions.mjs';
 
 // The vendored UMD build exports nothing to an ES module import and sets
 // globalThis.jsyaml instead.
@@ -25,9 +30,10 @@ await import('../assets/vendor/js-yaml.min.js');
 
 const ROOT = join(import.meta.dirname, '..');
 const TMP = join(ROOT, '.artifacts', 'tmp');
+const TEMPLATES_MODULE = join(ROOT, 'src', 'templates.js');
 
 function git(args, cwd) {
-  return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+  return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 64 * 1024 * 1024 }).trim();
 }
 
 // A blobless, sparse clone downloads only the listed paths at the tag.
@@ -36,6 +42,22 @@ function fetchSource(source, dir) {
   git(['sparse-checkout', 'set', ...source.paths], dir);
 
   return git(['rev-parse', 'HEAD'], dir);
+}
+
+function latestRefs(template) {
+  return template.sources.map((source) => {
+    const ref = latestTag(stableTags(git(['ls-remote', '--tags', '--refs', source.repo])), source.ref);
+
+    console.log(source.name + ': ' + (ref === source.ref ? source.ref + ' is the latest' : source.ref + ' -> ' + ref));
+
+    return ref;
+  });
+}
+
+function readDocument(template) {
+  const path = join(ROOT, templatePath(template));
+
+  return existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : null;
 }
 
 function buildTemplate(template, clones) {
@@ -81,7 +103,29 @@ function buildTemplate(template, clones) {
   return doc;
 }
 
-function main(ids) {
+function updateTemplate(template, clones, latest) {
+  const refs = latest ? latestRefs(template) : template.sources.map((source) => source.ref);
+  const version = ownRef(template, refs);
+  const target = { ...template, version, sources: template.sources.map((source, index) => ({ ...source, ref: refs[index] })) };
+  const before = readDocument(template);
+  const after = buildTemplate(target, clones);
+  const counts = documentCounts(after);
+
+  console.log(templateTitle(target) + ': ' + after.entities.length + ' entities, ' + renderCounts(counts));
+
+  const text = readFileSync(TEMPLATES_MODULE, 'utf8');
+  const rewritten = rewriteTemplates(text, template.id, { version, refs, counts });
+
+  if (rewritten !== text) {
+    writeFileSync(TEMPLATES_MODULE, rewritten);
+    console.log('Updated ' + template.id + ' in src/templates.js');
+  }
+
+  return { title: changeTitle(template, refs), body: changeSummary(template, refs, before, after) };
+}
+
+function main(argv) {
+  const { values, positionals: ids } = parseArgs({ args: argv, allowPositionals: true, options: { latest: { type: 'boolean' }, pr: { type: 'string' } } });
   const unknown = ids.filter((id) => !TEMPLATES.some((template) => template.id === id));
 
   if (unknown.length > 0) {
@@ -89,7 +133,7 @@ function main(ids) {
   }
 
   const selected = ids.length > 0 ? TEMPLATES.filter((template) => ids.includes(template.id)) : TEMPLATES;
-  let stale = false;
+  const changes = [];
 
   mkdirSync(TMP, { recursive: true });
 
@@ -97,25 +141,21 @@ function main(ids) {
 
   try {
     for (const template of selected) {
-      const doc = buildTemplate(template, clones);
-      const counts = documentCounts(doc);
-
-      console.log(templateTitle(template) + ': ' + doc.entities.length + ' entities, ' + renderCounts(counts));
-
-      if (!isDeepStrictEqual(counts, template.counts)) {
-        stale = true;
-        console.error('Set the counts of ' + template.id + ' in src/templates.js to ' + renderCounts(counts));
-      }
+      changes.push(updateTemplate(template, clones, values.latest === true));
     }
   } finally {
     rmSync(clones, { recursive: true, force: true });
   }
 
-  return stale ? 1 : 0;
+  if (values.pr) {
+    mkdirSync(values.pr, { recursive: true });
+    writeFileSync(join(values.pr, 'title.txt'), changes.map((change) => change.title).join(' ') + '\n');
+    writeFileSync(join(values.pr, 'body.md'), changes.map((change) => change.body).join('\n'));
+  }
 }
 
 try {
-  process.exitCode = main(process.argv.slice(2));
+  main(process.argv.slice(2));
 } catch (e) {
   console.error(e.message);
   process.exitCode = 1;
