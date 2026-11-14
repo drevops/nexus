@@ -124,9 +124,10 @@ Every one is optional. Leave a key out when the source doesn't say, rather than 
 
 ## Annotations
 
-Annotations draw what Drupal configuration leaves out: events, external APIs and callbacks.
+Annotations draw what Drupal configuration leaves out: events, external APIs, callbacks and notes.
 
-- `annotations.nodes` holds 1 item per annotation, with an `id`, a `kind` (`event`, `api` or `callback`) and a `label`. An item can also have a `note` and a `method`, which is a second line of text such as an HTTP verb.
+- `annotations.nodes` holds 1 item per annotation, with an `id`, a `kind` (`event`, `api`, `callback` or `note`) and a `label`. An item can also have a `note` and a `method`, which is a second line of text such as an HTTP verb.
+- A `note` item draws its `note` on the canvas as Markdown: `#` headings, `**bold**`, `*italic*`, `__underline__`, `~~strikethrough~~`, `` `code` `` and `[label](address)` links. Use it for a remark that belongs to the diagram as a whole, such as a sticky note from the source, and set its `label` to `Note`.
 - `annotations.edges` holds 1 item per edge: `from` and `to` are the ids of any 2 nodes in the diagram, and `label` is optional. An edge from an entity to an event ties the event to that entity.
 
 Leave `annotations` out when the source shows none.

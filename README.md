@@ -49,6 +49,7 @@ Nexus is a static web app. Give it a Drupal config sync directory or a module's 
 - **Shared fields.** The Fields table and its CSV count the bundles of an entity type that have each field. The field Inspector lists the other bundles with the label each one gives the field.
 - **Templates.** The content models of Drupal CMS, CivicTheme, the Umami demo, Thunder and Open Social open in 1 click.
 - **Editable.** Add and change entities, fields, references and annotations, with undo and history.
+- **Notes on the canvas.** A Note holds text in Markdown, anywhere on the diagram. See [Notes](#notes).
 - **Field editing in the Fields table.** Click a cell to change a field's label, machine name, type, cardinality, references, help text, default value, allowed values or translatability. Tick **Req** to make a field required.
 - **Checks.** The Checks panel lists the problems in the model after every edit, such as a reference with no target or a field name with 2 types. Click a problem to go to it.
 - **Saved as a document.** A `.nexus.json` document holds the model and its layout, and a [JSON Schema](schema/nexus.schema.json) defines the format.
@@ -105,8 +106,28 @@ Nexus draws entities, fields and references from configuration. Events, APIs, ca
 | Diamond | Event | Annotation |
 | Hexagon | API | Annotation |
 | Rounded rectangle with a method | Callback | Annotation |
+| Yellow rectangle with formatted text | Note | Annotation |
 
 Content types are rounded rectangles, vocabularies are tags, media are barrels, paragraphs are cut rectangles, blocks are rectangles, users are ellipses and external entities are hexagons. A field label ending in `*` marks a required field. A reference arrow carries the field's cardinality: `1`, `1..N` for a limit of N or `1..n` for unlimited.
+
+## Notes
+
+A Note holds text anywhere on the diagram. To add one, switch to **Edit**, click **Note** in the **Add** bar (<kbd>Shift</kbd>+<kbd>N</kbd>) and click the canvas. Write the text in the Inspector. The Note grows to fit it and wraps lines at 240 pixels.
+
+A Note reads this Markdown:
+
+| Markdown | Draws |
+|----------|-------|
+| `# Heading`, `## Heading`, `### Heading` | A heading. Levels 4 to 6 draw as level 3 |
+| `**bold**` | **Bold** text |
+| `*italic*` or `_italic_` | *Italic* text |
+| `__underline__` | Underlined text |
+| `~~strikethrough~~` | ~~Struck-through~~ text |
+| `` `code` `` | Code |
+| `[label](https://example.com)` | A link. Hover over it to see its address |
+| A blank line | A new paragraph |
+
+A backslash keeps the next punctuation mark as written, so `\*` draws `*`. An underscore inside a word stays as written, so `field_tags_more` draws as typed. HTML shows as written, and a link never opens a page. PNG and SVG exports show each Note's text without formatting.
 
 ## Annotation overlay
 
@@ -139,13 +160,13 @@ Every key is optional. The following table lists what each key draws:
 | Key | What it draws |
 |-----|---------------|
 | `title` | The diagram's title, in place of `Content model` |
-| `nodes` | 1 Event, API or Callback node per item |
+| `nodes` | 1 Event, API, Callback or Note node per item |
 | `nodes[].id` | The node's id, which `attach` and `edges` refer to. An item without an `id` draws nothing |
-| `nodes[].kind` | The node's symbol: `event` (diamond), `api` (hexagon) or `callback` (rounded rectangle). A missing or unknown kind draws an Event |
-| `nodes[].label` | The text in the node. Defaults to its `id` |
+| `nodes[].kind` | The node's symbol: `event` (diamond), `api` (hexagon), `callback` (rounded rectangle) or `note` (a [Note](#notes)). A missing or unknown kind draws an Event |
+| `nodes[].label` | The text in the node. Defaults to its `id`. A Note doesn't draw it |
 | `nodes[].attach` | An edge to the node from the node with this id, such as `node.event` |
 | `nodes[].method` | A second line of text in the node, such as an HTTP verb |
-| `nodes[].note` | A note badge that shows this text |
+| `nodes[].note` | A note badge that shows this text. A Note draws this text as its Markdown instead |
 | `edges` | 1 edge between 2 nodes per item |
 | `edges[].from`, `edges[].to` | The ids of the edge's start and end nodes. An item without both draws nothing |
 | `edges[].label` | The text on the edge. Defaults to none |
@@ -171,7 +192,7 @@ Nexus compresses the diagram with `deflate`, which ends the data with an Adler-3
 
 The checksum catches only accidental damage, because anyone can write a new link with a matching checksum. Treat a link like a file from the person who sent it. Nexus reads every link's diagram as data and runs none of it:
 
-- Labels, notes and descriptions are drawn as text, so markup in them shows as written.
+- Labels, notes and descriptions are drawn as text, so markup in them shows as written. A Note formats only its [Markdown](#notes).
 - An entity type's color, symbol and name go through the checks listed under [Security](#security). Any other value falls back to the default.
 - The Content Security Policy runs only Nexus's own scripts, so a link can't run code in your browser.
 - Unpacking stops at 5 MB, so a crafted link can't fill the page's memory.

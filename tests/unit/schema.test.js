@@ -156,7 +156,7 @@ test('names each break in words an agent can act on', async (t) => {
 function dataProviderSchemaMessages() {
   return [
     ['an unknown key', (doc) => (doc.entities[0].fields[0].fieldtype = 'string'), 'has the unknown key "fieldtype"'],
-    ['an unknown value', (doc) => (doc.annotations.nodes[0].kind = 'webhook'), 'must be equal to one of the allowed values: event, api, callback'],
+    ['an unknown value', (doc) => (doc.annotations.nodes[0].kind = 'webhook'), 'must be equal to one of the allowed values: event, api, callback, note'],
     ['a missing key', (doc) => delete doc.nexus, "must have required property 'nexus'"],
   ];
 }

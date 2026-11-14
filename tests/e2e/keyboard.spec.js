@@ -336,6 +336,7 @@ test.describe('Keyboard', { tag: '@runner-2' }, () => {
       ['Event', 'Shift+E', placesNote('event')],
       ['API', 'Shift+A', placesNote('api')],
       ['Callback', 'Shift+K', placesNote('callback')],
+      ['Note', 'Shift+N', placesNote('note')],
       ['Connect', 'c', (page) => expect(page.locator('#connect-toggle')).toHaveClass(/is-active/)],
     ];
   }

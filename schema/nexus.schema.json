@@ -42,7 +42,7 @@
       "items": { "$ref": "#/$defs/entity" }
     },
     "annotations": {
-      "description": "Event, API and Callback nodes and the edges between any 2 nodes of the diagram.",
+      "description": "Event, API, Callback and Note nodes and the edges between any 2 nodes of the diagram.",
       "type": "object",
       "additionalProperties": false,
       "properties": {
@@ -174,16 +174,16 @@
       }
     },
     "annotationNode": {
-      "description": "An Event, API or Callback node. Its id is the id it's given here.",
+      "description": "An Event, API, Callback or Note node. Its id is the id it's given here.",
       "type": "object",
       "required": ["id", "kind", "label"],
       "additionalProperties": false,
       "properties": {
         "id": { "type": "string", "minLength": 1 },
-        "kind": { "enum": ["event", "api", "callback"] },
+        "kind": { "enum": ["event", "api", "callback", "note"] },
         "label": { "type": "string" },
         "method": { "description": "A second line of text, such as an HTTP verb.", "type": "string" },
-        "note": { "description": "Free text shown as a note badge.", "type": "string" }
+        "note": { "description": "Free text shown as a note badge. A Note node draws it on the canvas as Markdown instead.", "type": "string" }
       }
     },
     "annotationEdge": {

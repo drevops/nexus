@@ -711,6 +711,86 @@ sl-button#zoom-level::part(base) {
   border-color: var(--frame-edit, transparent);
 }
 
+/* Note bodies sit on their Cytoscape boxes, which draw the fill, the border
+   and the selection. The box keeps its sticky-note colours in both themes, so
+   the text colours are pinned. A link takes pointer events to show its
+   address. */
+.note-bodies {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.note-body {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  font-family: 'Helvetica Neue', Helvetica, sans-serif;
+  font-size: 12px;
+  line-height: 1.35;
+  color: #3a2f0a;
+  overflow-wrap: anywhere;
+  transform-origin: 0 0;
+}
+
+.note-body--probe {
+  width: max-content;
+  visibility: hidden;
+}
+
+.note-body > :first-child {
+  margin-top: 0;
+}
+
+.note-body > :last-child {
+  margin-bottom: 0;
+}
+
+.note-body p {
+  margin: 0 0 6px;
+}
+
+.note-body h1,
+.note-body h2,
+.note-body h3 {
+  margin: 8px 0 4px;
+  line-height: 1.2;
+}
+
+.note-body h1 {
+  font-size: 17px;
+}
+
+.note-body h2 {
+  font-size: 15px;
+}
+
+.note-body h3 {
+  font-size: 13px;
+}
+
+.note-body code {
+  padding: 0 2px;
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  font-size: 11px;
+  background: rgba(58, 47, 10, 0.08);
+  border-radius: 2px;
+}
+
+.note-body .rich-text__link {
+  color: #1d4f91;
+  cursor: help;
+  pointer-events: auto;
+}
+
+.note-body__empty {
+  font-style: italic;
+  color: #8a7a3f;
+}
+
 /* Note badges: the layer sets pointer-events: none so the canvas stays
    draggable. Each badge sets pointer-events: auto so it can be hovered and
    clicked. */

@@ -85,6 +85,7 @@ const SWATCHES = {
   api: '<svg width="34" height="24"><polygon points="10,3 24,3 32,12 24,21 10,21 2,12" fill="#fff" stroke="#333b45"/></svg>',
   callback:
     '<svg width="34" height="24"><rect x="2" y="4" width="30" height="16" rx="2" fill="#fff" stroke="#333b45"/><line x1="2" y1="13" x2="32" y2="13" stroke="#333b45"/></svg>',
+  note: '<svg width="34" height="24"><rect x="4" y="3" width="26" height="18" fill="#fff4b3" stroke="#d9b93a"/><line x1="8" y1="9" x2="26" y2="9" stroke="#3a2f0a"/><line x1="8" y1="15" x2="20" y2="15" stroke="#3a2f0a"/></svg>',
 };
 
 // Entity types are drawn dynamically from the settings; these are the fixed
@@ -97,6 +98,7 @@ const LEGEND_ITEMS = [
   ['event', 'Event'],
   ['api', 'API'],
   ['callback', 'Callback / method'],
+  ['note', 'Note'],
 ];
 
 function useStore() {
@@ -450,6 +452,7 @@ class CanvasHost extends Component {
 
   render() {
     return html` <div id="cy" class="cy"></div>
+      <div id="note-bodies" class="note-bodies"></div>
       <div id="captions" class="captions" aria-hidden="true"></div>
       <div id="notes" class="notes"></div>
       <div id="handles" class="handles" hidden></div>

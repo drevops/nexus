@@ -132,6 +132,17 @@ test.describe('Titles', { tag: '@runner-1' }, () => {
         },
       ],
       [
+        'the note Inspector',
+        async (page) => {
+          await page.click('#new-btn');
+          await page.click('#mode-build');
+          await page.click('#add-note');
+          const box = await page.locator('#cy').boundingBox();
+          await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+          await expect(page.locator('#inspector .insp__title')).toHaveText('Note');
+        },
+      ],
+      [
         'the new entity form',
         async (page) => {
           await editing(page);

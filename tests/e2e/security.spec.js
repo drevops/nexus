@@ -121,6 +121,30 @@ test.describe('Security', { tag: '@runner-1' }, () => {
     expect(await page.evaluate(() => window.__violations)).toEqual([]);
   });
 
+  test('draws the Markdown of a Note and none of its markup', async ({ page }) => {
+    const note =
+      '# *Plan*\n<img src="x" onerror="window.__injected = true"><script>window.__injected = true</script>\n[here](javascript:window.__injected=true) [docs]("><img src=x onerror=1>)';
+    await openDocument(page, {
+      nexus: 1,
+      title: 'Hostile note',
+      entities: [{ entityType: 'node', bundle: 'article', label: 'Article', fields: [] }],
+      annotations: { nodes: [{ id: 'hostile', kind: 'note', label: 'Note', note: note }], edges: [] },
+    });
+
+    const body = page.locator('#note-bodies .note-body[data-node-id="hostile"]');
+    await expect(body.locator('h1 em')).toHaveText('Plan');
+    await expect(body.locator('img, script, a')).toHaveCount(0);
+    await expect(body).toContainText('<img src="x" onerror="window.__injected = true">');
+    await expect(body).toContainText('[docs]("><img src=x onerror=1>)');
+    await expect(body.locator('.rich-text__link')).toHaveText('here');
+    await expect(body.locator('.rich-text__link')).toHaveAttribute('title', 'javascript:window.__injected=true');
+
+    await body.locator('.rich-text__link').click();
+
+    expect(await page.evaluate(() => window.__injected)).toBeUndefined();
+    expect(await page.evaluate(() => window.__violations)).toEqual([]);
+  });
+
   test('ignores stored type styles carrying markup', async ({ page }) => {
     await page.evaluate((markup) => {
       window.localStorage.setItem('nexusSettings', JSON.stringify({ colors: { node: markup }, customTypes: [{ type: 'x"]', label: 'X' }] }));

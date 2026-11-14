@@ -82,7 +82,7 @@ test.describe('Palette', { tag: '@runner-2' }, () => {
     await loadExample(page);
     await page.click('#mode-build');
 
-    for (const id of ['#add-event', '#add-api', '#add-callback']) {
+    for (const id of ['#add-event', '#add-api', '#add-callback', '#add-note']) {
       await expect(page.locator(id + ' svg.icon')).toBeVisible();
       expect(await page.locator(id + ' svg.icon').evaluate((svg) => svg.childElementCount)).toBeGreaterThan(0);
     }
