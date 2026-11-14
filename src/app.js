@@ -293,7 +293,7 @@ function templateRow(template, index) {
 }
 
 function wireLanding() {
-  $('template-list').append(...TEMPLATES.map(templateRow));
+  $('template-list').replaceChildren(...TEMPLATES.map(templateRow));
 
   const zone = $('dropzone');
 
@@ -598,6 +598,12 @@ function initAbout() {
   $('about-close').addEventListener('click', () => dialog.hide());
 }
 
+function enableLanding() {
+  const landing = $('landing');
+  landing.inert = false;
+  landing.removeAttribute('aria-busy');
+}
+
 function initVersion() {
   document.querySelectorAll('[data-version]').forEach((el) => {
     el.textContent = VERSION;
@@ -620,5 +626,6 @@ initAbout();
 initAiDialog(showDocument);
 initLinkDialog();
 initVersion();
+enableLanding();
 openLink();
 window.addEventListener('hashchange', openLink);

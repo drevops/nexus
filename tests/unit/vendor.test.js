@@ -48,6 +48,18 @@ test('loads vendored files in index.html only from recorded libraries', () => {
   );
 });
 
+// A classic script without defer holds up parsing, and with it every module
+// script, the Shoelace autoloader included.
+test('defers every classic vendor script in index.html', () => {
+  const index = readFileSync(join(ROOT, 'index.html'), 'utf8');
+  const classic = [...index.matchAll(/<script\b([^>]*\bsrc=["'](?:\.\/)?assets\/vendor\/[^"']+["'][^>]*)>/g)]
+    .map((match) => match[1])
+    .filter((attributes) => !/\btype=["']module["']/.test(attributes));
+
+  assert.ok(classic.length > 0);
+  classic.forEach((attributes) => assert.match(attributes, /\sdefer(?:[\s=]|$)/, attributes));
+});
+
 test('digests a folder as the listing sha256sum prints', () => {
   const dir = join(FIXTURES, 'vendored');
   const listing = ['lib/added.js', 'lib/changed.js', 'same.js'].map((file) => sha256(join(dir, file)) + '  ' + file + '\n').join('');

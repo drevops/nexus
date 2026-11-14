@@ -1923,6 +1923,11 @@ body.is-dragging-panel * {
   gap: 0.45rem;
 }
 
+/* Its icon buttons have no content until the app adds their icons. */
+.landing[aria-busy='true'] .landing__corner {
+  visibility: hidden;
+}
+
 .landing__logo {
   display: flex;
   flex-direction: column;
@@ -2039,6 +2044,25 @@ body.is-dragging-panel * {
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 12px;
+}
+
+/* As tall as the dropzone beside it, so the columns line up while loading. */
+.template-list__loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  min-height: 15rem;
+  background: var(--panel-bg);
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.template-list__spinner {
+  font-size: 1.4rem;
+  --track-width: 3px;
+  --indicator-color: var(--accent);
+  --track-color: var(--border);
 }
 
 .template-row {

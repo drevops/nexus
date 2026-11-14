@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { entityCount, loadExample, boxesOverlap, openFrom } from './helpers.js';
+import { entityCount, loadExample, boxesOverlap, openBeforeAppStarts, openFrom } from './helpers.js';
 
 test.describe('Landing', { tag: '@runner-1' }, () => {
   function boxesOf(page, selectors) {
@@ -15,6 +15,24 @@ test.describe('Landing', { tag: '@runner-1' }, () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto('/index.html');
+  });
+
+  test('draws the landing before the diagram libraries load and keeps it inert until the app starts', async ({ page }) => {
+    const start = await openBeforeAppStarts(page);
+    const landing = page.locator('#landing');
+
+    await page.waitForFunction(() => customElements.get('sl-card') && customElements.get('sl-button'));
+    await expect(page.locator('#folder-btn')).toBeVisible();
+    await expect(landing).toHaveAttribute('aria-busy', 'true');
+    expect(await landing.evaluate((element) => element.inert)).toBe(true);
+    await expect(page.locator('.landing__corner')).toBeHidden();
+    expect(await page.evaluate(() => typeof window.cytoscape)).toBe('undefined');
+
+    start();
+
+    await expect(landing).not.toHaveAttribute('aria-busy');
+    expect(await landing.evaluate((element) => element.inert)).toBe(false);
+    await expect(page.locator('#landing-theme')).toBeVisible();
   });
 
   test('reopens the import screen and cancels back to the diagram', async ({ page }) => {

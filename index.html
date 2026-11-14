@@ -159,7 +159,8 @@
 <!-- Outside the toolbar, which is inert while the landing screen is open. -->
 <input id="doc-open" class="visually-hidden" type="file" accept=".json,application/json" tabindex="-1">
 
-<div id="landing" class="landing">
+<!-- Inert and busy until src/app.js has wired its controls. -->
+<div id="landing" class="landing" inert aria-busy="true">
   <sl-card class="landing__card">
     <div class="landing__corner">
       <sl-button id="landing-theme" class="toolbar__button toolbar__button--icon" size="small" data-icon="moon" data-theme-toggle data-shortcut="D" title="Toggle light / dark theme" aria-label="Toggle theme"></sl-button>
@@ -186,7 +187,12 @@
       </section>
       <section aria-labelledby="landing-templates-heading">
         <h2 id="landing-templates-heading" class="landing__heading">Start from a template</h2>
-        <div id="template-list" class="template-list"></div>
+        <div id="template-list" class="template-list">
+          <div class="template-list__loader" role="status">
+            <sl-spinner class="template-list__spinner"></sl-spinner>
+            <span>Loading templates…</span>
+          </div>
+        </div>
         <p class="landing__more">Missing a theme or distribution? <a href="https://github.com/drevops/nexus/issues" target="_blank" rel="noopener" title="Open an issue on GitHub to suggest a template">Suggest a template</a>.</p>
       </section>
     </div>
@@ -263,11 +269,11 @@
   <sl-button id="link-save" slot="footer" variant="primary" data-icon="download" title="Save this diagram as a Nexus document (.nexus.json)">Save .nexus.json</sl-button>
 </sl-dialog>
 
-<script src="assets/vendor/cytoscape.min.js"></script>
-<script src="assets/vendor/dagre.min.js"></script>
-<script src="assets/vendor/cytoscape-dagre.js"></script>
-<script src="assets/vendor/cytoscape-svg.js"></script>
-<script src="assets/vendor/js-yaml.min.js"></script>
+<script src="assets/vendor/cytoscape.min.js" defer></script>
+<script src="assets/vendor/dagre.min.js" defer></script>
+<script src="assets/vendor/cytoscape-dagre.js" defer></script>
+<script src="assets/vendor/cytoscape-svg.js" defer></script>
+<script src="assets/vendor/js-yaml.min.js" defer></script>
 <script type="module" src="src/app.js"></script>
 </body>
 </html>
