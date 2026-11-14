@@ -81,8 +81,12 @@ test.describe('Notes', { tag: '@runner-1' }, () => {
     await slFill(page, '#inspector sl-textarea[data-note-text]', MARKDOWN);
     await expect.poll(height).toBeGreaterThan(empty);
 
+    // zoom() returns the Cytoscape core, which Playwright is slow to
+    // serialize, so the callback returns nothing.
     for (const zoom of [0.5, 1, 2]) {
-      await page.evaluate((level) => window.__nexus.cy.zoom(level), zoom);
+      await page.evaluate((level) => {
+        window.__nexus.cy.zoom(level);
+      }, zoom);
       await expect
         .poll(async () => {
           const boxes = await noteBoxes(page, id);
