@@ -388,7 +388,12 @@ function Panel({ id, panel, dragging, header, children }) {
   const ref = useRef(null);
   const docked = !!panel.dock;
   const resizable = docked && id !== 'inspector';
-  const cls = 'panel' + (WIDE[id] ? ' panel--wide' : '') + (id === 'legend' || id === 'help' ? ' panel--' + id : '') + (docked ? ' is-docked' : '') + (dragging ? ' is-dragging' : '');
+  const cls =
+    'panel' +
+    (WIDE[id] ? ' panel--wide' : '') +
+    (id === 'legend' || id === 'help' ? ' panel--' + id : '') +
+    (docked ? ' is-docked' : '') +
+    (dragging ? ' is-dragging' : '');
   const style = docked ? dockStyle(id, panel) : floatStyle(panel);
   const help = helpTarget(id);
 
@@ -407,16 +412,18 @@ function Panel({ id, panel, dragging, header, children }) {
       <span class="panel__title">${TITLES[id]}</span>
       ${header}
       <span class="panel__spacer"></span>
-      ${help
-        ? html`<button
-            class="panel__help"
-            type="button"
-            title=${'Read about the ' + TITLES[id] + ' panel in the Help panel'}
-            aria-label=${'Help on ' + TITLES[id]}
-            onClick=${() => openHelp(help.page, help.anchor || null)}
-            dangerouslySetInnerHTML=${{ __html: icon('help-circle') }}
-          ></button>`
-        : null}
+      ${
+        help
+          ? html`<button
+              class="panel__help"
+              type="button"
+              title=${'Read about the ' + TITLES[id] + ' panel in the Help panel'}
+              aria-label=${'Help on ' + TITLES[id]}
+              onClick=${() => openHelp(help.page, help.anchor || null)}
+              dangerouslySetInnerHTML=${{ __html: icon('help-circle') }}
+            ></button>`
+          : null
+      }
       <button
         class="panel__pin"
         type="button"

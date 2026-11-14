@@ -209,8 +209,14 @@ test('links the Copy link dialog to the manual sections on protection and limits
 
       assert.ok(link, 'index.html has no #' + id + ' link');
       assert.ok(link[1].includes('href="docs/sharing.md#' + section + '"'), '#' + id + ' does not link docs/sharing.md#' + section);
-      assert.ok(link[1].includes('data-help-page="sharing" data-help-anchor="' + section + '"'), '#' + id + ' does not open sharing#' + section + ' in the Help panel');
-      assert.ok(sharing.headings.some((heading) => heading.id === section), 'docs/sharing.md has no heading for #' + section);
+      assert.ok(
+        link[1].includes('data-help-page="sharing" data-help-anchor="' + section + '"'),
+        '#' + id + ' does not open sharing#' + section + ' in the Help panel',
+      );
+      assert.ok(
+        sharing.headings.some((heading) => heading.id === section),
+        'docs/sharing.md has no heading for #' + section,
+      );
     });
   }
 });

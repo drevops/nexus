@@ -71,7 +71,10 @@ test('reads the sections and pages of the contents in order', () => {
 test('reports contents items that are not page links under a section', () => {
   const { errors } = readContents('- [Early](early.md)\n\n## Basics\n\n- Plain text\n');
 
-  assert.deepEqual(errors, ['README.md: "Early" is not a page link under a section heading', 'README.md: "Plain text" is not a page link under a section heading']);
+  assert.deepEqual(errors, [
+    'README.md: "Early" is not a page link under a section heading',
+    'README.md: "Plain text" is not a page link under a section heading',
+  ]);
 });
 
 test('reads the title, summary, sections and text of a page', () => {
@@ -131,13 +134,21 @@ function dataProviderMarkdown() {
       '[Drupal](https://www.drupal.org "The Drupal site")',
       '<p><a href="https://www.drupal.org" target="_blank" rel="noopener" title="The Drupal site">Drupal</a></p>',
     ],
-    ['page link', '[the **keys**](keys.md)', '<p><a href="docs/keys.md" data-page="keys" title="Read &quot;the keys&quot; in the manual">the <strong>keys</strong></a></p>'],
+    [
+      'page link',
+      '[the **keys**](keys.md)',
+      '<p><a href="docs/keys.md" data-page="keys" title="Read &quot;the keys&quot; in the manual">the <strong>keys</strong></a></p>',
+    ],
     [
       'page link with an anchor',
       '[Saving](keys.md#saving)',
       '<p><a href="docs/keys.md#saving" data-page="keys" data-anchor="saving" title="Read &quot;Saving&quot; in the manual">Saving</a></p>',
     ],
-    ['anchor on the same page', '[Below](#below)', '<p><a href="docs/page.md#below" data-page="page" data-anchor="below" title="Read &quot;Below&quot; in the manual">Below</a></p>'],
+    [
+      'anchor on the same page',
+      '[Below](#below)',
+      '<p><a href="docs/page.md#below" data-page="page" data-anchor="below" title="Read &quot;Below&quot; in the manual">Below</a></p>',
+    ],
     ['image', '![The <landing> screen](assets/landing.png)', '<p><img src="docs/assets/landing.png" alt="The &lt;landing&gt; screen" loading="lazy"></p>'],
   ].map(([name, markdown, expected]) => [name, markdown, expected ?? '<p>Use &lt;code&gt; &amp; &quot;quotes&quot; with *stars*.</p>']);
 }
@@ -159,9 +170,21 @@ function dataProviderPageErrors() {
     ['block HTML', '# Page\n\nSummary.\n\n<div>Hi</div>\n', ['page.md: has raw HTML "<div>Hi</div>"']],
     ['inline HTML', '# Page\n\nPress <kbd>F1</kbd>.\n', ['page.md: has raw HTML "<kbd>"', 'page.md: has raw HTML "</kbd>"']],
     ['a comment', '# Page\n\nSummary.\n\n<!-- todo -->\n', ['page.md: has raw HTML "<!-- todo -->"']],
-    ['a link outside docs', '# Page\n\nSee [the code](../src/app.js).\n', ['page.md: links to "../src/app.js", which is neither another page in docs/ nor an external URL']],
-    ['a link to the contents', '# Page\n\nSee [all](README.md).\n', ['page.md: links to "README.md", which is neither another page in docs/ nor an external URL']],
-    ['an external image', '# Page\n\n![Logo](https://example.com/logo.png)\n', ['page.md: shows "https://example.com/logo.png", which is not an image in assets/']],
+    [
+      'a link outside docs',
+      '# Page\n\nSee [the code](../src/app.js).\n',
+      ['page.md: links to "../src/app.js", which is neither another page in docs/ nor an external URL'],
+    ],
+    [
+      'a link to the contents',
+      '# Page\n\nSee [all](README.md).\n',
+      ['page.md: links to "README.md", which is neither another page in docs/ nor an external URL'],
+    ],
+    [
+      'an external image',
+      '# Page\n\n![Logo](https://example.com/logo.png)\n',
+      ['page.md: shows "https://example.com/logo.png", which is not an image in assets/'],
+    ],
     ['an image outside assets', '# Page\n\n![Logo](../logo.svg)\n', ['page.md: shows "../logo.svg", which is not an image in assets/']],
     ['an image without alt text', '# Page\n\n![](assets/logo.png)\n', ['page.md: shows "assets/logo.png" without alt text']],
   ];
@@ -188,11 +211,14 @@ test('accepts a link to a heading below a section', () => {
 test('lists every problem of the manual in 1 error', async (t) => {
   for (const [name, pages, assets, expected] of dataProviderManualErrors()) {
     await t.test(name, () => {
-      assert.throws(() => buildManual(docs(pages), new Set(assets)), (error) => {
-        assert.deepEqual(error.message.split('\n').slice(1), expected);
+      assert.throws(
+        () => buildManual(docs(pages), new Set(assets)),
+        (error) => {
+          assert.deepEqual(error.message.split('\n').slice(1), expected);
 
-        return true;
-      });
+          return true;
+        },
+      );
     });
   }
 });
@@ -205,11 +231,31 @@ function dataProviderManualErrors() {
     ['a listed page that does not exist', { 'panels.md': null }, landing, ['- README.md: lists panels.md, which does not exist']],
     ['a page listed twice', { 'README.md': CONTENTS + '- [Start](start.md)\n' }, landing, ['- README.md: lists start.md twice']],
     ['a contents item that is not a page', { 'README.md': CONTENTS + '- [Out](../out.md)\n' }, landing, ['- README.md: "../out.md" is not a page in docs/']],
-    ['a contents item with an anchor', { 'README.md': CONTENTS + '- [Keys](keys.md#saving)\n' }, landing, ['- README.md: "keys.md#saving" is not a page in docs/']],
+    [
+      'a contents item with an anchor',
+      { 'README.md': CONTENTS + '- [Keys](keys.md#saving)\n' },
+      landing,
+      ['- README.md: "keys.md#saving" is not a page in docs/'],
+    ],
     ['an empty section', { 'README.md': CONTENTS + '\n## Empty\n' }, landing, ['- README.md: section "Empty" lists no pages']],
-    ['a title that differs', { 'panels.md': '# The panels\n\nEvery panel.\n' }, landing, ['- panels.md: its title "The panels" differs from "Panels" in the contents']],
-    ['a link to a missing page', { 'panels.md': '# Panels\n\nSee [gone](gone.md).\n' }, landing, ['- panels.md: links to "gone.md", a page that does not exist']],
-    ['a link to a missing anchor', { 'panels.md': '# Panels\n\nSee [keys](keys.md#loading).\n' }, landing, ['- panels.md: links to "keys.md#loading", an anchor that does not exist']],
+    [
+      'a title that differs',
+      { 'panels.md': '# The panels\n\nEvery panel.\n' },
+      landing,
+      ['- panels.md: its title "The panels" differs from "Panels" in the contents'],
+    ],
+    [
+      'a link to a missing page',
+      { 'panels.md': '# Panels\n\nSee [gone](gone.md).\n' },
+      landing,
+      ['- panels.md: links to "gone.md", a page that does not exist'],
+    ],
+    [
+      'a link to a missing anchor',
+      { 'panels.md': '# Panels\n\nSee [keys](keys.md#loading).\n' },
+      landing,
+      ['- panels.md: links to "keys.md#loading", an anchor that does not exist'],
+    ],
     ['a missing image', {}, [], ['- docs/assets/landing.png does not exist']],
     ['an unused image', {}, ['landing.png', 'old.png'], ['- docs/assets/old.png is shown on no page']],
     [

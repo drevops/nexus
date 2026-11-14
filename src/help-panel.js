@@ -64,26 +64,34 @@ function Contents({ navRef, pages, current, anchor }) {
                   >
                     ${page.title}
                   </button>
-                  ${page.id === current.id
-                    ? page.headings.map(
-                        (heading) =>
-                          html`<button
-                            key=${heading.id}
-                            type="button"
-                            class=${'help__sublink' + (heading.id === anchor ? ' is-current' : '')}
-                            data-help-anchor=${heading.id}
-                            title=${'Go to "' + heading.text + '"'}
-                            onClick=${() => openHelp(page.id, heading.id)}
-                          >
-                            ${heading.text}
-                          </button>`,
-                      )
-                    : null}`,
+                  ${
+                    page.id === current.id
+                      ? page.headings.map(
+                          (heading) =>
+                            html`<button
+                              key=${heading.id}
+                              type="button"
+                              class=${'help__sublink' + (heading.id === anchor ? ' is-current' : '')}
+                              data-help-anchor=${heading.id}
+                              title=${'Go to "' + heading.text + '"'}
+                              onClick=${() => openHelp(page.id, heading.id)}
+                            >
+                              ${heading.text}
+                            </button>`,
+                        )
+                      : null
+                  }`,
             )}
           </div>`,
       )}
     ${pages.length ? null : html`<p class="panel__note help__empty">No page matches.</p>`}
-    <button id="help-about" type="button" class="help__about" title="Show the version and licence of Nexus" onClick=${() => document.getElementById('about-dialog').show()}>
+    <button
+      id="help-about"
+      type="button"
+      class="help__about"
+      title="Show the version and licence of Nexus"
+      onClick=${() => document.getElementById('about-dialog').show()}
+    >
       ${rawIcon('nexus')}About Nexus
     </button>
   </nav>`;

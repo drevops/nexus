@@ -274,7 +274,9 @@ export function renderPage(id, markdown) {
         const head = token.header
           .map((cell) => '<th' + align(cell) + ' title="' + escapeHtml(collapse(plainText(cell.tokens))) + '">' + inline(cell.tokens) + '</th>')
           .join('');
-        const rows = token.rows.map((row) => '<tr>' + row.map((cell, at) => '<td' + align(token.header[at]) + '>' + inline(cell.tokens) + '</td>').join('') + '</tr>');
+        const rows = token.rows.map(
+          (row) => '<tr>' + row.map((cell, at) => '<td' + align(token.header[at]) + '>' + inline(cell.tokens) + '</td>').join('') + '</tr>',
+        );
 
         return '<table><thead><tr>' + head + '</tr></thead><tbody>' + rows.join('') + '</tbody></table>';
       }
@@ -408,7 +410,9 @@ export function buildManual(files, assets) {
   [...assets].filter((asset) => !used.has(asset)).forEach((asset) => errors.push('docs/' + ASSETS_DIR + '/' + asset + ' is shown on no page'));
 
   if (errors.length) {
-    throw new Error('The manual has ' + errors.length + (errors.length === 1 ? ' problem' : ' problems') + ':\n' + errors.map((error) => '- ' + error).join('\n'));
+    throw new Error(
+      'The manual has ' + errors.length + (errors.length === 1 ? ' problem' : ' problems') + ':\n' + errors.map((error) => '- ' + error).join('\n'),
+    );
   }
 
   return { sections: contents.sections.map((section) => section.title), pages };
