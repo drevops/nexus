@@ -1,27 +1,19 @@
 name: Benchmark
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
-      - 'feature/**'
   workflow_dispatch:
     inputs:
       base:
-        description: Commit, branch or tag to compare with; leave empty to measure the branch alone
+        description: Commit, branch or tag to compare with; leave empty for the latest release
         type: string
-        default: main
+        default: ''
 
 permissions: {}
 
-# A pull request push cancels its superseded run. Runs on main queue, so the
-# issue comment always ends with the newest commit's numbers.
+# A new run on the same branch replaces the one in progress.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   NODE_VERSION: 26
@@ -54,33 +46,36 @@ jobs:
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
 
-      # The base of a pull request, the commit before a push to main or the
-      # ref a manual run names. A push that starts a branch has no commit
-      # before it, so the head is measured alone.
+      # The latest release excludes drafts and prereleases. A repository with
+      # no release yet has no base, so the branch is measured alone.
       - name: Pick the base commit
         id: base
         run: |
-          case "$EVENT" in
-            pull_request) ref="$PR_BASE" ;;
-            push) ref="$BEFORE" ;;
-            *) ref="$INPUT_BASE" ;;
-          esac
+          ref="$INPUT_BASE"
+          if [ -z "$ref" ]; then
+            ref=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName || true)
+          fi
           sha=''
           if [ -n "$ref" ]; then
             sha=$(git rev-parse --verify --quiet --end-of-options "${ref}^{commit}" || true)
+            if [ -z "$sha" ]; then
+              echo "::error::${ref} is not a commit in this repository."
+              exit 1
+            fi
           fi
-          echo "Base: ${sha:-none}"
+          echo "Base: ${ref:-none} ${sha}"
           echo "sha=${sha}" >> "$GITHUB_OUTPUT"
         env:
-          EVENT: ${{ github.event_name }}
-          PR_BASE: ${{ github.event.pull_request.base.sha }}
-          BEFORE: ${{ github.event.before }}
+          GH_TOKEN: ${{ github.token }}
           INPUT_BASE: ${{ inputs.base }}
 
+      # The script's defaults apply while a variable is unset.
       - name: Run the benchmark
-        run: npm run benchmark -- --runs 7 ${BASE_SHA:+--base-ref "$BASE_SHA"}
+        run: npm run benchmark -- --runs 7 ${BASE_SHA:+--base-ref "$BASE_SHA"} ${THRESHOLD:+--threshold "$THRESHOLD"} ${MIN_DIFF:+--min-diff "$MIN_DIFF"}
         env:
           BASE_SHA: ${{ steps.base.outputs.sha }}
+          THRESHOLD: ${{ vars.BENCHMARK_THRESHOLD }}
+          MIN_DIFF: ${{ vars.BENCHMARK_MIN_DIFF }}
 
       - name: Add the report to the job summary
         if: always()
@@ -96,52 +91,3 @@ jobs:
           name: benchmark
           path: .artifacts/benchmark
           if-no-files-found: warn
-
-  # Checks out and runs nothing from the repository, so the write token never
-  # meets the code under test. A fork's token can't comment, so its pull
-  # requests get the job summary only.
-  report:
-    name: Report
-    needs: benchmark
-    if: ${{ !cancelled() && github.event_name != 'workflow_dispatch' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
-    runs-on: ubuntu-latest
-
-    permissions:
-      actions: read # Download the report artifact.
-      issues: write # Comment on the 'Performance benchmarks' issue.
-      pull-requests: write # Comment on the pull request.
-
-    steps:
-      # A pull request gets the report as its comment. A push to main puts it
-      # on the open 'Performance benchmarks' issue, created on the first push.
-      # Each run replaces the comment the workflow posted before.
-      - name: Post the report
-        run: |
-          if ! gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" --name benchmark --dir report || [ ! -f report/benchmark.md ]; then
-            echo "The benchmark wrote no report."
-            exit 0
-          fi
-
-          if [ "$EVENT" = pull_request ]; then
-            number="$PR_NUMBER"
-          else
-            number=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"${ISSUE_TITLE}\" in:title" --json number,title --jq ".[] | select(.title == \"${ISSUE_TITLE}\") | .number" | head -n 1)
-            if [ -z "$number" ]; then
-              url=$(gh issue create --repo "$GITHUB_REPOSITORY" --title "$ISSUE_TITLE" --body 'The Benchmark workflow replaces the comment below with the numbers of every push to `main`.')
-              number="${url##*/}"
-            fi
-          fi
-
-          comment=$(gh api --paginate "repos/${GITHUB_REPOSITORY}/issues/${number}/comments" --jq ".[] | select(.user.login == \"github-actions[bot]\" and (.body | startswith(\"${MARKER}\"))) | .id" | head -n 1)
-          if [ -n "$comment" ]; then
-            gh api --method PATCH "repos/${GITHUB_REPOSITORY}/issues/comments/${comment}" -F body=@report/benchmark.md > /dev/null
-          else
-            gh api --method POST "repos/${GITHUB_REPOSITORY}/issues/${number}/comments" -F body=@report/benchmark.md > /dev/null
-          fi
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RUN_ID: ${{ github.run_id }}
-          EVENT: ${{ github.event_name }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          ISSUE_TITLE: Performance benchmarks
-          MARKER: '<!-- nexus-benchmark -->'

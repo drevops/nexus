@@ -5,7 +5,6 @@ import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   DEFAULTS,
-  REPORT_MARKER,
   SHIPPED_PATHS,
   addSample,
   benchmarkMarkdown,
@@ -307,11 +306,10 @@ test('writes a report that compares the base with the head', () => {
   assert.equal(
     markdown,
     [
-      REPORT_MARKER,
       '## Performance benchmarks',
       '',
       'Base `abc1234` against head `def5678`: the median of 7 runs of each scenario, with the CPU slowed down 4x.',
-      'A load or an interaction regresses when its median is more than 20% and 10 ms slower than the base. Blocking time, heap and bytes are for information.',
+      'A load or an interaction regresses when its median is more than 15% and 10 ms slower than the base. Blocking time, heap and bytes are for information.',
       '',
       '| Scenario | Base | Head | Change | Result |',
       '| --- | ---: | ---: | ---: | --- |',
@@ -359,7 +357,6 @@ test('writes a report of the head alone without a base', () => {
   assert.equal(
     markdown,
     [
-      REPORT_MARKER,
       '## Performance benchmarks',
       '',
       'Head `def5678 with local changes`: the median of 5 runs of each scenario, with the CPU slowed down 4x.',

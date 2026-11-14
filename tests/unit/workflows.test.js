@@ -144,22 +144,35 @@ test('keeps the files OpenSSF Scorecard reads in source archives', async (t) => 
   }
 });
 
-test('runs the benchmark with read access only', () => {
+test('runs the benchmark only on demand, with read access only', () => {
   const benchmark = WORKFLOWS.find(({ name }) => name === 'benchmark.yml').workflow;
 
+  assert.deepEqual(Object.keys(benchmark.on), ['workflow_dispatch']);
+  assert.deepEqual(Object.keys(benchmark.jobs), ['benchmark']);
   assert.deepEqual(benchmark.jobs.benchmark.permissions, { contents: 'read' });
-  assert.ok('pull_request' in benchmark.on);
-  assert.ok('push' in benchmark.on);
 });
 
-test('compares the head with a base commit the benchmark checks out', () => {
+test('compares the branch with the latest release unless a base is given', () => {
   const steps = WORKFLOWS.find(({ name }) => name === 'benchmark.yml').workflow.jobs.benchmark.steps;
   const checkout = steps.find((step) => String(step.uses).startsWith('actions/checkout@'));
+  const base = steps.find((step) => step.name === 'Pick the base commit');
   const run = steps.find((step) => step.name === 'Run the benchmark');
 
   assert.equal(checkout.with['fetch-depth'], 0);
+  assert.equal(base.env.INPUT_BASE, '${{ inputs.base }}');
+  assert.match(base.run, /ref="\$INPUT_BASE"/);
+  assert.match(base.run, /gh release view --repo "\$GITHUB_REPOSITORY" --json tagName --jq \.tagName/);
   assert.equal(run.env.BASE_SHA, '${{ steps.base.outputs.sha }}');
-  assert.match(run.run, /^npm run benchmark -- .*--base-ref "\$BASE_SHA"/);
+  assert.match(run.run, /^npm run benchmark -- .*\$\{BASE_SHA:\+--base-ref "\$BASE_SHA"\}/);
+});
+
+test('takes the threshold and the minimum difference from repository variables', () => {
+  const run = WORKFLOWS.find(({ name }) => name === 'benchmark.yml').workflow.jobs.benchmark.steps.find((step) => step.name === 'Run the benchmark');
+
+  assert.equal(run.env.THRESHOLD, '${{ vars.BENCHMARK_THRESHOLD }}');
+  assert.equal(run.env.MIN_DIFF, '${{ vars.BENCHMARK_MIN_DIFF }}');
+  assert.match(run.run, /\$\{THRESHOLD:\+--threshold "\$THRESHOLD"\}/);
+  assert.match(run.run, /\$\{MIN_DIFF:\+--min-diff "\$MIN_DIFF"\}/);
 });
 
 test('passes event values to the benchmark scripts through the environment', () => {
@@ -170,28 +183,3 @@ test('passes event values to the benchmark scripts through the environment', () 
   );
 });
 
-test('posts the benchmark report without checking out or running the code', () => {
-  const report = WORKFLOWS.find(({ name }) => name === 'benchmark.yml').workflow.jobs.report;
-
-  assert.equal(report.needs, 'benchmark');
-  assert.deepEqual(report.permissions, { actions: 'read', issues: 'write', 'pull-requests': 'write' });
-  report.steps.forEach((step) => {
-    assert.equal(step.uses, undefined, step.name);
-    assert.doesNotMatch(step.run, /\b(?:npm|npx|node)\b/, step.name);
-  });
-});
-
-test('reports a regression too, but not for a pull request from a fork', () => {
-  const report = WORKFLOWS.find(({ name }) => name === 'benchmark.yml').workflow.jobs.report;
-
-  assert.match(report.if, /!cancelled\(\)/);
-  assert.match(report.if, /github\.event\.pull_request\.head\.repo\.full_name == github\.repository/);
-});
-
-test('finds the comment it posted by the marker the report starts with', async () => {
-  const { REPORT_MARKER } = await import('../../scripts/lib/benchmark.mjs');
-  const post = WORKFLOWS.find(({ name }) => name === 'benchmark.yml').workflow.jobs.report.steps.find((step) => step.name === 'Post the report');
-
-  assert.equal(post.env.MARKER, REPORT_MARKER);
-  assert.match(post.run, /select\(\.user\.login == \\"github-actions\[bot\]\\"/);
-});

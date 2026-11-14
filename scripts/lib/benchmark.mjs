@@ -13,12 +13,10 @@ import { readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 
-export const REPORT_MARKER = '<!-- nexus-benchmark -->';
-
 // The folders whose size is reported as the bytes the app ships.
 export const SHIPPED_PATHS = Object.freeze(['src', 'assets/vendor']);
 
-export const DEFAULTS = Object.freeze({ baseRef: null, runs: 5, throttle: 4, threshold: 20, minDiff: 10, out: '.artifacts/benchmark' });
+export const DEFAULTS = Object.freeze({ baseRef: null, runs: 5, throttle: 4, threshold: 15, minDiff: 10, out: '.artifacts/benchmark' });
 
 const LIMITS = {
   runs: { min: 1, max: 50, integer: true },
@@ -238,7 +236,7 @@ function plural(count, one, many) {
  */
 export function benchmarkMarkdown(compared, info) {
   const runs = 'the median of ' + plural(info.runs, 'run', 'runs') + ' of each scenario, with the CPU slowed down ' + info.throttle + 'x';
-  const lines = [REPORT_MARKER, '## Performance benchmarks', ''];
+  const lines = ['## Performance benchmarks', ''];
 
   if (!info.base) {
     lines.push('Head `' + info.head + '`: ' + runs + '.', '', '| Scenario | Median | Min | Max |', '| --- | ---: | ---: | ---: |');
