@@ -95,8 +95,11 @@ body {
   display: none;
 }
 
+/* Narrower than the toolbar's buttons, so the whole palette fits a 1280px
+   window. */
 .toolbar__palette .toolbar__button {
   flex: 0 0 auto;
+  padding-inline: 0.5rem;
 }
 
 .toolbar__palette-label {
