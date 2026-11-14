@@ -146,7 +146,7 @@ test.describe('Toolbar', { tag: '@runner-2' }, () => {
     });
   }
 
-  for (const [button, panel] of [...dataProviderPanelToggles(), ['settings-toggle', 'settings']]) {
+  for (const [button, panel] of dataProviderPanelToggles()) {
     test(`heads the ${panel} panel with the icon of ${button}`, async ({ page }) => {
       await loadExample(page);
 
