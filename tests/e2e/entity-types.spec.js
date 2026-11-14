@@ -319,14 +319,12 @@ test.describe('Entity types', { tag: '@runner-2' }, () => {
 
       // Every option is as tall as the others, so no name wraps onto a second
       // line, and each draws its symbol at the Settings width.
-      const options = await select
-        .locator('sl-option')
-        .evaluateAll((items) =>
-          items.map((item) => ({
-            height: Math.round(item.getBoundingClientRect().height),
-            symbol: Number(item.querySelector('.type-row__preview svg').getAttribute('width')),
-          })),
-        );
+      const read = (items) =>
+        items.map((item) => ({
+          height: Math.round(item.getBoundingClientRect().height),
+          symbol: Number(item.querySelector('.type-row__preview svg').getAttribute('width')),
+        }));
+      const options = await select.locator('sl-option').evaluateAll(read);
 
       expect(options.length).toBe(11);
       expect(new Set(options.map((option) => option.height)).size).toBe(1);
