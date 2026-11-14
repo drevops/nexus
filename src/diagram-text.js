@@ -8,6 +8,8 @@
  */
 
 import { isHexColor, isSymbol } from './type-styles.js';
+import { NOTE_KIND } from './annotations.js';
+import { noteMarkdownPlain } from './note-markdown.js';
 
 // Mermaid's default maxTextSize and maxEdges; a diagram past either doesn't
 // render, and neither can be raised from inside the diagram.
@@ -44,6 +46,9 @@ const COLORS = {
   proxyEdge: '#c2c8d0',
   annotationEdge: '#b5739d',
   annotationText: '#8a5a76',
+  noteBg: '#fff4b3',
+  noteBorder: '#d9b93a',
+  noteText: '#3a2f0a',
 };
 
 // Mermaid 11.3 shapes for the entity symbols. Mermaid has no ellipse, tag,
@@ -76,7 +81,7 @@ const DOT_SHAPES = {
   octagon: { shape: 'octagon', style: [] },
 };
 
-const ANNOTATION_SYMBOLS = { event: 'diamond', api: 'hexagon', callback: 'rounded' };
+const ANNOTATION_SYMBOLS = { event: 'diamond', api: 'hexagon', callback: 'rounded', [NOTE_KIND]: 'rectangle' };
 
 // Words that start a Mermaid flowchart statement, so a node id can't be one.
 const MERMAID_KEYWORDS = /^(end|graph|flowchart|subgraph|direction|style|classdef|class|linkstyle|click|call|href|default)$/i;
@@ -116,6 +121,21 @@ function nodeLabel(data) {
   return text(data.label, data.id);
 }
 
+// A node's text as the label and the lines below it. A note's text is its
+// Markdown without the markup, 1 line per block.
+function nodeText(data) {
+  if (data.group === 'annotation' && data.kind === NOTE_KIND) {
+    const lines = noteMarkdownPlain(data.note)
+      .split('\n')
+      .map((line) => text(line, ''))
+      .filter((line) => line !== '');
+
+    return { label: lines[0] || '', detail: lines.slice(1).join('\n') };
+  }
+
+  return { label: nodeLabel(data), detail: data.group === 'annotation' ? text(data.method, '') : '' };
+}
+
 /**
  * Reads the graph a text export draws from graph element definitions.
  *
@@ -152,8 +172,7 @@ export function canvasGraph(elements, options = {}) {
       return {
         id: data.id,
         group: data.group,
-        label: nodeLabel(data),
-        detail: data.group === 'annotation' ? text(data.method, '') : '',
+        ...nodeText(data),
         caption: data.group === 'entity' ? text(typeLabel(data.entityType), '') : '',
         machineName: options.machineNames === true ? machineNameOf(data) : '',
         entityType: typed ? text(data.entityType, '') : '',
@@ -268,8 +287,12 @@ function captionLines(node) {
   return [node.caption, node.machineName].filter((line) => line !== '');
 }
 
+function textLines(node) {
+  return [node.label, ...node.detail.split('\n')].filter((line) => line !== '');
+}
+
 function mermaidLabel(node, compaction) {
-  const lines = [node.label, node.detail].filter((line) => line !== '').map(mermaidText);
+  const lines = textLines(node).map(mermaidText);
   const captions = [compaction.captions ? node.caption : '', compaction.machineNames ? node.machineName : ''].filter((line) => line !== '');
 
   return lines.concat(captions.map((line) => '<small>' + mermaidText(line) + '</small>')).join('<br>');
@@ -314,7 +337,7 @@ function mermaidClass(node) {
   }
 
   if (node.group === 'annotation') {
-    return 'annotation';
+    return node.kind === NOTE_KIND ? 'note' : 'annotation';
   }
 
   return node.group + '_' + identifier(node.entityType, 't');
@@ -328,6 +351,7 @@ function mermaidStyle(name, node) {
     field_system: 'fill:' + COLORS.fieldBg + ',stroke:' + COLORS.systemBorder + ',stroke-dasharray:4 3,color:' + COLORS.muted,
     field_calculated: 'fill:' + COLORS.calculatedBg + ',stroke:' + COLORS.calculatedBorder + ',color:' + COLORS.calculatedText,
     annotation: 'fill:' + COLORS.fieldBg + ',stroke:' + COLORS.nodeBorder + ',color:' + COLORS.text,
+    note: 'fill:' + COLORS.noteBg + ',stroke:' + COLORS.noteBorder + ',color:' + COLORS.noteText,
   };
 
   if (Object.hasOwn(styles, name)) {
@@ -495,13 +519,13 @@ function dotLabel(node) {
   const captions = captionLines(node);
 
   if (captions.length > 0) {
-    const lines = [node.label, node.detail].filter((line) => line !== '').map(dotHtml);
+    const lines = textLines(node).map(dotHtml);
     const small = captions.map((line) => '<FONT POINT-SIZE="9" COLOR="' + COLORS.muted + '">' + dotHtml(line) + '</FONT>');
 
     return '<' + lines.concat(small).join('<BR/>') + '>';
   }
 
-  return node.detail ? '"' + dotEscape(node.label) + '\\n' + dotEscape(node.detail) + '"' : dotString(node.label);
+  return '"' + textLines(node).map(dotEscape).join('\\n') + '"';
 }
 
 // A proxy's fill is its entity's colour at 40% opacity, as on the canvas.
@@ -551,6 +575,10 @@ function dotNodeAttributes(node) {
 
   if (node.group === 'annotation') {
     attributes.fillcolor = '"' + COLORS.fieldBg + '"';
+
+    if (node.kind === NOTE_KIND) {
+      Object.assign(attributes, { fillcolor: '"' + COLORS.noteBg + '"', color: '"' + COLORS.noteBorder + '"', fontcolor: '"' + COLORS.noteText + '"' });
+    }
 
     if (node.kind === 'callback') {
       attributes.fontname = '"Helvetica-Bold"';

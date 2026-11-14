@@ -279,6 +279,35 @@ function dataProviderCaptions() {
   ];
 }
 
+test('draws a note as its plain text in a yellow box', () => {
+  const graph = canvasGraph({
+    nodes: [{ data: { id: 'n1', group: 'annotation', kind: 'note', label: 'Note', note: '# Release plan\n\nShip **v2** by _June_ & "soon".' } }],
+  });
+
+  assert.equal(graph.nodes[0].label, 'Release plan');
+  assert.equal(graph.nodes[0].detail, 'Ship v2 by June & "soon".');
+
+  const mermaid = toMermaid(graph).split('\n');
+  assert.ok(mermaid.includes('  n1@{ shape: rect, label: "Release plan<br>Ship v2 by June #amp; #quot;soon#quot;." }'), mermaid.join('\n'));
+  assert.ok(mermaid.includes('  classDef note fill:#fff4b3,stroke:#d9b93a,color:#3a2f0a'));
+  assert.ok(mermaid.includes('  class n1 note'));
+
+  assert.ok(
+    toDot(graph).includes(
+      '  "n1" [label="Release plan\\nShip v2 by June &amp; \\"soon\\".", shape=box, fillcolor="#fff4b3", color="#d9b93a", fontcolor="#3a2f0a", style="filled"',
+    ),
+    toDot(graph),
+  );
+});
+
+test('draws an empty note as an empty box', () => {
+  const graph = canvasGraph({ nodes: [{ data: { id: 'n1', group: 'annotation', kind: 'note' } }] });
+
+  assert.deepEqual([graph.nodes[0].label, graph.nodes[0].detail], ['', '']);
+  assert.ok(toMermaid(graph).includes('\n  n1@{ shape: rect, label: "" }\n'));
+  assert.ok(toDot(graph).includes('\n  "n1" [label="", shape=box, '));
+});
+
 test('escapes captions in both formats', () => {
   const graph = canvasGraph(
     { nodes: [{ data: { id: 'node.a', group: 'entity', entityType: 'node', bundle: 'a', label: 'A & B' } }] },
