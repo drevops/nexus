@@ -70,7 +70,8 @@ function dataProviderStoredFrameSettings() {
     ],
     ['an Edit colour without a switch', { edit: '#112233' }, { view: VIEW, edit: { enabled: true, color: '#112233' } }],
     ['an Edit colour with opacity', { edit: '#11223380' }, { view: VIEW, edit: { enabled: true, color: '#11223380' } }],
-    ['a transparent Edit colour', { enabled: true, edit: '#11223300' }, FRAME_DEFAULTS],
+    ['a transparent Edit colour', { enabled: true, edit: '#11223300' }, { view: VIEW, edit: { ...EDIT, enabled: false } }],
+    ['a transparent Edit colour without a switch', { edit: '#f59e0b00' }, { view: VIEW, edit: { ...EDIT, enabled: false } }],
     ['an invalid colour', { enabled: true, view: 'red', edit: '#112233; display: none' }, FRAME_DEFAULTS],
     ['a switch that is not a boolean', { enabled: 'false', view: '#445566' }, { view: { enabled: true, color: '#445566' }, edit: EDIT }],
     [

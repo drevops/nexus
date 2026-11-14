@@ -5,9 +5,9 @@
  * The settings are saved under `frame` in the `nexusSettings` entry as
  * `{ view: { enabled, color }, edit: { enabled, color } }`, each colour a 6-
  * or 8-digit hex value. Settings stored as `{ enabled, view, edit }`, with 1
- * switch and a colour per mode, read as the same frames: a mode whose colour
- * is missing, invalid or fully transparent takes its default, and is off when
- * the stored switch is off.
+ * switch and a colour per mode, read as the same frames: a mode with a fully
+ * transparent colour is off, and a mode whose colour is missing or invalid
+ * takes its default, off when the stored switch is off.
  */
 
 import { isHexColor } from './type-styles.js';
@@ -21,8 +21,8 @@ function isObject(value) {
 }
 
 // An 8-digit hex colour ending in 00 draws nothing.
-function isVisibleColor(value) {
-  return isHexColor(value) && !/^#[0-9a-f]{6}00$/i.test(value);
+function isTransparent(value) {
+  return isHexColor(value) && /^#[0-9a-f]{6}00$/i.test(value);
 }
 
 // A stored colour reaches a CSS custom property, so anything but a hex value
@@ -37,7 +37,11 @@ function modeFrame(entry, defaults) {
 }
 
 function storedModeFrame(color, enabled, defaults) {
-  if (isVisibleColor(color)) {
+  if (isTransparent(color)) {
+    return { enabled: false, color: defaults.color };
+  }
+
+  if (isHexColor(color)) {
     return { enabled, color };
   }
 
