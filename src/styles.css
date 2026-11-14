@@ -1952,6 +1952,21 @@ body.is-dragging-panel * {
   --width: min(52rem, 100vw - 2rem);
 }
 
+.settings-dialog__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.settings-dialog__label > span {
+  display: inline-flex;
+}
+
+.settings-dialog__label .icon {
+  width: 1.1em;
+  height: 1.1em;
+}
+
 .settings-dialog::part(body) {
   padding: 0;
   display: flex;

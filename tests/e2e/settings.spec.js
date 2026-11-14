@@ -30,6 +30,8 @@ test.describe('Settings', { tag: '@runner-2' }, () => {
 
       await expect(page.locator('#settings')).toHaveAttribute('open', '');
       await expect(page.locator('#settings sl-tab-group')).toBeVisible();
+      await expect(page.locator('#settings .settings-dialog__label')).toHaveText('Settings');
+      await expect(page.locator('#settings .settings-dialog__label svg.icon')).toBeVisible();
       await expect(page.locator('.panel#settings')).toHaveCount(0);
 
       // The dialog's overlay takes the pointer from the canvas.
@@ -39,6 +41,16 @@ test.describe('Settings', { tag: '@runner-2' }, () => {
       );
     });
   }
+
+  test('draws the same cog on the toolbar button and before the dialog title', async ({ page }) => {
+    await loadExample(page);
+    const toolbarCog = await page.locator('#settings-toggle svg.icon').innerHTML();
+
+    await page.click('#settings-toggle');
+
+    expect(toolbarCog).toContain('<circle cx="12" cy="12" r="3"');
+    expect(await page.locator('#settings .settings-dialog__label svg.icon').innerHTML()).toBe(toolbarCog);
+  });
 
   function dataProviderOpeners() {
     return [
