@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ContentModel, Entity, KIND_CALCULATED } from '../../src/model.js';
-import { ANNOTATION_FILES, ANNOTATION_KINDS, applyAnnotations } from '../../src/annotations.js';
+import { ANNOTATION_FILES, ANNOTATION_KINDS, NOTE_KIND, applyAnnotations } from '../../src/annotations.js';
 
 const ROOT = join(import.meta.dirname, '..', '..');
 const SOURCE = readFileSync(join(ROOT, 'src', 'annotations.js'), 'utf8');
@@ -69,12 +69,29 @@ test('adds calculated fields to existing entities', () => {
   assert.equal(computed[0].name, 'computed_url');
 });
 
-test('labels the event, API and callback annotation kinds', () => {
+test('labels the event, API, callback and note annotation kinds', () => {
   assert.deepEqual(ANNOTATION_KINDS, [
     { kind: 'event', label: 'Event' },
     { kind: 'api', label: 'API' },
     { kind: 'callback', label: 'Callback' },
+    { kind: 'note', label: 'Note' },
   ]);
+  assert.ok(ANNOTATION_KINDS.some((entry) => entry.kind === NOTE_KIND));
+});
+
+test('keeps the Markdown text of a note node', () => {
+  const m = model();
+  applyAnnotations(m, { nodes: [{ id: 'reminder', kind: 'note', note: '# Todo\n**Check** the `field_tags` field.', attach: 'node.article' }] });
+
+  const data = m.toArray();
+  assert.deepEqual(nodesById(data).reminder, {
+    id: 'reminder',
+    group: 'annotation',
+    kind: 'note',
+    label: 'reminder',
+    note: '# Todo\n**Check** the `field_tags` field.',
+  });
+  assert.equal(data.edges.filter((e) => e.data.source === 'node.article' && e.data.target === 'reminder').length, 1);
 });
 
 test('keeps every annotation kind and turns any other kind into an event', async (t) => {

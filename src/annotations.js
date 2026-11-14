@@ -2,8 +2,11 @@
  * Applies an optional annotation overlay onto a content model.
  *
  * Adds the parts of the visual language that cannot be derived from Drupal
- * configuration: Event / API / Callback nodes, explicit edges, and calculated
- * fields. Input is the already-parsed overlay object.
+ * configuration: Event / API / Callback / Note nodes, explicit edges, and
+ * calculated fields. Input is the already-parsed overlay object.
+ *
+ * A Note node draws its `note` as Markdown (see src/note-markdown.js) instead
+ * of a note badge.
  */
 
 import { Field, KIND_CALCULATED } from './model.js';
@@ -14,7 +17,10 @@ export const ANNOTATION_KINDS = [
   { kind: 'event', label: 'Event' },
   { kind: 'api', label: 'API' },
   { kind: 'callback', label: 'Callback' },
+  { kind: 'note', label: 'Note' },
 ];
+
+export const NOTE_KIND = 'note';
 
 export function applyAnnotations(model, data) {
   if (!data || typeof data !== 'object') {

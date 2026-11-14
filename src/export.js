@@ -75,6 +75,20 @@ function recordsToCsv(records, typeLabel) {
   return [headers.join(','), ...rows].join('\r\n');
 }
 
+// A note draws its Markdown in an HTML layer that Cytoscape doesn't export,
+// so its plain-text label shows while `draw` runs.
+function withNoteLabels(cy, draw) {
+  const notes = cy.nodes('[group="annotation"][kind="note"]');
+
+  notes.style('text-opacity', 1);
+
+  try {
+    return draw();
+  } finally {
+    notes.removeStyle('text-opacity');
+  }
+}
+
 /**
  * Export the whole graph (not just the viewport) as a PNG named after the
  * given diagram title.
@@ -83,7 +97,10 @@ export function exportPng(cy, title) {
   if (!cy) {
     return;
   }
-  downloadUri(cy.png({ full: true, scale: 2, bg: '#ffffff' }), fileName(title, '.png'));
+  downloadUri(
+    withNoteLabels(cy, () => cy.png({ full: true, scale: 2, bg: '#ffffff' })),
+    fileName(title, '.png'),
+  );
 }
 
 /**
@@ -93,7 +110,11 @@ export function exportSvg(cy, title) {
   if (!cy || typeof cy.svg !== 'function') {
     return;
   }
-  downloadText(cy.svg({ full: true, bg: '#ffffff' }), fileName(title, '.svg'), 'image/svg+xml');
+  downloadText(
+    withNoteLabels(cy, () => cy.svg({ full: true, bg: '#ffffff' })),
+    fileName(title, '.svg'),
+    'image/svg+xml',
+  );
 }
 
 /**

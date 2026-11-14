@@ -41,6 +41,8 @@ import { checkModel, readCheckSettings } from './model-checks.js';
 import { documentFromGraph } from './document.js';
 import { nodeLookup, selectionEntity } from './inspector-trail.js';
 import { parseRichText, richTextHtml } from './rich-text.js';
+import { NOTE_KIND } from './annotations.js';
+import { noteMarkdownHtml, noteMarkdownPlain } from './note-markdown.js';
 import { fieldSharing } from './shared-fields.js';
 import { SYMBOLS, customTypeList, isHexColor, isSymbol, isTypeName, typeColors, typeSymbols } from './type-styles.js';
 import { $ } from './dom.js';
@@ -90,6 +92,11 @@ const PROXY_BOX = { fontSize: 10, fontStyle: 'italic', fontWeight: 'normal', lin
 const SQUARE_POLYGON = '-1 -1 1 -1 1 1 -1 1';
 const NODE_BOX_LIMIT = 2000;
 
+// Model-space metrics of a note box. Its body wraps at textMaxWidth, and the
+// plain-text label that exports draw matches the body's font size. The HTML
+// body draws above every node, so the box does too.
+const NOTE_BOX = { fontSize: 12, textMaxWidth: 240, minWidth: 80, minHeight: 16, padding: 10, border: 1, zIndex: 100 };
+
 // Model-space caption metrics: the font size, the height of 1 caption line
 // and the gap between a node's box and its first machine-name line.
 const CAPTION_SIZE = 10;
@@ -106,6 +113,7 @@ const activeSymbols = Object.create(null);
 let measureContext = null;
 const textWidths = new Map();
 const nodeBoxes = new Map();
+const noteSizes = new Map();
 const captionStyles = {};
 
 let fieldsMode = false;
@@ -503,6 +511,43 @@ function nodeBox(ele) {
   return nodeBoxes.get(key);
 }
 
+function isNote(ele) {
+  return ele.data('group') === 'annotation' && ele.data('kind') === NOTE_KIND;
+}
+
+// A note's body as HTML. noteMarkdownHtml() escapes every string, so only the
+// Markdown tags reach innerHTML.
+function noteHtml(text) {
+  return (text || '').trim() ? noteMarkdownHtml(text) : '<p class="note-body__empty">Empty note</p>';
+}
+
+// Model-space size of a note's body, without padding, measured through a probe
+// body at zoom 1. Measuring reads layout, so sizes are cached by text.
+function noteSize(ele) {
+  const text = ele.data('note') || '';
+
+  if (!noteSizes.has(text)) {
+    if (noteSizes.size >= NODE_BOX_LIMIT) {
+      noteSizes.clear();
+    }
+
+    const probe = document.createElement('div');
+    probe.className = 'note-body note-body--probe';
+    probe.style.maxWidth = NOTE_BOX.textMaxWidth + 'px';
+    probe.innerHTML = noteHtml(text);
+    $('note-bodies').appendChild(probe);
+    const rect = probe.getBoundingClientRect();
+    probe.remove();
+
+    noteSizes.set(text, {
+      width: Math.min(NOTE_BOX.textMaxWidth, Math.max(NOTE_BOX.minWidth, Math.ceil(rect.width))),
+      height: Math.max(NOTE_BOX.minHeight, Math.ceil(rect.height)),
+    });
+  }
+
+  return noteSizes.get(text);
+}
+
 // Model-space outer width of an entity or field box.
 function boxWidth(ele) {
   if (ele.data('group') === 'entity') {
@@ -689,6 +734,29 @@ function style() {
     { selector: 'node[group="annotation"][kind="event"]', style: { shape: 'diamond' } },
     { selector: 'node[group="annotation"][kind="api"]', style: { shape: 'hexagon' } },
     { selector: 'node[group="annotation"][kind="callback"]', style: { shape: 'round-rectangle', 'font-weight': 600, padding: '9px' } },
+    // positionNotes() draws a note's Markdown in the HTML note layer, which
+    // exports leave out. The plain-text label shows only in exports.
+    {
+      selector: 'node[group="annotation"][kind="note"]',
+      style: {
+        shape: 'rectangle',
+        'background-color': '#fff4b3',
+        'border-color': '#d9b93a',
+        'border-width': NOTE_BOX.border,
+        label: (ele) => noteMarkdownPlain(ele.data('note')),
+        'text-opacity': 0,
+        'text-max-width': (ele) => noteSize(ele).width,
+        'text-justification': 'left',
+        'font-family': LABEL_FONT_FAMILY,
+        'font-size': NOTE_BOX.fontSize,
+        'font-weight': 'normal',
+        color: '#3a2f0a',
+        width: (ele) => noteSize(ele).width,
+        height: (ele) => noteSize(ele).height,
+        padding: NOTE_BOX.padding + 'px',
+        'z-index': NOTE_BOX.zIndex,
+      },
+    },
     {
       selector: 'edge',
       style: {
@@ -831,6 +899,8 @@ function buildController(model, options = {}) {
   let captionMap = {};
   const notesEl = $('notes');
   let noteMap = {};
+  const noteBodiesEl = $('note-bodies');
+  let noteBodies = {};
 
   function entityTypeOf(entityId) {
     const entity = cy.getElementById(entityId);
@@ -1447,7 +1517,7 @@ function buildController(model, options = {}) {
   // A note badge sits at an entity's top-right corner; hovering or clicking it
   // reveals the note text in the shared tooltip.
   function addNoteBadge(node) {
-    if (node.data('group') === 'proxy' || !(node.data('note') || '').trim()) {
+    if (node.data('group') === 'proxy' || isNote(node) || !(node.data('note') || '').trim()) {
       return;
     }
 
@@ -1477,14 +1547,68 @@ function buildController(model, options = {}) {
     delete noteMap[node.id()];
   }
 
+  function addNoteBody(node) {
+    if (!isNote(node)) {
+      return;
+    }
+
+    const body = document.createElement('div');
+    body.className = 'note-body';
+    body.dataset.nodeId = node.id();
+    body.innerHTML = noteHtml(node.data('note'));
+    noteBodiesEl.appendChild(body);
+    noteBodies[node.id()] = body;
+  }
+
+  function removeNoteBody(node) {
+    const body = noteBodies[node.id()];
+    if (!body) {
+      return;
+    }
+
+    body.remove();
+    delete noteBodies[node.id()];
+  }
+
   function rebuildNotes() {
     notesEl.innerHTML = '';
     noteMap = {};
-    cy.nodes().forEach((node) => addNoteBadge(node));
+    noteBodiesEl.innerHTML = '';
+    noteBodies = {};
+    cy.nodes().forEach((node) => {
+      addNoteBadge(node);
+      addNoteBody(node);
+    });
     positionNotes();
   }
 
+  // Each body is laid out at zoom 1 in model pixels and scaled with the canvas,
+  // so it wraps exactly as noteSize() measured it.
+  function positionNoteBodies() {
+    const zoom = cy.zoom();
+
+    Object.keys(noteBodies).forEach((id) => {
+      const node = cy.getElementById(id);
+      const body = noteBodies[id];
+
+      if (node.empty() || node.hasClass('hidden')) {
+        body.style.display = 'none';
+        return;
+      }
+
+      const size = noteSize(node);
+      const pos = node.renderedPosition();
+      body.style.display = 'block';
+      body.style.width = size.width + 'px';
+      body.style.height = size.height + 'px';
+      body.style.opacity = node.hasClass('faded') ? '0.1' : '';
+      body.style.transform = 'translate(' + (pos.x - (size.width / 2) * zoom) + 'px, ' + (pos.y - (size.height / 2) * zoom) + 'px) scale(' + zoom + ')';
+    });
+  }
+
   function positionNotes() {
+    positionNoteBodies();
+
     const zoom = cy.zoom();
     const tooSmall = zoom < 0.35;
     const size = Math.max(15, 17 * zoom);
@@ -1613,6 +1737,10 @@ function buildController(model, options = {}) {
   });
 
   cy.on('mouseover', 'node', (evt) => {
+    if (isNote(evt.target)) {
+      return;
+    }
+
     const tooltip = $('tooltip');
     tooltip.innerHTML = tooltipHtml(evt.target);
     tooltip.hidden = false;
@@ -1669,12 +1797,22 @@ function buildController(model, options = {}) {
   cy.on('add', 'node', (evt) => {
     addCaptions(evt.target);
     addNoteBadge(evt.target);
+    addNoteBody(evt.target);
     positionCaptions();
     positionNotes();
   });
   cy.on('remove', 'node', (evt) => {
     removeCaptions(evt.target);
     removeNoteBadge(evt.target);
+    removeNoteBody(evt.target);
+  });
+  cy.on('data', 'node[group="annotation"][kind="note"]', (evt) => {
+    const body = noteBodies[evt.target.id()];
+
+    if (body) {
+      body.innerHTML = noteHtml(evt.target.data('note'));
+      positionNoteBodies();
+    }
   });
 
   $('fields-toggle').checked = fieldsMode;

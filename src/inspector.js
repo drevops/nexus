@@ -17,7 +17,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import htmBase from 'htm';
 import { icon } from './icons.js';
 import { cardinalityLabel, cardinalityOptions, typeOptions, FIELD_TYPES, KIND_SYSTEM, REFERENCE_FIELD_TYPES } from './model.js';
-import { ANNOTATION_KINDS } from './annotations.js';
+import { ANNOTATION_KINDS, NOTE_KIND } from './annotations.js';
 import { formatFieldLine, parseFieldLines } from './bulk-fields.js';
 import { allowedValuesText, parseAllowedValues, translatableChoice, translatableValue, TRANSLATABLE_OPTIONS } from './field-settings.js';
 import { setFieldCardinality, setFieldLabel, setFieldRequired, setFieldTranslatable, setFieldType, setSetting } from './field-edits.js';
@@ -29,8 +29,12 @@ import { getController, getBuilder, openInspector, bump } from './store.js';
 const html = htmBase.bind(h);
 
 const CARDINALITY_OPTIONS = cardinalityOptions();
-const ANNOTATION_OPTIONS = ANNOTATION_KINDS.map((entry) => [entry.kind, entry.label]);
-const ANNOTATION_KIND_TITLE = 'The kind of annotation: ' + ANNOTATION_KINDS.map((entry) => entry.label).join(', ');
+// A note draws its text instead of a label, so no annotation turns into a note
+// or back.
+const SYMBOL_KINDS = ANNOTATION_KINDS.filter((entry) => entry.kind !== NOTE_KIND);
+const ANNOTATION_OPTIONS = SYMBOL_KINDS.map((entry) => [entry.kind, entry.label]);
+const ANNOTATION_KIND_TITLE = 'The kind of annotation: ' + SYMBOL_KINDS.map((entry) => entry.label).join(', ');
+const NOTE_SYNTAX = '**bold**, *italic*, __underline__, ~~strikethrough~~, `code`, [link](https://…), # Heading';
 const METHOD_TITLE = 'A method shown under the label, such as an HTTP verb';
 
 // The selection whose form last took the focus. A form the history remounts
@@ -64,9 +68,9 @@ function slOptions(list) {
 // Focuses the field in `ref` each time `selection` opens the form, so typing
 // fills the form rather than running the keyboard shortcuts. A Shoelace
 // field takes the focus only once it has rendered.
-function useFocusOnOpen(ref, selection) {
+function useFocusOnOpen(ref, selection, enabled = true) {
   useEffect(() => {
-    if (selection === focusedSelection) {
+    if (!enabled || selection === focusedSelection) {
       return;
     }
 
@@ -450,8 +454,54 @@ export function FieldForm({ id }) {
   </div>`;
 }
 
-export function AnnotationForm({ id }) {
+// An empty note takes the focus, so text typed straight after placing it
+// lands in the note.
+function NoteForm({ node, selection }) {
+  const [text, setText] = useState(node.data('note') || '');
+  const textRef = useRef(null);
+
+  useFocusOnOpen(textRef, selection, !text.trim());
+
+  return html` <div class="insp" data-note-form>
+    <p class="insp__title">Note</p>
+    <div class="insp__note">
+      <label>Text</label>
+      <sl-textarea
+        ref=${textRef}
+        size="small"
+        data-note-text
+        rows="6"
+        resize="auto"
+        placeholder="Write the note in Markdown…"
+        title="The note's text, in Markdown"
+        value=${text}
+        onsl-input=${(e) => {
+          setText(e.target.value);
+          node.data('note', e.target.value);
+          bump();
+          checkpoint('Edited the text of ' + describeNode(node), 'note:' + node.id());
+        }}
+      ></sl-textarea>
+    </div>
+    <p class="panel__note">${NOTE_SYNTAX}</p>
+    <sl-button size="small" variant="danger" outline class="insp__delete" title="Delete this note" onClick=${() => getBuilder().deleteNode(node.id())}
+      >${rawIcon('trash')}Delete note</sl-button
+    >
+  </div>`;
+}
+
+export function AnnotationForm({ id, selection }) {
   const node = cy().getElementById(id);
+
+  if (node.data('kind') === NOTE_KIND) {
+    return html`<${NoteForm} node=${node} selection=${selection} />`;
+  }
+
+  return html`<${SymbolForm} node=${node} />`;
+}
+
+function SymbolForm({ node }) {
+  const id = node.id();
   const [s, setS] = useState({ label: node.data('label'), kind: node.data('kind'), method: node.data('method') || '' });
 
   function set(key, value) {
@@ -855,7 +905,7 @@ function InspectorForm({ selected, revision }) {
     return html`<${FieldForm} key=${selected.id + '@' + revision} id=${selected.id} />`;
   }
   if (selected.kind === 'annotation') {
-    return html`<${AnnotationForm} key=${selected.id + '@' + revision} id=${selected.id} />`;
+    return html`<${AnnotationForm} key=${selected.id + '@' + revision} id=${selected.id} selection=${selected} />`;
   }
   if (selected.kind === 'new-entity') {
     return html`<${NewEntityForm} key=${'new:' + selected.entityType} entityType=${selected.entityType} selection=${selected} />`;
