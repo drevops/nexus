@@ -41,6 +41,7 @@ import { readMarkdownSettings } from './markdown.js';
 import { checkModel, readCheckSettings } from './model-checks.js';
 import { documentFromGraph } from './document.js';
 import { LINE_OPTIONS, lineOption, lineStyle, readLineSettings } from './connection-lines.js';
+import { canvasGraph } from './diagram-text.js';
 import { nodeLookup, selectionEntity } from './inspector-trail.js';
 import { parseRichText, richTextHtml } from './rich-text.js';
 import { NOTE_KIND } from './annotations.js';
@@ -1917,6 +1918,23 @@ function buildController(model, options = {}) {
       const sharing = fieldSharing(records);
 
       return records.map((r) => ({ ...r, usedIn: sharing.get(r.id) }));
+    },
+    canvasGraph: () => {
+      const visible = shown(cy.elements());
+
+      return canvasGraph(
+        {
+          nodes: visible.nodes().map((n) => ({ data: n.data(), position: n.position(), width: n.outerWidth(), height: n.outerHeight() })),
+          edges: visible.edges().map((e) => ({ data: e.data() })),
+        },
+        {
+          direction: LAYOUTS[layoutName].rankDir,
+          colorFor: entityColor,
+          symbolFor: (type) => activeSymbols[type] || FALLBACK_SYMBOL,
+          typeLabel: typeLabel,
+          machineNames: showMachineNames,
+        },
+      );
     },
     presentTypes: () =>
       allTypeKeys()

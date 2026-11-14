@@ -10,12 +10,12 @@
 import { isModelConfig, parseConfig } from './parser.js';
 import { ANNOTATION_FILES, applyAnnotations } from './annotations.js';
 import { render } from './render.js';
-import { exportPng, exportSvg, exportCsv, exportCsvTemplate, exportDocument, exportHtml, exportMarkdown } from './export.js';
+import { exportPng, exportSvg, exportCsv, exportCsvTemplate, exportMermaid, exportDot, exportDocument, exportHtml, exportMarkdown } from './export.js';
 import { csvDocument, csvErrorLines, csvTitle, fieldsCsv } from './fields-csv.js';
 import { documentMarkdown, includesDiagram } from './markdown.js';
 import { documentHtml } from './html-report.js';
 import { bundlesCsv, referencesCsv } from './csv.js';
-import { SAVE_FORMATS, SAVE_MENU, findSaveFormat } from './save-formats.js';
+import { SAVE_MENU, findSaveFormat } from './save-formats.js';
 import { documentFromGraph, documentToModel } from './document.js';
 import { initBuilder, attachBuilder } from './builder.js';
 import { initUI } from './ui.js';
@@ -43,6 +43,8 @@ const SAVERS = {
   'references-csv': (controller, title) => exportCsv(referencesCsv(currentDocument(controller, title)), title, 'references'),
   md: saveMarkdown,
   html: (controller, title) => exportHtml(documentHtml(currentDocument(controller, title)), title),
+  mermaid: (controller, title) => exportMermaid(controller.canvasGraph(), title),
+  dot: (controller, title) => exportDot(controller.canvasGraph(), title),
 };
 
 const OPENERS = {
@@ -538,7 +540,7 @@ function newDocument() {
 }
 
 function wireDocument() {
-  $('doc-save').addEventListener('click', () => saveAs(SAVE_FORMATS[0]));
+  $('doc-save').addEventListener('click', () => saveAs(findSaveFormat('json')));
   $('doc-new').addEventListener('click', newDocument);
   $('doc-open-btn').addEventListener('click', () => $('doc-open').click());
   $('doc-open').addEventListener('change', (evt) => {

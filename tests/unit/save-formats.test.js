@@ -3,22 +3,33 @@ import assert from 'node:assert/strict';
 import { SAVE_FORMATS, SAVE_MENU, findSaveFormat } from '../../src/save-formats.js';
 import { hasIcon } from '../../src/icons.js';
 
-test('lists JSON, PNG, SVG, a CSV submenu, Markdown and HTML in menu order', () => {
+test('lists a CSV submenu, DOT, HTML, JSON, Markdown, Mermaid, PNG and SVG in menu order', () => {
   assert.deepEqual(
     SAVE_MENU.map((entry) => entry.label),
-    ['JSON', 'PNG', 'SVG', 'CSV', 'Markdown', 'HTML'],
+    ['CSV', 'Graphviz DOT', 'HTML', 'JSON', 'Markdown', 'Mermaid', 'PNG', 'SVG'],
   );
   assert.deepEqual(
-    SAVE_MENU[3].formats.map((format) => format.label),
-    ['Fields', 'Bundles', 'References'],
+    SAVE_MENU[0].formats.map((format) => format.label),
+    ['Bundles', 'Fields', 'References'],
   );
 });
 
 test('lists every format in menu order with the submenu in place', () => {
   assert.deepEqual(
     SAVE_FORMATS.map((format) => format.id),
-    ['json', 'png', 'svg', 'csv', 'bundles-csv', 'references-csv', 'md', 'html'],
+    ['bundles-csv', 'csv', 'references-csv', 'dot', 'html', 'json', 'md', 'mermaid', 'png', 'svg'],
   );
+});
+
+test('sorts the menu and each submenu alphabetically by label', () => {
+  const sorted = (labels) => labels.toSorted((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' }));
+  const lists = [SAVE_MENU, ...SAVE_MENU.filter((entry) => entry.formats).map((entry) => entry.formats)];
+
+  for (const list of lists) {
+    const labels = list.map((entry) => entry.label);
+
+    assert.deepEqual(labels, sorted(labels));
+  }
 });
 
 test('describes every menu entry and save format completely', () => {
@@ -63,6 +74,8 @@ function dataProviderFindSaveFormat() {
     ['the references CSV', 'references-csv', 'References'],
     ['Markdown', 'md', 'Markdown'],
     ['HTML', 'html', 'HTML'],
+    ['Mermaid', 'mermaid', 'Mermaid'],
+    ['DOT', 'dot', 'Graphviz DOT'],
     ['an id in capitals', 'SVG', null],
     ['an unknown id', 'pdf', null],
     ['an inherited object property', 'constructor', null],

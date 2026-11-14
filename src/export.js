@@ -1,12 +1,13 @@
 /**
  * Client-side downloads: the diagram canvas as PNG or SVG, the fields,
  * bundles and references and the CSV template as CSV, the model as Markdown
- * or HTML and the diagram as a Nexus document. Nothing is uploaded - the PNG
- * is rasterised by Cytoscape and the SVG is produced by the cytoscape-svg
- * extension entirely in the browser.
+ * or HTML, the diagram as Mermaid or Graphviz DOT text and as a Nexus
+ * document. Nothing is uploaded - the PNG is rasterised by Cytoscape and the
+ * SVG is produced by the cytoscape-svg extension entirely in the browser.
  */
 
 import { DEFAULT_TITLE } from './model.js';
+import { toDot, toMermaid } from './diagram-text.js';
 import { fileSlug } from './names.js';
 import { csvTemplate, TEMPLATE_FILE_NAME } from './fields-csv.js';
 
@@ -103,6 +104,20 @@ export function exportMarkdown(text, title) {
  */
 export function exportHtml(text, title) {
   downloadText(text, fileName(title, '.html'), 'text/html');
+}
+
+/**
+ * Export a canvas graph as a Mermaid flowchart named after the diagram title.
+ */
+export function exportMermaid(graph, title) {
+  downloadText(toMermaid(graph, title), fileName(title, '.mmd'), 'text/plain');
+}
+
+/**
+ * Export a canvas graph as a Graphviz DOT graph named after the diagram title.
+ */
+export function exportDot(graph, title) {
+  downloadText(toDot(graph, title), fileName(title, '.dot'), 'text/vnd.graphviz');
 }
 
 /**
