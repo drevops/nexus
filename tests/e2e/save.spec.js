@@ -141,7 +141,7 @@ test.describe('Save', { tag: '@runner-1' }, () => {
       await page.click('[data-field-visibility="field:node.event:field_venue"]');
       expect(await savedText(page, format)).not.toContain(text.field);
 
-      await page.click('#fields-toggle');
+      await page.click('#detail-level');
       await page.click('#entities-toggle');
       await page.locator('#type-filters label', { hasText: 'Vocabulary' }).locator('input').uncheck();
 
