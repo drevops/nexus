@@ -1574,6 +1574,7 @@ function TypeSettings({ controller }) {
               size="small"
               no-format-toggle
               hoist
+              label=${'Colour of ' + controller.typeLabel(t)}
               title=${'Colour of ' + controller.typeLabel(t)}
               onsl-input=${(e) => controller.applyColor(t, e.target.value)}
             ></sl-color-picker>
@@ -1620,6 +1621,7 @@ function TypeSettings({ controller }) {
         size="small"
         no-format-toggle
         hoist
+        label="Colour of the new type"
         title="Colour of the new type"
         onsl-input=${(e) => setNt((p) => ({ ...p, color: e.target.value }))}
       ></sl-color-picker>
@@ -1665,6 +1667,7 @@ function FrameSettings({ controller }) {
               no-format-toggle
               hoist
               disabled=${!frame[mode].enabled}
+              label=${'Frame colour in ' + label}
               title=${'Frame colour in ' + label}
               onsl-input=${(e) => controller.setFrame(mode, { color: e.target.value })}
             ></sl-color-picker>
@@ -1673,9 +1676,9 @@ function FrameSettings({ controller }) {
               size="small"
               checked=${frame[mode].enabled}
               title=${help}
-              aria-label=${'Frame the canvas in ' + label}
               onsl-change=${(e) => controller.setFrame(mode, { enabled: e.target.checked })}
-            ></sl-switch>
+              ><span class="visually-hidden">Frame the canvas in ${label}</span></sl-switch
+            >
           </div>`,
       )}
     </div>

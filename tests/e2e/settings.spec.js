@@ -155,6 +155,20 @@ test.describe('Settings', { tag: '@runner-2' }, () => {
     await expect.poll(fill).toBe('rgb(217,226,243)');
   });
 
+  test('names each frame switch and colour picker for assistive technology', async ({ page }) => {
+    await loadExample(page);
+    await openSettings(page, 'frame');
+
+    for (const mode of ['View mode', 'Edit mode']) {
+      await expect(page.getByRole('switch', { name: 'Frame the canvas in ' + mode })).toHaveCount(1);
+      await expect(page.locator('#settings').getByRole('button', { name: 'Frame colour in ' + mode })).toHaveCount(1);
+    }
+
+    await openSettings(page, 'types');
+    await expect(page.locator('#settings').getByRole('button', { name: 'Colour of Content type' })).toHaveCount(1);
+    await expect(page.locator('#settings').getByRole('button', { name: 'Colour of the new type' })).toHaveCount(1);
+  });
+
   test('keeps custom types through Reset this tab on Entity types', async ({ page }) => {
     await loadExample(page);
     await openSettings(page, 'types');

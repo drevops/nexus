@@ -2144,6 +2144,11 @@ body.is-dragging-panel * {
   gap: 0.75rem;
 }
 
+/* The switch's label is visually hidden, so its slot keeps no margin. */
+.setting-row sl-switch::part(label) {
+  margin: 0;
+}
+
 .setting-row__text {
   display: flex;
   flex-direction: column;
