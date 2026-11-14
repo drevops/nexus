@@ -75,7 +75,17 @@ test.describe('Save', { tag: '@runner-1' }, () => {
     await expect(page.locator('#save-menu')).toBeVisible();
     await expect(page.locator('#save-menu sl-menu-label')).toHaveText('Save as');
     // The CSV item's text includes its submenu's.
-    await expect(page.locator('#save-menu > sl-menu-item')).toHaveText([/^CSV/, 'Graphviz DOT', 'HTML', 'JSON', 'Markdown', 'Mermaid', 'PNG', 'SVG', 'Copy link']);
+    await expect(page.locator('#save-menu > sl-menu-item')).toHaveText([
+      /^CSV/,
+      'Graphviz DOT',
+      'HTML',
+      'JSON',
+      'Markdown',
+      'Mermaid',
+      'PNG',
+      'SVG',
+      'Copy link',
+    ]);
     await expect(page.locator('#save-menu > sl-menu-item').nth(0).locator('> sl-menu[slot="submenu"] > sl-menu-item')).toHaveText([
       'Bundles',
       'Fields',

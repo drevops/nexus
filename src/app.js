@@ -15,7 +15,7 @@ import { csvDocument, csvErrorLines, csvTitle, fieldsCsv } from './fields-csv.js
 import { documentMarkdown, includesDiagram } from './markdown.js';
 import { documentHtml } from './html-report.js';
 import { bundlesCsv, referencesCsv } from './csv.js';
-import { SAVE_FORMATS, SAVE_MENU, findSaveFormat } from './save-formats.js';
+import { SAVE_MENU, findSaveFormat } from './save-formats.js';
 import { documentFromGraph, documentToModel } from './document.js';
 import { initBuilder, attachBuilder } from './builder.js';
 import { initUI } from './ui.js';
