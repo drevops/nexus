@@ -31,6 +31,7 @@ import { RESIZE_HANDLES, resizeBox } from './panel-resize.js';
 import { goToVersion, historyState } from './undo.js';
 import { MODES } from './diagram-defaults.js';
 import { MARKDOWN_DIAGRAM_OPTIONS } from './markdown.js';
+import { CHECK_RULES, LEVEL_ERROR, LEVEL_WARNING, MAX_FIELD_LIMIT, isFieldLimit } from './model-checks.js';
 import { titleShoelaceHosts } from './host-titles.js';
 import {
   getState,
@@ -62,13 +63,14 @@ import { $ } from './dom.js';
 
 const html = htmBase.bind(h);
 
-const TITLES = { entities: 'Entities', table: 'Fields', settings: 'Settings', legend: 'Legend', history: 'History', inspector: 'Inspector' };
+const TITLES = { entities: 'Entities', table: 'Fields', settings: 'Settings', legend: 'Legend', history: 'History', checks: 'Checks', inspector: 'Inspector' };
 const WIDE = { table: true };
 const PANEL_TOGGLES = [
   ['entities-toggle', 'entities'],
   ['table-toggle', 'table'],
   ['legend-toggle', 'legend'],
   ['history-toggle', 'history'],
+  ['checks-toggle', 'checks'],
   ['settings-toggle', 'settings'],
 ];
 
@@ -487,6 +489,9 @@ function body(id, s) {
   if (id === 'history') {
     return html`<${HistoryBody} />`;
   }
+  if (id === 'checks') {
+    return html`<${ChecksBody} controller=${controller} problems=${currentProblems()} />`;
+  }
   if (id === 'legend') {
     return html`<div class="legend-body">
       ${controller
@@ -579,6 +584,96 @@ function HistoryBody() {
       ${rows.reverse()}
     </ol>
     <p class="panel__note history-note">Click a version to return to it. The versions after it stay until your next edit.</p>`;
+}
+
+const CHECK_LEVELS = [
+  { level: LEVEL_ERROR, heading: 'Errors', icon: 'circle-alert', title: 'Problems Drupal would reject' },
+  { level: LEVEL_WARNING, heading: 'Warnings', icon: 'triangle-alert', title: 'Problems that break common practice' },
+];
+
+const RULE_LABELS = Object.fromEntries(CHECK_RULES.map((rule) => [rule.id, rule.label]));
+
+// The store's version moves with every edit, undo, redo, new diagram and
+// setting change, so the problems are worked out again only then.
+let checked = { controller: null, version: -1, problems: [] };
+
+function currentProblems() {
+  const controller = getController();
+  const { version } = getState();
+
+  if (!controller) {
+    return [];
+  }
+
+  if (checked.controller !== controller || checked.version !== version) {
+    checked = { controller, version, problems: controller.problems() };
+  }
+
+  return checked.problems;
+}
+
+function countText(count, noun) {
+  return count + ' ' + noun + (count === 1 ? '' : 's');
+}
+
+// In Edit mode the Inspector opens on the node too, so it can be fixed. A
+// problem on an entity of a hidden type has nothing on the canvas to go to.
+function goToProblem(controller, id) {
+  if (!controller.canFocusProblem(id)) {
+    return;
+  }
+
+  controller.focusProblem(id);
+
+  if (window.__nexusBuild) {
+    getBuilder().select(id);
+  }
+}
+
+function problemRow(controller, problem, iconName, index) {
+  const reachable = controller.canFocusProblem(problem.id);
+  const action = reachable ? '. Click to go to it on the canvas' : '. Show its entity type to go to it';
+
+  return html`<li key=${problem.rule + problem.id + index}>
+    <button
+      type="button"
+      class="checks__item"
+      data-check-rule=${problem.rule}
+      data-check-id=${problem.id}
+      aria-disabled=${reachable ? null : 'true'}
+      title=${RULE_LABELS[problem.rule] + action}
+      onClick=${() => goToProblem(controller, problem.id)}
+    >
+      ${rawIcon(iconName, 14)}<span class="checks__message">${problem.message}</span>
+    </button>
+  </li>`;
+}
+
+// The problems of the open model, errors first, each a button that goes to
+// the entity or field it is on.
+function ChecksBody({ controller, problems }) {
+  if (problems.length === 0) {
+    return html`<p class="panel__note checks-empty">No problems found.</p>`;
+  }
+
+  const groups = CHECK_LEVELS.map((group) => ({ ...group, items: problems.filter((problem) => problem.level === group.level) }));
+
+  return html`<div class="checks">
+      ${groups
+        .filter((group) => group.items.length > 0)
+        .map(
+          (group) =>
+            html`<section class="checks__group" data-level=${group.level} key=${group.level}>
+              <h3 class="checks__heading" title=${group.title}>
+                ${group.heading}<span class="checks__count" title=${countText(group.items.length, group.level)}>${group.items.length}</span>
+              </h3>
+              <ul class="checks__list">
+                ${group.items.map((problem, index) => problemRow(controller, problem, group.icon, index))}
+              </ul>
+            </section>`,
+        )}
+    </div>
+    <p class="panel__note checks-note">Click a problem to go to it. The list follows every edit, undo and redo.</p>`;
 }
 
 const KIND_BADGE_TITLES = {
@@ -1364,11 +1459,12 @@ function SettingsBody({ controller }) {
     <${DiagramDefaults} controller=${controller} />
     <${FrameSettings} controller=${controller} />
     <${MarkdownSettings} controller=${controller} />
+    <${CheckSettings} controller=${controller} />
     <sl-button
       id="settings-reset"
       class="settings-reset"
       size="small"
-      title="Restore the default colours, symbols, new diagram settings, mode frame and Markdown export"
+      title="Restore the default colours, symbols, new diagram settings, mode frame, Markdown export and checks"
       onClick=${() => controller.resetSettings()}
       >${rawIcon('rotate-ccw')}Reset to defaults</sl-button
     >
@@ -1434,7 +1530,55 @@ function MarkdownSettings({ controller }) {
     </sl-select>`;
 }
 
+function CheckSettings({ controller }) {
+  const { fieldLimit } = controller.checkSettings();
+
+  // A value that is not a field limit is dropped, and the input shows the
+  // stored limit again.
+  function change(evt) {
+    const limit = Number(evt.target.value);
+
+    if (isFieldLimit(limit)) {
+      controller.setChecks({ fieldLimit: limit });
+    }
+
+    evt.target.value = String(controller.checkSettings().fieldLimit);
+  }
+
+  return html`<h3 class="settings-section__title settings-section__title--spaced">Checks</h3>
+    <sl-input
+      class="default-row"
+      type="number"
+      size="small"
+      min="1"
+      max=${MAX_FIELD_LIMIT}
+      step="1"
+      label="Field limit"
+      data-check-setting="fieldLimit"
+      title=${'Warn about a bundle with more fields of its own than this, from 1 to ' + MAX_FIELD_LIMIT}
+      value=${String(fieldLimit)}
+      onsl-change=${change}
+    ></sl-input>`;
+}
+
 /* Boot -------------------------------------------------------------------- */
+
+// The badge counts every problem and takes the colour of the worst.
+function syncChecksBadge() {
+  const badge = document.querySelector('#checks-toggle .checks-badge');
+
+  if (!badge) {
+    return;
+  }
+
+  const problems = currentProblems();
+  const errors = problems.filter((problem) => problem.level === LEVEL_ERROR).length;
+
+  badge.hidden = problems.length === 0;
+  badge.textContent = String(problems.length);
+  badge.dataset.level = errors > 0 ? LEVEL_ERROR : LEVEL_WARNING;
+  badge.title = countText(errors, LEVEL_ERROR) + ' and ' + countText(problems.length - errors, LEVEL_WARNING);
+}
 
 function syncToggles() {
   const s = getState();
@@ -1461,5 +1605,7 @@ export function initUI() {
   });
 
   subscribe(syncToggles);
+  subscribe(syncChecksBadge);
   syncToggles();
+  syncChecksBadge();
 }

@@ -7,6 +7,7 @@
       "bundle": "page",
       "label": "Page",
       "fields": [{ "name": "field_tags", "label": "Tags", "fieldType": "entity_reference", "kind": "multi", "targetType": "taxonomy_term", "targetBundles": ["tags"] }]
-    }
+    },
+    { "entityType": "taxonomy_term", "bundle": "tags", "label": "Tags" }
   ]
 }

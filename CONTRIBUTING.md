@@ -102,7 +102,7 @@ To check a `.nexus.json` document before you open it, such as one an AI agent wr
 
     npm run check-diagram -- path/to/diagram.nexus.json
 
-The command prints each error and warning with the JSON Pointer of the part it's about, and `OK` for a document with neither. An error marks a break in the format or a part of the model that gets lost, such as 2 entities with the same id. A warning marks a part that opens but isn't drawn, such as a reference to an entity the document doesn't define. The command exits with 1 when any document has an error.
+The command prints each error and warning with the JSON Pointer of the part it's about, and `OK` for a document with neither. An error marks a break in the format, a part of the model that gets lost, such as 2 entities with the same id, or a model Drupal would reject. A warning marks a part that opens but isn't drawn, such as an annotation edge to an unknown id, or a model that breaks common practice. The command also runs the rules of the Checks panel, from `src/model-checks.js`, at their default settings. It exits with 1 when any document has an error.
 
 ## Updating the templates
 

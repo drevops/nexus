@@ -310,6 +310,26 @@ export const SCATTERED_DOC = {
   },
 };
 
+// A diagram with 1 problem of each level the Checks panel lists: a reference
+// field with no target, a list with no allowed values and a paragraph type no
+// field references.
+export const CHECKS_DOC = {
+  nexus: 1,
+  title: 'Checks',
+  entities: [
+    {
+      entityType: 'node',
+      bundle: 'article',
+      label: 'Article',
+      fields: [
+        { name: 'field_tags', label: 'Tags', fieldType: 'entity_reference', kind: 'multi', cardinality: -1 },
+        { name: 'field_size', label: 'Size', fieldType: 'list_string', kind: 'single' },
+      ],
+    },
+    { entityType: 'paragraph', bundle: 'hero', label: 'Hero', fields: [{ name: 'field_heading', label: 'Heading', fieldType: 'string', kind: 'single' }] },
+  ],
+};
+
 export function hasNode(page, id) {
   return page.evaluate((nodeId) => window.__nexus.cy.getElementById(nodeId).nonempty(), id);
 }

@@ -1505,6 +1505,117 @@ body.is-dragging-panel * {
   padding: 0 0.95rem 0.75rem;
 }
 
+/* Checks panel: errors, then warnings, 1 row per problem. */
+.checks {
+  padding: 0.4rem;
+}
+
+.checks__heading {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.35rem 0.55rem 0.2rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.checks__count {
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+}
+
+.checks__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.checks__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.4rem 0.55rem;
+  font: inherit;
+  font-size: 0.82rem;
+  color: var(--text);
+  text-align: left;
+  background: none;
+  border: 0;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.checks__item:hover {
+  background: var(--surface-2);
+}
+
+.checks__item[aria-disabled='true'] {
+  color: var(--muted);
+  background: none;
+  cursor: default;
+}
+
+.checks__item:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.checks__item > span:first-child {
+  flex: 0 0 auto;
+  display: flex;
+  margin-top: 0.1rem;
+}
+
+[data-level='error'] .checks__item > span:first-child {
+  color: var(--sl-color-danger-600);
+}
+
+[data-level='warning'] .checks__item > span:first-child {
+  color: var(--sl-color-warning-600);
+}
+
+.checks__message {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.checks-empty {
+  margin: 0;
+  padding: 0.9rem 1rem;
+}
+
+.checks-note {
+  margin: 0;
+  padding: 0 0.95rem 0.75rem;
+}
+
+/* The count of problems on the Checks button, in the colour of the worst. */
+.checks-badge {
+  min-width: 1.1rem;
+  padding: 0 0.3rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.1rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: #fff;
+  background: var(--sl-color-warning-600);
+  border-radius: 999px;
+}
+
+.checks-badge[data-level='error'] {
+  background: var(--sl-color-danger-600);
+}
+
+.checks-badge[hidden] {
+  display: none;
+}
+
 .tooltip {
   position: absolute;
   z-index: 6;
