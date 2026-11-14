@@ -18,8 +18,8 @@
  * open diagram uses (see LAYOUTS).
  *
  * The controller that render() returns sets entity type colours and symbols,
- * adds or removes custom entity types and sets the new diagram settings,
- * saving each change to localStorage.
+ * adds or removes custom entity types and sets the new diagram settings and
+ * the connection lines, saving each change to localStorage.
  *
  * Safe to call repeatedly - each call tears down the previous graph.
  */
@@ -39,6 +39,7 @@ import { frameSettings } from './mode-frame.js';
 import { readMarkdownSettings } from './markdown.js';
 import { checkModel, readCheckSettings } from './model-checks.js';
 import { documentFromGraph } from './document.js';
+import { curveStyle, readLineSettings } from './connection-lines.js';
 import { nodeLookup, selectionEntity } from './inspector-trail.js';
 import { parseRichText, richTextHtml } from './rich-text.js';
 import { NOTE_KIND } from './annotations.js';
@@ -760,7 +761,7 @@ function style() {
     {
       selector: 'edge',
       style: {
-        'curve-style': 'taxi',
+        'curve-style': curveStyle(settings.lines),
         'taxi-direction': () => (LAYOUTS[layoutName].rankDir === 'TB' ? 'vertical' : 'horizontal'),
         'taxi-turn': '50%',
         'taxi-turn-min-distance': '8px',
@@ -1679,8 +1680,8 @@ function buildController(model, options = {}) {
     bump();
   }
 
-  // The new diagram settings apply to the next diagram, so only the colours
-  // and symbols are redrawn.
+  // The new diagram settings apply to the next diagram, so only the colours,
+  // symbols and connection lines are redrawn.
   function resetSettings() {
     delete settings.colors;
     delete settings.symbols;
@@ -1688,6 +1689,7 @@ function buildController(model, options = {}) {
     delete settings.frame;
     delete settings.markdown;
     delete settings.checks;
+    delete settings.lines;
     saveSettings();
     applyFrame();
     initColors();
@@ -1697,6 +1699,13 @@ function buildController(model, options = {}) {
     cy.style(style());
     positionCaptions();
     positionNotes();
+    bump();
+  }
+
+  function setLines(patch) {
+    settings.lines = readLineSettings({ ...readLineSettings(settings.lines), ...patch });
+    saveSettings();
+    cy.style(style());
     bump();
   }
 
@@ -1855,6 +1864,8 @@ function buildController(model, options = {}) {
     problems: () => checkModel(documentFromGraph(cy), settings.checks),
     focusProblem,
     canFocusProblem: (id) => problemTarget(id) !== null,
+    lineSettings: () => readLineSettings(settings.lines),
+    setLines,
     applyTheme: () => {
       cy.style(style());
       positionCaptions();

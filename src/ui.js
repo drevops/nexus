@@ -32,6 +32,7 @@ import { goToVersion, historyState } from './undo.js';
 import { MODES } from './diagram-defaults.js';
 import { MARKDOWN_DIAGRAM_OPTIONS } from './markdown.js';
 import { CHECK_RULES, LEVEL_ERROR, LEVEL_WARNING, MAX_FIELD_LIMIT, isFieldLimit } from './model-checks.js';
+import { LINE_OPTIONS } from './connection-lines.js';
 import { titleShoelaceHosts } from './host-titles.js';
 import {
   getState,
@@ -1460,6 +1461,7 @@ function SettingsBody({ controller }) {
       >
     </div>
     <${DiagramDefaults} controller=${controller} />
+    <${LineSettings} controller=${controller} />
     <${FrameSettings} controller=${controller} />
     <${MarkdownSettings} controller=${controller} />
     <${CheckSettings} controller=${controller} />
@@ -1467,12 +1469,30 @@ function SettingsBody({ controller }) {
       id="settings-reset"
       class="settings-reset"
       size="small"
-      title="Restore the default colours, symbols, new diagram settings, mode frame, Markdown export and checks"
+      title="Restore the default colours, symbols, new diagram settings, connection lines, mode frame, Markdown export and checks"
       onClick=${() => controller.resetSettings()}
       >${rawIcon('rotate-ccw')}Reset to defaults</sl-button
     >
     <p class="panel__note">Saved to this browser and reused across diagrams.</p>
   </div>`;
+}
+
+function LineSettings({ controller }) {
+  const lines = controller.lineSettings();
+
+  return html`<h3 class="settings-section__title settings-section__title--spaced">Connection lines</h3>
+    <sl-select
+      class="default-row"
+      size="small"
+      hoist
+      label="Lines"
+      data-lines="style"
+      title="Draw the connection lines at right angles, or straight so lines that share a turn no longer overlap"
+      value=${lines.style}
+      onsl-change=${(e) => controller.setLines({ style: e.target.value })}
+    >
+      ${LINE_OPTIONS.map((option) => html`<sl-option value=${option.id}>${option.label}</sl-option>`)}
+    </sl-select>`;
 }
 
 const FRAME_MODES = [
