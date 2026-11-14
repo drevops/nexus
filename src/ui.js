@@ -1911,7 +1911,7 @@ function SettingsDialog({ dialog }) {
     };
   }, []);
 
-  return html`<span slot="label" class="settings-dialog__label">${rawIcon('settings', 20)}Settings</span>
+  return html`<span slot="label" class="dialog__label" dangerouslySetInnerHTML=${{ __html: icon('settings') + 'Settings' }}></span>
     ${open && controller ? html`<${SettingsTabs} controller=${controller} />` : null}
     <p slot="footer" class="settings-dialog__note">Saved to this browser and reused across diagrams.</p>
     <sl-button
