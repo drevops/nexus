@@ -39,8 +39,18 @@ test.describe('Status bar', { tag: '@runner-1' }, () => {
     await expect(hint).toHaveText(LAYOUT_HINT);
     await expect(hint).not.toHaveClass(/is-tips/);
     expect(await hint.boundingBox()).toEqual(tipsBox);
-    expect(await hint.evaluate((el) => getComputedStyle(el).textAlign)).not.toBe('center');
     expect(tipsBox.width).toBeGreaterThan(200);
+
+    // The rendered text, measured with a Range, sits in the middle of the slot.
+    const offset = await hint.evaluate((el) => {
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      const text = range.getBoundingClientRect();
+      const slot = el.getBoundingClientRect();
+
+      return text.left + text.width / 2 - (slot.left + slot.width / 2);
+    });
+    expect(Math.abs(offset)).toBeLessThan(2);
 
     await page.locator('#cy').hover();
     await expect(hint).toHaveText(TIPS);

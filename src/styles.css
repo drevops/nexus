@@ -531,6 +531,7 @@ sl-button#zoom-level::part(base) {
   min-width: 0;
   color: var(--muted);
   font-size: 0.77rem;
+  text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
