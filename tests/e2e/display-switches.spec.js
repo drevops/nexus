@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
-import { loadExample, pickLevel, saveFrom, selectTrackField, slSelect, tapNode, TRACK_FIELD } from './helpers.js';
+import { loadExample, pickLevel, saveFrom, selectTrackField, slSelect, tapNode, TRACK_FIELD, activeLevel, stepLevel } from './helpers.js';
 
 // The fields and edges the canvas shows, and the fields each level should
 // show, worked out from each field's kind and type in the browser.
@@ -38,13 +38,13 @@ test.describe('Display switches', { tag: '@runner-2' }, () => {
   test('shows every field by default and collapses to an overview', async ({ page }) => {
     await loadExample(page);
 
-    await expect(page.locator('#detail-level')).toHaveText('All');
+    await expect(activeLevel(page)).toHaveAttribute('data-level', 'all');
     await expect(page.locator('#machine-names')).toHaveJSProperty('checked', true);
     expect(await page.locator('#captions .caption').count()).toBeGreaterThan(0);
     const detailed = await page.evaluate(() => window.__nexus.cy.nodes(':visible').length);
 
-    await page.click('#detail-level');
-    await expect(page.locator('#detail-level')).toHaveText('Entities');
+    await stepLevel(page);
+    await expect(activeLevel(page)).toHaveAttribute('data-level', 'entities');
     const overview = await page.evaluate(() => window.__nexus.cy.nodes(':visible').length);
     expect(overview).toBeLessThan(detailed);
 
@@ -61,9 +61,8 @@ test.describe('Display switches', { tag: '@runner-2' }, () => {
       await loadExample(page);
       await pickLevel(page, level);
 
-      await expect(page.locator('#detail-level')).toHaveText(label);
-      await expect(page.locator('#detail-levels .is-active')).toHaveCount(1);
-      await expect(page.locator('#detail-levels .is-active')).toHaveAttribute('data-level', level);
+      await expect(activeLevel(page)).toHaveCount(1);
+      await expect(activeLevel(page)).toHaveAttribute('data-level', level);
       await expect(page.locator('#detail-levels [data-level="' + level + '"]')).toHaveAttribute('aria-pressed', 'true');
 
       const state = await canvasState(page);
@@ -101,26 +100,24 @@ test.describe('Display switches', { tag: '@runner-2' }, () => {
     expect(expected.all.length).toBeGreaterThan(expected.configurable.length);
   });
 
-  test('cycles the levels with the button and F, titled with the level each moves to', async ({ page }) => {
+  test('cycles the levels with F, the group titled with the level it moves to', async ({ page }) => {
     await loadExample(page);
-    const button = page.locator('#detail-level');
+    const group = page.locator('#detail-levels');
 
-    for (const [label, next] of [
-      ['All', 'Entities'],
-      ['Entities', 'References'],
-      ['References', 'Configurable'],
-      ['Configurable', 'All'],
+    for (const [level, next] of [
+      ['all', 'Entities'],
+      ['entities', 'References'],
+      ['references', 'Configurable'],
+      ['configurable', 'All'],
     ]) {
-      await expect(button).toHaveText(label);
-      await expect(button).toHaveAttribute('title', 'Switch to the next detail level: ' + next);
-      await button.click();
+      await expect(activeLevel(page)).toHaveAttribute('data-level', level);
+      await expect(group).toHaveAttribute('title', 'Switch to the next detail level: ' + next);
+      await page.keyboard.press('f');
     }
 
-    await expect(button).toHaveText('All');
-    await page.keyboard.press('f');
-    await expect(button).toHaveText('Entities');
-    await page.keyboard.press('f');
-    await expect(button).toHaveText('References');
+    await expect(activeLevel(page)).toHaveAttribute('data-level', 'all');
+    await stepLevel(page);
+    await expect(activeLevel(page)).toHaveAttribute('data-level', 'entities');
   });
 
   test('offers an icon button for every level, titled with its name and what it shows', async ({ page }) => {
@@ -135,8 +132,8 @@ test.describe('Display switches', { tag: '@runner-2' }, () => {
       expect(title.startsWith(label + ': ')).toBe(true);
       expect(icons).toBe(1);
     });
-    await expect(page.locator('#detail-levels .is-active')).toHaveCount(1);
-    await expect(page.locator('#detail-levels .is-active')).toHaveAttribute('data-level', 'all');
+    await expect(activeLevel(page)).toHaveCount(1);
+    await expect(activeLevel(page)).toHaveAttribute('data-level', 'all');
   });
 
   test('leaves the level alone when its own button is clicked again', async ({ page }) => {
@@ -145,7 +142,7 @@ test.describe('Display switches', { tag: '@runner-2' }, () => {
 
     await page.click('#detail-levels [data-level="all"]');
 
-    await expect(page.locator('#detail-level')).toHaveText('All');
+    await expect(activeLevel(page)).toHaveAttribute('data-level', 'all');
     expect(await page.evaluate(() => window.__nexus.cy.getElementById('node.session').position())).toEqual(before);
   });
 
@@ -168,7 +165,7 @@ test.describe('Display switches', { tag: '@runner-2' }, () => {
     for (const level of ['entities', 'references', 'configurable']) {
       await pickLevel(page, level);
     }
-    await page.click('#detail-level');
+    await stepLevel(page);
 
     await expect(page.locator('#undo')).toHaveAttribute('disabled', '');
 
@@ -186,7 +183,7 @@ test.describe('Display switches', { tag: '@runner-2' }, () => {
 
     await page.click('#proxy-toggle');
 
-    await expect(page.locator('#detail-level')).toHaveText('References');
+    await expect(activeLevel(page)).toHaveAttribute('data-level', 'references');
     const state = await canvasState(page);
     expect(state.shown).toEqual(state.expected.references);
     expect(state.proxies).toBeGreaterThan(0);
@@ -197,12 +194,12 @@ test.describe('Display switches', { tag: '@runner-2' }, () => {
     await pickLevel(page, 'entities');
 
     await page.click('#mode-build');
-    await expect(page.locator('#detail-level')).toHaveText('All');
+    await expect(activeLevel(page)).toHaveAttribute('data-level', 'all');
 
     await page.click('#mode-view');
     await pickLevel(page, 'configurable');
     await page.click('#mode-build');
-    await expect(page.locator('#detail-level')).toHaveText('Configurable');
+    await expect(activeLevel(page)).toHaveAttribute('data-level', 'configurable');
   });
 
   test('moves to a level that shows a field created in Edit mode', async ({ page }) => {
@@ -217,7 +214,7 @@ test.describe('Display switches', { tag: '@runner-2' }, () => {
 
     await page.click('.handle--right');
 
-    await expect(page.locator('#detail-level')).toHaveText('Configurable');
+    await expect(activeLevel(page)).toHaveAttribute('data-level', 'configurable');
     expect(await sessionFields()).toEqual(Array(before.length + 1).fill(true));
     await expect(page.locator('#undo')).toHaveAttribute('title', /^Undo: Added field/);
   });
@@ -228,7 +225,7 @@ test.describe('Display switches', { tag: '@runner-2' }, () => {
 
     await slSelect(page, '#inspector sl-select[title="The field type"]', 'string');
 
-    await expect(page.locator('#detail-level')).toHaveText('Configurable');
+    await expect(activeLevel(page)).toHaveAttribute('data-level', 'configurable');
     expect(await page.evaluate((id) => window.__nexus.cy.getElementById(id).visible(), TRACK_FIELD)).toBe(true);
   });
 
@@ -252,13 +249,12 @@ test.describe('Display switches', { tag: '@runner-2' }, () => {
       [...document.querySelectorAll('.statusbar__display > *')].map((el) => [el.tagName.toLowerCase(), el.id || el.className, el.dataset.shortcut]),
     );
     expect(controls).toEqual([
-      ['div', 'statusbar__level', undefined],
+      ['sl-button-group', 'detail-levels', 'F'],
       ['sl-switch', 'proxy-toggle', 'P'],
       ['sl-switch', 'machine-names', 'M'],
     ]);
-    expect(await page.evaluate(() => [...document.querySelectorAll('.statusbar__level > *')].map((el) => el.id))).toEqual(['detail-levels', 'detail-level']);
-    await expect(page.locator('#detail-level')).toHaveAttribute('data-shortcut', 'F');
-    await expect(page.locator('.toolbar sl-switch, .toolbar #detail-level, .toolbar #proxy-toggle, .toolbar #machine-names')).toHaveCount(0);
+    await expect(page.locator('#detail-levels')).toHaveAttribute('data-shortcut', 'F');
+    await expect(page.locator('.toolbar sl-switch, .toolbar #detail-levels, .toolbar #proxy-toggle, .toolbar #machine-names')).toHaveCount(0);
   });
 
   test('keeps the switches in place as the level label changes', async ({ page }) => {
@@ -311,7 +307,7 @@ test.describe('Display switches', { tag: '@runner-2' }, () => {
     await page.locator('#proxy-toggle').hover();
     await expect(page.locator('#statusbar-hint')).toHaveText('Show references as semi-opaque proxies instead of long edges');
 
-    await page.locator('#detail-level').hover();
-    await expect(page.locator('#statusbar-hint')).toHaveText('Switch to the next detail level: Entities');
+    await page.locator('#detail-levels [data-level="references"]').hover();
+    await expect(page.locator('#statusbar-hint')).toHaveText('References: Show the entities with their reference fields');
   });
 });

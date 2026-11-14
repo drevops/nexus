@@ -25,6 +25,7 @@ import {
   pagePosition,
   buildEntities,
   dataProviderShortcutModifiers,
+  pickLevel,
 } from './helpers.js';
 
 test.describe('History', { tag: '@runner-1' }, () => {
@@ -334,7 +335,11 @@ test.describe('History', { tag: '@runner-1' }, () => {
     await editExample(page);
     await page.click('#entities-toggle');
 
-    for (const toggle of ['#detail-level', '#detail-level', '#detail-level', '#detail-level', '#proxy-toggle', '#proxy-toggle', '#machine-names']) {
+    for (const level of ['entities', 'references', 'configurable', 'all']) {
+      await pickLevel(page, level);
+    }
+
+    for (const toggle of ['#proxy-toggle', '#proxy-toggle', '#machine-names']) {
       await page.click(toggle);
     }
 

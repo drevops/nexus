@@ -2353,21 +2353,18 @@ function fillLevelButtons() {
   $('detail-levels').append(...buttons);
 }
 
-// Marks the level's button active, names the level beside the buttons and
-// titles the name with the level a click on it moves to.
+// Marks the level's button active and titles the group with the level the
+// F shortcut moves to.
 function showLevel() {
-  const name = $('detail-level');
+  const group = $('detail-levels');
 
-  $('detail-levels')
-    .querySelectorAll('[data-level]')
-    .forEach((button) => {
-      const active = button.getAttribute('data-level') === levelId;
+  group.querySelectorAll('[data-level]').forEach((button) => {
+    const active = button.getAttribute('data-level') === levelId;
 
-      button.classList.toggle('is-active', active);
-      button.setAttribute('aria-pressed', String(active));
-    });
-  name.textContent = detailLevel(levelId).label;
-  name.setAttribute('title', 'Switch to the next detail level: ' + nextLevel(levelId).label);
+    button.classList.toggle('is-active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
+  group.setAttribute('title', 'Switch to the next detail level: ' + nextLevel(levelId).label);
 }
 
 function wire() {
@@ -2434,13 +2431,11 @@ function wire() {
   });
 
   fillLevelButtons();
-  $('detail-level').addEventListener('click', () => controller.setDetailLevel(nextLevel(levelId).id));
+  // The F shortcut clicks the group itself, which steps to the next level.
   $('detail-levels').addEventListener('click', (evt) => {
     const button = evt.target.closest('[data-level]');
 
-    if (button) {
-      controller.setDetailLevel(button.getAttribute('data-level'));
-    }
+    controller.setDetailLevel(button ? button.getAttribute('data-level') : nextLevel(levelId).id);
   });
 
   // The display toggles re-run the layout too, but undo reverts edits only,

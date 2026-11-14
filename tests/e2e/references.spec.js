@@ -15,6 +15,8 @@ import {
   selectTrackField,
   addTarget,
   pickLevel,
+  activeLevel,
+  stepLevel,
 } from './helpers.js';
 
 test.describe('References', { tag: '@runner-2' }, () => {
@@ -53,7 +55,7 @@ test.describe('References', { tag: '@runner-2' }, () => {
     await loadExample(page);
 
     await expect(page.locator('#proxy-toggle')).toHaveJSProperty('checked', true);
-    await expect(page.locator('#detail-level')).toHaveText('All');
+    await expect(activeLevel(page)).toHaveAttribute('data-level', 'all');
 
     const counts = await page.evaluate(() => {
       const cy = window.__nexus.cy;
@@ -317,7 +319,7 @@ test.describe('References', { tag: '@runner-2' }, () => {
     const tags = page.locator('#inspector sl-tag.insp__reftag');
     await expect(tags).toHaveCount(1);
     await tags.evaluate((el) => el.dispatchEvent(new Event('sl-remove', { bubbles: true })));
-    await page.click('#detail-level');
+    await stepLevel(page);
 
     expect(await page.evaluate(() => window.__nexus.cy.getElementById('c:taxonomy_term.sponsors>media.image').length)).toBe(0);
   });

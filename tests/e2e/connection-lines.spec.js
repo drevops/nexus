@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loadExample } from './helpers.js';
+import { loadExample, stepLevel } from './helpers.js';
 
 test.describe('Connection lines', { tag: '@runner-1' }, () => {
   // The curve styles of the visible edges, and how many of the visible edges
@@ -91,7 +91,7 @@ test.describe('Connection lines', { tag: '@runner-1' }, () => {
     await loadExample(page);
     await pickLines(page, 'merged');
 
-    await page.click('#detail-level');
+    await stepLevel(page);
     await expect.poll(() => page.evaluate(() => window.__nexus.cy.nodes('[group="field"]:visible').length)).toBe(0);
 
     const drawn = await turns(page);
@@ -121,7 +121,7 @@ test.describe('Connection lines', { tag: '@runner-1' }, () => {
     await loadExample(page);
     await pickLines(page, 'straight');
 
-    await page.click('#detail-level');
+    await stepLevel(page);
     await expect.poll(() => page.evaluate(() => window.__nexus.cy.nodes('[group="field"]:visible').length)).toBe(0);
 
     const drawn = await lines(page);

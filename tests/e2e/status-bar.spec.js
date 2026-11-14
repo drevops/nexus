@@ -131,6 +131,6 @@ test.describe('Status bar', { tag: '@runner-1' }, () => {
   }
 
   function dataProviderStatusbarWidths() {
-    return [360, 420, 784, 785, 1280];
+    return [360, 420, 688, 689, 1280];
   }
 });

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { nodePositions, loadExample, pickLayout, eventLayout } from './helpers.js';
+import { nodePositions, loadExample, pickLayout, eventLayout, stepLevel } from './helpers.js';
 
 test.describe('Layouts', { tag: '@runner-2' }, () => {
   test.beforeEach(async ({ page }) => {
@@ -25,8 +25,8 @@ test.describe('Layouts', { tag: '@runner-2' }, () => {
       [
         'the detail level through every level',
         async (page) => {
-          await page.click('#detail-level');
-          await page.click('#detail-level');
+          await stepLevel(page);
+          await stepLevel(page);
         },
       ],
       ['Proxies', (page) => page.click('#proxy-toggle')],

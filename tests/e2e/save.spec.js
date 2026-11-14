@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
-import { loadExample, openDocument, openSaveSubmenu, slFill, slSelect, downloadFrom, saveFrom, topmostOf } from './helpers.js';
+import { loadExample, openDocument, openSaveSubmenu, slFill, slSelect, downloadFrom, saveFrom, topmostOf, stepLevel } from './helpers.js';
 
 async function savedText(page, format) {
   return readFile(await (await saveFrom(page, format)).path(), 'utf8');
@@ -141,7 +141,7 @@ test.describe('Save', { tag: '@runner-1' }, () => {
       await page.click('[data-field-visibility="field:node.event:field_venue"]');
       expect(await savedText(page, format)).not.toContain(text.field);
 
-      await page.click('#detail-level');
+      await stepLevel(page);
       await page.click('#entities-toggle');
       await page.locator('#type-filters label', { hasText: 'Vocabulary' }).locator('input').uncheck();
 

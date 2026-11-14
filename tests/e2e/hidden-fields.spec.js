@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-import { waitForGraph, loadExample, pickLevel } from './helpers.js';
+import { waitForGraph, loadExample, pickLevel, stepLevel } from './helpers.js';
 
 test.describe('Hidden fields', { tag: '@runner-2' }, () => {
   // A reference field of the conference fixture to 2 media types, so it has 2
@@ -100,7 +100,7 @@ test.describe('Hidden fields', { tag: '@runner-2' }, () => {
   function dataProviderFieldOffCanvas() {
     return [
       ['its own eye', (page) => visibilityButton(page, EVENT_MEDIA).click(), 'Show this field to go to it'],
-      ['the Entities level', (page) => page.click('#detail-level'), 'The Entities level hides this field. Pick References to go to it'],
+      ['the Entities level', (page) => stepLevel(page), 'The Entities level hides this field. Pick References to go to it'],
       [
         'its entity type filter',
         async (page) => {

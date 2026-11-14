@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-import { nodePositions, waitForGraph, loadExample, slSelect, eventLayout } from './helpers.js';
+import { nodePositions, waitForGraph, loadExample, slSelect, eventLayout, activeLevel } from './helpers.js';
 
 test.describe('Diagram defaults', { tag: '@runner-1' }, () => {
   async function openSettings(page) {
@@ -55,7 +55,7 @@ test.describe('Diagram defaults', { tag: '@runner-1' }, () => {
         'the Entities level',
         (page) => slSelect(page, '#settings [data-default="level"]', 'entities'),
         async (page) => {
-          await expect(page.locator('#detail-level')).toHaveText('Entities');
+          await expect(activeLevel(page)).toHaveAttribute('data-level', 'entities');
           expect(await page.evaluate(() => window.__nexus.cy.nodes('[group="field"]:visible').length)).toBe(0);
         },
       ],
@@ -63,7 +63,7 @@ test.describe('Diagram defaults', { tag: '@runner-1' }, () => {
         'the Configurable level',
         (page) => slSelect(page, '#settings [data-default="level"]', 'configurable'),
         async (page) => {
-          await expect(page.locator('#detail-level')).toHaveText('Configurable');
+          await expect(activeLevel(page)).toHaveAttribute('data-level', 'configurable');
           expect(await page.evaluate(() => window.__nexus.cy.nodes('[group="field"][kind="system"]:visible').length)).toBe(0);
           expect(await page.evaluate(() => window.__nexus.cy.nodes('[group="field"]:visible').length)).toBeGreaterThan(0);
         },
@@ -116,7 +116,7 @@ test.describe('Diagram defaults', { tag: '@runner-1' }, () => {
     await page.reload();
     await loadExample(page);
 
-    await expect(page.locator('#detail-level')).toHaveText('All');
+    await expect(activeLevel(page)).toHaveAttribute('data-level', 'all');
   });
 
   test('keeps a level that shows fields when the next diagram opens in Edit mode', async ({ page }) => {
@@ -128,7 +128,7 @@ test.describe('Diagram defaults', { tag: '@runner-1' }, () => {
     await page.reload();
     await loadExample(page);
 
-    await expect(page.locator('#detail-level')).toHaveText('References');
+    await expect(activeLevel(page)).toHaveAttribute('data-level', 'references');
   });
 
   for (const [fields, label] of dataProviderStoredFieldsSwitch()) {
@@ -137,7 +137,7 @@ test.describe('Diagram defaults', { tag: '@runner-1' }, () => {
       await page.reload();
       await loadExample(page);
 
-      await expect(page.locator('#detail-level')).toHaveText('' + label);
+      await expect(activeLevel(page)).toHaveAttribute('data-level', label.toLowerCase());
       await expect(page.locator('#proxy-toggle')).toHaveJSProperty('checked', false);
       await openSettings(page);
       await expect(page.locator('#settings [data-default="level"]')).toHaveJSProperty('value', label.toLowerCase());
@@ -163,7 +163,7 @@ test.describe('Diagram defaults', { tag: '@runner-1' }, () => {
     await page.setInputFiles('#doc-open', saved);
     await waitForGraph(page);
 
-    await expect(page.locator('#detail-level')).toHaveText('Entities');
+    await expect(activeLevel(page)).toHaveAttribute('data-level', 'entities');
     const positions = await nodePositions(page, '[group="entity"]');
     expect(Object.keys(positions).length).toBeGreaterThan(0);
     expect(positions).toEqual(Object.fromEntries(Object.keys(positions).map((id) => [id, doc.layout[id]])));
@@ -184,6 +184,6 @@ test.describe('Diagram defaults', { tag: '@runner-1' }, () => {
     await loadExample(page);
 
     await expect(page.locator('#layout-run .layout-label')).toHaveText('Layout: Columns');
-    await expect(page.locator('#detail-level')).toHaveText('All');
+    await expect(activeLevel(page)).toHaveAttribute('data-level', 'all');
   });
 });
