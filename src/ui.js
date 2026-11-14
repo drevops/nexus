@@ -1461,13 +1461,14 @@ function SettingsBody({ controller }) {
     </div>
     <${DiagramDefaults} controller=${controller} />
     <${FrameSettings} controller=${controller} />
+    <${HoverSettings} controller=${controller} />
     <${MarkdownSettings} controller=${controller} />
     <${CheckSettings} controller=${controller} />
     <sl-button
       id="settings-reset"
       class="settings-reset"
       size="small"
-      title="Restore the default colours, symbols, new diagram settings, mode frame, Markdown export and checks"
+      title="Restore the default colours, symbols, new diagram settings, mode frame, hover highlight, Markdown export and checks"
       onClick=${() => controller.resetSettings()}
       >${rawIcon('rotate-ccw')}Reset to defaults</sl-button
     >
@@ -1513,6 +1514,21 @@ function FrameSettings({ controller }) {
           </div>`,
       )}
     </div>`;
+}
+
+function HoverSettings({ controller }) {
+  const hover = controller.hoverSettings();
+
+  return html`<h3 class="settings-section__title settings-section__title--spaced">Hover highlight</h3>
+    <sl-switch
+      id="hover-toggle"
+      class="hover-toggle"
+      size="small"
+      checked=${hover.enabled}
+      title="Highlight the fields, references and connected entities of the node under the pointer, and fade the rest"
+      onsl-change=${(e) => controller.setHover({ enabled: e.target.checked })}
+      >Highlight connections</sl-switch
+    >`;
 }
 
 function MarkdownSettings({ controller }) {

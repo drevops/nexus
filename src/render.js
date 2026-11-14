@@ -47,6 +47,7 @@ import { parseRichText, richTextHtml } from './rich-text.js';
 import { NOTE_KIND } from './annotations.js';
 import { noteMarkdownHtml, noteMarkdownPlain } from './note-markdown.js';
 import { fieldSharing } from './shared-fields.js';
+import { HOVER_DELAY, hoverNeighbourhood, readHoverSettings } from './hover-highlight.js';
 import { SYMBOLS, customTypeList, isHexColor, isSymbol, isTypeName, typeColors, typeSymbols } from './type-styles.js';
 import { $ } from './dom.js';
 
@@ -108,6 +109,8 @@ const CAPTION_GAP = 6;
 
 const NAME_CAPTION = 'caption';
 const TYPE_CAPTION = 'caption caption--type';
+
+const FADED_OPACITY = 0.1;
 
 let settings = loadSettings();
 const activeColors = Object.create(null);
@@ -183,6 +186,10 @@ function setChecks(patch) {
   settings.checks = readCheckSettings({ ...readCheckSettings(settings.checks), ...patch });
   saveSettings();
   bump();
+}
+
+function hoverEnabled() {
+  return readHoverSettings(settings.hover).enabled;
 }
 
 function initColors() {
@@ -798,13 +805,17 @@ function style() {
         color: '#8a5a76',
       },
     },
-    { selector: '.faded', style: { opacity: 0.1 } },
+    { selector: '.faded', style: { opacity: FADED_OPACITY } },
     { selector: '.hidden', style: { display: 'none' } },
     { selector: '.highlight', style: { 'border-color': '#2f6db3', 'border-width': 3 } },
     { selector: 'node.trace', style: { opacity: 1, 'border-color': '#0f9d8f', 'border-width': 3 } },
     { selector: 'edge.trace', style: { opacity: 1, 'line-color': '#0f9d8f', 'target-arrow-color': '#0f9d8f', width: 2.6, 'z-index': 20 } },
     { selector: 'node.trace-source', style: { opacity: 1, 'border-color': '#0b7a70', 'border-width': 4, 'background-color': '#c3f0e8' } },
     { selector: 'node:selected', style: { 'border-color': '#2f6db3', 'border-width': 3 } },
+    // The hover classes come last, so they win over the fade and the trace
+    // while a hover lasts and leave both in place for when it ends.
+    { selector: '.hover-lit', style: { opacity: 1 } },
+    { selector: '.hover-faded', style: { opacity: FADED_OPACITY } },
   ];
 }
 
@@ -895,6 +906,10 @@ function buildController(model, options = {}) {
 
   // The node a View-mode tap focused, as { kind, id }, or null.
   let focused = null;
+  // The timer of a hover highlight that waits for HOVER_DELAY, and whether a
+  // highlight is drawn.
+  let hoverTimer = 0;
+  let hoverShown = false;
   syncReferenceElements(cy);
 
   const captionsEl = $('captions');
@@ -1384,6 +1399,72 @@ function buildController(model, options = {}) {
     setFocused(null);
   }
 
+  // A hover highlight lights its elements over any fade.
+  function isFaded(node) {
+    return node.hasClass('hover-faded') || (node.hasClass('faded') && !node.hasClass('hover-lit'));
+  }
+
+  // The HTML layers read isFaded() and follow only Cytoscape's render event,
+  // which a class change alone may not fire.
+  function showHover(node) {
+    if (cy.destroyed() || node.removed()) {
+      return;
+    }
+
+    const lit = hoverNeighbourhood(node);
+
+    if (lit.empty()) {
+      return;
+    }
+
+    cy.batch(() => {
+      cy.elements().difference(lit).addClass('hover-faded');
+      lit.addClass('hover-lit');
+    });
+    hoverShown = true;
+    positionCaptions();
+    positionNotes();
+  }
+
+  // The highlight waits, so a pointer crossing the canvas draws none. A held
+  // button means a drag, a pan or a box selection.
+  function scheduleHover(evt) {
+    clearHover();
+
+    if (!hoverEnabled() || evt.originalEvent?.buttons) {
+      return;
+    }
+
+    const node = evt.target;
+    hoverTimer = setTimeout(() => {
+      hoverTimer = 0;
+      showHover(node);
+    }, HOVER_DELAY);
+  }
+
+  // Only the hover classes come off, so a focus, an isolation or a search
+  // fade stays as it was.
+  function clearHover() {
+    clearTimeout(hoverTimer);
+    hoverTimer = 0;
+
+    if (!hoverShown) {
+      return;
+    }
+
+    hoverShown = false;
+    cy.elements().removeClass('hover-lit hover-faded');
+    positionCaptions();
+    positionNotes();
+  }
+
+  function setHover(patch) {
+    settings.hover = readHoverSettings({ ...readHoverSettings(settings.hover), ...patch });
+    saveSettings();
+    clearHover();
+    bump();
+  }
+
   // Under each node: the entity type (always, de-emphasised) then, when
   // showMachineNames is set, the machine name. Cytoscape labels take a single
   // style, so the differently styled type line is in the HTML caption layer.
@@ -1441,7 +1522,7 @@ function buildController(model, options = {}) {
 
   // Below 35% zoom the captions are too small to read.
   function captionsShown(node) {
-    return node.nonempty() && !node.hasClass('hidden') && !node.hasClass('faded') && cy.zoom() >= 0.35;
+    return node.nonempty() && !node.hasClass('hidden') && !isFaded(node) && cy.zoom() >= 0.35;
   }
 
   // Rendered y of a node's box bottom, rendered x and y of the centre top of
@@ -1603,7 +1684,7 @@ function buildController(model, options = {}) {
       body.style.display = 'block';
       body.style.width = size.width + 'px';
       body.style.height = size.height + 'px';
-      body.style.opacity = node.hasClass('faded') ? '0.1' : '';
+      body.style.opacity = isFaded(node) ? String(FADED_OPACITY) : '';
       body.style.transform = 'translate(' + (pos.x - (size.width / 2) * zoom) + 'px, ' + (pos.y - (size.height / 2) * zoom) + 'px) scale(' + zoom + ')';
     });
   }
@@ -1617,7 +1698,7 @@ function buildController(model, options = {}) {
     Object.keys(noteMap).forEach((id) => {
       const node = cy.getElementById(id);
       const badge = noteMap[id];
-      if (node.empty() || node.hasClass('hidden') || node.hasClass('faded') || tooSmall) {
+      if (node.empty() || node.hasClass('hidden') || isFaded(node) || tooSmall) {
         badge.style.display = 'none';
         return;
       }
@@ -1690,6 +1771,7 @@ function buildController(model, options = {}) {
     delete settings.frame;
     delete settings.markdown;
     delete settings.checks;
+    delete settings.hover;
     saveSettings();
     applyFrame();
     initColors();
@@ -1754,6 +1836,7 @@ function buildController(model, options = {}) {
     tooltip.innerHTML = tooltipHtml(evt.target);
     tooltip.hidden = false;
   });
+  cy.on('mouseover', 'node', scheduleHover);
   cy.on('mousemove', 'node', (evt) => {
     const tooltip = $('tooltip');
     tooltip.style.left = evt.renderedPosition.x + 14 + 'px';
@@ -1761,7 +1844,11 @@ function buildController(model, options = {}) {
   });
   cy.on('mouseout', 'node', () => {
     $('tooltip').hidden = true;
+    clearHover();
   });
+  // A press starts a tap, a drag, a pan or a box selection, and a pan, a
+  // zoom or an edit moves the elements under the pointer.
+  cy.on('tapstart cxttapstart boxstart viewport add remove', clearHover);
   cy.on('tap', (evt) => {
     if (evt.target === cy) {
       clearFocus();
@@ -1840,6 +1927,7 @@ function buildController(model, options = {}) {
     syncReferences,
     resetView,
     clearFocus,
+    clearHover,
     focusEntity,
     focusField,
     setFieldHidden,
@@ -1861,6 +1949,8 @@ function buildController(model, options = {}) {
     setMarkdown,
     checkSettings: () => readCheckSettings(settings.checks),
     setChecks,
+    hoverSettings: () => readHoverSettings(settings.hover),
+    setHover,
     problems: () => checkModel(documentFromGraph(cy), settings.checks),
     focusProblem,
     canFocusProblem: (id) => problemTarget(id) !== null,
@@ -2014,6 +2104,12 @@ function showLines() {
 }
 
 function wire() {
+  // A shortcut can export the diagram while the pointer rests on a node, and
+  // an export draws the classes the graph has.
+  window.addEventListener('keydown', () => controller.clearHover(), true);
+  // Cytoscape fires no mouseout when the pointer leaves a node for a panel
+  // over the canvas.
+  $('cy').addEventListener('mouseleave', () => controller.clearHover());
   $('zoom-in').addEventListener('click', () =>
     controller.cy.zoom({ level: controller.cy.zoom() * 1.25, renderedPosition: { x: controller.cy.width() / 2, y: controller.cy.height() / 2 } }),
   );
