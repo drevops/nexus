@@ -2258,7 +2258,7 @@ body.is-dragging-panel * {
 }
 
 .type-row__symbol {
-  width: 4.5rem;
+  width: 5.75rem;
 }
 
 /* The picked symbol stands in for its name, which stays in the title. */
@@ -2270,9 +2270,8 @@ body.is-dragging-panel * {
   opacity: 0;
 }
 
-/* Shoelace's padding and margins are wider than the 4.5rem select, which
-   pushes the caret against its right border, so they shrink and the symbol
-   centres in the room left. */
+/* Shoelace's padding and margins push the caret against the select's right
+   border, so they shrink and the symbol centres in the room left. */
 .type-row__symbol::part(combobox) {
   padding-inline: 0.5rem;
 }
@@ -2298,11 +2297,11 @@ body.is-dragging-panel * {
 
 /* The list is wider than the select, so the option names fit on 1 line. */
 .type-row__symbol::part(listbox) {
-  width: 13.5rem;
+  width: 16.5rem;
 }
 
 .type-row__symbol.is-list-end::part(listbox) {
-  margin-inline-start: calc(100% - 13.5rem);
+  margin-inline-start: calc(100% - 16.5rem);
 }
 
 .type-row__preview {

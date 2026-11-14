@@ -1433,8 +1433,11 @@ function alignWideList(evt) {
   select.classList.toggle('is-list-end', select.getBoundingClientRect().left + width > document.documentElement.clientWidth);
 }
 
+// The width, in pixels, of each symbol the Settings select and its list draw.
+const SETTINGS_SYMBOL_WIDTH = 34;
+
 // The select draws the picked symbol in place of its name, so it takes no
-// more room than the color picker beside it.
+// more room than the symbol and its caret.
 function symbolSelect(controller, type, value, color, onChange) {
   const options = controller.symbolOptions();
   const picked = options.find((o) => o.key === value);
@@ -1449,8 +1452,8 @@ function symbolSelect(controller, type, value, color, onChange) {
     onsl-show=${alignWideList}
     onsl-change=${onChange}
   >
-    <span slot="prefix" class="type-row__preview" dangerouslySetInnerHTML=${{ __html: controller.symbolSvg(value, color, 20) }}></span>
-    ${options.map((o) => html`<sl-option value=${o.key}><span slot="prefix" class="type-row__preview" dangerouslySetInnerHTML=${{ __html: controller.symbolSvg(o.key, '#c7d2df', 20) }}></span>${o.label}</sl-option>`)}
+    <span slot="prefix" class="type-row__preview" dangerouslySetInnerHTML=${{ __html: controller.symbolSvg(value, color, SETTINGS_SYMBOL_WIDTH) }}></span>
+    ${options.map((o) => html`<sl-option value=${o.key}><span slot="prefix" class="type-row__preview" dangerouslySetInnerHTML=${{ __html: controller.symbolSvg(o.key, '#c7d2df', SETTINGS_SYMBOL_WIDTH) }}></span>${o.label}</sl-option>`)}
   </sl-select>`;
 }
 
