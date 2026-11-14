@@ -32,7 +32,11 @@ function dataProviderFrameSettings() {
     ],
     ['only the View switch', { view: { enabled: true } }, { view: { ...VIEW, enabled: true }, edit: EDIT }],
     ['only the Edit colour', { edit: { color: '#ABCDEF' } }, { view: VIEW, edit: { ...EDIT, color: '#ABCDEF' } }],
-    ['a fully transparent colour kept with its switch', { edit: { enabled: true, color: '#11223300' } }, { view: VIEW, edit: { enabled: true, color: '#11223300' } }],
+    [
+      'a fully transparent colour kept with its switch',
+      { edit: { enabled: true, color: '#11223300' } },
+      { view: VIEW, edit: { enabled: true, color: '#11223300' } },
+    ],
     ['a switch that is not a boolean', { edit: { enabled: 'false' } }, FRAME_DEFAULTS],
     ['a colour name', { view: { color: 'red' } }, FRAME_DEFAULTS],
     ['a 3-digit hex colour', { view: { color: '#123' } }, FRAME_DEFAULTS],
@@ -59,13 +63,21 @@ function dataProviderStoredFrameSettings() {
     ['the switch off', { enabled: false, view: '#00000000', edit: '#f59e0b' }, { view: VIEW, edit: { ...EDIT, enabled: false } }],
     ['only the switch off', { enabled: false }, { view: VIEW, edit: { ...EDIT, enabled: false } }],
     ['a View colour', { enabled: true, view: '#445566', edit: '#f59e0b' }, { view: { enabled: true, color: '#445566' }, edit: EDIT }],
-    ['a View colour with the switch off', { enabled: false, view: '#445566' }, { view: { enabled: false, color: '#445566' }, edit: { ...EDIT, enabled: false } }],
+    [
+      'a View colour with the switch off',
+      { enabled: false, view: '#445566' },
+      { view: { enabled: false, color: '#445566' }, edit: { ...EDIT, enabled: false } },
+    ],
     ['an Edit colour without a switch', { edit: '#112233' }, { view: VIEW, edit: { enabled: true, color: '#112233' } }],
     ['an Edit colour with opacity', { edit: '#11223380' }, { view: VIEW, edit: { enabled: true, color: '#11223380' } }],
     ['a transparent Edit colour', { enabled: true, edit: '#11223300' }, FRAME_DEFAULTS],
     ['an invalid colour', { enabled: true, view: 'red', edit: '#112233; display: none' }, FRAME_DEFAULTS],
     ['a switch that is not a boolean', { enabled: 'false', view: '#445566' }, { view: { enabled: true, color: '#445566' }, edit: EDIT }],
-    ['a stored colour beside a mode object', { view: '#445566', edit: { enabled: false } }, { view: { enabled: true, color: '#445566' }, edit: { ...EDIT, enabled: false } }],
+    [
+      'a stored colour beside a mode object',
+      { view: '#445566', edit: { enabled: false } },
+      { view: { enabled: true, color: '#445566' }, edit: { ...EDIT, enabled: false } },
+    ],
   ];
 }
 

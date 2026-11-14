@@ -1,7 +1,19 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
-import { closeSettings, loadExample, openDocument, openSaveSubmenu, openSettings, slFill, slSelect, downloadFrom, saveFrom, topmostOf, stepLevel } from './helpers.js';
+import {
+  closeSettings,
+  loadExample,
+  openDocument,
+  openSaveSubmenu,
+  openSettings,
+  slFill,
+  slSelect,
+  downloadFrom,
+  saveFrom,
+  topmostOf,
+  stepLevel,
+} from './helpers.js';
 
 async function savedText(page, format) {
   return readFile(await (await saveFrom(page, format)).path(), 'utf8');

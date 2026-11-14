@@ -1,5 +1,17 @@
 import { test, expect } from '@playwright/test';
-import { loadExample, openSettings, slFill, slSelect, createEntity, buildStoryWithField, tapNode, captionsOf, openDiagram, pickLayout, stepLevel } from './helpers.js';
+import {
+  loadExample,
+  openSettings,
+  slFill,
+  slSelect,
+  createEntity,
+  buildStoryWithField,
+  tapNode,
+  captionsOf,
+  openDiagram,
+  pickLayout,
+  stepLevel,
+} from './helpers.js';
 
 test.describe('Node text', { tag: '@runner-2' }, () => {
   test.beforeEach(async ({ page }) => {

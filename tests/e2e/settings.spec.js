@@ -34,7 +34,9 @@ test.describe('Settings', { tag: '@runner-2' }, () => {
 
       // The dialog's overlay takes the pointer from the canvas.
       const centre = await page.locator('#cy').boundingBox();
-      expect(await page.evaluate(({ x, y }) => !!document.elementFromPoint(x, y).closest('#cy'), { x: centre.x + 10, y: centre.y + centre.height / 2 })).toBe(false);
+      expect(await page.evaluate(({ x, y }) => !!document.elementFromPoint(x, y).closest('#cy'), { x: centre.x + 10, y: centre.y + centre.height / 2 })).toBe(
+        false,
+      );
     });
   }
 
@@ -219,7 +221,10 @@ test.describe('Settings', { tag: '@runner-2' }, () => {
 
   test('ignores a stored layout with the Settings panel open', async ({ page }) => {
     await page.evaluate(() =>
-      window.localStorage.setItem('nexusLayout', JSON.stringify({ panels: { settings: { open: true, dock: 'right', order: 0 } }, dockWidth: { left: 320, right: 340 } })),
+      window.localStorage.setItem(
+        'nexusLayout',
+        JSON.stringify({ panels: { settings: { open: true, dock: 'right', order: 0 } }, dockWidth: { left: 320, right: 340 } }),
+      ),
     );
     await page.reload();
     await loadExample(page);

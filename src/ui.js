@@ -1874,7 +1874,10 @@ function SettingsTabs({ controller }) {
 
 // A colour picker keeps its dropdown in its shadow root.
 function hasOpenPopup(root) {
-  return !!root.querySelector('sl-select[open]') || [...root.querySelectorAll('sl-color-picker')].some((picker) => !!picker.shadowRoot.querySelector('sl-dropdown[open]'));
+  return (
+    !!root.querySelector('sl-select[open]') ||
+    [...root.querySelectorAll('sl-color-picker')].some((picker) => !!picker.shadowRoot.querySelector('sl-dropdown[open]'))
+  );
 }
 
 // Renders into the #settings dialog. The tabs mount only while it is open, so

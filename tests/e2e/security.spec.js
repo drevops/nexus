@@ -1,5 +1,18 @@
 import { test, expect } from '@playwright/test';
-import { closeSettings, copyLink, entityCount, hoverNode, linkTo, loadExample, openDocument, openFrom, openSettings, pasteDiagram, saveFrom, waitForGraph } from './helpers.js';
+import {
+  closeSettings,
+  copyLink,
+  entityCount,
+  hoverNode,
+  linkTo,
+  loadExample,
+  openDocument,
+  openFrom,
+  openSettings,
+  pasteDiagram,
+  saveFrom,
+  waitForGraph,
+} from './helpers.js';
 
 test.describe('Security', { tag: '@runner-1' }, () => {
   // Markup that runs script when a colour reaches innerHTML unchecked.
