@@ -712,13 +712,14 @@ sl-button#zoom-level::part(base) {
 }
 
 /* Note bodies sit on their Cytoscape boxes, which draw the fill, the border
-   and the selection. The box keeps its sticky-note colours in both themes, so
-   the text colours are pinned. A link takes pointer events to show its
-   address. */
+   and the selection. A note box draws above other nodes, so its body sits
+   above the captions too. The box keeps its sticky-note colours in both
+   themes, so the text colours are pinned. A link takes pointer events to show
+   its address. */
 .note-bodies {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: 3;
   overflow: hidden;
   pointer-events: none;
 }

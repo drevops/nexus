@@ -93,8 +93,9 @@ const SQUARE_POLYGON = '-1 -1 1 -1 1 1 -1 1';
 const NODE_BOX_LIMIT = 2000;
 
 // Model-space metrics of a note box. Its body wraps at textMaxWidth, and the
-// plain-text label that exports draw matches the body's font size.
-const NOTE_BOX = { fontSize: 12, textMaxWidth: 240, minWidth: 80, minHeight: 16, padding: 10, border: 1 };
+// plain-text label that exports draw matches the body's font size. The HTML
+// body draws above every node, so the box does too.
+const NOTE_BOX = { fontSize: 12, textMaxWidth: 240, minWidth: 80, minHeight: 16, padding: 10, border: 1, zIndex: 100 };
 
 // Model-space caption metrics: the font size, the height of 1 caption line
 // and the gap between a node's box and its first machine-name line.
@@ -753,6 +754,7 @@ function style() {
         width: (ele) => noteSize(ele).width,
         height: (ele) => noteSize(ele).height,
         padding: NOTE_BOX.padding + 'px',
+        'z-index': NOTE_BOX.zIndex,
       },
     },
     {

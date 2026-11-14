@@ -92,6 +92,31 @@ test.describe('Notes', { tag: '@runner-1' }, () => {
     }
   });
 
+  // Both layers take no pointer events, so elementFromPoint() can't tell
+  // which one is on top.
+  test('draws a Note over other nodes and their machine names', async ({ page }) => {
+    await loadExample(page);
+    await page.click('#mode-build');
+    await page.click('#add-note');
+    const box = await page.locator('#cy').boundingBox();
+    await page.mouse.click(box.x + 10, box.y + 10);
+
+    const order = await page.evaluate(() => {
+      const cy = window.__nexus.cy;
+      const layer = (id) => Number(getComputedStyle(document.getElementById(id)).zIndex);
+
+      return {
+        note: cy.nodes('[kind="note"]').style('z-index'),
+        others: Math.max(...cy.nodes('[group="entity"], [group="field"], [group="proxy"]').map((node) => Number(node.style('z-index')))),
+        bodies: layer('note-bodies'),
+        captions: layer('captions'),
+      };
+    });
+
+    expect(Number(order.note)).toBeGreaterThan(order.others);
+    expect(order.bodies).toBeGreaterThan(order.captions);
+  });
+
   test('shows no tooltip for a Note', async ({ page }) => {
     const id = await placeNote(page);
     await slFill(page, '#inspector sl-textarea[data-note-text]', 'Hello');
