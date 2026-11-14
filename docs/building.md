@@ -79,7 +79,12 @@ Click a button, then click the canvas where the annotation goes, or drag the but
 
 Select the node and change **Machine name** in the Inspector. The new name applies when you press `Enter` or leave the box. Nexus turns it into a machine name, in lowercase with underscores, and updates the node's fields and references. A name that's empty or already taken leaves the node as it was.
 
-An entity's type is fixed after you create it. To change it, add a new entity of the right type, copy the fields to it with [Adding fields in bulk](bulk-fields.md#copy-fields-from-another-entity) and delete the old entity.
+An entity's type is fixed after you create it. To change it:
+
+1. Add a new entity of the right type.
+2. Copy the fields to it with [Adding fields in bulk](bulk-fields.md#copy-fields-from-another-entity).
+3. Point every reference that targets the old entity at the new one. Deleting an entity deletes the references to it.
+4. Delete the old entity.
 
 ## Move nodes
 

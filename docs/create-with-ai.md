@@ -22,7 +22,7 @@ The dialog has 3 tabs, 1 per way of giving the agent the skill. Pick the tab tha
 | **Skill** | A chat that can't read web pages | Click **Copy skill** and paste the whole skill into the chat first, then your source. **Download SKILL.md** saves the skill as a file |
 | **Install** | An agent you use in a project, so it uses the skill whenever you ask for a Nexus diagram | Click **Copy command** and run the command in the project's root |
 
-The prompt asks the agent to read the skill and reply with the whole document in a single JSON code block when it can't save files. The install command writes the skill to `.claude/skills` for Claude Code, and other agents read the same file from their own skills folder. On https://nexus.drevops.com, the command is:
+The prompt asks the agent to read the skill and reply with the whole document in a single JSON code block when it can't save files. The install command writes the skill to `.claude/skills`, where Claude Code reads it. For another agent, copy `SKILL.md` into the folder that agent reads its skills from. On https://nexus.drevops.com, the command is:
 
 ```bash
 curl -sSL --create-dirs -o .claude/skills/create-nexus-diagram/SKILL.md https://nexus.drevops.com/skills/create-nexus-diagram/SKILL.md
