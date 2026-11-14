@@ -3,8 +3,9 @@
  *
  * Loads a Drupal config folder entirely in the browser (nothing is uploaded),
  * parses it, and renders the content-model diagram. Also handles the bundled
- * templates, the Open and Save buttons, links that carry a diagram and the
- * loading overlay, and starts a history for each diagram it draws.
+ * templates, the Open and Save buttons, links that carry a diagram, the
+ * comparisons the Open menu starts and the loading overlay, and starts a
+ * history for each diagram it draws.
  */
 
 import { isModelConfig, parseConfig } from './parser.js';
@@ -22,6 +23,7 @@ import { initUI } from './ui.js';
 import { initExploreBar } from './explore-bar.js';
 import { initUndo, resetHistory, checkpoint } from './undo.js';
 import { initShortcuts } from './keyboard.js';
+import { initCompare, startComparison } from './compare.js';
 import { initAiDialog, showAiDialog } from './ai-dialog.js';
 import { initLinkDialog, showLinkDialog } from './link-dialog.js';
 import { decodeDocument, documentLink, encodeDocument, linkParams } from './doc-link.js';
@@ -54,7 +56,12 @@ const OPENERS = {
   csv: () => $('csv-open').click(),
   'csv-template': exportCsvTemplate,
   ai: showAiDialog,
+  'compare-document': () => $('compare-doc').click(),
+  'compare-folder': () => $('compare-folder').click(),
 };
+
+const NO_ENTITIES =
+  "No content types, vocabularies, media, paragraphs or blocks were found. Point at a Drupal config directory (or a module's config/install).";
 
 function basename(path) {
   const parts = String(path).split('/');
@@ -127,7 +134,45 @@ function showDiagram(modelData, options, origin) {
   resetHistory(origin);
 }
 
-function buildAndShow(map, annotations) {
+// Reads the model config and the annotation overlay of a folder's files into
+// model data. Throws when the folder holds no YAML or no entity.
+async function readConfigFolder(fileList) {
+  const map = {};
+  let annotations = null;
+  let foundYaml = false;
+
+  for (const file of fileList) {
+    const name = basename(file.webkitRelativePath || file.name);
+    const isAnnotations = ANNOTATION_FILES.includes(name);
+
+    if (!isYaml(name)) {
+      continue;
+    }
+
+    foundYaml = true;
+
+    if (!isAnnotations && !isModelConfig(name)) {
+      continue;
+    }
+
+    let data;
+    try {
+      data = window.jsyaml.load(await file.text());
+    } catch {
+      continue;
+    }
+
+    if (isAnnotations) {
+      annotations = data;
+    } else if (data && typeof data === 'object') {
+      map[name] = data;
+    }
+  }
+
+  if (!foundYaml) {
+    throw new Error('No YAML configuration files were found in that folder.');
+  }
+
   const model = parseConfig(map);
 
   if (annotations) {
@@ -135,60 +180,56 @@ function buildAndShow(map, annotations) {
   }
 
   const data = model.toArray();
+
   if (!data.meta.entityCount) {
-    showError("No content types, vocabularies, media, paragraphs or blocks were found. Point at a Drupal config directory (or a module's config/install).");
-    return;
+    throw new Error(NO_ENTITIES);
   }
 
-  showError('');
-  showDiagram(data, {}, 'Imported a config folder');
+  return data;
 }
 
 async function loadFromFiles(fileList) {
   showError('');
   showLoader('Reading configuration…');
   try {
-    const map = {};
-    let annotations = null;
-    let foundYaml = false;
-
-    for (const file of fileList) {
-      const name = basename(file.webkitRelativePath || file.name);
-      const isAnnotations = ANNOTATION_FILES.includes(name);
-
-      if (!isYaml(name)) {
-        continue;
-      }
-
-      foundYaml = true;
-
-      if (!isAnnotations && !isModelConfig(name)) {
-        continue;
-      }
-
-      let data;
-      try {
-        data = window.jsyaml.load(await file.text());
-      } catch {
-        continue;
-      }
-
-      if (isAnnotations) {
-        annotations = data;
-      } else if (data && typeof data === 'object') {
-        map[name] = data;
-      }
-    }
-
-    if (!foundYaml) {
-      showError('No YAML configuration files were found in that folder.');
-      return;
-    }
-
-    buildAndShow(map, annotations);
+    showDiagram(await readConfigFolder(fileList), {}, 'Imported a config folder');
+  } catch (e) {
+    showError(e.message);
   } finally {
     hideLoader();
   }
+}
+
+// The name of the folder a folder picker's files came from.
+function folderName(fileList) {
+  const first = fileList[0];
+  const path = first ? first.webkitRelativePath || '' : '';
+
+  return path.split('/')[0] || 'a config folder';
+}
+
+// Compares the open diagram with a saved diagram or a config folder. A file
+// that can't be read shows its reason on the landing screen, whose close
+// button returns to the diagram unchanged.
+async function compareWith(name, read) {
+  showError('');
+  showLoader('Comparing with ' + name + '…');
+  try {
+    startComparison(await read(), name);
+  } catch (e) {
+    showLanding();
+    showError('Could not compare with ' + name + ': ' + e.message);
+  } finally {
+    hideLoader();
+  }
+}
+
+function compareDocument(file) {
+  return compareWith(file.name, async () => documentToModel(JSON.parse(await file.text())).modelData);
+}
+
+function compareFolder(fileList) {
+  return compareWith(folderName(fileList), () => readConfigFolder(fileList));
 }
 
 async function fetchText(url) {
@@ -397,6 +438,12 @@ function wireOpenAndSave() {
   $('save-divider').before(...SAVE_MENU.map(saveMenuItem));
 
   $('open-menu').addEventListener('sl-select', (evt) => {
+    if (evt.detail.item.querySelector(':scope > sl-menu')) {
+      evt.stopPropagation();
+
+      return;
+    }
+
     const value = evt.detail.item.value;
 
     if (Object.hasOwn(OPENERS, value)) {
@@ -551,6 +598,20 @@ function wireDocument() {
     }
     evt.target.value = '';
   });
+  $('compare-doc').addEventListener('change', (evt) => {
+    if (evt.target.files[0]) {
+      compareDocument(evt.target.files[0]);
+    }
+    evt.target.value = '';
+  });
+  $('compare-folder').addEventListener('change', (evt) => {
+    const files = [...evt.target.files];
+
+    if (files.length) {
+      compareFolder(files);
+    }
+    evt.target.value = '';
+  });
   $('diagram-title').addEventListener('sl-input', () => {
     document.title = pageTitle($('diagram-title').value);
     checkpoint('Renamed the diagram', 'title');
@@ -686,6 +747,7 @@ initUI();
 initBuilder();
 initUndo(showTitle);
 initExploreBar();
+initCompare();
 initShortcuts();
 initIcons();
 initTheme();

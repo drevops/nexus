@@ -7,7 +7,8 @@
  *
  * `revision` counts the times the graph changed under the Inspector: by the
  * history or by an edit in the Fields table. Its forms remount on each.
- * `editMode` is true while the app is in Edit mode.
+ * `editMode` is true while the app is in Edit mode. `comparison` holds the
+ * comparison on the canvas, as `{ source, changes }`, or null.
  */
 
 import { DEFAULT_SORT } from './field-table.js';
@@ -16,7 +17,7 @@ const listeners = new Set();
 
 // The default order of the panels, also the order of a side rail's panels
 // until they are moved.
-export const PANEL_ORDER = ['entities', 'table', 'settings', 'legend', 'history', 'checks', 'inspector'];
+export const PANEL_ORDER = ['entities', 'table', 'settings', 'legend', 'history', 'checks', 'changes', 'inspector'];
 
 const DEFAULT_POS = {
   entities: { left: 16, top: 16 },
@@ -26,6 +27,7 @@ const DEFAULT_POS = {
   legend: { right: 16, bottom: 16 },
   history: { left: 16, bottom: 16 },
   checks: { left: 16, bottom: 16 },
+  changes: { right: 16, top: 16 },
 };
 
 // Raised panels hold distinct z-indexes in a band from PANEL_Z up, 1 per
@@ -141,6 +143,7 @@ function initialState() {
     tableSearch: '',
     tableSort: DEFAULT_SORT,
     editMode: false,
+    comparison: null,
     version: 0,
     revision: 0,
     dragging: null,
@@ -215,6 +218,12 @@ export function setTableSort(sort) {
 export function setEditMode(editMode) {
   if (state.editMode !== editMode) {
     emit({ editMode });
+  }
+}
+
+export function setComparison(comparison) {
+  if (state.comparison !== comparison) {
+    emit({ comparison });
   }
 }
 

@@ -55,6 +55,7 @@ Nexus is a static web app. Give it a Drupal config sync directory or a module's 
 - **Hover highlight.** Rest the pointer on an entity to highlight its fields, its references and the entities at each end, and fade the rest. On a field, the highlight covers the field's own references. To turn it off, switch off **Highlight connections** in **Settings**.
 - **Explore from 1 entity.** Right-click an entity and pick **Explore from here**, or click **Explore from here** in its Inspector. The diagram then shows only the entities within 1 to 5 references of it. Pick the depth and the direction in the status bar: **Outward**, **Inward** or **Both**. **Clear** puts the whole diagram back where it was.
 - **Checks.** The Checks panel lists the problems in the model after every edit, such as a reference with no target or a field name with 2 types. Click a problem to go to it.
+- **Comparisons.** Compare the open diagram with a saved diagram or a config folder to see the bundles, fields and references each one adds, removes or changes. See [Compare 2 versions](#compare-2-versions).
 - **Saved as a document.** A `.nexus.json` document holds the model and its layout, and a [JSON Schema](schema/nexus.schema.json) defines the format.
 - **Exports.** PNG and SVG images of the diagram, and CSV files of its fields, bundles and references. A Markdown page documents each bundle, its fields and notes, with an optional Mermaid diagram. A standalone HTML report holds the same documentation and opens in any browser. Mermaid and Graphviz DOT text keeps the diagram in a README, a pull request or a wiki. Both draw the nodes and edges the canvas shows, in its shapes and colors. DOT keeps each node where the canvas has it, and Mermaid lays the diagram out itself. The Mermaid file uses node shapes that need Mermaid 11.3 or later. A diagram past Mermaid's 50,000-character limit gets short node ids, then loses machine names and type captions until it fits. A note at the top of the file says what changed. For a site with more than about 100 entities, pick DOT.
 - **Shared as a link.** **Copy link** puts the whole diagram inside a link. See [Shared links](#shared-links).
@@ -123,6 +124,27 @@ A row with an entity type and a bundle but no field adds a bundle with no fields
 **Save as > CSV > Fields** writes the Fields table with the same columns and a **Used in** column, plus a row for each bundle with no fields. A CSV saved that way imports as the same entities, fields and references. Notes, bundle descriptions, hidden fields, annotations and the layout stay out of the CSV.
 
 When a row has a problem, Nexus opens nothing and lists the first 5 problems with their row numbers. The header is row 1.
+
+## Compare 2 versions
+
+A comparison shows what changed between 2 versions of a content model, such as the config export on `main` and the one on a branch. The open diagram is the earlier version. Nexus lists what the other version adds, removes or changes.
+
+To compare the open diagram with another version:
+
+1. Pick **Open > Compare with** in the toolbar.
+2. Pick **Saved diagram…** for a `.nexus.json` file, or **Config folder…** for a Drupal config folder. Nexus reads a config folder as an import does, `annotations.yml` included.
+
+The **Changes** panel lists each change under its bundle. Click a change to go to it on the canvas. Nexus matches bundles by entity type and machine name, and fields by bundle and machine name, so a renamed bundle shows as 1 removed and 1 added. The following table lists what the comparison checks:
+
+| Item | Changed when it differs in |
+|------|----------------------------|
+| Bundle | Label or description |
+| Field | Label, type, cardinality, required, help text, default value, allowed values or translatability |
+| Reference | None: each target of a field is added or removed |
+
+Notes, hidden fields and annotations stay out of the comparison. The canvas switches to the **All** detail level and draws added elements in green, changed ones in amber and removed ones faded with a dashed red border, and the Legend lists the 3 colors. Nexus places added bundles to the right of the diagram.
+
+While a comparison is open, Edit mode, **Save**, **Undo**, **Redo** and the Fields table's editors are off. The detail levels, display switches and layouts still work. Click **Stop comparing** in the **Changes** panel to bring the diagram back as it was, with its layout, detail level, display switches and view. The history gains no step. Opening another diagram also ends the comparison.
 
 ## The visual language
 

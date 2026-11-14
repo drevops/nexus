@@ -66,6 +66,13 @@
             <sl-menu-item value="csv" title="Import a content model from a CSV file with 1 row per field"><span slot="prefix" data-icon="table"></span>CSV file…</sl-menu-item>
             <sl-menu-item value="csv-template" title="Download a CSV template to fill in and import with CSV file…"><span slot="prefix" data-icon="file-down"></span>CSV template</sl-menu-item>
             <sl-menu-item value="ai" title="Create a diagram with an AI agent from a screenshot, spreadsheet or spec"><span slot="prefix" data-icon="sparkles"></span>Create with AI…</sl-menu-item>
+            <sl-divider></sl-divider>
+            <sl-menu-item id="compare-with" title="Compare this diagram with another version of its content model"><span slot="prefix" data-icon="git-compare"></span>Compare with
+              <sl-menu slot="submenu">
+                <sl-menu-item value="compare-document" title="Compare this diagram with a saved Nexus diagram (.nexus.json)"><span slot="prefix" data-icon="folder-open"></span>Saved diagram…</sl-menu-item>
+                <sl-menu-item value="compare-folder" title="Compare this diagram with a Drupal config folder"><span slot="prefix" data-icon="folder-input"></span>Config folder…</sl-menu-item>
+              </sl-menu>
+            </sl-menu-item>
           </sl-menu>
         </sl-dropdown>
       </sl-button-group>
@@ -120,6 +127,7 @@
         <sl-button id="legend-toggle" class="toolbar__button" size="small" data-icon="info" data-shortcut="3" title="Toggle the legend panel">Legend</sl-button>
         <sl-button id="history-toggle" class="toolbar__button" size="small" data-icon="history" data-shortcut="4" title="Toggle the history panel: every version of this diagram">History</sl-button>
         <sl-button id="checks-toggle" class="toolbar__button" size="small" data-icon="list-checks" data-shortcut="5" title="Toggle the checks panel: problems in this model">Checks<span class="checks-badge" slot="suffix" hidden></span></sl-button>
+        <sl-button id="changes-toggle" class="toolbar__button" size="small" data-icon="git-compare" data-shortcut="6" title="Toggle the changes panel: what the compared model adds, removes and changes" hidden>Changes<span class="changes-badge" slot="suffix"></span></sl-button>
       </sl-button-group>
     </div>
   </div>
@@ -183,6 +191,8 @@
 <!-- Outside the toolbar, which is inert while the landing screen is open. -->
 <input id="doc-open" class="visually-hidden" type="file" accept=".json,application/json" tabindex="-1">
 <input id="csv-open" class="visually-hidden" type="file" accept=".csv,text/csv" tabindex="-1">
+<input id="compare-doc" class="visually-hidden" type="file" accept=".json,application/json" tabindex="-1">
+<input id="compare-folder" class="visually-hidden" type="file" webkitdirectory directory multiple tabindex="-1">
 
 <!-- Inert and busy until src/app.js has wired its controls. -->
 <div id="landing" class="landing" inert aria-busy="true">
