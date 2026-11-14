@@ -106,6 +106,10 @@
         </sl-dropdown>
         <sl-button id="tidy" class="toolbar__button" size="small" data-icon="tidy" data-shortcut="T" title="Tidy up: straighten each entity, keeping its fields in their order, and line the entities up in columns near where they are">Tidy up</sl-button>
       </sl-button-group>
+      <sl-dropdown id="lines-dropdown" placement="bottom-end" hoist>
+        <sl-button id="lines-choose" slot="trigger" class="toolbar__button" size="small" caret data-icon="spline" data-shortcut="Alt+L" title="Draw lines at right angles, each turning halfway to its target"><span class="lines-label">Lines: Right-angled</span></sl-button>
+        <sl-menu id="lines-menu"></sl-menu>
+      </sl-dropdown>
     </div>
     <div class="toolbar__section">
       <sl-button-group class="toolbar__group" label="Panels">
