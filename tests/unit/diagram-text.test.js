@@ -10,6 +10,7 @@ import {
   canvasGraph,
   identifier,
   identifiers,
+  mermaidCompactionNote,
   toDot,
   toMermaid,
 } from '../../src/diagram-text.js';
@@ -556,6 +557,85 @@ function dataProviderLargeGraphs() {
   ];
 }
 
+test('shrinks a flowchart past the character limit 1 step at a time and notes what changed', () => {
+  const graph = articleGraph();
+  const full = toMermaid(graph, 'T');
+  const note = (list) => "%% This diagram is past Mermaid's 50,000-character limit, so " + list + '.';
+  const steps = [];
+  let limit = full.length - 1;
+
+  for (let index = 0; index < 4; index++) {
+    const output = toMermaid(graph, 'T', limit);
+
+    assert.ok(output.length <= limit, 'step ' + (index + 1) + ' fits');
+    steps.push({ lines: output.split('\n') });
+    limit = output.length - 1;
+  }
+
+  assert.ok(!full.includes('%% This diagram is past'));
+
+  assert.equal(steps[0].lines[7], note('node ids are shortened'));
+  assert.ok(steps[0].lines.includes('n1@{ shape: rounded, label: "Article<br><small>Content type</small><br><small>article</small>" }'));
+  assert.ok(steps[0].lines.includes('n2 -.->|"1..n"| n3'));
+  assert.ok(steps[0].lines.includes('class n1 entity_node'));
+
+  assert.equal(steps[1].lines[7], note('node ids are shortened'));
+  assert.ok(steps[1].lines.includes('n1("Article<br><small>Content type</small><br><small>article</small>")'));
+  assert.ok(steps[1].lines.includes('n2(["Tags *<br><small>field_tags</small>"])'));
+  assert.ok(steps[1].lines.includes('n3>"Tags"]'));
+  assert.ok(steps[1].lines.includes('n5{{"Search API<br>GET /search"}}'));
+
+  assert.equal(steps[2].lines[7], note('node ids are shortened and machine names are left out'));
+  assert.ok(steps[2].lines.includes('n1("Article<br><small>Content type</small>")'));
+  assert.ok(steps[2].lines.includes('n2(["Tags *"])'));
+
+  assert.equal(steps[3].lines[7], note('node ids are shortened, machine names are left out and entity type captions are left out'));
+  assert.ok(steps[3].lines.includes('n1("Article")'));
+  assert.ok(!steps[3].lines.some((line) => line.includes('<small>')));
+
+  const last = toMermaid(graph, 'T', limit).split('\n');
+  assert.equal(last[7], MERMAID_LARGE_NOTE);
+  assert.equal(last[8], note('node ids are shortened, machine names are left out and entity type captions are left out'));
+});
+
+test('keeps the new syntax for shapes the classic syntax lacks', async (t) => {
+  for (const [symbol, expected] of [
+    ['cut', 'n1@{ shape: notch-rect, label: "A" }'],
+    ['pentagon', 'n1@{ shape: notch-pent, label: "A" }'],
+    ['barrel', 'n1[("A")]'],
+    ['rhomboid', 'n1[/"A"/]'],
+    ['diamond', 'n1{"A"}'],
+    ['rectangle', 'n1["A"]'],
+  ]) {
+    await t.test(symbol, () => {
+      const graph = canvasGraph({ nodes: [{ data: { id: 'node.a', group: 'entity', entityType: 'node', label: 'A' } }] }, { symbolFor: () => symbol });
+      const output = toMermaid(graph, '', 1);
+
+      assert.ok(output.split('\n').includes(expected), output);
+    });
+  }
+});
+
+test('lists the changes a compaction note names', async (t) => {
+  for (const [name, notes, expected] of dataProviderCompactionNotes()) {
+    await t.test(name, () => {
+      assert.equal(mermaidCompactionNote(notes), expected);
+    });
+  }
+});
+
+function dataProviderCompactionNotes() {
+  const note = (list) => "%% This diagram is past Mermaid's 50,000-character limit, so " + list + '.';
+
+  return [
+    ['no changes', [], ''],
+    ['only a change with nothing to say', [''], ''],
+    ['1 change', ['a'], note('a')],
+    ['2 changes around a silent one', ['a', '', 'b'], note('a and b')],
+    ['3 changes', ['a', 'b', 'c'], note('a, b and c')],
+  ];
+}
+
 test('writes a DOT graph that keeps the canvas layout', () => {
   assert.equal(
     toDot(articleGraph(), 'My model'),
@@ -657,7 +737,9 @@ test('draws every node and edge of each template in both formats', async (t) => 
       const { modelData } = documentToModel(JSON.parse(readFileSync(join(ROOT, templatePath(template)), 'utf8')));
       const graph = canvasGraph(modelData);
       const names = identifiers(graph.nodes.map((node) => node.id));
-      const mermaid = toMermaid(graph, template.label).split('\n');
+      const mermaid = toMermaid(graph, template.label, Infinity).split('\n');
+
+      assert.ok(toMermaid(graph, template.label).length <= MERMAID_MAX_TEXT, 'the export fits Mermaid');
       const dot = toDot(graph, template.label).split('\n');
 
       assert.equal(graph.nodes.length, modelData.nodes.length);

@@ -268,14 +268,40 @@ function captionLines(node) {
   return [node.caption, node.machineName].filter((line) => line !== '');
 }
 
-function mermaidLabel(node) {
+function mermaidLabel(node, compaction) {
   const lines = [node.label, node.detail].filter((line) => line !== '').map(mermaidText);
+  const captions = [compaction.captions ? node.caption : '', compaction.machineNames ? node.machineName : ''].filter((line) => line !== '');
 
-  return lines.concat(captionLines(node).map((line) => '<small>' + mermaidText(line) + '</small>')).join('<br>');
+  return lines.concat(captions.map((line) => '<small>' + mermaidText(line) + '</small>')).join('<br>');
 }
 
 function mermaidShape(node) {
   return node.group === 'field' ? 'stadium' : MERMAID_SHAPES[nodeSymbol(node)];
+}
+
+// The shorter shape syntax that draws the same shape as Mermaid 11.3's
+// '@{ shape: ... }', as the text before and after the quoted label. The
+// notched shapes have none.
+const MERMAID_CLASSIC_SHAPES = {
+  rect: ['[', ']'],
+  rounded: ['(', ')'],
+  stadium: ['([', '])'],
+  diam: ['{', '}'],
+  hex: ['{{', '}}'],
+  'lean-r': ['[/', '/]'],
+  cyl: ['[(', ')]'],
+  odd: ['>', ']'],
+};
+
+function mermaidNode(name, node, compaction) {
+  const shape = mermaidShape(node);
+  const label = '"' + mermaidLabel(node, compaction) + '"';
+
+  if (compaction.classicShapes && Object.hasOwn(MERMAID_CLASSIC_SHAPES, shape)) {
+    return name + MERMAID_CLASSIC_SHAPES[shape][0] + label + MERMAID_CLASSIC_SHAPES[shape][1];
+  }
+
+  return name + '@{ shape: ' + shape + ', label: ' + label + ' }';
 }
 
 function fieldClass(node) {
@@ -323,15 +349,38 @@ const MERMAID_LINKS = {
   annotation: { arrow: '-.->', style: 'stroke:' + COLORS.annotationEdge + ',color:' + COLORS.annotationText },
 };
 
+const FULL_MERMAID = { shortIds: false, classicShapes: false, machineNames: true, captions: true };
+
+// The steps that shrink a flowchart past MERMAID_MAX_TEXT, least lossy first,
+// each with what the note says it changed. The classic shapes draw the same
+// shapes, so they need no note.
+export const MERMAID_COMPACTIONS = [
+  { change: { shortIds: true }, note: 'node ids are shortened' },
+  { change: { classicShapes: true }, note: '' },
+  { change: { machineNames: false }, note: 'machine names are left out' },
+  { change: { captions: false }, note: 'entity type captions are left out' },
+];
+
 /**
- * Writes a canvas graph as a Mermaid flowchart in the direction of the
- * layout: each node in the shape and colours the canvas draws it in, and
- * each edge in its line style. Mermaid lays the flowchart out itself. A graph
- * Mermaid can't draw well starts with MERMAID_LARGE_NOTE.
+ * Returns the note that says which compactions shrank a flowchart past
+ * Mermaid's character limit, or an empty string when none says anything.
  */
-export function toMermaid(graph, title = '') {
-  const names = identifiers(graph.nodes.map((node) => node.id));
+export function mermaidCompactionNote(notes) {
+  const changes = notes.filter((note) => note !== '');
+
+  if (changes.length === 0) {
+    return '';
+  }
+
+  const list = changes.length === 1 ? changes[0] : changes.slice(0, -1).join(', ') + ' and ' + changes[changes.length - 1];
+
+  return "%% This diagram is past Mermaid's " + MERMAID_MAX_TEXT.toLocaleString('en-US') + '-character limit, so ' + list + '.';
+}
+
+function mermaidLines(graph, title, compaction, note) {
+  const names = compaction.shortIds ? new Map(graph.nodes.map((node, index) => [node.id, 'n' + (index + 1)])) : identifiers(graph.nodes.map((node) => node.id));
   const name = (id) => names.get(id);
+  const indent = compaction.shortIds ? '' : INDENT;
   const lines = ['---'];
 
   // The front matter is YAML, which Mermaid reads before it decodes '#'
@@ -343,12 +392,16 @@ export function toMermaid(graph, title = '') {
   lines.push('config:', '  flowchart:', '    curve: step', '---', 'flowchart ' + graph.direction);
   const header = lines.length;
 
+  if (note !== '') {
+    lines.push(note);
+  }
+
   const classes = new Map();
 
   graph.nodes.forEach((node) => {
     const className = mermaidClass(node);
 
-    lines.push(INDENT + name(node.id) + '@{ shape: ' + mermaidShape(node) + ', label: "' + mermaidLabel(node) + '" }');
+    lines.push(indent + mermaidNode(name(node.id), node, compaction));
 
     if (!classes.has(className)) {
       classes.set(className, { style: mermaidStyle(className, node), members: [] });
@@ -363,23 +416,53 @@ export function toMermaid(graph, title = '') {
     const link = MERMAID_LINKS[edge.kind];
     const label = edge.label ? '|"' + mermaidText(edge.label) + '"|' : '';
 
-    lines.push(INDENT + name(edge.source) + ' ' + link.arrow + label + ' ' + name(edge.target));
+    lines.push(indent + name(edge.source) + ' ' + link.arrow + label + ' ' + name(edge.target));
     linkStyles.set(link.style, [...(linkStyles.get(link.style) || []), index]);
   });
 
-  classes.forEach((entry, className) => lines.push(INDENT + 'classDef ' + className + ' ' + entry.style));
-  classes.forEach((entry, className) => lines.push(INDENT + 'class ' + entry.members.join(',') + ' ' + className));
-  linkStyles.forEach((indexes, style) => lines.push(INDENT + 'linkStyle ' + indexes.join(',') + ' ' + style));
+  classes.forEach((entry, className) => lines.push(indent + 'classDef ' + className + ' ' + entry.style));
+  classes.forEach((entry, className) => lines.push(indent + 'class ' + entry.members.join(',') + ' ' + className));
+  linkStyles.forEach((indexes, style) => lines.push(indent + 'linkStyle ' + indexes.join(',') + ' ' + style));
 
-  let output = lines.join('\n') + '\n';
-  const entities = graph.nodes.filter((node) => node.group === 'entity').length;
+  return { lines: lines, header: header };
+}
 
-  if (entities > MERMAID_MAX_ENTITIES || graph.edges.length > MERMAID_MAX_EDGES || output.length > MERMAID_MAX_TEXT) {
-    lines.splice(header, 0, MERMAID_LARGE_NOTE);
-    output = lines.join('\n') + '\n';
+function joined(lines) {
+  return lines.join('\n') + '\n';
+}
+
+/**
+ * Writes a canvas graph as a Mermaid flowchart in the direction of the
+ * layout: each node in the shape and colours the canvas draws it in, and
+ * each edge in its line style. Mermaid lays the flowchart out itself.
+ *
+ * A flowchart past `maxText` characters, Mermaid's limit by default, goes
+ * through MERMAID_COMPACTIONS in turn until it fits, and starts with a note
+ * that says what they changed. A graph Mermaid still can't draw well also
+ * starts with MERMAID_LARGE_NOTE.
+ */
+export function toMermaid(graph, title = '', maxText = MERMAID_MAX_TEXT) {
+  let compaction = FULL_MERMAID;
+  const notes = [];
+  let result = mermaidLines(graph, title, compaction, '');
+
+  for (const step of MERMAID_COMPACTIONS) {
+    if (joined(result.lines).length <= maxText) {
+      break;
+    }
+
+    compaction = { ...compaction, ...step.change };
+    notes.push(step.note);
+    result = mermaidLines(graph, title, compaction, mermaidCompactionNote(notes));
   }
 
-  return output;
+  const entities = graph.nodes.filter((node) => node.group === 'entity').length;
+
+  if (entities > MERMAID_MAX_ENTITIES || graph.edges.length > MERMAID_MAX_EDGES || joined(result.lines).length > maxText) {
+    result.lines.splice(result.header, 0, MERMAID_LARGE_NOTE);
+  }
+
+  return joined(result.lines);
 }
 
 // Graphviz decodes HTML entities in quoted labels, so '&' is escaped too.
