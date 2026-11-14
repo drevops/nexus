@@ -31,7 +31,7 @@ import { initIcons, icon } from './icons.js';
 import { DEFAULT_TITLE } from './model.js';
 import { exportLayout, importLayout, getController } from './store.js';
 import { templateTitle } from './templates.js';
-import { downloadTemplates, rowTemplate, templateText } from './template-list.js';
+import { downloadTemplates, forgetTemplate, rowTemplate, templateText } from './template-list.js';
 import { $ } from './dom.js';
 
 const THEME_TOGGLES = '[data-theme-toggle]';
@@ -239,6 +239,9 @@ async function loadTemplate(template) {
   try {
     showDocument(JSON.parse(await templateText(template)), 'Loaded the ' + title + ' template');
   } catch (e) {
+    // A diagram that downloaded but doesn't open is downloaded again on the
+    // next click.
+    forgetTemplate(template);
     showError('Could not load ' + title + ': ' + e.message);
   } finally {
     hideLoader();

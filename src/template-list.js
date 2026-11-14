@@ -79,6 +79,7 @@ function showDownload(template, state, share) {
   row.dataset.download = state;
   row.title = rowTitle(template, state);
   row.style.setProperty('--progress', String(share));
+
   if (state === 'loading') {
     row.setAttribute('aria-busy', 'true');
   } else {
@@ -118,6 +119,15 @@ export function templateText(template, priority = 'auto') {
   downloads.set(template.id, download);
 
   return download;
+}
+
+/**
+ * Drops a template's downloaded text and marks its row failed, so the next
+ * call to templateText() downloads it again.
+ */
+export function forgetTemplate(template) {
+  downloads.delete(template.id);
+  showDownload(template, 'failed', 1);
 }
 
 /**

@@ -228,6 +228,28 @@ test.describe('Templates', { tag: '@runner-2' }, () => {
     ];
   }
 
+  test('downloads a diagram that does not open again on the next click', async ({ page }) => {
+    let broken = 1;
+
+    await page.route('**/templates/civictheme.nexus.json', (route) => {
+      if (broken-- > 0) {
+        return route.fulfill({ status: 200, contentType: 'application/json', body: '{ "nexus": 1 }' });
+      }
+
+      return route.continue();
+    });
+    await page.goto('/index.html');
+    await page.click('#template-civictheme');
+
+    await expect(page.locator('#landing-error-text')).toHaveText('Could not load ' + templateTitle(template('civictheme')) + ': Not a valid Nexus document.');
+    await expect(page.locator('#template-civictheme')).toHaveAttribute('data-download', 'failed');
+
+    await page.click('#template-civictheme');
+    await waitForGraph(page);
+
+    await expect(page.locator('#diagram-title')).toHaveJSProperty('value', templateTitle(template('civictheme')));
+  });
+
   test('asks to check the connection when a template cannot be downloaded', async ({ page }) => {
     await page.route('**/templates/civictheme.nexus.json', (route) => route.abort());
     await page.goto('/index.html');
