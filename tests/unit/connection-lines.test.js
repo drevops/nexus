@@ -3,7 +3,10 @@ import assert from 'node:assert/strict';
 import { LINE_DEFAULTS, LINE_OPTIONS, curveStyle, readLineSettings } from '../../src/connection-lines.js';
 
 test('lists right-angled lines first and makes them the default', () => {
-  assert.deepEqual(LINE_OPTIONS.map((option) => option.id), ['right-angled', 'straight']);
+  assert.deepEqual(
+    LINE_OPTIONS.map((option) => option.id),
+    ['right-angled', 'straight'],
+  );
   assert.deepEqual(LINE_DEFAULTS, { style: 'right-angled' });
 });
 
