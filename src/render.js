@@ -48,6 +48,7 @@ import { NOTE_KIND } from './annotations.js';
 import { noteMarkdownHtml, noteMarkdownPlain } from './note-markdown.js';
 import { fieldSharing } from './shared-fields.js';
 import { HOVER_DELAY, hoverNeighbourhood, readHoverSettings } from './hover-highlight.js';
+import { EXPLORE_DEFAULTS, exploreEntities, readExplore } from './explore.js';
 import { SYMBOLS, customTypeList, isHexColor, isSymbol, isTypeName, typeColors, typeSymbols } from './type-styles.js';
 import { $ } from './dom.js';
 
@@ -127,6 +128,9 @@ let proxyMode = false;
 let layoutName = DIAGRAM_DEFAULTS.layout;
 let showMachineNames = false;
 let typeVisible = {};
+// The depth and direction of the last explore view, which the next one
+// starts with.
+let exploreChoice = { ...EXPLORE_DEFAULTS };
 
 let controller = null;
 let wired = false;
@@ -910,6 +914,10 @@ function buildController(model, options = {}) {
   // highlight is drawn.
   let hoverTimer = 0;
   let hoverShown = false;
+  // The explore view, as { entityId, outside, saved }, or null. `outside`
+  // holds the ids of the entities and annotations the view hides, and
+  // `saved` the positions, viewport and display it started from.
+  let explore = null;
   syncReferenceElements(cy);
 
   const captionsEl = $('captions');
@@ -925,22 +933,33 @@ function buildController(model, options = {}) {
     return entity.nonempty() ? entity.data('entityType') : null;
   }
 
+  // Whether the explore view hides the node: an entity or annotation outside
+  // it, or a proxy standing in for an entity outside it. A field follows its
+  // entity through hiddenBy().
+  function outsideExplore(node) {
+    if (!explore) {
+      return false;
+    }
+
+    return explore.outside.has(node.data('group') === 'proxy' ? node.data('target') : node.id());
+  }
+
   function nodeVisible(node) {
     const group = node.data('group');
     if (group === 'entity') {
-      return typeVisible[node.data('entityType')] !== false;
+      return typeVisible[node.data('entityType')] !== false && !outsideExplore(node);
     }
     if (group === 'field') {
       return hiddenBy(node) === null;
     }
     if (group === 'proxy') {
-      return proxyMode && hiddenBy(cy.getElementById(node.data('field'))) === null && typeVisible[node.data('entityType')] !== false;
+      return proxyMode && hiddenBy(cy.getElementById(node.data('field'))) === null && typeVisible[node.data('entityType')] !== false && !outsideExplore(node);
     }
-    return true;
+    return !outsideExplore(node);
   }
 
   // What keeps a field off the canvas: the field itself, the Fields switch,
-  // its entity type's filter, or null when nothing does.
+  // its entity type's filter, the explore view, or null when nothing does.
   function hiddenBy(field) {
     if (field.data('hidden')) {
       return 'field';
@@ -950,7 +969,11 @@ function buildController(model, options = {}) {
       return 'fields';
     }
 
-    return typeVisible[entityTypeOf(field.data('entity'))] === false ? 'type' : null;
+    if (typeVisible[entityTypeOf(field.data('entity'))] === false) {
+      return 'type';
+    }
+
+    return explore && explore.outside.has(field.data('entity')) ? 'explore' : null;
   }
 
   function edgeVisible(edge) {
@@ -1293,6 +1316,10 @@ function buildController(model, options = {}) {
   // new proxy beside its field. Only reference elements and ref edges are
   // re-filtered, so entities and fields keep their visibility.
   function syncReferences(renames) {
+    if (explore && renames) {
+      renameExplore(renames);
+    }
+
     const added = syncReferenceElements(cy, renames);
 
     applyVisibility(cy.elements(REFERENCE_ELEMENTS).union(cy.edges('[group="ref"]')));
@@ -1463,6 +1490,155 @@ function buildController(model, options = {}) {
     saveSettings();
     clearHover();
     bump();
+  }
+
+  // Each reference as the entity holding its field and the entity it targets.
+  function referenceLinks() {
+    return cy.edges('[group="ref"]').map((edge) => ({ source: edge.source().data('entity'), target: edge.target().id() }));
+  }
+
+  // The ids of the entities outside the explore view from the entity, and of
+  // the annotations attached to no entity or field inside it.
+  function exploreOutside(entityId) {
+    const inside = exploreEntities(referenceLinks(), entityId, exploreChoice.depth, exploreChoice.direction);
+    const ownerInside = (node) => inside.has(node.data('group') === 'field' ? node.data('entity') : node.id());
+    const entities = cy.nodes('[group="entity"]').filter((entity) => !inside.has(entity.id()));
+    const notes = cy.nodes('[group="annotation"]').filter((note) => !note.connectedEdges('[group="annotation"]').connectedNodes().some(ownerInside));
+
+    return new Set(entities.union(notes).map((node) => node.id()));
+  }
+
+  // The display settings a layout run depends on.
+  function displayKey() {
+    return JSON.stringify([fieldsMode, proxyMode, typeVisible]);
+  }
+
+  // Shows only the entity and the entities within the chosen depth of it,
+  // and lays them out. A view started from another entity keeps the
+  // positions the first one saved.
+  function startExplore(entityId) {
+    const entity = cy.getElementById(entityId);
+
+    if (entity.empty() || entity.data('group') !== 'entity') {
+      return;
+    }
+
+    const saved = explore
+      ? explore.saved
+      : { positions: new Map(cy.nodes().map((node) => [node.id(), { ...node.position() }])), zoom: cy.zoom(), pan: { ...cy.pan() }, display: displayKey() };
+
+    explore = { entityId: entityId, outside: new Set(), saved: saved };
+    applyExplore();
+  }
+
+  function applyExplore() {
+    explore.outside = exploreOutside(explore.entityId);
+    clearFocus();
+    // The layout moves nodes from under the pointer without a mouseout.
+    $('tooltip').hidden = true;
+    clearHover();
+    untracked(() => refresh(true));
+    bump();
+  }
+
+  function setExplore(patch) {
+    exploreChoice = readExplore({ ...exploreChoice, ...patch });
+
+    if (explore) {
+      applyExplore();
+    }
+  }
+
+  // Shows the whole diagram again, at the positions and the viewport the
+  // view started from. A display switch changed during the view moved only
+  // the nodes it showed, so the layout runs again instead.
+  function clearExplore() {
+    if (!explore) {
+      return;
+    }
+
+    const saved = explore.saved;
+
+    explore = null;
+    clearFocus();
+    $('tooltip').hidden = true;
+    clearHover();
+    untracked(() => {
+      if (saved.display !== displayKey()) {
+        refresh(true);
+        return;
+      }
+
+      refresh(false);
+      cy.nodes().forEach((node) => {
+        const position = saved.positions.get(node.id());
+
+        if (position) {
+          node.position(position);
+        }
+      });
+      cy.viewport({ zoom: saved.zoom, pan: saved.pan });
+      positionCaptions();
+      positionNotes();
+    });
+    bump();
+  }
+
+  // Ends the explore view when the entity it started from is gone.
+  function syncExplore() {
+    if (explore && cy.getElementById(explore.entityId).empty()) {
+      clearExplore();
+    }
+  }
+
+  // Carries the explore view over renamed node ids.
+  function renameExplore(renames) {
+    const renamed = (id) => (Object.hasOwn(renames, id) ? renames[id] : id);
+
+    explore.entityId = renamed(explore.entityId);
+    explore.outside = new Set([...explore.outside].map(renamed));
+    explore.saved.positions = new Map([...explore.saved.positions].map(([id, position]) => [renamed(id), position]));
+  }
+
+  // The explore view as { entityId, label, depth, direction }, or null.
+  function exploring() {
+    if (!explore) {
+      return null;
+    }
+
+    return { entityId: explore.entityId, label: cy.getElementById(explore.entityId).data('label'), ...exploreChoice };
+  }
+
+  // Runs `read` on the graph as it is without the explore view, at the
+  // positions the view saved, and returns its result. A saved document then
+  // keeps the diagram's own layout.
+  function withoutExplore(read) {
+    if (!explore) {
+      return read();
+    }
+
+    const view = explore;
+    const shownAt = new Map(cy.nodes().map((node) => [node.id(), { ...node.position() }]));
+    const moveTo = (positions) =>
+      positions.forEach((position, id) => {
+        const node = cy.getElementById(id);
+
+        if (node.nonempty()) {
+          node.position(position);
+        }
+      });
+
+    explore = null;
+    applyVisibility(cy.elements());
+    moveTo(view.saved.positions);
+
+    try {
+      return read();
+    } finally {
+      explore = view;
+      moveTo(shownAt);
+      applyVisibility(cy.elements());
+    }
   }
 
   // Under each node: the entity type (always, de-emphasised) then, when
@@ -1930,6 +2106,19 @@ function buildController(model, options = {}) {
     clearHover,
     focusEntity,
     focusField,
+    explore: startExplore,
+    setExplore,
+    clearExplore,
+    syncExplore,
+    exploring,
+    withoutExplore,
+    // Whether the explore view hides the entity or field with the id, or the
+    // field's entity.
+    exploreHides: (id) => {
+      const node = cy.getElementById(id);
+
+      return node.nonempty() && outsideExplore(node.data('group') === 'field' ? cy.getElementById(node.data('entity')) : node);
+    },
     setFieldHidden,
     rebuildCaptions,
     rebuildNotes,

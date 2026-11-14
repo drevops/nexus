@@ -176,6 +176,21 @@ export function tapNode(page, id) {
   }, id);
 }
 
+// Right-clicks the entity, which opens the entity menu at it.
+export async function openEntityMenu(page, id) {
+  await page.evaluate((nodeId) => {
+    window.__nexus.cy.getElementById(nodeId).emit('cxttap');
+  }, id);
+  await expect(page.locator('#entity-menu')).toBeVisible();
+}
+
+// Starts an explore view from the entity through its right-click menu.
+export async function exploreFrom(page, id) {
+  await openEntityMenu(page, id);
+  await page.click('#entity-menu [data-explore]');
+  await expect(page.locator('#explore-bar')).toBeVisible();
+}
+
 export function captionsOf(page, id) {
   return page.evaluate(
     (nodeId) =>
@@ -260,7 +275,7 @@ export async function selectTrackField(page) {
 }
 
 export function addTarget(page, target) {
-  return slSelect(page, '#inspector sl-select[placeholder="Add target…"]', target);
+  return slSelect(page, '#inspector sl-select[data-add-target]', target);
 }
 
 // Captions and handles are repositioned 1 frame after a Cytoscape redraw, so

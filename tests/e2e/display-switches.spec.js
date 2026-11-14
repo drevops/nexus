@@ -37,7 +37,7 @@ test.describe('Display switches', { tag: '@runner-2' }, () => {
     await loadExample(page);
 
     const parts = await page.evaluate(() => [...document.querySelector('#statusbar').children].map((el) => el.id || el.className));
-    expect(parts).toEqual(['statusbar__display', 'statusbar-hint', 'statusbar__tips', 'statusbar__zoom']);
+    expect(parts).toEqual(['statusbar__display', 'explore-bar', 'statusbar-hint', 'statusbar__tips', 'statusbar__zoom']);
 
     const switches = await page.evaluate(() =>
       [...document.querySelectorAll('.statusbar__display > *')].map((el) => [el.tagName.toLowerCase(), el.id, el.textContent, el.dataset.shortcut]),
