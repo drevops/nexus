@@ -70,7 +70,7 @@ test.describe('Keyboard', { tag: '@runner-2' }, () => {
       ['Settings', ',', (page) => expect(page.locator('#settings')).toBeVisible()],
       ['the Open menu', 'Shift+O', (page) => expect(page.locator('#open-menu')).toBeVisible()],
       ['the Save as menu', 'Control+Shift+S', (page) => expect(page.locator('#save-menu')).toBeVisible()],
-      ['Fields', 'f', (page) => expect(page.locator('#fields-toggle')).toHaveJSProperty('checked', false)],
+      ['Fields', 'f', (page) => expect(page.locator('#detail-level')).toHaveText('Fields: Entities')],
       ['Proxies', 'p', (page) => expect(page.locator('#proxy-toggle')).toHaveJSProperty('checked', false)],
       ['Machine names', 'm', (page) => expect(page.locator('#machine-names')).toHaveJSProperty('checked', false)],
       ['Entities', '1', (page) => expect(page.locator('#entities')).toBeVisible()],
@@ -369,7 +369,7 @@ test.describe('Keyboard', { tag: '@runner-2' }, () => {
 
       await expect(page.locator(field)).toHaveJSProperty('value', 'cf');
       await expect(page.locator('#connect-toggle')).not.toHaveClass(/is-active/);
-      await expect(page.locator('#fields-toggle')).toHaveJSProperty('checked', true);
+      await expect(page.locator('#detail-level')).toHaveText('Fields: All');
     });
   }
 
@@ -412,7 +412,7 @@ test.describe('Keyboard', { tag: '@runner-2' }, () => {
     await page.keyboard.press('Alt+n');
 
     await expect(page.locator('#search')).toHaveJSProperty('value', 'f1?');
-    await expect(page.locator('#fields-toggle')).toHaveJSProperty('checked', true);
+    await expect(page.locator('#detail-level')).toHaveText('Fields: All');
     await expect(page.locator('#entities')).toHaveCount(0);
     await expect(page.locator('#about-dialog')).not.toBeVisible();
     expect(await entityCount(page)).toBeGreaterThan(0);
@@ -451,7 +451,7 @@ test.describe('Keyboard', { tag: '@runner-2' }, () => {
     await page.keyboard.down('f');
     await page.keyboard.down('f');
     await page.keyboard.up('f');
-    await expect(page.locator('#fields-toggle')).toHaveJSProperty('checked', false);
+    await expect(page.locator('#detail-level')).toHaveText('Fields: Entities');
 
     await page.keyboard.down('F1');
     await page.keyboard.down('F1');

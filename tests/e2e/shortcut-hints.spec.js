@@ -10,7 +10,7 @@ test.describe('Shortcut hints', { tag: '@runner-2' }, () => {
     fit: '⇧1',
     'zoom-in': '+',
     search: '/',
-    'fields-toggle': 'F',
+    'detail-level': 'F',
   };
 
   const PC_LABELS = {
@@ -21,7 +21,7 @@ test.describe('Shortcut hints', { tag: '@runner-2' }, () => {
     fit: 'Shift+1',
     'zoom-in': '+',
     search: '/',
-    'fields-toggle': 'F',
+    'detail-level': 'F',
   };
 
   // Reloads the page as a browser on the given platform, which decides how the
@@ -210,7 +210,7 @@ test.describe('Shortcut hints', { tag: '@runner-2' }, () => {
     await page.keyboard.press('f');
     await page.keyboard.press('F1');
 
-    await expect(page.locator('#fields-toggle')).toHaveJSProperty('checked', true);
+    await expect(page.locator('#detail-level')).toHaveText('Fields: All');
     await expect(page.locator('#shortcut-hints')).toBeHidden();
   });
 

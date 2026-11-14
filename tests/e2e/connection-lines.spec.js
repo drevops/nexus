@@ -91,7 +91,7 @@ test.describe('Connection lines', { tag: '@runner-1' }, () => {
     await loadExample(page);
     await pickLines(page, 'merged');
 
-    await page.click('#fields-toggle');
+    await page.click('#detail-level');
     await expect.poll(() => page.evaluate(() => window.__nexus.cy.nodes('[group="field"]:visible').length)).toBe(0);
 
     const drawn = await turns(page);
@@ -121,7 +121,7 @@ test.describe('Connection lines', { tag: '@runner-1' }, () => {
     await loadExample(page);
     await pickLines(page, 'straight');
 
-    await page.click('#fields-toggle');
+    await page.click('#detail-level');
     await expect.poll(() => page.evaluate(() => window.__nexus.cy.nodes('[group="field"]:visible').length)).toBe(0);
 
     const drawn = await lines(page);

@@ -334,7 +334,7 @@ test.describe('History', { tag: '@runner-1' }, () => {
     await editExample(page);
     await page.click('#entities-toggle');
 
-    for (const toggle of ['#fields-toggle', '#fields-toggle', '#proxy-toggle', '#proxy-toggle', '#machine-names']) {
+    for (const toggle of ['#detail-level', '#detail-level', '#detail-level', '#detail-level', '#proxy-toggle', '#proxy-toggle', '#machine-names']) {
       await page.click(toggle);
     }
 

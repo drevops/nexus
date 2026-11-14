@@ -434,7 +434,7 @@ test.describe('Node text', { tag: '@runner-2' }, () => {
       await openDiagram(page, source);
 
       if (view === 'overview') {
-        await page.click('#fields-toggle');
+        await page.click('#detail-level');
       }
 
       await pickLayout(page, layout.toLowerCase());

@@ -14,6 +14,7 @@ import {
   editExample,
   selectTrackField,
   addTarget,
+  pickLevel,
 } from './helpers.js';
 
 test.describe('References', { tag: '@runner-2' }, () => {
@@ -52,7 +53,7 @@ test.describe('References', { tag: '@runner-2' }, () => {
     await loadExample(page);
 
     await expect(page.locator('#proxy-toggle')).toHaveJSProperty('checked', true);
-    await expect(page.locator('#fields-toggle')).toHaveJSProperty('checked', true);
+    await expect(page.locator('#detail-level')).toHaveText('Fields: All');
 
     const counts = await page.evaluate(() => {
       const cy = window.__nexus.cy;
@@ -218,10 +219,10 @@ test.describe('References', { tag: '@runner-2' }, () => {
     await selectTrackField(page);
     await addTarget(page, 'node.event');
 
-    await page.click('#fields-toggle');
+    await pickLevel(page, 'entities');
     expect(await referenceView(page, TRACK_FIELD, 'node.event')).toEqual({ ref: false, proxy: false, proxyEdge: false, collapsed: true });
 
-    await page.click('#fields-toggle');
+    await pickLevel(page, 'references');
     expect(await referenceView(page, TRACK_FIELD, 'node.event')).toEqual(PROXY_VIEW);
   });
 
@@ -316,7 +317,7 @@ test.describe('References', { tag: '@runner-2' }, () => {
     const tags = page.locator('#inspector sl-tag.insp__reftag');
     await expect(tags).toHaveCount(1);
     await tags.evaluate((el) => el.dispatchEvent(new Event('sl-remove', { bubbles: true })));
-    await page.click('#fields-toggle');
+    await page.click('#detail-level');
 
     expect(await page.evaluate(() => window.__nexus.cy.getElementById('c:taxonomy_term.sponsors>media.image').length)).toBe(0);
   });

@@ -98,8 +98,8 @@ test.describe('Checks', { tag: '@runner-2' }, () => {
 
   test('focuses the entity of a field the canvas does not show', async ({ page }) => {
     await openChecks(page, CHECKS_DOC);
-    await page.click('#fields-toggle');
-    await expect(page.locator('#fields-toggle')).not.toHaveAttribute('checked', '');
+    await page.click('#detail-level');
+    await expect(page.locator('#detail-level')).toHaveText('Fields: Entities');
 
     await page.click(`#checks [data-check-id="${TAGS_FIELD}"]`);
 
