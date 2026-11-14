@@ -162,7 +162,8 @@ test.describe('Save', { tag: '@runner-1' }, () => {
           venues: '\n  "taxonomy_term_venues" [label=',
           field: '\n  "field_node_event_field_venue" [label=<Venue<BR/><FONT POINT-SIZE="9" COLOR="#6b7280">field_venue</FONT>>',
           has: '\n  "node_event" -> "field_node_event_field_venue" [dir=none];\n',
-          proxy: '\n  "field_node_event_field_venue" -> "proxy_field_node_event_field_venue_taxonomy_term_venues" [style=dashed, color="#c2c8d0", label="1"];\n',
+          proxy:
+            '\n  "field_node_event_field_venue" -> "proxy_field_node_event_field_venue_taxonomy_term_venues" [style=dashed, color="#c2c8d0", label="1"];\n',
           ref: '\n  "field_node_event_field_venue" -> "taxonomy_term_venues" [color="#8a94a3", label="1"];\n',
         },
       ],

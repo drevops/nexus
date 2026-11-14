@@ -28,15 +28,30 @@ const TAGS_PROXY = 'proxy:' + TAGS_FIELD + '>taxonomy_term.tags';
 function articleElements() {
   return {
     nodes: [
-      { data: { id: 'node.article', group: 'entity', entityType: 'node', bundle: 'article', label: 'Article' }, position: { x: 0, y: 0 }, width: 120, height: 48 },
+      {
+        data: { id: 'node.article', group: 'entity', entityType: 'node', bundle: 'article', label: 'Article' },
+        position: { x: 0, y: 0 },
+        width: 120,
+        height: 48,
+      },
       {
         data: { id: TAGS_FIELD, group: 'field', entity: 'node.article', name: 'field_tags', label: 'Tags', kind: 'multi', required: true },
         position: { x: 180, y: -30 },
         width: 70,
         height: 28,
       },
-      { data: { id: TAGS_PROXY, group: 'proxy', entityType: 'taxonomy_term', label: 'Tags', target: 'taxonomy_term.tags' }, position: { x: 300, y: -30 }, width: 80, height: 30 },
-      { data: { id: 'taxonomy_term.tags', group: 'entity', entityType: 'taxonomy_term', bundle: 'tags', label: 'Tags' }, position: { x: 500, y: 0 }, width: 100, height: 48 },
+      {
+        data: { id: TAGS_PROXY, group: 'proxy', entityType: 'taxonomy_term', label: 'Tags', target: 'taxonomy_term.tags' },
+        position: { x: 300, y: -30 },
+        width: 80,
+        height: 30,
+      },
+      {
+        data: { id: 'taxonomy_term.tags', group: 'entity', entityType: 'taxonomy_term', bundle: 'tags', label: 'Tags' },
+        position: { x: 500, y: 0 },
+        width: 100,
+        height: 48,
+      },
       { data: { id: 'api1', group: 'annotation', kind: 'api', label: 'Search API', method: 'GET /search' }, position: { x: 0, y: 200 }, width: 90, height: 40 },
     ],
     edges: [
@@ -90,7 +105,18 @@ test('reads the nodes and edges the canvas shows', () => {
       height: 48,
     }),
     node({ id: TAGS_FIELD, group: 'field', label: 'Tags *', machineName: 'field_tags', kind: 'multi', x: 180, y: -30, width: 70, height: 28 }),
-    node({ id: TAGS_PROXY, group: 'proxy', label: 'Tags', entityType: 'taxonomy_term', color: '#e2f0d9', symbol: 'tag', x: 300, y: -30, width: 80, height: 30 }),
+    node({
+      id: TAGS_PROXY,
+      group: 'proxy',
+      label: 'Tags',
+      entityType: 'taxonomy_term',
+      color: '#e2f0d9',
+      symbol: 'tag',
+      x: 300,
+      y: -30,
+      width: 80,
+      height: 30,
+    }),
     node({
       id: 'taxonomy_term.tags',
       group: 'entity',
@@ -139,9 +165,24 @@ function dataProviderLeftOut() {
   return [
     ['nothing', () => {}, all, ['has', 'proxy', 'annotation']],
     ['a node of an unknown group', (e) => e.nodes.push({ data: { id: 'x', group: 'caption' } }), all, ['has', 'proxy', 'annotation']],
-    ['an edge of an unknown group', (e) => e.edges.push({ data: { group: 'link', source: 'api1', target: 'node.article' } }), all, ['has', 'proxy', 'annotation']],
-    ['an edge to a node the graph does not hold', (e) => e.nodes.splice(2, 1), ['node.article', TAGS_FIELD, 'taxonomy_term.tags', 'api1'], ['has', 'annotation']],
-    ['an edge from a node the graph does not hold', (e) => e.nodes.splice(4, 1), ['node.article', TAGS_FIELD, TAGS_PROXY, 'taxonomy_term.tags'], ['has', 'proxy']],
+    [
+      'an edge of an unknown group',
+      (e) => e.edges.push({ data: { group: 'link', source: 'api1', target: 'node.article' } }),
+      all,
+      ['has', 'proxy', 'annotation'],
+    ],
+    [
+      'an edge to a node the graph does not hold',
+      (e) => e.nodes.splice(2, 1),
+      ['node.article', TAGS_FIELD, 'taxonomy_term.tags', 'api1'],
+      ['has', 'annotation'],
+    ],
+    [
+      'an edge from a node the graph does not hold',
+      (e) => e.nodes.splice(4, 1),
+      ['node.article', TAGS_FIELD, TAGS_PROXY, 'taxonomy_term.tags'],
+      ['has', 'proxy'],
+    ],
     [
       'an empty graph',
       (e) => {
@@ -239,7 +280,10 @@ function dataProviderCaptions() {
 }
 
 test('escapes captions in both formats', () => {
-  const graph = canvasGraph({ nodes: [{ data: { id: 'node.a', group: 'entity', entityType: 'node', bundle: 'a', label: 'A & B' } }] }, { typeLabel: () => '<i>"T"</i> #1' });
+  const graph = canvasGraph(
+    { nodes: [{ data: { id: 'node.a', group: 'entity', entityType: 'node', bundle: 'a', label: 'A & B' } }] },
+    { typeLabel: () => '<i>"T"</i> #1' },
+  );
 
   assert.ok(toMermaid(graph).includes('label: "A #amp; B<br><small>#lt;i#gt;#quot;T#quot;#lt;/i#gt; #35;1</small>" }'), toMermaid(graph));
   assert.ok(toDot(graph).includes('[label=<A &amp; B<BR/><FONT POINT-SIZE="9" COLOR="#6b7280">&lt;i&gt;&quot;T&quot;&lt;/i&gt; #1</FONT>>, '), toDot(graph));
@@ -463,7 +507,12 @@ test('styles each kind of field the way the canvas draws it', async (t) => {
 function dataProviderFieldKinds() {
   return [
     ['single', 'field', 'fill:#ffffff,stroke:#555c66,color:#1f2933', 'fillcolor="#ffffff", color="#555c66", style="filled"'],
-    ['multi', 'field_multi', 'fill:#ffffff,stroke:#555c66,stroke-width:3px,color:#1f2933', 'fillcolor="#ffffff", color="#555c66", peripheries=2, style="filled"'],
+    [
+      'multi',
+      'field_multi',
+      'fill:#ffffff,stroke:#555c66,stroke-width:3px,color:#1f2933',
+      'fillcolor="#ffffff", color="#555c66", peripheries=2, style="filled"',
+    ],
     [
       'system',
       'field_system',
