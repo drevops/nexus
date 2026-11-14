@@ -113,8 +113,9 @@ test.describe('Mode frame', { tag: '@runner-2' }, () => {
     expect((await modeFrame(page)).color).toBe('rgb(17, 34, 51)');
 
     await openSettings(page, 'frame');
-    await expect(page.locator('#settings sl-color-picker[data-frame-color="view"]')).toHaveAttribute('value', '#445566');
-    await expect(page.locator('#settings sl-color-picker[data-frame-color="edit"]')).toHaveAttribute('value', '#112233');
+    // A picker with opacity reports its value with the alpha channel.
+    await expect(page.locator('#settings sl-color-picker[data-frame-color="view"]')).toHaveJSProperty('value', '#445566ff');
+    await expect(page.locator('#settings sl-color-picker[data-frame-color="edit"]')).toHaveJSProperty('value', '#112233ff');
   });
 
   // Settings stored with 1 switch and a colour per mode open as the frames

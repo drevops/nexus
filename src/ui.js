@@ -15,6 +15,7 @@
  * imperative overlays it owns are never re-rendered.
  */
 
+import { discover } from '../assets/vendor/shoelace/shoelace-autoloader.js';
 import { h, render, Component, options } from 'preact';
 import { useState, useEffect, useLayoutEffect, useRef } from 'preact/hooks';
 import htmBase from 'htm';
@@ -1945,13 +1946,27 @@ function syncToggles() {
   });
 }
 
+// The Shoelace components the Settings tabs draw. The autoloader loads a
+// component only once it is in the page, so on the first open a component
+// that no diagram screen has used would draw a frame after the rest.
+const SETTINGS_COMPONENTS = ['sl-tab-group', 'sl-tab', 'sl-tab-panel', 'sl-select', 'sl-option', 'sl-color-picker', 'sl-switch', 'sl-input', 'sl-button'];
+
+function loadSettingsComponents() {
+  const holder = document.createElement('div');
+
+  holder.append(...SETTINGS_COMPONENTS.map((tag) => document.createElement(tag)));
+
+  return discover(holder);
+}
+
 export function initUI() {
   titleShoelaceHosts(options);
   render(html`<${StageApp} />`, $('stage-root'));
 
   const settings = $('settings');
+  const components = loadSettingsComponents();
   render(html`<${SettingsBody} dialog=${settings} />`, $('settings-body'));
-  $('settings-toggle').addEventListener('click', () => settings.show());
+  $('settings-toggle').addEventListener('click', () => components.then(() => settings.show()));
   $('settings-close').addEventListener('click', () => settings.hide());
   $('settings-reset').addEventListener('click', () => getController()?.resetSettings());
 

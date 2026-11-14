@@ -41,6 +41,26 @@ test.describe('Settings', { tag: '@runner-2' }, () => {
     });
   }
 
+  // No diagram screen draws a colour picker or a tab, so before the first
+  // open those components are loaded only by the Settings button.
+  test('shows the dialog only once every component of its tabs is defined', async ({ page }) => {
+    await loadExample(page);
+    await page.locator('#settings').evaluate((dialog) => {
+      dialog.addEventListener(
+        'sl-show',
+        () => {
+          window.__settingsComponents = ['sl-tab-group', 'sl-color-picker', 'sl-select', 'sl-switch', 'sl-input'].filter((tag) => !customElements.get(tag));
+        },
+        { once: true },
+      );
+    });
+
+    await page.click('#settings-toggle');
+
+    await expect(page.locator('#settings')).toHaveAttribute('open', '');
+    expect(await page.evaluate(() => window.__settingsComponents)).toEqual([]);
+  });
+
   test('heads the Settings dialog with the cog of the Settings button', async ({ page }) => {
     await loadExample(page);
     await page.click('#settings-toggle');
