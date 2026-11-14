@@ -803,6 +803,31 @@ function dataProviderDotShapes() {
   ];
 }
 
+test('draws entity text in the colour that reads on its fill in both formats', async (t) => {
+  for (const [name, color, mermaidText, dotFont, dotCaption] of dataProviderEntityText()) {
+    await t.test(name, () => {
+      const options = { colorFor: () => color, typeLabel: () => 'Content type', machineNames: true };
+      const graph = canvasGraph({ nodes: [{ data: { id: 'node.a', group: 'entity', entityType: 'node', bundle: 'a', label: 'A' } }] }, options);
+      const node = toDot(graph)
+        .split('\n')
+        .find((line) => line.includes('"node_a" ['));
+
+      assert.ok(toMermaid(graph).includes('stroke:#5b6470,color:' + mermaidText + '\n'), toMermaid(graph));
+      assert.equal(node.includes('fontcolor='), dotFont !== null, node);
+      assert.ok(dotFont === null || node.includes('fontcolor="' + dotFont + '"'), node);
+      assert.ok(node.includes('<FONT POINT-SIZE="9" COLOR="' + dotCaption + '">Content type</FONT>'), node);
+    });
+  }
+});
+
+function dataProviderEntityText() {
+  return [
+    ['a pastel fill', '#d9e2f3', '#1f2933', null, '#6b7280'],
+    ['a dark fill', '#1e3a8a', '#ffffff', '#ffffff', '#e5e7eb'],
+    ['no fill', null, '#1f2933', null, '#6b7280'],
+  ];
+}
+
 test('keeps an 8-digit proxy colour and leaves out a missing one', () => {
   const graph = (color) => canvasGraph({ nodes: [{ data: { id: 'p', group: 'proxy', entityType: 'node', label: 'P' } }] }, { colorFor: () => color });
 

@@ -10,6 +10,7 @@
 import { isHexColor, isSymbol } from './type-styles.js';
 import { NOTE_KIND } from './annotations.js';
 import { noteMarkdownPlain } from './note-markdown.js';
+import { TEXT_TONES, textTone } from './text-contrast.js';
 
 // Mermaid's default maxTextSize and maxEdges; a diagram past either doesn't
 // render, and neither can be raised from inside the diagram.
@@ -343,6 +344,16 @@ function mermaidClass(node) {
   return node.group + '_' + identifier(node.entityType, 't');
 }
 
+// The text and muted colours of a node's label: the light theme's, or the
+// light pair of TEXT_TONES on an entity fill too dark for them.
+function labelColors(node) {
+  if (node.group === 'entity' && node.color && textTone(node.color) === 'light') {
+    return TEXT_TONES.light;
+  }
+
+  return { text: COLORS.text, muted: COLORS.muted };
+}
+
 function mermaidStyle(name, node) {
   const fill = node.color ? 'fill:' + node.color + ',' : '';
   const styles = {
@@ -362,7 +373,7 @@ function mermaidStyle(name, node) {
     return fill + 'fill-opacity:0.4,stroke:' + COLORS.proxyBorder + ',stroke-dasharray:4 3,color:' + COLORS.muted + ',font-style:italic';
   }
 
-  return fill + 'stroke:' + COLORS.nodeBorder + ',color:' + COLORS.text;
+  return fill + 'stroke:' + COLORS.nodeBorder + ',color:' + labelColors(node).text;
 }
 
 const MERMAID_LINKS = {
@@ -525,7 +536,7 @@ function dotLabel(node) {
 
   if (captions.length > 0) {
     const lines = textLines(node).map(dotHtml);
-    const small = captions.map((line) => '<FONT POINT-SIZE="9" COLOR="' + COLORS.muted + '">' + dotHtml(line) + '</FONT>');
+    const small = captions.map((line) => '<FONT POINT-SIZE="9" COLOR="' + labelColors(node).muted + '">' + dotHtml(line) + '</FONT>');
 
     return '<' + lines.concat(small).join('<BR/>') + '>';
   }
@@ -545,6 +556,9 @@ function dotNodeAttributes(node) {
 
   if (node.group === 'entity') {
     attributes.fillcolor = node.color ? '"' + node.color + '"' : null;
+    const fontColor = labelColors(node).text;
+
+    attributes.fontcolor = fontColor === COLORS.text ? null : '"' + fontColor + '"';
   }
 
   if (node.group === 'proxy') {

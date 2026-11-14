@@ -35,15 +35,6 @@ body {
   background: var(--bg);
 }
 
-/* Muted and coloured text keeps its own colour on the browser's highlight,
-   which leaves it unreadable in the dark theme. Primary-700 keeps a 4.5:1
-   contrast with neutral-0 in both themes, while primary-600 drops below it
-   in the light theme. */
-::selection {
-  background: var(--sl-color-primary-700);
-  color: var(--sl-color-neutral-0);
-}
-
 .toolbar {
   display: flex;
   flex-direction: column;
@@ -733,13 +724,12 @@ sl-button#zoom-level::part(base) {
   white-space: nowrap;
 }
 
-/* A quiet sub-label inside the entity box. The box keeps its light pastel fill
-   in both themes, so the colour is pinned (not themed) to stay legible on it. */
+/* A sub-label inside the entity box. positionCaptions() in src/render.js sets
+   its colour from the box's fill. */
 .caption--type {
   font-family: inherit;
   font-style: italic;
   font-weight: 400;
-  color: rgba(31, 41, 51, 0.6);
   background: none;
 }
 
