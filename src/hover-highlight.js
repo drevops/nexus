@@ -76,7 +76,15 @@ export function hoverNeighbourhood(node) {
   }
 
   if (group === 'proxy') {
-    return node.union(referencesOf(cy, cy.getElementById(node.data('field')).edgesTo(cy.getElementById(node.data('target'))).filter('[group="ref"]')));
+    return node.union(
+      referencesOf(
+        cy,
+        cy
+          .getElementById(node.data('field'))
+          .edgesTo(cy.getElementById(node.data('target')))
+          .filter('[group="ref"]'),
+      ),
+    );
   }
 
   return cy.collection();

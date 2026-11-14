@@ -33,7 +33,16 @@ const NOTE = 'annotation:note';
 
 // The elements that draw a reference from a field to a target.
 function reference(field, entity, target) {
-  return [field, entity, hasEdgeId(field), refEdgeId(field, target), target, proxyNodeId(field, target), proxyEdgeId(field, target), collapsedEdgeId(entity, target)];
+  return [
+    field,
+    entity,
+    hasEdgeId(field),
+    refEdgeId(field, target),
+    target,
+    proxyNodeId(field, target),
+    proxyEdgeId(field, target),
+    collapsedEdgeId(entity, target),
+  ];
 }
 
 // An article that references a vocabulary and pages, a page that references
