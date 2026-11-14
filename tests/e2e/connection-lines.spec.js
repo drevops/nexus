@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { loadExample, slSelect } from './helpers.js';
 
-test.describe('Connection lines', { tag: '@runner-2' }, () => {
+test.describe('Connection lines', { tag: '@runner-1' }, () => {
   const SELECT = '#settings [data-lines="style"]';
 
   // The curve styles of the visible edges, and how many of the visible edges
