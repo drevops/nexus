@@ -205,7 +205,7 @@ npm run benchmark -- --base-ref main --runs 7
   - `shortcut-hints.spec.js` - the F1 shortcut view: its labels on each platform, their placement and what hides them.
   - `status-bar.spec.js` - the status bar's hint, tips and zoom menu, and its layout in narrow windows.
   - `templates.spec.js` - the template rows on the landing screen, the loader they replace and loading each template. It reads each template's version and bundle counts from `TEMPLATES`, because `npm run update-templates` rewrites them there.
-  - `theme.spec.js` - the dark theme toggle on the landing screen and in the toolbar, and the theme applied before `src/app.js` starts.
+  - `theme.spec.js` - the dark theme toggle on the landing screen and in the toolbar, the theme applied before `src/app.js` starts, and the colours and contrast of selected text in each theme.
   - `tidy.spec.js` - the Tidy up button, the field order it keeps and the entity it works on.
   - `titles.spec.js` - the hover title on every control, header and badge.
   - `toolbar.spec.js` - the toolbar's sections and separators, the panel toggles' labels, the brand line and the split button carets.

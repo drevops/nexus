@@ -35,6 +35,15 @@ body {
   background: var(--bg);
 }
 
+/* Muted and coloured text keeps its own colour on the browser's highlight,
+   which leaves it unreadable in the dark theme. Primary-700 keeps a 4.5:1
+   contrast with neutral-0 in both themes, while primary-600 drops below it
+   in the light theme. */
+::selection {
+  background: var(--sl-color-primary-700);
+  color: var(--sl-color-neutral-0);
+}
+
 .toolbar {
   display: flex;
   flex-direction: column;
