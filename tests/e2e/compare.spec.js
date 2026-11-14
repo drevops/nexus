@@ -77,6 +77,13 @@ async function compareWith(page, doc, name = 'site.nexus.json') {
   await expect(page.locator('#changes')).toBeVisible();
 }
 
+// The comparison fits the view a frame after it starts, and a menu on the
+// canvas closes when the view moves, so this waits for the fit to end.
+async function waitForFit(page) {
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await expect.poll(() => page.evaluate(() => window.__nexus.cy.animated())).toBe(false);
+}
+
 // The rows of the Changes panel, in order, as [bundle heading, change, id].
 function listedChanges(page) {
   return page
@@ -281,6 +288,7 @@ test.describe('Compare', { tag: '@runner-1' }, () => {
     await compareWith(page, SITE);
     await expect(page.locator('#explore-bar')).toBeHidden();
 
+    await waitForFit(page);
     await exploreFrom(page, 'node.article');
     await page.click('#compare-stop');
 
