@@ -267,6 +267,41 @@ test.describe('Entity types', { tag: '@runner-2' }, () => {
     await expect(select.locator(':scope > .type-row__preview polygon')).toHaveCount(1);
   });
 
+  // Each symbol select's caret and symbol as the room left between them and
+  // the select's border, and the height of the colour picker beside it.
+  function symbolSelectLayout(page) {
+    return page.evaluate(() =>
+      [...document.querySelectorAll('#settings .type-row')].map((row) => {
+        const select = row.querySelector('sl-select');
+        const box = select.getBoundingClientRect();
+        const caret = select.shadowRoot.querySelector('[part~="expand-icon"]').getBoundingClientRect();
+        const symbol = select.querySelector('.type-row__preview svg').getBoundingClientRect();
+
+        return {
+          caretRoom: Math.round(box.right - caret.right),
+          symbolRoom: Math.round(symbol.left - box.left),
+          pickerHeight: Math.round(row.querySelector('sl-color-picker').getBoundingClientRect().height - box.height),
+        };
+      }),
+    );
+  }
+
+  for (const placement of dataProviderSymbolListPlacements()) {
+    test(`keeps the caret and symbol of each symbol select inside its border in the ${placement}`, async ({ page }) => {
+      await openTypeSettings(page, placement);
+
+      const rows = await symbolSelectLayout(page);
+
+      expect(rows.length).toBe(9);
+
+      for (const row of rows) {
+        expect(row.caretRoom).toBeGreaterThanOrEqual(6);
+        expect(row.symbolRoom).toBeGreaterThanOrEqual(6);
+        expect(row.pickerHeight).toBe(0);
+      }
+    });
+  }
+
   for (const placement of dataProviderSymbolListPlacements()) {
     test(`opens the symbol list inside the window in the ${placement}`, async ({ page }) => {
       await openTypeSettings(page, placement);
