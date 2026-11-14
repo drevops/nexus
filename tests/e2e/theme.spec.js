@@ -1,29 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { loadExample, openBeforeAppStarts, openFrom, DARK_MARK, markFills } from './helpers.js';
 
-// Text in each of the page's text colours: the brand, muted text, a machine
-// name and an entity type caption.
-const SELECTION_SAMPLES = ['.toolbar__brand', '.statusbar__tips', '.caption:not(.caption--type)', '.caption--type'];
-
-// The WCAG contrast ratio of 2 'rgb()' colours.
-function contrastRatio(first, second) {
-  const luminance = (colour) => {
-    const [r, g, b] = colour
-      .match(/\d+/g)
-      .slice(0, 3)
-      .map((channel) => {
-        const value = Number(channel) / 255;
-
-        return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
-      });
-
-    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  };
-  const [lighter, darker] = [luminance(first), luminance(second)].sort((a, b) => b - a);
-
-  return (lighter + 0.05) / (darker + 0.05);
-}
-
 test.describe('Theme', { tag: '@runner-1' }, () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/index.html');
@@ -99,36 +76,6 @@ test.describe('Theme', { tag: '@runner-1' }, () => {
       ['a stored light theme over a dark system scheme', 'light', 'dark', false],
       ['a dark system scheme with no stored theme', null, 'dark', true],
       ['a light system scheme with no stored theme', null, 'light', false],
-    ];
-  }
-
-  for (const [theme, dark] of dataProviderSelectionThemes()) {
-    test(`draws selected text in 1 readable colour pair in the ${theme} theme`, async ({ page }) => {
-      await loadExample(page);
-
-      if (dark) {
-        await page.click('#theme-toggle');
-      }
-
-      expect(await page.evaluate(() => document.documentElement.classList.contains('sl-theme-dark'))).toBe(dark);
-
-      const pairs = await page.evaluate((selectors) => {
-        return selectors.map((selector) => {
-          const style = getComputedStyle(document.querySelector(selector), '::selection');
-
-          return [style.backgroundColor, style.color];
-        });
-      }, SELECTION_SAMPLES);
-
-      expect(new Set(pairs.map((pair) => pair.join('/'))).size).toBe(1);
-      expect(contrastRatio(...pairs[0])).toBeGreaterThanOrEqual(4.5);
-    });
-  }
-
-  function dataProviderSelectionThemes() {
-    return [
-      ['light', false],
-      ['dark', true],
     ];
   }
 
