@@ -5,6 +5,8 @@
  * symbol, and the base name of bundles created on the canvas.
  */
 
+import { machineName } from './names.js';
+
 export const ENTITY_TYPES = [
   { type: 'node', label: 'Content type', color: '#d9e2f3', symbol: 'rounded', bundleBase: 'content_type' },
   { type: 'taxonomy_term', label: 'Vocabulary', color: '#9fc5e8', symbol: 'tag', bundleBase: 'vocabulary' },
@@ -34,6 +36,18 @@ const COUNT_NOUNS = new Map([
  */
 export function findEntityType(type) {
   return BY_TYPE.get(type) || null;
+}
+
+/**
+ * Returns the built-in entity type a name stands for, or null. The name can
+ * be the type's machine name, its label or the singular noun of its bundles,
+ * such as 'paragraph type', compared as machine names, so case, spaces and
+ * punctuation don't count.
+ */
+export function findEntityTypeByName(name) {
+  const key = machineName(name);
+
+  return ENTITY_TYPES.find((entry) => [entry.type, entry.label, COUNT_NOUNS.get(entry.type)[0]].some((alias) => machineName(alias) === key)) || null;
 }
 
 /**

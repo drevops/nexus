@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { humanize, machineName, fileSlug } from '../../src/names.js';
+import { fieldLabel, fieldMachineName, humanize, machineName, fileSlug } from '../../src/names.js';
 
 test('humanizes a machine name into a label', async (t) => {
   for (const [name, value, expected] of dataProviderHumanize()) {
@@ -59,6 +59,44 @@ test('keeps a machine name unchanged when it is already valid', () => {
     assert.equal(machineName(value), value);
   }
 });
+
+test('derives a field machine name from a label', async (t) => {
+  for (const [name, value, expected] of dataProviderFieldMachineName()) {
+    await t.test(name, () => {
+      assert.equal(fieldMachineName(value), expected);
+    });
+  }
+});
+
+function dataProviderFieldMachineName() {
+  return [
+    ['a label', 'Main image', 'field_main_image'],
+    ['a name with the prefix', 'field_body', 'field_body'],
+    ['a label starting with Field', 'Field Hero', 'field_hero'],
+    ['a name without the prefix', 'body', 'field_body'],
+    ['punctuation only', '!!!', ''],
+    ['an empty string', '', ''],
+    ['null', null, ''],
+  ];
+}
+
+test('derives a field label from a machine name', async (t) => {
+  for (const [name, value, expected] of dataProviderFieldLabel()) {
+    await t.test(name, () => {
+      assert.equal(fieldLabel(value), expected);
+    });
+  }
+});
+
+function dataProviderFieldLabel() {
+  return [
+    ['a prefixed name', 'field_main_image', 'Main Image'],
+    ['a name without the prefix', 'body', 'Body'],
+    ['the prefix alone', 'field_', 'Field '],
+    ['an empty string', '', ''],
+    ['null', null, ''],
+  ];
+}
 
 test('slugs a title into a file name', async (t) => {
   for (const [name, value, expected] of dataProviderFileSlug()) {

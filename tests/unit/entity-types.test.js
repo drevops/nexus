@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { ENTITY_TYPES, ENTITY_TYPE_ORDER, findEntityType, formatCount, pluralLabel } from '../../src/entity-types.js';
+import { ENTITY_TYPES, ENTITY_TYPE_ORDER, findEntityType, findEntityTypeByName, formatCount, pluralLabel } from '../../src/entity-types.js';
 import { machineName } from '../../src/names.js';
 
 const ROOT = join(import.meta.dirname, '..', '..');
@@ -45,6 +45,38 @@ function dataProviderFindEntityType() {
     ['an inherited object property', 'constructor', null],
     ['an empty string', '', null],
     ['undefined', undefined, null],
+  ];
+}
+
+test('finds a built-in entity type by any of its names', async (t) => {
+  for (const [name, value, expected] of dataProviderFindEntityTypeByName()) {
+    await t.test(name, () => {
+      const entry = findEntityTypeByName(value);
+
+      assert.equal(entry ? entry.type : null, expected);
+    });
+  }
+});
+
+function dataProviderFindEntityTypeByName() {
+  return [
+    ['a machine name', 'taxonomy_term', 'taxonomy_term'],
+    ['a machine name in words', 'Taxonomy term', 'taxonomy_term'],
+    ['a label', 'Content type', 'node'],
+    ['a label in another case', 'VOCABULARY', 'taxonomy_term'],
+    ['a label as a machine name', 'content_type', 'node'],
+    ['a paragraph type', 'Paragraph type', 'paragraph'],
+    ['a media type', 'media type', 'media'],
+    ['a block type', 'Block type', 'block_content'],
+    ['a block content machine name', 'block_content', 'block_content'],
+    ['a user type', 'User type', 'user'],
+    ['an external entity type', 'External entity type', 'external'],
+    ['surrounding spaces and punctuation', '  Paragraph-type! ', 'paragraph'],
+    ['a plural', 'Paragraph types', null],
+    ['a custom type', 'Commerce product', null],
+    ['an inherited object property', 'constructor', null],
+    ['an empty string', '', null],
+    ['null', null, null],
   ];
 }
 

@@ -101,9 +101,9 @@ test.describe('Fields table', { tag: '@runner-2' }, () => {
     const csv = readFileSync(await download.path(), 'utf8');
     const lines = csv.split('\r\n');
     expect(lines[0]).toBe(
-      'Entity,Entity type,Field,Machine name,Field type,Cardinality,Required,References,Used in,Help text,Default,Allowed values,Translatable',
+      'Entity,Entity type,Bundle,Field,Machine name,Field type,Cardinality,Required,References,Used in,Help text,Default,Allowed values,Translatable',
     );
-    expect(lines.some((l) => l.startsWith('Session,Content type,'))).toBe(true);
+    expect(lines.some((l) => l.startsWith('Session,Content type,session,'))).toBe(true);
   });
 
   test('quotes CSV cells that hold a comma, a quote or a line break', async ({ page }) => {

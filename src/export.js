@@ -1,13 +1,14 @@
 /**
  * Client-side downloads: the diagram canvas as PNG or SVG, the fields,
- * bundles and references as CSV, the model as Markdown or HTML and the
- * diagram as a Nexus document. Nothing is uploaded - the PNG is rasterised by
- * Cytoscape and the SVG is produced by the cytoscape-svg extension entirely
- * in the browser.
+ * bundles and references and the CSV template as CSV, the model as Markdown
+ * or HTML and the diagram as a Nexus document. Nothing is uploaded - the PNG
+ * is rasterised by Cytoscape and the SVG is produced by the cytoscape-svg
+ * extension entirely in the browser.
  */
 
 import { DEFAULT_TITLE } from './model.js';
 import { fileSlug } from './names.js';
+import { csvTemplate, TEMPLATE_FILE_NAME } from './fields-csv.js';
 
 if (window.cytoscape && window.cytoscapeSvg && !window.cytoscape('core', 'svg')) {
   window.cytoscape.use(window.cytoscapeSvg);
@@ -81,6 +82,13 @@ export function exportSvg(cy, title) {
  */
 export function exportCsv(text, title, name) {
   downloadText(text, fileName(title, '-' + name + '.csv'), 'text/csv');
+}
+
+/**
+ * Download the CSV template a content model can be written in.
+ */
+export function exportCsvTemplate() {
+  downloadText(csvTemplate(), TEMPLATE_FILE_NAME, 'text/csv');
 }
 
 /**

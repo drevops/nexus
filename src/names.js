@@ -29,6 +29,29 @@ export function machineName(value) {
     .replace(/^_+|_+$/g, '');
 }
 
+const FIELD_PREFIX = 'field_';
+
+/**
+ * Turns a field label into a field machine name: 'Main image' gives
+ * 'field_main_image'. A name that already starts with 'field_' keeps it, and
+ * text with no letter or digit gives an empty string.
+ */
+export function fieldMachineName(value) {
+  const name = machineName(value);
+
+  return name && !name.startsWith(FIELD_PREFIX) ? FIELD_PREFIX + name : name;
+}
+
+/**
+ * Turns a field machine name into a label: 'field_main_image' gives
+ * 'Main Image'. The 'field_' prefix is dropped unless nothing else remains.
+ */
+export function fieldLabel(value) {
+  const name = String(value ?? '');
+
+  return humanize(name.startsWith(FIELD_PREFIX) ? name.slice(FIELD_PREFIX.length) : name) || humanize(name);
+}
+
 /**
  * Turns text into a lowercase, hyphen-separated file name stem: 'My Model'
  * gives 'my-model'. Returns an empty string when no letter or digit remains.

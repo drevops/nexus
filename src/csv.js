@@ -1,6 +1,7 @@
 /**
- * The CSV exports: the fields table, 1 row per bundle and 1 row per
- * reference target.
+ * Comma-separated values: the writer every CSV export uses, the reader the
+ * CSV import uses, and the bundles and references exports. The fields CSV
+ * lives in fields-csv.js.
  *
  * Every writer returns CSV text with CRLF line endings. A cell holding a
  * quote, a comma or a line break is quoted, with each quote doubled. A cell
@@ -9,24 +10,7 @@
  */
 
 import { cardinalityLabel, KIND_SYSTEM } from './model.js';
-import { allowedValueLabels } from './field-settings.js';
 import { documentOutline } from './document-outline.js';
-
-const FIELD_HEADERS = [
-  'Entity',
-  'Entity type',
-  'Field',
-  'Machine name',
-  'Field type',
-  'Cardinality',
-  'Required',
-  'References',
-  'Used in',
-  'Help text',
-  'Default',
-  'Allowed values',
-  'Translatable',
-];
 
 const BUNDLE_HEADERS = ['entity_type', 'bundle', 'label', 'description', 'fields', 'referenced_by', 'note'];
 
@@ -37,6 +21,8 @@ const REFERENCE_HEADERS = ['source_entity_type', 'source_bundle', 'field', 'fiel
 const FORMULA_START = /^[=+\-@\t\r]/;
 
 const NUMBER = /^[+-]?\d+(\.\d+)?$/;
+
+const SEPARATORS = [',', ';', '\t'];
 
 function csvCell(value) {
   let text = String(value == null ? '' : value);
@@ -61,27 +47,92 @@ export function csvText(headers, rows) {
 }
 
 /**
- * Returns the fields table as CSV, 1 row per field record. `typeLabel` turns
- * an entity type into the label the CSV shows.
+ * Returns the text a cell holds after the `'` csvText() puts before a formula
+ * is dropped. Any other cell comes back unchanged.
  */
-export function fieldsCsv(records, typeLabel) {
-  const rows = records.map((r) => [
-    r.entity,
-    typeLabel(r.entityType),
-    r.field,
-    r.name,
-    r.type,
-    cardinalityLabel(r.cardinality),
-    yesNo(r.required),
-    r.refs.map((x) => x.label).join('; '),
-    r.usedIn.length || '',
-    r.description,
-    r.defaultValue,
-    allowedValueLabels(r.allowedValues).join('; '),
-    r.translatable === null ? '' : yesNo(r.translatable),
-  ]);
+export function cellText(cell) {
+  const text = String(cell ?? '');
+  const rest = text.slice(1);
 
-  return csvText(FIELD_HEADERS, rows);
+  return text.startsWith("'") && FORMULA_START.test(rest) && !NUMBER.test(rest) ? rest : text;
+}
+
+/**
+ * Returns the cell separator of CSV text: the one of ',', ';' and tab that
+ * occurs most often in its first line outside quotes, or ',' on a tie.
+ * Spreadsheet apps in locales with a decimal comma write ';'.
+ */
+export function csvSeparator(text) {
+  const firstLine = String(text ?? '')
+    .split(/\r|\n/)[0]
+    .replace(/"[^"]*"/g, '');
+  const counts = SEPARATORS.map((separator) => firstLine.split(separator).length - 1);
+  const most = Math.max(...counts);
+
+  return SEPARATORS[counts.indexOf(most)];
+}
+
+/**
+ * Reads CSV text into rows of string cells, split on `separator`. Rows end in
+ * CRLF, LF or CR, a leading byte order mark is dropped, and a final line
+ * break adds no row.
+ *
+ * A double quote opens a quoted cell only at the start of a cell; elsewhere
+ * it is part of the text, as spreadsheets write it.
+ */
+export function parseCsv(text, separator = ',') {
+  const source = String(text ?? '').replace(/^\uFEFF/, '');
+  const rows = [];
+  let row = [];
+  let cell = '';
+  let quoted = false;
+  let started = false;
+
+  for (let i = 0; i < source.length; i++) {
+    const char = source[i];
+
+    if (quoted) {
+      if (char !== '"') {
+        cell += char;
+      } else if (source[i + 1] === '"') {
+        cell += '"';
+        i++;
+      } else {
+        quoted = false;
+      }
+
+      continue;
+    }
+
+    if (char === '"' && cell === '') {
+      quoted = true;
+      started = true;
+    } else if (char === separator) {
+      row.push(cell);
+      cell = '';
+      started = true;
+    } else if (char === '\r' || char === '\n') {
+      row.push(cell);
+      rows.push(row);
+      row = [];
+      cell = '';
+      started = false;
+
+      if (char === '\r' && source[i + 1] === '\n') {
+        i++;
+      }
+    } else {
+      cell += char;
+      started = true;
+    }
+  }
+
+  if (started || cell !== '') {
+    row.push(cell);
+    rows.push(row);
+  }
+
+  return rows;
 }
 
 /**

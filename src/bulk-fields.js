@@ -15,9 +15,8 @@
  */
 
 import { FIELD_TYPES, MAX_CARDINALITY, REFERENCE_FIELD_TYPES } from './model.js';
-import { humanize, machineName } from './names.js';
+import { fieldLabel, fieldMachineName, machineName } from './names.js';
 
-const FIELD_PREFIX = 'field_';
 const MACHINE_NAME = /^[a-z][a-z0-9_]*$/;
 // Greedy, so a label holding parentheses keeps them: 'Size (cm) (field_size)'.
 const LABELLED = /^(.*)\(([^()]*)\)$/;
@@ -124,7 +123,7 @@ function parseLine(source, existing, entityIds, fieldTypes) {
   return {
     field: {
       name: named.name,
-      label: named.label || (reused && reused.label) || defaultLabel(named.name),
+      label: named.label || (reused && reused.label) || fieldLabel(named.name),
       fieldType: fieldType,
       cardinality: options.cardinality ?? (reused && reused.cardinality != null ? reused.cardinality : 1),
       required: options.required,
@@ -146,9 +145,7 @@ function parseName(column) {
     return { name: column, label: '' };
   }
 
-  const name = machineName(column);
-
-  return { name: name && !name.startsWith(FIELD_PREFIX) ? FIELD_PREFIX + name : name, label: column };
+  return { name: fieldMachineName(column), label: column };
 }
 
 // Records 1 option column on `options`, or returns why it can't be used.
@@ -208,9 +205,4 @@ function nameError(name, taken, listed) {
   }
 
   return null;
-}
-
-// 'field_body' gives 'Body'.
-function defaultLabel(name) {
-  return humanize(name.startsWith(FIELD_PREFIX) ? name.slice(FIELD_PREFIX.length) : name) || humanize(name);
 }

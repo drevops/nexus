@@ -48,6 +48,7 @@ Nexus is a static web app. Give it a Drupal config sync directory or a module's 
 - **Descriptions and field settings.** Bundle descriptions, help text, default values, allowed values and translatability show in tooltips, the Inspector, the Fields table and its CSV. Tooltips and the Fields table draw basic formatting in help text and descriptions, such as `<em>` and `<strong>`, and drop scripts and other markup.
 - **Shared fields.** The Fields table and its CSV count the bundles of an entity type that have each field. The field Inspector lists the other bundles with the label each one gives the field.
 - **Templates.** The content models of Drupal CMS, CivicTheme, the Umami demo, Thunder and Open Social open in 1 click.
+- **CSV import.** Write a content model in a spreadsheet with 1 row per field and open it as a diagram. See [Import a CSV](#import-a-csv).
 - **Editable.** Add and change entities, fields, references and annotations, with undo and history.
 - **Notes on the canvas.** A Note holds text in Markdown, anywhere on the diagram. See [Notes](#notes).
 - **Field editing in the Fields table.** Click a cell to change a field's label, machine name, type, cardinality, references, help text, default value, allowed values or translatability. Tick **Req** to make a field required.
@@ -90,6 +91,36 @@ Nexus ships 5 ready-made content models:
 | [Open Social](https://www.drupal.org/project/social) | 13.1.0 | The community and intranet distribution: topics, events, pages, albums, landing pages and courses, with 20 paragraph types, 11 vocabularies, 1 media type and 9 block types |
 
 Each template is drawn from the configuration of an exact release. Drupal CMS builds its landing pages with Canvas, so its diagram has no landing page content type. Umami ships with Drupal core, so its version is the core release it comes from. Open Social keeps groups, profiles and posts in entity types that Nexus doesn't draw, so the diagram leaves out their fields. A field that references a group points to a placeholder entity.
+
+## Import a CSV
+
+A CSV file can hold a content model with 1 row per field. To start from an example, pick **Open > CSV template** in the toolbar and fill the file in with any spreadsheet app.
+
+To open a CSV file as a diagram, pick **Open > CSV file…** in the toolbar or drop the file on the landing screen. Nexus lays the diagram out and titles it after the filename.
+
+The import reads cells separated by commas, semicolons or tabs, taking the separator the header row uses most. It matches these columns by their header, in any order and case:
+
+| Column | What it holds | When the cell is empty |
+|--------|---------------|------------------------|
+| Entity type | The entity type's machine name, label or bundle noun, such as `node`, `Content type` or `Paragraph type`. Any other value adds a custom entity type | The row is an error |
+| Bundle | The bundle's machine name | The machine name of **Entity** |
+| Entity | The bundle's label | The label from another row of the bundle, or a label made from the bundle's machine name |
+| Field | The field's label | A label made from the field's machine name |
+| Machine name | The field's machine name | `field_` and the machine name of **Field** |
+| Field type | The Drupal field type, such as `string` or `entity_reference_revisions` | `entity_reference` on a row with references, `string` on any other row |
+| Cardinality | `1`, a number above 1, `1..5` or `1..n` for unlimited | `1` |
+| Required | `yes` or `no` | `no` |
+| References | The entities the field references, separated by `;`. Write each as `Tags (taxonomy_term.tags)`, as an entity id or as the label of an entity in the file. `media.*` or `media` references every media type | None |
+| Help text | The field's help text | None |
+| Default | The field's default value | None |
+| Allowed values | The field's allowed values, separated by `;`, each written as `Wide (wide)` or `wide\|Wide` | None |
+| Translatable | `yes` or `no` | Unknown |
+
+A row with an entity type and a bundle but no field adds a bundle with no fields. A base field, such as `title` on a content type, imports as a system field. A reference to an entity the file doesn't have adds that entity to the diagram, as a config import does. The import ignores any other column.
+
+**Save as > CSV > Fields** writes the Fields table with the same columns and a **Used in** column. A CSV saved that way imports as the same entities, fields and references. Notes, bundle descriptions, hidden fields, annotations and the layout stay out of the CSV.
+
+When a row has a problem, Nexus opens nothing and lists the first 5 problems with their row numbers. The header is row 1.
 
 ## The visual language
 

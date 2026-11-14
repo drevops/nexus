@@ -63,6 +63,8 @@
           <sl-menu id="open-menu">
             <sl-menu-item value="document" title="Open a saved Nexus diagram (.nexus.json)"><span slot="prefix" data-icon="folder-open"></span>Saved diagram…</sl-menu-item>
             <sl-menu-item value="import" title="Import a Drupal config folder or start from a template"><span slot="prefix" data-icon="folder-input"></span>Config folder or template…</sl-menu-item>
+            <sl-menu-item value="csv" title="Import a content model from a CSV file with 1 row per field"><span slot="prefix" data-icon="table"></span>CSV file…</sl-menu-item>
+            <sl-menu-item value="csv-template" title="Download a CSV template to fill in and import with CSV file…"><span slot="prefix" data-icon="file-down"></span>CSV template</sl-menu-item>
             <sl-menu-item value="ai" title="Create a diagram with an AI agent from a screenshot, spreadsheet or spec"><span slot="prefix" data-icon="sparkles"></span>Create with AI…</sl-menu-item>
           </sl-menu>
         </sl-dropdown>
@@ -174,6 +176,7 @@
 
 <!-- Outside the toolbar, which is inert while the landing screen is open. -->
 <input id="doc-open" class="visually-hidden" type="file" accept=".json,application/json" tabindex="-1">
+<input id="csv-open" class="visually-hidden" type="file" accept=".csv,text/csv" tabindex="-1">
 
 <!-- Inert and busy until src/app.js has wired its controls. -->
 <div id="landing" class="landing" inert aria-busy="true">
