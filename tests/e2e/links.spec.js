@@ -191,6 +191,19 @@ test.describe('Links', { tag: '@runner-2' }, () => {
       .toBe(true);
   });
 
+  test('heads the dialog with the icon of Copy link in the Save menu', async ({ page, context }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    await loadExample(page);
+    await copyLink(page);
+
+    const label = page.locator('#link-dialog .dialog__label');
+    const menuIcon = await page.locator('sl-menu-item[value="link"] > [slot="prefix"] > svg').evaluate((svg) => svg.outerHTML);
+
+    await expect(page.getByRole('dialog', { name: 'Copy link' })).toBeVisible();
+    await expect(label).toHaveText('Copy link');
+    expect(await label.locator('svg').evaluate((svg) => svg.outerHTML)).toBe(menuIcon);
+  });
+
   test('copies the link again from the dialog', async ({ page, context }) => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
     await loadExample(page);

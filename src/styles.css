@@ -1085,9 +1085,27 @@ body.is-dragging-panel * {
   cursor: grabbing !important;
 }
 
+.panel__icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  margin-right: -0.15rem;
+}
+
 .panel__title {
   font-weight: 600;
   font-size: 0.9rem;
+}
+
+.dialog__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dialog__label .icon {
+  flex: 0 0 auto;
+  width: 1em;
+  height: 1em;
 }
 
 .panel__spacer {
