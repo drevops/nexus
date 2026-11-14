@@ -210,8 +210,8 @@ test.describe('Explore', { tag: '@runner-2' }, () => {
 
     await expect(page.locator('#explore-bar')).toBeHidden();
     await expect(page.locator('#statusbar-hint')).toBeVisible();
+    await expect.poll(() => shownIds(page)).toEqual(shown);
     expect(await shownEntities(page)).toEqual(ALL_ENTITIES);
-    expect(await shownIds(page)).toEqual(shown);
     expect(await nodePositions(page)).toEqual(positions);
     expect(await viewport(page)).toEqual(view);
     await expect(page.locator('#undo')).toHaveAttribute('title', undo);
