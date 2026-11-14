@@ -213,6 +213,7 @@ export function initBuilder() {
     }
   });
 
+  wireEntityMenu();
   subscribe(paintPaletteSymbols);
   subscribe(followInspector);
 }
@@ -224,6 +225,7 @@ export function attachBuilder(instance, build = false) {
   buildMode = build;
   connectSource = null;
   taps = [null, null];
+  closeEntityMenu();
   cy.on('tap', (evt) => {
     if (evt.target === cy && placeKind) {
       const kind = placeKind;
@@ -268,10 +270,14 @@ export function attachBuilder(instance, build = false) {
     });
   });
 
-  // A right-click on an entity isolates it and its fields; a tap on the empty
-  // canvas releases the isolation. The native context menu is suppressed, so
-  // a right-click only isolates.
-  cy.on('cxttap', 'node[group="entity"]', (evt) => isolateEntity(evt.target.id()));
+  // A right-click on an entity isolates it and its fields and opens the
+  // entity menu; a tap on the empty canvas releases the isolation. The
+  // native context menu is suppressed.
+  cy.on('cxttap', 'node[group="entity"]', (evt) => {
+    isolateEntity(evt.target.id());
+    openEntityMenu(evt.target.id(), evt.renderedPosition || evt.target.renderedPosition());
+  });
+  cy.on('tapstart cxttapstart viewport', closeEntityMenu);
   cy.container().addEventListener('contextmenu', (evt) => evt.preventDefault());
 
   // Cytoscape zooms on the wheel only while user panning is on, so panning
@@ -384,6 +390,7 @@ export function attachBuilder(instance, build = false) {
     renameEntity,
     renameField,
     refreshSelection,
+    explore: exploreFrom,
   });
   applyMode();
 }
@@ -412,6 +419,7 @@ function applyMode() {
   // A mode switch clears focus and isolation, so no trace, fade or grab state
   // remains from the previous mode.
   clearIsolation();
+  closeEntityMenu();
   const controller = getController();
   if (controller) {
     controller.clearFocus();
@@ -501,6 +509,73 @@ function clearIsolation() {
   isolatedIds = new Set();
   drag = null;
   cy.nodes().grabify();
+}
+
+/* Entity menu: opens at the pointer on a right-click on an entity. ------- */
+
+let menuEntityId = null;
+
+// Opens the menu with its top-left corner at the rendered point, moved left
+// or up as far as it takes to keep the menu inside the canvas.
+function openEntityMenu(entityId, point) {
+  const menu = $('entity-menu');
+  const area = cy.container().getBoundingClientRect();
+
+  menuEntityId = entityId;
+  menu.hidden = false;
+
+  const box = menu.getBoundingClientRect();
+
+  menu.style.left = Math.max(0, Math.min(point.x, area.width - box.width)) + 'px';
+  menu.style.top = Math.max(0, Math.min(point.y, area.height - box.height)) + 'px';
+  menu.querySelector('sl-menu-item').focus();
+}
+
+function closeEntityMenu() {
+  const menu = $('entity-menu');
+
+  menuEntityId = null;
+
+  if (menu) {
+    menu.hidden = true;
+  }
+}
+
+function wireEntityMenu() {
+  const menu = $('entity-menu');
+
+  menu.addEventListener('sl-select', (evt) => {
+    const id = menuEntityId;
+
+    closeEntityMenu();
+
+    if (evt.detail.item.value === 'explore' && id) {
+      exploreFrom(id);
+    }
+  });
+  menu.addEventListener('keydown', (evt) => {
+    if (evt.key === 'Escape') {
+      closeEntityMenu();
+    }
+  });
+  // A press anywhere outside the menu closes it, including on the panels and
+  // the toolbar.
+  document.addEventListener(
+    'pointerdown',
+    (evt) => {
+      if (!menu.hidden && !menu.contains(evt.target)) {
+        closeEntityMenu();
+      }
+    },
+    true,
+  );
+}
+
+// Starts an explore view from the entity, in place of an isolation.
+function exploreFrom(entityId) {
+  clearIsolation();
+  closeEntityMenu();
+  getController().explore(entityId);
 }
 
 // The nodes a drag of the node moves: its isolated group, nothing when an
@@ -980,6 +1055,8 @@ function deleteNode(id) {
   hideHandles();
   bump();
   checkpoint(change);
+  // Runs after the checkpoint, so the step holds the deletion alone.
+  getController().syncExplore();
 }
 
 /* Builder controller ---------------------------------------------------- */

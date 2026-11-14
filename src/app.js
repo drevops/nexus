@@ -19,6 +19,7 @@ import { SAVE_MENU, findSaveFormat } from './save-formats.js';
 import { documentFromGraph, documentToModel } from './document.js';
 import { initBuilder, attachBuilder } from './builder.js';
 import { initUI } from './ui.js';
+import { initExploreBar } from './explore-bar.js';
 import { initUndo, resetHistory, checkpoint } from './undo.js';
 import { initShortcuts } from './keyboard.js';
 import { initAiDialog, showAiDialog } from './ai-dialog.js';
@@ -425,14 +426,9 @@ function wireOpenAndSave() {
 
 function currentDocument(controller, title) {
   const types = controller.typeSettings();
+  const meta = { title: title, colors: types.colors, symbols: types.symbols, customTypes: types.customTypes, ui: exportLayout() };
 
-  return documentFromGraph(controller.cy, {
-    title: title,
-    colors: types.colors,
-    symbols: types.symbols,
-    customTypes: types.customTypes,
-    ui: exportLayout(),
-  });
+  return controller.withoutExplore(() => documentFromGraph(controller.cy, meta));
 }
 
 function saveDocument(controller, title) {
@@ -689,6 +685,7 @@ wireDocument();
 initUI();
 initBuilder();
 initUndo(showTitle);
+initExploreBar();
 initShortcuts();
 initIcons();
 initTheme();

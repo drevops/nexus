@@ -271,6 +271,14 @@ export function EntityForm({ id }) {
       </div>
       ${fields.length ? fields : html`<p class="insp__empty">No fields yet.</p>`}
     </div>
+    <sl-button
+      size="small"
+      class="insp__explore"
+      data-explore-entity
+      title="Show only this entity and the entities within a few references of it"
+      onClick=${() => getBuilder().explore(id)}
+      >${rawIcon('network')}Explore from here</sl-button
+    >
     <sl-button size="small" variant="danger" outline class="insp__delete" title="Delete this entity and its fields" onClick=${() => getBuilder().deleteNode(id)}
       >${rawIcon('trash')}Delete entity</sl-button
     >
@@ -432,6 +440,7 @@ export function FieldForm({ id }) {
         }
         <sl-select
           size="small"
+          data-add-target
           placeholder="Add target…"
           title="Add an entity this field references"
           value=""

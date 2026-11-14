@@ -457,7 +457,14 @@ class CanvasHost extends Component {
       <div id="notes" class="notes"></div>
       <div id="handles" class="handles" hidden></div>
       <div id="mode-frame" class="mode-frame" aria-hidden="true"></div>
-      <div id="tooltip" class="tooltip" role="tooltip" hidden></div>`;
+      <div id="tooltip" class="tooltip" role="tooltip" hidden></div>
+      <div id="entity-menu" class="entity-menu" hidden>
+        <sl-menu aria-label="Entity">
+          <sl-menu-item value="explore" data-explore title="Show only this entity and the entities within a few references of it"
+            ><span slot="prefix" dangerouslySetInnerHTML=${{ __html: icon('network') }}></span>Explore from here</sl-menu-item
+          >
+        </sl-menu>
+      </div>`;
   }
 }
 
@@ -635,7 +642,8 @@ function goToProblem(controller, id) {
 
 function problemRow(controller, problem, iconName, index) {
   const reachable = controller.canFocusProblem(problem.id);
-  const action = reachable ? '. Click to go to it on the canvas' : '. Show its entity type to go to it';
+  const blocked = controller.exploreHides(problem.id) ? '. Clear the explore view to go to it' : '. Show its entity type to go to it';
+  const action = reachable ? '. Click to go to it on the canvas' : blocked;
 
   return html`<li key=${problem.rule + problem.id + index}>
     <button
@@ -763,6 +771,7 @@ const GO_TO_TITLES = {
   field: 'Show this field to go to it',
   fields: 'Turn on Fields to go to this field',
   type: 'Show its entity type to go to this field',
+  explore: 'Clear the explore view to go to this field',
 };
 
 // The go-to and show-or-hide cells of a field's row.

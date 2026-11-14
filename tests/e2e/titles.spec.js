@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { CHECKS_DOC, copyLink, loadExample, openDocument, tapNode } from './helpers.js';
+import { CHECKS_DOC, copyLink, exploreFrom, loadExample, openDocument, openEntityMenu, tapNode } from './helpers.js';
 
 test.describe('Titles', { tag: '@runner-1' }, () => {
   // Describes each visible control, table header and badge that shows no
@@ -166,6 +166,20 @@ test.describe('Titles', { tag: '@runner-1' }, () => {
           await tapNode(page, 'node.event');
           await page.click('#inspector [data-bulk-fields]');
           await expect(page.locator('#inspector [data-copy-from]')).toBeVisible();
+        },
+      ],
+      [
+        'the entity menu',
+        async (page) => {
+          await loadExample(page);
+          await openEntityMenu(page, 'node.event');
+        },
+      ],
+      [
+        'the explore bar',
+        async (page) => {
+          await loadExample(page);
+          await exploreFrom(page, 'node.event');
         },
       ],
       ['the open menu', menu('#open-choose', '#open-menu')],

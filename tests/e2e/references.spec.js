@@ -150,7 +150,7 @@ test.describe('References', { tag: '@runner-2' }, () => {
     const tags = page.locator('#inspector sl-tag.insp__reftag');
     await expect(tags).toHaveCount(1);
 
-    await slSelect(page, '#inspector sl-select[placeholder="Add target…"]', ref.target);
+    await slSelect(page, '#inspector sl-select[data-add-target]', ref.target);
     expect(await refCount(page, ref.field, ref.target)).toBe(1);
     await expect(tags).toHaveCount(1);
 

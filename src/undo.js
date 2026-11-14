@@ -103,7 +103,15 @@ export function historyState() {
  * Brings the open diagram to the version at `index`.
  */
 export function goToVersion(index) {
-  if (!diagramHistory || !diagramHistory.goTo(index)) {
+  if (!diagramHistory || index === diagramHistory.index) {
+    return;
+  }
+
+  // The versions hold the diagram's own positions, so an explore view, which
+  // moves the nodes it shows, ends first.
+  getController().clearExplore();
+
+  if (!diagramHistory.goTo(index)) {
     return;
   }
 

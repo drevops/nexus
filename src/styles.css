@@ -542,6 +542,37 @@ sl-button#zoom-level::part(base) {
   display: none;
 }
 
+/* The explore bar takes the tips' place while an explore view holds. */
+.statusbar__explore {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 0 0 auto;
+  font-size: 0.77rem;
+  white-space: nowrap;
+}
+
+.statusbar__explore[hidden],
+.statusbar__explore:not([hidden]) ~ .statusbar__tips {
+  display: none;
+}
+
+.statusbar__explore-entity {
+  display: inline-block;
+  max-width: 12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+}
+
+.statusbar__explore-depth {
+  width: 8.5rem;
+}
+
+.statusbar__explore-direction sl-radio-button::part(button) {
+  font-size: 0.77rem;
+}
+
 .statusbar__zoom {
   display: flex;
   align-items: center;
@@ -1700,6 +1731,22 @@ body.is-dragging-panel * {
   display: none;
 }
 
+/* Above the floating panels, however often they are raised. */
+.entity-menu {
+  position: absolute;
+  z-index: 30;
+  min-width: 11rem;
+  box-shadow: var(--sl-shadow-large);
+}
+
+.entity-menu sl-menu {
+  padding: 0.2rem 0;
+}
+
+.entity-menu sl-menu-item::part(base) {
+  font-size: 0.82rem;
+}
+
 .tooltip {
   position: absolute;
   z-index: 6;
@@ -2442,6 +2489,7 @@ html.sl-theme-dark .icon--nexus .ink {
 }
 
 .insp sl-button.insp__create,
+.insp sl-button.insp__explore,
 .insp sl-button.insp__delete {
   display: block;
   width: 100%;
@@ -2452,6 +2500,7 @@ html.sl-theme-dark .icon--nexus .ink {
 }
 
 .insp sl-button.insp__create::part(base),
+.insp sl-button.insp__explore::part(base),
 .insp sl-button.insp__delete::part(base) {
   width: 100%;
 }
