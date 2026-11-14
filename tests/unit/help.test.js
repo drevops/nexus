@@ -100,6 +100,10 @@ function dataProviderSearches() {
     ['in', ['start', 'table']],
     ['every dropzone', []],
     ['nothing', []],
+    ['key?', ['keys']],
+    ['"field", table.', ['table']],
+    ['f1-badges', ['keys']],
+    ['?!', ['start', 'table', 'keys']],
   ];
 }
 

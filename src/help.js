@@ -31,10 +31,14 @@ export function findHelpPage(pages, id) {
 
 /**
  * Returns the pages that hold every word of the query in their title,
- * summary or text, in manual order. A blank query matches every page.
+ * summary or text, in manual order. Words are the runs of letters and digits,
+ * so a query with no letter or digit matches every page.
  */
 export function searchManual(pages, query) {
-  const words = String(query).toLowerCase().split(/\s+/).filter(Boolean);
+  const words = String(query)
+    .toLowerCase()
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter(Boolean);
 
   if (!words.length) {
     return pages;
