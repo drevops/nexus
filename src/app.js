@@ -28,11 +28,10 @@ import { initAiDialog, showAiDialog } from './ai-dialog.js';
 import { initLinkDialog, showLinkDialog } from './link-dialog.js';
 import { decodeDocument, documentLink, encodeDocument, linkParams } from './doc-link.js';
 import { initIcons, icon } from './icons.js';
-import { VERSION } from './version.js';
 import { DEFAULT_TITLE } from './model.js';
 import { exportLayout, importLayout, getController } from './store.js';
-import { TEMPLATES, summaryCounts, templatePath, templateTitle } from './templates.js';
-import { formatCount } from './entity-types.js';
+import { templateTitle } from './templates.js';
+import { rowTemplate, templateText } from './template-list.js';
 import { $ } from './dom.js';
 
 const THEME_TOGGLES = '[data-theme-toggle]';
@@ -232,31 +231,13 @@ function compareFolder(fileList) {
   return compareWith(folderName(fileList), () => readConfigFolder(fileList));
 }
 
-async function fetchText(url) {
-  let response;
-  let text;
-
-  try {
-    response = await fetch(url);
-    text = await response.text();
-  } catch {
-    throw new Error(basename(url) + ' could not be downloaded. Check your connection and try again.');
-  }
-
-  if (!response.ok) {
-    throw new Error(basename(url) + ' returned ' + response.status);
-  }
-
-  return text;
-}
-
 async function loadTemplate(template) {
   const title = templateTitle(template);
 
   showError('');
   showLoader('Loading ' + title + '…');
   try {
-    showDocument(JSON.parse(await fetchText(templatePath(template))), 'Loaded the ' + title + ' template');
+    showDocument(JSON.parse(await templateText(template)), 'Loaded the ' + title + ' template');
   } catch (e) {
     showError('Could not load ' + title + ': ' + e.message);
   } finally {
@@ -315,50 +296,14 @@ function walkEntry(entry, files) {
   });
 }
 
-function element(tag, className, text) {
-  const node = document.createElement(tag);
-  node.className = className;
-
-  if (text !== undefined) {
-    node.textContent = text;
-  }
-
-  return node;
-}
-
-function templateRow(template, index) {
-  const row = element('button', 'template-row');
-  row.type = 'button';
-  row.id = 'template-' + template.id;
-  row.title = 'Load the ' + templateTitle(template) + ' content model';
-  row.addEventListener('click', () => loadTemplate(template));
-
-  // The digit keys 1 to 9 load the templates in order.
-  if (index < 9) {
-    row.dataset.shortcut = String(index + 1);
-  }
-
-  const mark = element('span', 'template-row__mark');
-  mark.style.setProperty('--template-color', template.color);
-  mark.innerHTML = icon(template.icon);
-
-  const head = element('span', 'template-row__head');
-  head.append(element('span', 'template-row__name', template.label), element('span', 'template-row__badge', template.version));
-
-  const counts = summaryCounts(template).map(({ type, count }) => formatCount(type, count));
-  const body = element('span', 'template-row__body');
-  body.append(head, element('span', 'template-row__summary', template.summary), element('span', 'template-row__counts', counts.join(' · ')));
-
-  const go = element('span', 'template-row__go');
-  go.innerHTML = icon('chevron-right');
-
-  row.append(mark, body, go);
-
-  return row;
-}
-
 function wireLanding() {
-  $('template-list').replaceChildren(...TEMPLATES.map(templateRow));
+  $('template-list').addEventListener('click', (evt) => {
+    const row = evt.target.closest('.template-row');
+
+    if (row) {
+      loadTemplate(rowTemplate(row));
+    }
+  });
 
   const zone = $('dropzone');
 
@@ -734,12 +679,6 @@ function enableLanding() {
   landing.removeAttribute('aria-busy');
 }
 
-function initVersion() {
-  document.querySelectorAll('[data-version]').forEach((el) => {
-    el.textContent = VERSION;
-  });
-}
-
 wireLanding();
 wireOpenAndSave();
 wireDocument();
@@ -757,7 +696,6 @@ initPageZoomGuard();
 initAbout();
 initAiDialog(showDocument);
 initLinkDialog();
-initVersion();
 enableLanding();
 openLink();
 window.addEventListener('hashchange', openLink);

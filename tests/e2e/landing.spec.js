@@ -21,8 +21,10 @@ test.describe('Landing', { tag: '@runner-1' }, () => {
     const start = await openBeforeAppStarts(page);
     const landing = page.locator('#landing');
 
-    await page.waitForFunction(() => customElements.get('sl-card') && customElements.get('sl-button'));
+    await expect(landing).toHaveAttribute('data-drawn', '');
+    expect(await page.evaluate(() => Boolean(customElements.get('sl-button')))).toBe(true);
     await expect(page.locator('#folder-btn')).toBeVisible();
+    await expect(page.locator('.landing__mark svg.icon--nexus')).toBeVisible();
     await expect(landing).toHaveAttribute('aria-busy', 'true');
     expect(await landing.evaluate((element) => element.inert)).toBe(true);
     await expect(page.locator('.landing__corner')).toBeHidden();
@@ -33,6 +35,54 @@ test.describe('Landing', { tag: '@runner-1' }, () => {
     await expect(landing).not.toHaveAttribute('aria-busy');
     expect(await landing.evaluate((element) => element.inert)).toBe(false);
     await expect(page.locator('#landing-theme')).toBeVisible();
+  });
+
+  test('shows the card only once it is drawn and never moves it while the app starts', async ({ page }) => {
+    const parts = [
+      '.landing__card',
+      '.landing__header',
+      '#dropzone',
+      '#folder-btn',
+      '#landing-open',
+      '#new-btn',
+      '#landing-ai',
+      '#template-list',
+      '.landing__more',
+    ];
+    let release;
+    const held = new Promise((resolve) => {
+      release = resolve;
+    });
+
+    await page.route('**/src/boot.js', async (route) => {
+      await held;
+      await route.continue();
+    });
+
+    const start = await openBeforeAppStarts(page);
+    const card = page.locator('.landing__card');
+
+    await page.locator('.landing__more').waitFor({ state: 'attached' });
+    await expect(card).toBeHidden();
+    await expect(page.locator('.template-row')).toHaveCount(0);
+
+    release();
+
+    await expect(card).toBeVisible();
+    await expect(page.locator('.template-row')).toHaveCount(5);
+    const drawn = await boxesOf(page, parts);
+
+    start();
+
+    await expect(page.locator('#landing')).not.toHaveAttribute('aria-busy');
+    expect(await boxesOf(page, parts)).toEqual(drawn);
+  });
+
+  test('draws the card as a plain element, so its frame needs no component to load', async ({ page }) => {
+    const card = page.locator('.landing__card');
+
+    expect(await card.evaluate((element) => element.localName)).toBe('div');
+    expect(await card.evaluate((element) => getComputedStyle(element).borderTopLeftRadius)).toBe('16px');
   });
 
   test('reopens the import screen and cancels back to the diagram', async ({ page }) => {

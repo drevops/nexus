@@ -2201,15 +2201,20 @@ body.is-dragging-panel * {
   width: 940px;
   max-width: 100%;
   margin: auto;
+  border: 1px solid var(--sl-color-neutral-200);
+  border-radius: 16px;
+  background: var(--sl-panel-background-color);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
   container-type: inline-size;
 }
 
-.landing__card::part(base) {
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+/* src/boot.js sets data-drawn once the buttons, icons and template rows are
+   in, so the card first paints in its final layout. */
+.landing:not([data-drawn]) .landing__card {
+  visibility: hidden;
 }
 
-.landing__card::part(body) {
+.landing__body {
   padding: 1.5rem 1.75rem;
 }
 
@@ -2404,26 +2409,8 @@ body.is-dragging-panel * {
   border-radius: 12px;
 }
 
-/* As tall as the dropzone beside it, so the columns line up while loading. */
-.template-list__loader {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  min-height: 15rem;
-  background: var(--panel-bg);
-  color: var(--muted);
-  font-size: 0.85rem;
-}
-
-.template-list__spinner {
-  font-size: 1.4rem;
-  --track-width: 3px;
-  --indicator-color: var(--accent);
-  --track-color: var(--border);
-}
-
 .template-row {
+  position: relative;
   display: flex;
   flex: 0 0 auto;
   align-items: center;
@@ -2521,6 +2508,68 @@ body.is-dragging-panel * {
 
 .template-row:hover .template-row__go {
   color: var(--accent);
+}
+
+/* The diagram's download, along the bottom edge of the row. It shows only
+   when the download takes longer than 0.15s, so a cached diagram draws no
+   bar. It fades out once the diagram is in and the app has started, and
+   turns red when the download fails. */
+.template-row__progress {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: var(--border);
+  opacity: 0;
+  transition: opacity 0.3s 0.25s;
+  pointer-events: none;
+}
+
+.template-row__progress::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--template-color);
+  transform: scaleX(var(--progress, 0));
+  transform-origin: left;
+  transition: transform 0.2s ease-out;
+}
+
+.template-row[data-download='loading'] .template-row__progress,
+.landing[aria-busy='true'] .template-row[data-download='done'] .template-row__progress {
+  animation: template-progress-in 0.2s 0.15s both;
+}
+
+/* A row opens nothing until src/app.js has started, so a full bar pulses
+   until then. */
+.landing[aria-busy='true'] .template-row[data-download='done'] .template-row__progress::after {
+  animation: template-progress-wait 1.2s ease-in-out infinite alternate;
+}
+
+.template-row[data-download='failed'] .template-row__progress {
+  opacity: 1;
+  transition-delay: 0s;
+}
+
+.template-row[data-download='failed'] .template-row__progress::after {
+  background: var(--sl-color-danger-600);
+}
+
+@keyframes template-progress-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes template-progress-wait {
+  to {
+    opacity: 0.45;
+  }
 }
 
 .landing__more {
