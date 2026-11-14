@@ -293,7 +293,7 @@ function templateRow(template, index) {
 }
 
 function wireLanding() {
-  $('template-list').append(...TEMPLATES.map(templateRow));
+  $('template-list').replaceChildren(...TEMPLATES.map(templateRow));
 
   const zone = $('dropzone');
 
@@ -508,18 +508,16 @@ function applyTheme(dark) {
   }
 }
 
+function isDark() {
+  return document.documentElement.classList.contains('sl-theme-dark');
+}
+
+// The inline script in index.html has already picked the theme.
 function initTheme() {
-  let dark = false;
-  try {
-    const saved = window.localStorage.getItem('nexusTheme');
-    dark = saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
-  } catch {
-    dark = false;
-  }
-  applyTheme(dark);
+  applyTheme(isDark());
 
   for (const btn of document.querySelectorAll(THEME_TOGGLES)) {
-    btn.addEventListener('click', () => applyTheme(!document.documentElement.classList.contains('sl-theme-dark')));
+    btn.addEventListener('click', () => applyTheme(!isDark()));
   }
 }
 
@@ -598,6 +596,12 @@ function initAbout() {
   $('about-close').addEventListener('click', () => dialog.hide());
 }
 
+function enableLanding() {
+  const landing = $('landing');
+  landing.inert = false;
+  landing.removeAttribute('aria-busy');
+}
+
 function initVersion() {
   document.querySelectorAll('[data-version]').forEach((el) => {
     el.textContent = VERSION;
@@ -620,5 +624,6 @@ initAbout();
 initAiDialog(showDocument);
 initLinkDialog();
 initVersion();
+enableLanding();
 openLink();
 window.addEventListener('hashchange', openLink);

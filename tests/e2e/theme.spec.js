@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loadExample, openFrom, DARK_MARK, markFills } from './helpers.js';
+import { loadExample, openBeforeAppStarts, openFrom, DARK_MARK, markFills } from './helpers.js';
 
 test.describe('Theme', { tag: '@runner-1' }, () => {
   test.beforeEach(async ({ page }) => {
@@ -46,6 +46,38 @@ test.describe('Theme', { tag: '@runner-1' }, () => {
     expect(await isDark()).toBe(false);
     await expect(page.locator('#landing-theme')).toHaveAttribute('title', 'Switch to dark theme');
   });
+
+  for (const [name, stored, scheme, dark] of dataProviderEarlyThemes()) {
+    test(`applies ${name} before the app starts`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme });
+      await page.addInitScript((value) => {
+        if (value) {
+          window.localStorage.setItem('nexusTheme', value);
+        } else {
+          window.localStorage.removeItem('nexusTheme');
+        }
+      }, stored);
+
+      const start = await openBeforeAppStarts(page);
+
+      await expect(page.locator('#template-list .template-list__loader')).toBeVisible();
+      expect(await page.evaluate(() => document.documentElement.classList.contains('sl-theme-dark'))).toBe(dark);
+
+      start();
+
+      await expect(page.locator('#landing-theme')).toHaveAttribute('title', dark ? 'Switch to light theme' : 'Switch to dark theme');
+      expect(await page.evaluate(() => document.documentElement.classList.contains('sl-theme-dark'))).toBe(dark);
+    });
+  }
+
+  function dataProviderEarlyThemes() {
+    return [
+      ['a stored dark theme over a light system scheme', 'dark', 'light', true],
+      ['a stored light theme over a dark system scheme', 'light', 'dark', false],
+      ['a dark system scheme with no stored theme', null, 'dark', true],
+      ['a light system scheme with no stored theme', null, 'light', false],
+    ];
+  }
 
   test('keeps the landing and toolbar theme toggles in step around an open diagram', async ({ page }) => {
     const fieldFill = () => page.evaluate(() => window.__nexus.cy.nodes('[group="field"][kind="single"]').first().style('background-color').replace(/\s/g, ''));

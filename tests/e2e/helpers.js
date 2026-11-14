@@ -24,6 +24,24 @@ export async function waitForGraph(page) {
   await page.waitForFunction(() => window.__nexus && window.__nexus.cy.nodes('[group="entity"]').length > 0);
 }
 
+// Opens the page with Cytoscape held back, so src/app.js, which runs after
+// it, waits until the returned function is called. Routing turns off the
+// HTTP cache, so the held script is always requested.
+export async function openBeforeAppStarts(page) {
+  let start;
+  const held = new Promise((resolve) => {
+    start = resolve;
+  });
+
+  await page.route('**/assets/vendor/cytoscape.min.js', async (route) => {
+    await held;
+    await route.continue();
+  });
+  await page.goto('/index.html', { waitUntil: 'commit' });
+
+  return start;
+}
+
 // Imports the conference fixture folder, with its annotation overlay.
 export async function loadExample(page) {
   await page.setInputFiles('#folder-input', EXAMPLE_DIR);

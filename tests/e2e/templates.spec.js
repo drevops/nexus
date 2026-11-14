@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { entityCount, waitForGraph } from './helpers.js';
+import { entityCount, openBeforeAppStarts, waitForGraph } from './helpers.js';
 import { formatCount } from '../../src/entity-types.js';
 import { TEMPLATES, summaryCounts, templateTitle } from '../../src/templates.js';
 
@@ -33,6 +33,21 @@ test.describe('Templates', { tag: '@runner-2' }, () => {
     await expect(page.locator('#loader')).toBeVisible();
     await waitForGraph(page);
     await expect(page.locator('#loader')).toBeHidden();
+  });
+
+  test('shows a loader in place of the templates until the app starts', async ({ page }) => {
+    const start = await openBeforeAppStarts(page);
+    const loader = page.locator('#template-list .template-list__loader');
+
+    await expect(loader).toBeVisible();
+    await expect(loader).toHaveText('Loading templates…');
+    await expect(loader).toHaveAttribute('role', 'status');
+    await expect(page.locator('.template-row')).toHaveCount(0);
+
+    start();
+
+    await expect(page.locator('.template-row')).toHaveCount(TEMPLATES.length);
+    await expect(loader).toHaveCount(0);
   });
 
   test('lists every template with its badge, its counts and a drawn mark', async ({ page }) => {
