@@ -182,4 +182,3 @@ test('passes event values to the benchmark scripts through the environment', () 
     definition.steps.filter((step) => step.run).forEach((step) => assert.doesNotMatch(step.run, /\$\{\{/, job + ': ' + step.name)),
   );
 });
-
