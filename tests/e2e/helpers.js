@@ -314,12 +314,12 @@ export async function pickLayout(page, value) {
   await page.click('#layout-menu sl-menu-item[value="' + value + '"]');
 }
 
-// Picks a detail level from the status bar's menu and waits for the menu to
-// close, so the next pick opens it again.
+// Picks a detail level from the status bar's icon buttons.
 export async function pickLevel(page, value) {
-  await page.click('#detail-choose');
-  await page.click('#detail-menu sl-menu-item[value="' + value + '"]');
-  await expect(page.locator('#detail-menu')).toBeHidden();
+  const button = page.locator('#detail-levels [data-level="' + value + '"]');
+
+  await button.click();
+  await expect(button).toHaveClass(/is-active/);
 }
 
 // How the fields of the Event content type sit around it, and the direction

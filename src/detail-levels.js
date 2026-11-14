@@ -11,10 +11,10 @@ import { KIND_SYSTEM, REFERENCE_FIELD_TYPES } from './model.js';
 
 // In the order the shortcut cycles them.
 export const DETAIL_LEVELS = Object.freeze([
-  { id: 'entities', label: 'Entities', title: 'Show only the entities, with 1 line between each pair that reference each other' },
-  { id: 'references', label: 'References', title: 'Show the entities with their reference fields' },
-  { id: 'configurable', label: 'Configurable', title: 'Show every configurable field, without base fields' },
-  { id: 'all', label: 'All', title: 'Show every field, including base fields' },
+  { id: 'entities', label: 'Entities', icon: 'level-entities', title: 'Show only the entities, with 1 line between each pair that reference each other' },
+  { id: 'references', label: 'References', icon: 'level-references', title: 'Show the entities with their reference fields' },
+  { id: 'configurable', label: 'Configurable', icon: 'level-configurable', title: 'Show every configurable field, without base fields' },
+  { id: 'all', label: 'All', icon: 'level-all', title: 'Show every field, including base fields' },
 ]);
 
 export const DEFAULT_LEVEL = 'all';
@@ -82,5 +82,5 @@ export function levelToShow(id, fields) {
  * names the level and the first level that shows the field.
  */
 export function levelHidesTitle(id, field) {
-  return 'Fields: ' + detailLevel(id).label + ' hides this field. Pick ' + lowestLevelFor(field).label + ' to go to it';
+  return 'The ' + detailLevel(id).label + ' level hides this field. Pick ' + lowestLevelFor(field).label + ' to go to it';
 }

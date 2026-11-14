@@ -53,7 +53,7 @@ test.describe('References', { tag: '@runner-2' }, () => {
     await loadExample(page);
 
     await expect(page.locator('#proxy-toggle')).toHaveJSProperty('checked', true);
-    await expect(page.locator('#detail-level')).toHaveText('Fields: All');
+    await expect(page.locator('#detail-level')).toHaveText('All');
 
     const counts = await page.evaluate(() => {
       const cy = window.__nexus.cy;

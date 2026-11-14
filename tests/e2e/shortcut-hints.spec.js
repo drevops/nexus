@@ -210,7 +210,7 @@ test.describe('Shortcut hints', { tag: '@runner-2' }, () => {
     await page.keyboard.press('f');
     await page.keyboard.press('F1');
 
-    await expect(page.locator('#detail-level')).toHaveText('Fields: All');
+    await expect(page.locator('#detail-level')).toHaveText('All');
     await expect(page.locator('#shortcut-hints')).toBeHidden();
   });
 

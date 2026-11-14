@@ -2334,36 +2334,40 @@ function showLines() {
     });
 }
 
-// Fills the detail level menu with an item for each level, in DETAIL_LEVELS
-// order.
-function fillLevelMenu() {
-  const items = DETAIL_LEVELS.map((option) => {
-    const item = document.createElement('sl-menu-item');
+// Fills the detail level group with an icon button for each level, in
+// DETAIL_LEVELS order.
+function fillLevelButtons() {
+  const buttons = DETAIL_LEVELS.map((level) => {
+    const button = document.createElement('sl-button');
 
-    item.setAttribute('type', 'checkbox');
-    item.setAttribute('value', option.id);
-    item.setAttribute('title', option.title);
-    item.textContent = option.label;
+    button.className = 'toolbar__button toolbar__button--icon';
+    button.setAttribute('size', 'small');
+    button.setAttribute('data-level', level.id);
+    button.setAttribute('title', level.label + ': ' + level.title);
+    button.setAttribute('aria-label', level.label);
+    button.innerHTML = icon(level.icon);
 
-    return item;
+    return button;
   });
 
-  $('detail-menu').append(...items);
+  $('detail-levels').append(...buttons);
 }
 
-// Names the level on the detail level button, titles the button with the
-// level it moves to and ticks the level in the menu.
+// Marks the level's button active, names the level beside the buttons and
+// titles the name with the level a click on it moves to.
 function showLevel() {
-  const button = $('detail-level');
+  const name = $('detail-level');
 
-  button.textContent = 'Fields: ' + detailLevel(levelId).label;
-  // SlButton does not reflect its title property, so set the attribute.
-  button.setAttribute('title', 'Switch to the next detail level: ' + nextLevel(levelId).label);
-  $('detail-menu')
-    .querySelectorAll('sl-menu-item')
-    .forEach((item) => {
-      item.checked = item.getAttribute('value') === levelId;
+  $('detail-levels')
+    .querySelectorAll('[data-level]')
+    .forEach((button) => {
+      const active = button.getAttribute('data-level') === levelId;
+
+      button.classList.toggle('is-active', active);
+      button.setAttribute('aria-pressed', String(active));
     });
+  name.textContent = detailLevel(levelId).label;
+  name.setAttribute('title', 'Switch to the next detail level: ' + nextLevel(levelId).label);
 }
 
 function wire() {
@@ -2429,14 +2433,14 @@ function wire() {
     controller.cy.zoom({ level: parseFloat(value), renderedPosition: { x: controller.cy.width() / 2, y: controller.cy.height() / 2 } });
   });
 
-  fillLevelMenu();
+  fillLevelButtons();
   $('detail-level').addEventListener('click', () => controller.setDetailLevel(nextLevel(levelId).id));
-  // The menu flips a checkbox item on every select, so setDetailLevel()
-  // ticks the picked item again, and showLevel() does when it is the level
-  // already shown.
-  $('detail-menu').addEventListener('sl-select', (evt) => {
-    controller.setDetailLevel(evt.detail.item.value);
-    showLevel();
+  $('detail-levels').addEventListener('click', (evt) => {
+    const button = evt.target.closest('[data-level]');
+
+    if (button) {
+      controller.setDetailLevel(button.getAttribute('data-level'));
+    }
   });
 
   // The display toggles re-run the layout too, but undo reverts edits only,

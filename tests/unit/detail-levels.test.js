@@ -13,6 +13,7 @@ import {
 } from '../../src/detail-levels.js';
 import { DIAGRAM_DEFAULTS } from '../../src/diagram-defaults.js';
 import { KIND_CALCULATED, KIND_MULTI, KIND_SINGLE, KIND_SYSTEM } from '../../src/model.js';
+import { hasIcon } from '../../src/icons.js';
 
 const FIELDS = {
   baseText: { kind: KIND_SYSTEM, fieldType: 'string' },
@@ -24,7 +25,7 @@ const FIELDS = {
   calculated: { kind: KIND_CALCULATED, fieldType: 'computed' },
 };
 
-test('lists the levels from the fewest fields to the most, each with a label and a title', () => {
+test('lists the levels from the fewest fields to the most, each with a label, a title and its own icon', () => {
   assert.deepEqual(
     DETAIL_LEVELS.map((level) => [level.id, level.label]),
     [
@@ -35,7 +36,11 @@ test('lists the levels from the fewest fields to the most, each with a label and
     ],
   );
 
-  DETAIL_LEVELS.forEach((level) => assert.ok(level.title.length > 0, level.id));
+  DETAIL_LEVELS.forEach((level) => {
+    assert.ok(level.title.length > 0, level.id);
+    assert.ok(hasIcon(level.icon), level.id);
+  });
+  assert.equal(new Set(DETAIL_LEVELS.map((level) => level.icon)).size, DETAIL_LEVELS.length);
   assert.equal(new Set(DETAIL_LEVELS.map((level) => level.title)).size, DETAIL_LEVELS.length);
   assert.ok(Object.isFrozen(DETAIL_LEVELS));
 });
@@ -163,11 +168,11 @@ test('names the level that hides a field and the level that shows it', async (t)
 
 function dataProviderHiddenTitles() {
   return [
-    ['entities', 'reference', 'Fields: Entities hides this field. Pick References to go to it'],
-    ['entities', 'text', 'Fields: Entities hides this field. Pick Configurable to go to it'],
-    ['references', 'text', 'Fields: References hides this field. Pick Configurable to go to it'],
-    ['configurable', 'baseText', 'Fields: Configurable hides this field. Pick All to go to it'],
-    ['configurable', 'baseReference', 'Fields: Configurable hides this field. Pick All to go to it'],
+    ['entities', 'reference', 'The Entities level hides this field. Pick References to go to it'],
+    ['entities', 'text', 'The Entities level hides this field. Pick Configurable to go to it'],
+    ['references', 'text', 'The References level hides this field. Pick Configurable to go to it'],
+    ['configurable', 'baseText', 'The Configurable level hides this field. Pick All to go to it'],
+    ['configurable', 'baseReference', 'The Configurable level hides this field. Pick All to go to it'],
   ];
 }
 

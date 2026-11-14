@@ -100,7 +100,7 @@ test.describe('Hidden fields', { tag: '@runner-2' }, () => {
   function dataProviderFieldOffCanvas() {
     return [
       ['its own eye', (page) => visibilityButton(page, EVENT_MEDIA).click(), 'Show this field to go to it'],
-      ['the Entities level', (page) => page.click('#detail-level'), 'Fields: Entities hides this field. Pick References to go to it'],
+      ['the Entities level', (page) => page.click('#detail-level'), 'The Entities level hides this field. Pick References to go to it'],
       [
         'its entity type filter',
         async (page) => {
@@ -125,11 +125,11 @@ test.describe('Hidden fields', { tag: '@runner-2' }, () => {
 
   function dataProviderLevelHides() {
     return [
-      ['entities', EVENT_MEDIA, 'Fields: Entities hides this field. Pick References to go to it'],
-      ['entities', 'field:node.event:field_summary', 'Fields: Entities hides this field. Pick Configurable to go to it'],
-      ['references', 'field:node.event:field_summary', 'Fields: References hides this field. Pick Configurable to go to it'],
-      ['references', 'field:node.event:title', 'Fields: References hides this field. Pick All to go to it'],
-      ['configurable', 'field:node.event:title', 'Fields: Configurable hides this field. Pick All to go to it'],
+      ['entities', EVENT_MEDIA, 'The Entities level hides this field. Pick References to go to it'],
+      ['entities', 'field:node.event:field_summary', 'The Entities level hides this field. Pick Configurable to go to it'],
+      ['references', 'field:node.event:field_summary', 'The References level hides this field. Pick Configurable to go to it'],
+      ['references', 'field:node.event:title', 'The References level hides this field. Pick All to go to it'],
+      ['configurable', 'field:node.event:title', 'The Configurable level hides this field. Pick All to go to it'],
     ];
   }
 
