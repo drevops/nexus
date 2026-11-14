@@ -13,7 +13,8 @@ import { render } from './render.js';
 import { exportPng, exportSvg, exportCsv, exportDocument, exportHtml, exportMarkdown } from './export.js';
 import { documentMarkdown, includesDiagram } from './markdown.js';
 import { documentHtml } from './html-report.js';
-import { SAVE_FORMATS, findSaveFormat } from './save-formats.js';
+import { bundlesCsv, fieldsCsv, referencesCsv } from './csv.js';
+import { SAVE_FORMATS, SAVE_MENU, findSaveFormat } from './save-formats.js';
 import { documentFromGraph, documentToModel } from './document.js';
 import { initBuilder, attachBuilder } from './builder.js';
 import { initUI } from './ui.js';
@@ -36,7 +37,9 @@ const SAVERS = {
   json: saveDocument,
   png: (controller, title) => exportPng(controller.cy, title),
   svg: (controller, title) => exportSvg(controller.cy, title),
-  csv: (controller, title) => exportCsv(controller.records(), controller.typeLabel, title),
+  csv: (controller, title) => exportCsv(fieldsCsv(controller.records(), controller.typeLabel), title, 'fields'),
+  'bundles-csv': (controller, title) => exportCsv(bundlesCsv(currentDocument(controller, title)), title, 'bundles'),
+  'references-csv': (controller, title) => exportCsv(referencesCsv(currentDocument(controller, title)), title, 'references'),
   md: saveMarkdown,
   html: (controller, title) => exportHtml(documentHtml(currentDocument(controller, title)), title),
 };
@@ -339,21 +342,31 @@ function saveAs(format) {
   }
 }
 
-function saveMenuItem(format) {
+function saveMenuItem(entry) {
   const item = document.createElement('sl-menu-item');
   const glyph = document.createElement('span');
 
   glyph.slot = 'prefix';
-  glyph.innerHTML = icon(format.icon);
-  item.append(glyph, format.label);
-  item.setAttribute('value', format.id);
-  item.setAttribute('title', format.title);
+  glyph.innerHTML = icon(entry.icon);
+  item.append(glyph, entry.label);
+  item.setAttribute('title', entry.title);
+
+  if (!entry.formats) {
+    item.setAttribute('value', entry.id);
+
+    return item;
+  }
+
+  const submenu = document.createElement('sl-menu');
+  submenu.slot = 'submenu';
+  submenu.append(...entry.formats.map(saveMenuItem));
+  item.append(submenu);
 
   return item;
 }
 
 function wireOpenAndSave() {
-  $('save-divider').before(...SAVE_FORMATS.map(saveMenuItem));
+  $('save-divider').before(...SAVE_MENU.map(saveMenuItem));
 
   $('open-menu').addEventListener('sl-select', (evt) => {
     const value = evt.detail.item.value;
@@ -364,6 +377,14 @@ function wireOpenAndSave() {
   });
 
   $('save-menu').addEventListener('sl-select', (evt) => {
+    // A click on the icon of a submenu's own item selects that item, and the
+    // dropdown closes on any select that reaches it.
+    if (evt.detail.item.querySelector(':scope > sl-menu')) {
+      evt.stopPropagation();
+
+      return;
+    }
+
     const value = evt.detail.item.value;
     const format = findSaveFormat(value);
 

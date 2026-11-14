@@ -48,6 +48,7 @@ function outlineEntity(entity) {
     entityType: String(entity.entityType),
     bundle: bundle,
     label: String(entity.label || bundle),
+    description: String(entity.description ?? ''),
     note: String(entity.note ?? ''),
     fields: (Array.isArray(entity.fields) ? entity.fields : []).map(outlineField),
   };

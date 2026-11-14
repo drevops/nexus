@@ -53,7 +53,7 @@ Nexus is a static web app. Give it a Drupal config sync directory or a module's 
 - **Field editing in the Fields table.** Click a cell to change a field's label, machine name, type, cardinality, references, help text, default value, allowed values or translatability. Tick **Req** to make a field required.
 - **Checks.** The Checks panel lists the problems in the model after every edit, such as a reference with no target or a field name with 2 types. Click a problem to go to it.
 - **Saved as a document.** A `.nexus.json` document holds the model and its layout, and a [JSON Schema](schema/nexus.schema.json) defines the format.
-- **Exports.** PNG and SVG images of the diagram, a CSV of its fields, a Markdown page that documents each bundle, its fields and notes, with an optional Mermaid diagram, and the same documentation as a standalone HTML report to open in any browser.
+- **Exports.** PNG and SVG images of the diagram, and CSV files of its fields, bundles and references. A Markdown page documents each bundle, its fields and notes, with an optional Mermaid diagram. A standalone HTML report holds the same documentation and opens in any browser.
 - **Shared as a link.** **Copy link** puts the whole diagram inside a link. See [Shared links](#shared-links).
 - **Built by AI agents.** An agent can write a diagram from a screenshot, a spreadsheet or a spec.
 

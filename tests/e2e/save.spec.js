@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-import { loadExample, slFill, slSelect, downloadFrom, saveFrom, topmostOf } from './helpers.js';
+import { loadExample, openDocument, openSaveSubmenu, slFill, slSelect, downloadFrom, saveFrom, topmostOf } from './helpers.js';
 
 test.describe('Save', { tag: '@runner-1' }, () => {
   test.beforeEach(async ({ page }) => {
@@ -50,7 +50,9 @@ test.describe('Save', { tag: '@runner-1' }, () => {
     return [
       ['PNG', 'content-model.png', (page) => saveFrom(page, 'png')],
       ['SVG', 'content-model.svg', (page) => saveFrom(page, 'svg')],
-      ['CSV', 'content-model-fields.csv', (page) => saveFrom(page, 'csv')],
+      ['fields CSV', 'content-model-fields.csv', (page) => saveFrom(page, 'csv')],
+      ['bundles CSV', 'content-model-bundles.csv', (page) => saveFrom(page, 'bundles-csv')],
+      ['references CSV', 'content-model-references.csv', (page) => saveFrom(page, 'references-csv')],
       ['Markdown', 'content-model.md', (page) => saveFrom(page, 'md')],
       ['HTML', 'content-model.html', (page) => saveFrom(page, 'html')],
       ['JSON from the Save as menu', 'content-model.nexus.json', (page) => saveFrom(page, 'json')],
@@ -65,7 +67,13 @@ test.describe('Save', { tag: '@runner-1' }, () => {
 
     await expect(page.locator('#save-menu')).toBeVisible();
     await expect(page.locator('#save-menu sl-menu-label')).toHaveText('Save as');
-    await expect(page.locator('#save-menu sl-menu-item')).toHaveText(['JSON', 'PNG', 'SVG', 'CSV', 'Markdown', 'HTML', 'Copy link']);
+    // The CSV item's text includes its submenu's.
+    await expect(page.locator('#save-menu > sl-menu-item')).toHaveText(['JSON', 'PNG', 'SVG', /^CSV/, 'Markdown', 'HTML', 'Copy link']);
+    await expect(page.locator('#save-menu > sl-menu-item').nth(3).locator('> sl-menu[slot="submenu"] > sl-menu-item')).toHaveText([
+      'Fields',
+      'Bundles',
+      'References',
+    ]);
     await expect(page.locator('#save-menu > sl-menu-item[value="html"] + sl-divider + sl-menu-item[value="link"]')).toHaveCount(1);
   });
 
@@ -86,6 +94,8 @@ test.describe('Save', { tag: '@runner-1' }, () => {
       ['png', 'example-content-model.png'],
       ['svg', 'example-content-model.svg'],
       ['csv', 'example-content-model-fields.csv'],
+      ['bundles-csv', 'example-content-model-bundles.csv'],
+      ['references-csv', 'example-content-model-references.csv'],
       ['md', 'example-content-model.md'],
       ['html', 'example-content-model.html'],
     ];
@@ -225,6 +235,25 @@ test.describe('Save', { tag: '@runner-1' }, () => {
     await expect.poll(() => topmostOf(page, ['#save-menu', '#entities'])).toBe('#save-menu');
   });
 
+  for (const [name, target] of dataProviderCsvItemClicks()) {
+    test(`keeps the Save as menu open and shows the CSV submenu on a click on the CSV item's ${name}`, async ({ page }) => {
+      await loadExample(page);
+      await page.click('#save-choose');
+
+      await page.click('#save-menu > sl-menu-item:has(sl-menu-item[value="csv"])' + target);
+
+      await expect(page.locator('#save-menu')).toBeVisible();
+      await expect(page.locator('#save-menu sl-menu-item[value="bundles-csv"]')).toBeVisible();
+    });
+  }
+
+  function dataProviderCsvItemClicks() {
+    return [
+      ['label', ''],
+      ['icon', ' > [slot="prefix"]'],
+    ];
+  }
+
   test('describes a hovered save menu item in the status bar', async ({ page }) => {
     await loadExample(page);
 
@@ -232,7 +261,87 @@ test.describe('Save', { tag: '@runner-1' }, () => {
     await page.hover('#save-menu sl-menu-item[value="png"]');
     await expect(page.locator('#statusbar-hint')).toHaveText('Save the diagram as a PNG image');
 
+    await page.hover('#save-menu > sl-menu-item:has(sl-menu-item[value="csv"])');
+    await expect(page.locator('#statusbar-hint')).toHaveText('Save the fields, bundles or references as CSV');
+
+    await openSaveSubmenu(page, 'csv');
     await page.hover('#save-menu sl-menu-item[value="csv"]');
     await expect(page.locator('#statusbar-hint')).toHaveText('Save the fields table as CSV');
+
+    await page.hover('#save-menu sl-menu-item[value="bundles-csv"]');
+    await expect(page.locator('#statusbar-hint')).toHaveText('Save the bundles as CSV, 1 row per bundle');
+  });
+
+  const CSV_DOCUMENT = {
+    nexus: 1,
+    title: 'Spec sheet',
+    entities: [
+      {
+        entityType: 'node',
+        bundle: 'article',
+        label: 'Article, "news"',
+        description: 'Daily news.',
+        note: 'Keep short.',
+        fields: [
+          {
+            name: 'field_tags',
+            label: 'Tags',
+            fieldType: 'entity_reference',
+            kind: 'multi',
+            cardinality: -1,
+            required: true,
+            targetType: 'taxonomy_term',
+            targetBundles: ['tags', 'topics'],
+          },
+          {
+            name: 'field_media',
+            label: 'Media',
+            fieldType: 'entity_reference',
+            kind: 'single',
+            cardinality: 1,
+            targetType: 'media',
+            targetBundles: [],
+            hidden: true,
+          },
+        ],
+      },
+      { entityType: 'taxonomy_term', bundle: 'tags', label: 'Tags', fields: [] },
+      { entityType: 'taxonomy_term', bundle: 'topics', label: 'Topics', fields: [] },
+      { entityType: 'media', bundle: '*', label: 'Any Media', fields: [] },
+    ],
+  };
+
+  async function savedCsv(page, format) {
+    const download = await saveFrom(page, format);
+
+    return { filename: download.suggestedFilename(), lines: readFileSync(await download.path(), 'utf8').split('\r\n') };
+  }
+
+  test('saves 1 row per bundle as the bundles CSV, counting hidden fields', async ({ page }) => {
+    await openDocument(page, CSV_DOCUMENT);
+
+    expect(await savedCsv(page, 'bundles-csv')).toEqual({
+      filename: 'spec-sheet-bundles.csv',
+      lines: [
+        'entity_type,bundle,label,description,fields,referenced_by,note',
+        'node,article,"Article, ""news""",Daily news.,2,0,Keep short.',
+        'taxonomy_term,tags,Tags,,0,1,',
+        'taxonomy_term,topics,Topics,,0,1,',
+      ],
+    });
+  });
+
+  test('saves 1 row per reference target as the references CSV, including hidden fields', async ({ page }) => {
+    await openDocument(page, CSV_DOCUMENT);
+
+    expect(await savedCsv(page, 'references-csv')).toEqual({
+      filename: 'spec-sheet-references.csv',
+      lines: [
+        'source_entity_type,source_bundle,field,field_label,target_entity_type,target_bundle,cardinality,required',
+        'node,article,field_tags,Tags,taxonomy_term,tags,1..n,yes',
+        'node,article,field_tags,Tags,taxonomy_term,topics,1..n,yes',
+        'node,article,field_media,Media,media,*,1,no',
+      ],
+    });
   });
 });

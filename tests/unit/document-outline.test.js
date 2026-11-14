@@ -30,6 +30,8 @@ test('outlines a saved document', () => {
     targets: ['taxonomy_term.tags'],
   });
   assert.deepEqual(outline.entity('node.article').fields.find((field) => field.name === 'field_media').targets, ['media.*']);
+  assert.equal(outline.entity('node.article').description, 'Use <em>articles</em> for news.');
+  assert.equal(outline.entity('taxonomy_term.tags').description, '');
   assert.equal(outline.entity('node.missing'), null);
 });
 

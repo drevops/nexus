@@ -1,13 +1,13 @@
 /**
- * Client-side downloads: the diagram canvas as PNG or SVG, the fields table
- * as CSV, the model as Markdown or HTML and the diagram as a Nexus document. Nothing
- * is uploaded - the PNG is rasterised by Cytoscape and the SVG is produced by
- * the cytoscape-svg extension entirely in the browser.
+ * Client-side downloads: the diagram canvas as PNG or SVG, the fields,
+ * bundles and references as CSV, the model as Markdown or HTML and the
+ * diagram as a Nexus document. Nothing is uploaded - the PNG is rasterised by
+ * Cytoscape and the SVG is produced by the cytoscape-svg extension entirely
+ * in the browser.
  */
 
-import { cardinalityLabel, DEFAULT_TITLE } from './model.js';
+import { DEFAULT_TITLE } from './model.js';
 import { fileSlug } from './names.js';
-import { allowedValueLabels } from './field-settings.js';
 
 if (window.cytoscape && window.cytoscapeSvg && !window.cytoscape('core', 'svg')) {
   window.cytoscape.use(window.cytoscapeSvg);
@@ -31,48 +31,6 @@ function downloadText(text, filename, type) {
   const url = URL.createObjectURL(blob);
   downloadUri(url, filename);
   URL.revokeObjectURL(url);
-}
-
-function recordsToCsv(records, typeLabel) {
-  const esc = (value) => {
-    const s = String(value == null ? '' : value);
-    return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
-  };
-  const headers = [
-    'Entity',
-    'Entity type',
-    'Field',
-    'Machine name',
-    'Field type',
-    'Cardinality',
-    'Required',
-    'References',
-    'Used in',
-    'Help text',
-    'Default',
-    'Allowed values',
-    'Translatable',
-  ];
-  const rows = records.map((r) =>
-    [
-      r.entity,
-      typeLabel(r.entityType),
-      r.field,
-      r.name,
-      r.type,
-      cardinalityLabel(r.cardinality),
-      r.required ? 'yes' : 'no',
-      r.refs.map((x) => x.label).join('; '),
-      r.usedIn.length || '',
-      r.description,
-      r.defaultValue,
-      allowedValueLabels(r.allowedValues).join('; '),
-      r.translatable === null ? '' : r.translatable ? 'yes' : 'no',
-    ]
-      .map(esc)
-      .join(','),
-  );
-  return [headers.join(','), ...rows].join('\r\n');
 }
 
 // A note draws its Markdown in an HTML layer that Cytoscape doesn't export,
@@ -118,11 +76,11 @@ export function exportSvg(cy, title) {
 }
 
 /**
- * Export the field records as a CSV named after the diagram title.
- * `typeLabel` turns an entity type into the label the CSV shows.
+ * Download CSV text as a '<title>-<name>.csv' file, the title as a file
+ * slug.
  */
-export function exportCsv(records, typeLabel, title) {
-  downloadText(recordsToCsv(records, typeLabel), fileName(title, '-fields.csv'), 'text/csv');
+export function exportCsv(text, title, name) {
+  downloadText(text, fileName(title, '-' + name + '.csv'), 'text/csv');
 }
 
 /**
