@@ -21,7 +21,10 @@ const BUNDLE_PREFIXES = {
 
 const STORAGE_PREFIX = 'field.storage.';
 const FIELD_PREFIX = 'field.field.';
-const MODEL_PREFIXES = [...Object.keys(BUNDLE_PREFIXES), STORAGE_PREFIX, FIELD_PREFIX];
+/**
+ * The file name prefixes of the config files parseConfig() reads.
+ */
+export const MODEL_PREFIXES = [...Object.keys(BUNDLE_PREFIXES), STORAGE_PREFIX, FIELD_PREFIX];
 
 /**
  * Returns whether parseConfig() reads the config file with the given name.

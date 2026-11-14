@@ -6,6 +6,7 @@ import { TEMPLATES, summaryCounts, templatePath, templateTitle } from '../../src
 import { documentToModel } from '../../src/document.js';
 import { ENTITY_TYPE_ORDER } from '../../src/entity-types.js';
 import { hasIcon } from '../../src/icons.js';
+import { contrastRatio } from '../../src/text-contrast.js';
 
 const ROOT = join(import.meta.dirname, '..', '..');
 
@@ -30,6 +31,16 @@ test('describes every template completely', () => {
     for (const type of Object.keys(template.counts)) {
       assert.ok(ENTITY_TYPE_ORDER.includes(type), template.id + ' counts an unknown entity type ' + type);
     }
+  }
+});
+
+// The mark draws a white icon on the template's colour, and a graphic needs
+// 3:1 against its background under WCAG 1.4.11.
+test('gives every template a colour its white mark stands out on', () => {
+  for (const template of TEMPLATES) {
+    const ratio = contrastRatio(template.color, '#ffffff');
+
+    assert.ok(ratio >= 3, template.id + ' has a contrast of ' + ratio.toFixed(2) + ':1 with white');
   }
 });
 
