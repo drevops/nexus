@@ -508,18 +508,16 @@ function applyTheme(dark) {
   }
 }
 
+function isDark() {
+  return document.documentElement.classList.contains('sl-theme-dark');
+}
+
+// The inline script in index.html has already picked the theme.
 function initTheme() {
-  let dark = false;
-  try {
-    const saved = window.localStorage.getItem('nexusTheme');
-    dark = saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
-  } catch {
-    dark = false;
-  }
-  applyTheme(dark);
+  applyTheme(isDark());
 
   for (const btn of document.querySelectorAll(THEME_TOGGLES)) {
-    btn.addEventListener('click', () => applyTheme(!document.documentElement.classList.contains('sl-theme-dark')));
+    btn.addEventListener('click', () => applyTheme(!isDark()));
   }
 }
 
