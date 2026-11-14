@@ -701,10 +701,6 @@ sl-button#zoom-level::part(base) {
   background-size: 26px 26px;
 }
 
-.cy.is-panning {
-  cursor: grabbing;
-}
-
 .captions {
   position: absolute;
   inset: 0;
@@ -1171,6 +1167,7 @@ body.is-dragging-panel * {
 
 .filters__item input {
   margin: 0;
+  cursor: inherit;
 }
 
 .filters__swatch {

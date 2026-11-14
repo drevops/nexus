@@ -126,7 +126,7 @@ test.describe('Mouse', { tag: '@runner-1' }, () => {
       expect(await nodePositions(page)).toEqual(before);
       expect(await fadedNodes(page)).toEqual([]);
       await expect(page.locator('#undo')).toHaveAttribute('title', undo);
-      await expect(page.locator('#cy')).not.toHaveClass(/is-panning/);
+      expect(await page.evaluate(() => getComputedStyle(window.__nexus.cy.container()).cursor)).not.toBe('grabbing');
     });
 
     test(`keeps the canvas still on a left-drag over the empty canvas in ${mode} mode`, async ({ page }) => {
