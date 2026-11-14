@@ -10,10 +10,11 @@
 import { isModelConfig, parseConfig } from './parser.js';
 import { ANNOTATION_FILES, applyAnnotations } from './annotations.js';
 import { render } from './render.js';
-import { exportPng, exportSvg, exportCsv, exportDocument, exportHtml, exportMarkdown } from './export.js';
+import { exportPng, exportSvg, exportCsv, exportCsvTemplate, exportDocument, exportHtml, exportMarkdown } from './export.js';
+import { csvDocument, csvErrorLines, csvTitle, fieldsCsv } from './fields-csv.js';
 import { documentMarkdown, includesDiagram } from './markdown.js';
 import { documentHtml } from './html-report.js';
-import { bundlesCsv, fieldsCsv, referencesCsv } from './csv.js';
+import { bundlesCsv, referencesCsv } from './csv.js';
 import { SAVE_FORMATS, SAVE_MENU, findSaveFormat } from './save-formats.js';
 import { documentFromGraph, documentToModel } from './document.js';
 import { initBuilder, attachBuilder } from './builder.js';
@@ -37,7 +38,7 @@ const SAVERS = {
   json: saveDocument,
   png: (controller, title) => exportPng(controller.cy, title),
   svg: (controller, title) => exportSvg(controller.cy, title),
-  csv: (controller, title) => exportCsv(fieldsCsv(controller.records(), controller.typeLabel), title, 'fields'),
+  csv: (controller, title) => exportCsv(fieldsCsv(controller.records(), controller.typeLabel, controller.entities()), title, 'fields'),
   'bundles-csv': (controller, title) => exportCsv(bundlesCsv(currentDocument(controller, title)), title, 'bundles'),
   'references-csv': (controller, title) => exportCsv(referencesCsv(currentDocument(controller, title)), title, 'references'),
   md: saveMarkdown,
@@ -47,6 +48,8 @@ const SAVERS = {
 const OPENERS = {
   document: () => $('doc-open').click(),
   import: showLanding,
+  csv: () => $('csv-open').click(),
+  'csv-template': exportCsvTemplate,
   ai: showAiDialog,
 };
 
@@ -59,11 +62,26 @@ function isYaml(name) {
   return /\.ya?ml$/i.test(name);
 }
 
+function isCsv(name) {
+  return /\.csv$/i.test(name);
+}
+
 function showError(message) {
   const alert = $('landing-error');
   if (message) {
-    $('landing-error-text').textContent = message;
-    alert.open = true;
+    const text = $('landing-error-text');
+    // The alert sits below the templates, out of view in a short window. A
+    // closed alert has no box to scroll to until it has shown.
+    const reveal = () => text.scrollIntoView({ block: 'nearest' });
+
+    text.textContent = message;
+
+    if (alert.open) {
+      reveal();
+    } else {
+      alert.addEventListener('sl-after-show', reveal, { once: true });
+      alert.open = true;
+    }
   } else {
     alert.open = false;
   }
@@ -309,11 +327,18 @@ function wireLanding() {
     evt.preventDefault();
     zone.classList.remove('is-drag');
 
+    const files = evt.dataTransfer.files;
+
+    if (files.length === 1 && isCsv(files[0].name)) {
+      importCsv(files[0]);
+      return;
+    }
+
     const items = evt.dataTransfer.items;
     if (items && items.length && items[0].webkitGetAsEntry) {
       collectDroppedEntries(items).then((files) => loadFromFiles(files));
     } else {
-      loadFromFiles(evt.dataTransfer.files);
+      loadFromFiles(files);
     }
   });
 
@@ -487,6 +512,27 @@ async function openDocument(file) {
   }
 }
 
+async function importCsv(file) {
+  showError('');
+  showLoader('Reading ' + file.name + '…');
+  try {
+    const result = csvDocument(await file.text(), csvTitle(file.name) || DEFAULT_TITLE);
+
+    if (result.errors.length) {
+      showLanding();
+      showError(['Could not import ' + file.name + ':', ...csvErrorLines(result.errors)].join('\n'));
+      return;
+    }
+
+    showDocument(result.document, 'Imported ' + file.name);
+  } catch (e) {
+    showLanding();
+    showError('Could not import ' + file.name + ': ' + e.message);
+  } finally {
+    hideLoader();
+  }
+}
+
 function newDocument() {
   showDiagram({ meta: { title: 'New content model', entityCount: 0 }, nodes: [], edges: [] }, {}, 'Started a new content model');
 }
@@ -498,6 +544,12 @@ function wireDocument() {
   $('doc-open').addEventListener('change', (evt) => {
     if (evt.target.files[0]) {
       openDocument(evt.target.files[0]);
+    }
+    evt.target.value = '';
+  });
+  $('csv-open').addEventListener('change', (evt) => {
+    if (evt.target.files[0]) {
+      importCsv(evt.target.files[0]);
     }
     evt.target.value = '';
   });

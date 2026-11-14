@@ -96,11 +96,11 @@ test.describe('Shared fields', { tag: '@runner-1' }, () => {
     const lines = readFileSync(await download.path(), 'utf8').split('\r\n');
 
     expect(lines[0]).toBe(
-      'Entity,Entity type,Field,Machine name,Field type,Cardinality,Required,References,Used in,Help text,Default,Allowed values,Translatable',
+      'Entity,Entity type,Bundle,Field,Machine name,Field type,Cardinality,Required,References,Used in,Help text,Default,Allowed values,Translatable',
     );
-    expect(lines).toContain('Article,Content type,Title,title,string,1,no,,,,,,');
-    expect(lines).toContain('Article,Content type,Tags,field_tags,string,1,no,,3,,,,');
-    expect(lines).toContain('Page,Content type,Main image,field_main_image,string,1,no,,1,,,,');
+    expect(lines).toContain('Article,Content type,article,Title,title,string,1,no,,,,,,');
+    expect(lines).toContain('Article,Content type,article,Tags,field_tags,string,1,no,,3,,,,');
+    expect(lines).toContain('Page,Content type,page,Main image,field_main_image,string,1,no,,1,,,,');
   });
 
   test('updates the counts after a field is added, renamed or removed, and after undo and redo', async ({ page }) => {

@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { bundlesCsv, csvText, fieldsCsv, referencesCsv } from '../../src/csv.js';
+import fc from 'fast-check';
+import { bundlesCsv, cellText, csvSeparator, csvText, parseCsv, referencesCsv } from '../../src/csv.js';
 import { markdownDocument } from '../fixtures/markdown/document.js';
 import { savedDocument } from '../fixtures/saved-document.js';
 
@@ -55,71 +56,6 @@ function dataProviderCsvCell() {
     ['a minus on its own', '-', "'-"],
   ];
 }
-
-test('writes the fields table', () => {
-  const records = [
-    {
-      entity: 'Article',
-      entityType: 'node',
-      field: 'Tags',
-      name: 'field_tags',
-      type: 'entity_reference',
-      cardinality: -1,
-      required: true,
-      refs: [{ label: 'Tags' }, { label: 'Topics' }],
-      usedIn: [{ id: 'node.page' }, { id: 'node.event' }],
-      description: 'Pick "up to" 3, please.',
-      defaultValue: '',
-      allowedValues: [],
-      translatable: true,
-    },
-    {
-      entity: 'Article',
-      entityType: 'node',
-      field: 'Size',
-      name: 'field_size',
-      type: 'list_string',
-      cardinality: 1,
-      required: false,
-      refs: [],
-      usedIn: [],
-      description: '',
-      defaultValue: 's',
-      allowedValues: [
-        { value: 's', label: 'Small' },
-        { value: 'l', label: 'l' },
-      ],
-      translatable: false,
-    },
-    {
-      entity: 'Tags',
-      entityType: 'taxonomy_term',
-      field: 'Name',
-      name: 'name',
-      type: 'string',
-      cardinality: 1,
-      required: true,
-      refs: [],
-      usedIn: [],
-      description: '',
-      defaultValue: '',
-      allowedValues: [],
-      translatable: null,
-    },
-  ];
-  const typeLabel = (type) => ({ node: 'Content type', taxonomy_term: 'Vocabulary' })[type];
-
-  assert.deepEqual(fieldsCsv(records, typeLabel).split('\r\n'), [
-    'Entity,Entity type,Field,Machine name,Field type,Cardinality,Required,References,Used in,Help text,Default,Allowed values,Translatable',
-    'Article,Content type,Tags,field_tags,entity_reference,1..n,yes,Tags; Topics,2,"Pick ""up to"" 3, please.",,,yes',
-    'Article,Content type,Size,field_size,list_string,1,no,,,,s,Small (s); l,no',
-    'Tags,Vocabulary,Name,name,string,1,yes,,,,,,',
-  ]);
-  assert.equal(
-    fieldsCsv([], typeLabel),
-    'Entity,Entity type,Field,Machine name,Field type,Cardinality,Required,References,Used in,Help text,Default,Allowed values,Translatable',
-  );
-});
 
 test('writes 1 row per bundle in outline order', () => {
   assert.equal(
@@ -178,7 +114,7 @@ test('escapes bundle and reference cells', () => {
   assert.deepEqual(referencesCsv(doc).split('\r\n').slice(1), ['node,article,field_ref,"Ref, ""main""",node,article,1,no']);
 });
 
-test('writes formulas in document text as text in every CSV', () => {
+test('writes formulas in document text as text in the bundles and references CSVs', () => {
   const doc = {
     entities: [
       {
@@ -191,30 +127,9 @@ test('writes formulas in document text as text in every CSV', () => {
       },
     ],
   };
-  const record = {
-    entity: '=1+1',
-    entityType: 'node',
-    field: '-2+3',
-    name: 'field_ref',
-    type: 'entity_reference',
-    cardinality: 1,
-    required: false,
-    refs: [{ label: '=1+1' }],
-    usedIn: [],
-    description: '@SUM(A1)',
-    defaultValue: '-1',
-    allowedValues: [],
-    translatable: null,
-  };
 
   assert.deepEqual(bundlesCsv(doc).split('\r\n').slice(1), ["node,article,'=1+1,'+cmd,1,1,'@SUM(A1)"]);
   assert.deepEqual(referencesCsv(doc).split('\r\n').slice(1), ["node,article,field_ref,'-2+3,node,article,1,no"]);
-  assert.deepEqual(
-    fieldsCsv([record], () => 'Content type')
-      .split('\r\n')
-      .slice(1),
-    ["'=1+1,Content type,'-2+3,field_ref,entity_reference,1,no,'=1+1,,'@SUM(A1),-1,,"],
-  );
 });
 
 test('fills in what a sparse document leaves out', () => {
@@ -251,3 +166,158 @@ function dataProviderEmptyDocuments() {
     ['only a placeholder', { entities: [{ entityType: 'media', bundle: '*', label: 'Any Media', fields: [] }] }],
   ];
 }
+
+test('reads CSV text into rows', async (t) => {
+  for (const [name, text, expected] of dataProviderParseCsv()) {
+    await t.test(name, () => {
+      assert.deepEqual(parseCsv(text), expected);
+    });
+  }
+});
+
+function dataProviderParseCsv() {
+  return [
+    [
+      'CRLF rows',
+      'a,b\r\nc,d',
+      [
+        ['a', 'b'],
+        ['c', 'd'],
+      ],
+    ],
+    [
+      'LF rows',
+      'a,b\nc,d',
+      [
+        ['a', 'b'],
+        ['c', 'd'],
+      ],
+    ],
+    [
+      'CR rows',
+      'a,b\rc,d',
+      [
+        ['a', 'b'],
+        ['c', 'd'],
+      ],
+    ],
+    ['a final line break', 'a,b\r\n', [['a', 'b']]],
+    ['a byte order mark', '\uFEFFa,b', [['a', 'b']]],
+    ['a quoted comma', '"a,b",c', [['a,b', 'c']]],
+    ['a doubled quote', '"say ""hi"""', [['say "hi"']]],
+    ['a quoted line break', '"a\r\nb",c\nd', [['a\r\nb', 'c'], ['d']]],
+    ['an empty quoted cell', '""', [['']]],
+    ['empty cells', ',,', [['', '', '']]],
+    ['a trailing empty cell', 'a,', [['a', '']]],
+    ['a blank line between rows', 'a\n\nb', [['a'], [''], ['b']]],
+    ['a quote inside an unquoted cell', 'say "hi",b', [['say "hi"', 'b']]],
+    ['text after a closing quote', '"a"b,c', [['ab', 'c']]],
+    ['an empty string', '', []],
+    ['null', null, []],
+  ];
+}
+
+test('rejects a quoted cell with no closing quote, naming the row it starts on', async (t) => {
+  for (const [name, text, row] of dataProviderUnclosedQuotes()) {
+    await t.test(name, () => {
+      assert.throws(() => parseCsv(text), { message: 'A quoted cell has no closing quote.', row: row });
+    });
+  }
+});
+
+function dataProviderUnclosedQuotes() {
+  return [
+    ['on the first row', '"a,b', 1],
+    ['after closed rows', 'a,b\n"c","d\ne,f', 2],
+    ['running over later rows', 'a,b\nc,"unfinished\nd,e\nf,g', 2],
+  ];
+}
+
+test('finds the separator of the first line', async (t) => {
+  for (const [name, text, expected] of dataProviderSeparators()) {
+    await t.test(name, () => {
+      assert.equal(csvSeparator(text), expected);
+    });
+  }
+});
+
+function dataProviderSeparators() {
+  return [
+    ['commas', 'a,b,c\nd;e;f;g', ','],
+    ['semicolons', 'a;b;c\nd,e,f,g', ';'],
+    ['tabs', 'a\tb\tc', '\t'],
+    ['semicolons beside a quoted comma', '"a,b,c";d;e', ';'],
+    ['more commas than semicolons', 'a;b,c,d', ','],
+    ['a tie', 'a;b,c', ','],
+    ['a single column', 'Entity type', ','],
+    ['an empty string', '', ','],
+    ['null', null, ','],
+  ];
+}
+
+test('reads cells split on another separator', async (t) => {
+  for (const [name, text, separator, expected] of dataProviderOtherSeparators()) {
+    await t.test(name, () => {
+      assert.deepEqual(parseCsv(text, separator), expected);
+    });
+  }
+});
+
+function dataProviderOtherSeparators() {
+  return [
+    [
+      'semicolons',
+      'a;b\r\n"c;d";e,f',
+      ';',
+      [
+        ['a', 'b'],
+        ['c;d', 'e,f'],
+      ],
+    ],
+    [
+      'tabs',
+      'a\tb\nc,d\te',
+      '\t',
+      [
+        ['a', 'b'],
+        ['c,d', 'e'],
+      ],
+    ],
+  ];
+}
+
+test('drops the quote the writer puts before a formula', async (t) => {
+  for (const [name, cell, expected] of dataProviderCellText()) {
+    await t.test(name, () => {
+      assert.equal(cellText(cell), expected);
+    });
+  }
+});
+
+function dataProviderCellText() {
+  return [
+    ['a guarded formula', "'=1+1", '=1+1'],
+    ['a guarded plus', "'+cmd", '+cmd'],
+    ['a guarded minus on its own', "'-", '-'],
+    ['a guarded tab', "'\tx", '\tx'],
+    ['plain text', 'Article', 'Article'],
+    ['a quote before text', "'quoted", "'quoted"],
+    ['a quote before a number', "'-3", "'-3"],
+    ['a quote alone', "'", "'"],
+    ['an empty cell', '', ''],
+    ['undefined', undefined, ''],
+  ];
+}
+
+test('reads back any rows it writes', () => {
+  const cell = fc.string().filter((text) => !text.startsWith("'"));
+  const rows = fc.array(fc.array(cell, { minLength: 2, maxLength: 2 }), { maxLength: 5 });
+
+  fc.assert(
+    fc.property(rows, (generated) => {
+      const read = parseCsv(csvText(['a', 'b'], generated)).map((row) => row.map(cellText));
+
+      assert.deepEqual(read, [['a', 'b'], ...generated]);
+    }),
+  );
+});

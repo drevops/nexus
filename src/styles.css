@@ -2350,6 +2350,11 @@ sl-button[hidden] {
   text-align: left;
 }
 
+/* A CSV import lists 1 problem per line. */
+#landing-error-text {
+  white-space: pre-line;
+}
+
 .toolbar__brand {
   display: inline-flex;
   align-items: center;

@@ -31,7 +31,7 @@ const DEFINITIONS = {
 };
 
 export function baseFieldsForEntityType(entityType) {
-  const definitions = DEFINITIONS[entityType] || [];
+  const definitions = Object.hasOwn(DEFINITIONS, entityType) ? DEFINITIONS[entityType] : [];
 
   return definitions.map((definition) => new Field(definition.name, definition.label, definition.fieldType, KIND_SYSTEM, definition.required || false));
 }
