@@ -26,12 +26,20 @@ function element(tag, className, text) {
   return node;
 }
 
+function rowTitle(template, state) {
+  if (state === 'failed') {
+    return 'The ' + templateTitle(template) + ' diagram could not be downloaded. Click to try again.';
+  }
+
+  return 'Load the ' + templateTitle(template) + ' content model';
+}
+
 function templateRow(template, index) {
   const row = element('button', 'template-row');
   row.type = 'button';
   row.id = 'template-' + template.id;
   row.dataset.template = template.id;
-  row.title = 'Load the ' + templateTitle(template) + ' content model';
+  row.title = rowTitle(template, 'loading');
 
   // The digit keys 1 to 9 load the templates in order.
   if (index < 9) {
@@ -69,6 +77,7 @@ function showDownload(template, state, share) {
   }
 
   row.dataset.download = state;
+  row.title = rowTitle(template, state);
   row.style.setProperty('--progress', String(share));
   if (state === 'loading') {
     row.setAttribute('aria-busy', 'true');
@@ -119,12 +128,17 @@ export function rowTemplate(row) {
 }
 
 /**
- * Draws a row per template and starts downloading every diagram at low
- * priority, so the app's own files load first.
+ * Draws a row per template.
  */
 export function drawTemplateList() {
   $('template-list').replaceChildren(...TEMPLATES.map(templateRow));
+}
 
+/**
+ * Starts downloading every diagram that isn't downloaded or downloading, at
+ * low priority, so the app's own files load first.
+ */
+export function downloadTemplates() {
   for (const template of TEMPLATES) {
     // A failed download marks its row, and a click on it downloads again.
     templateText(template, 'low').catch(() => {});

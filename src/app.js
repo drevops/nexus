@@ -31,7 +31,7 @@ import { initIcons, icon } from './icons.js';
 import { DEFAULT_TITLE } from './model.js';
 import { exportLayout, importLayout, getController } from './store.js';
 import { templateTitle } from './templates.js';
-import { rowTemplate, templateText } from './template-list.js';
+import { downloadTemplates, rowTemplate, templateText } from './template-list.js';
 import { $ } from './dom.js';
 
 const THEME_TOGGLES = '[data-theme-toggle]';
@@ -346,6 +346,7 @@ function showLanding() {
   showError('');
   $('landing-cancel').hidden = !getController();
   setLandingOpen(true);
+  downloadTemplates();
 }
 
 function saveAs(format) {

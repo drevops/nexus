@@ -187,6 +187,27 @@ test.describe('Templates', { tag: '@runner-2' }, () => {
     expect(fetched).toHaveLength(TEMPLATES.length);
   });
 
+  test('downloads the template diagrams once a link that fails to open shows the landing', async ({ page }) => {
+    const fetched = [];
+
+    page.on('request', (request) => {
+      if (request.url().includes('/templates/')) {
+        fetched.push(new URL(request.url()).pathname);
+      }
+    });
+
+    // A fresh document, since a change of fragment alone keeps the page.
+    await page.goto('about:blank');
+    await page.goto('/index.html#doc=broken');
+    await expect(page.locator('#landing-error')).toHaveAttribute('open', '');
+
+    for (const template of TEMPLATES) {
+      await expect(page.locator('#template-' + template.id)).toHaveAttribute('data-download', 'done');
+    }
+
+    expect(fetched).toHaveLength(TEMPLATES.length);
+  });
+
   for (const [name, response, message] of dataProviderBrokenTemplates()) {
     test(`reports ${name} on the landing screen`, async ({ page }) => {
       await page.route('**/templates/civictheme.nexus.json', (route) => route.fulfill(response));
@@ -232,6 +253,7 @@ test.describe('Templates', { tag: '@runner-2' }, () => {
     await page.goto('/index.html');
 
     await expect(row).toHaveAttribute('data-download', 'failed');
+    await expect(row).toHaveAttribute('title', 'The ' + templateTitle(template('civictheme')) + ' diagram could not be downloaded. Click to try again.');
     await expect.poll(() => progressOpacity(page, 'civictheme')).toBe(1);
 
     await page.click('#template-civictheme');
@@ -239,6 +261,7 @@ test.describe('Templates', { tag: '@runner-2' }, () => {
 
     await expect(page.locator('#diagram-title')).toHaveJSProperty('value', templateTitle(template('civictheme')));
     await expect(row).toHaveAttribute('data-download', 'done');
+    await expect(row).toHaveAttribute('title', 'Load the ' + templateTitle(template('civictheme')) + ' content model');
   });
 
   test('loads a template from the keyboard', async ({ page }) => {
