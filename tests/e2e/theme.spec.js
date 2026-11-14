@@ -3,7 +3,7 @@ import { loadExample, openBeforeAppStarts, openFrom, DARK_MARK, markFills } from
 
 // Text in each of the page's text colours: the brand, muted text, a machine
 // name and an entity type caption.
-const SELECTION_SAMPLES = ['.toolbar__brand','.statusbar__tips', '.caption:not(.caption--type)', '.caption--type'];
+const SELECTION_SAMPLES = ['.toolbar__brand', '.statusbar__tips', '.caption:not(.caption--type)', '.caption--type'];
 
 // The WCAG contrast ratio of 2 'rgb()' colours.
 function contrastRatio(first, second) {
