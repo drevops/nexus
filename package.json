@@ -20,7 +20,8 @@
     "scripts": {
         "start": "node tests/server.mjs",
         "benchmark": "node scripts/benchmark.mjs",
-        "assemble":"rm -rf _site && mkdir _site && cp -R index.html llms.txt src assets templates schema skills _site/",
+        "assemble": "rm -rf _site && mkdir _site && cp -R index.html llms.txt src assets templates schema skills docs _site/",
+        "build-manual": "node scripts/build-manual.mjs",
         "check-diagram": "node scripts/check-diagram.mjs",
         "check-vendor": "node scripts/check-vendor.mjs",
         "lint": "eslint src scripts tests eslint.config.js playwright.config.js && prettier --check \"src/*.js\" \"scripts/**/*.mjs\" \"tests/**/*.{js,mjs}\" eslint.config.js playwright.config.js",
@@ -45,6 +46,7 @@
         "eslint-config-prettier": "^9.1.2",
         "fast-check": "^4.10.2",
         "globals": "^15.15.0",
+        "marked": "^18.2.0",
         "prettier": "^3.9.10"
     },
     "overrides": {
