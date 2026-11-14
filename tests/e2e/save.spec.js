@@ -1,7 +1,19 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
-import { loadExample, openDocument, openSaveSubmenu, slFill, slSelect, downloadFrom, saveFrom, topmostOf, stepLevel } from './helpers.js';
+import {
+  closeSettings,
+  loadExample,
+  openDocument,
+  openSaveSubmenu,
+  openSettings,
+  slFill,
+  slSelect,
+  downloadFrom,
+  saveFrom,
+  topmostOf,
+  stepLevel,
+} from './helpers.js';
 
 async function savedText(page, format) {
   return readFile(await (await saveFrom(page, format)).path(), 'utf8');
@@ -203,14 +215,6 @@ test.describe('Save', { tag: '@runner-1' }, () => {
     return readFileSync(await (await saveFrom(page, 'md')).path(), 'utf8');
   }
 
-  async function openSettings(page) {
-    if (!(await page.locator('#settings').isVisible())) {
-      await page.click('#settings-toggle');
-    }
-
-    await expect(page.locator('#settings [data-markdown="diagram"]')).toBeVisible();
-  }
-
   test('saves the model as Markdown with its diagram and a section per bundle', async ({ page }) => {
     await loadExample(page);
 
@@ -225,27 +229,30 @@ test.describe('Save', { tag: '@runner-1' }, () => {
 
   test('leaves the diagram out of the Markdown when the setting says Never, across reloads', async ({ page }) => {
     await loadExample(page);
-    await openSettings(page);
+    await openSettings(page, 'markdown');
     await slSelect(page, '#settings [data-markdown="diagram"]', 'never');
+    await closeSettings(page);
 
     expect(await savedMarkdown(page)).not.toContain('```mermaid');
 
     await page.reload();
     await loadExample(page);
-    await openSettings(page);
+    await openSettings(page, 'markdown');
 
     await expect(page.locator('#settings [data-markdown="diagram"]')).toHaveJSProperty('value', 'never');
+    await closeSettings(page);
     expect(await savedMarkdown(page)).not.toContain('```mermaid');
   });
 
   test('puts the diagram back in the Markdown with Reset to defaults', async ({ page }) => {
     await loadExample(page);
-    await openSettings(page);
+    await openSettings(page, 'markdown');
     await slSelect(page, '#settings [data-markdown="diagram"]', 'never');
 
     await page.click('#settings-reset');
 
     await expect(page.locator('#settings [data-markdown="diagram"]')).toHaveJSProperty('value', 'auto');
+    await closeSettings(page);
     expect(await savedMarkdown(page)).toContain('```mermaid');
   });
 

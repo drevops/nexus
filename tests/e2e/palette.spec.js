@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loadExample, slFill, slSelect, captionsOf } from './helpers.js';
+import { loadExample, openSettings, slFill, slSelect, captionsOf } from './helpers.js';
 
 test.describe('Palette', { tag: '@runner-2' }, () => {
   test.beforeEach(async ({ page }) => {
@@ -51,11 +51,11 @@ test.describe('Palette', { tag: '@runner-2' }, () => {
   test('draws each palette type button with the symbol and colour Settings picked for its type', async ({ page }) => {
     await loadExample(page);
     await page.click('#mode-build');
-    await page.click('#settings-toggle');
+    await openSettings(page, 'types');
 
     const symbols = (await paletteSymbols(page)).map(({ type, symbol, fill }) => ({ type, symbol, fill }));
 
-    // Shoelace defines the Settings controls after the panel renders, and an
+    // Shoelace defines the Settings controls after the dialog renders, and an
     // undefined control has no value yet.
     await expect.poll(() => settingsSymbols(page)).toEqual(symbols);
     expect(await paletteSymbolOf(page, 'paragraph')).toEqual({ type: 'paragraph', symbol: 'cut', shape: 'polygon', fill: '#cdbdec' });
@@ -66,7 +66,7 @@ test.describe('Palette', { tag: '@runner-2' }, () => {
   test('redraws a palette type button when Settings changes its colour or symbol and when they are reset', async ({ page }) => {
     await loadExample(page);
     await page.click('#mode-build');
-    await page.click('#settings-toggle');
+    await openSettings(page, 'types');
 
     await slFill(page, 'sl-color-picker[data-color="paragraph"]', '#112233');
     await expect.poll(() => paletteSymbolOf(page, 'paragraph')).toEqual({ type: 'paragraph', symbol: 'cut', shape: 'polygon', fill: '#112233' });

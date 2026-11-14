@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { editExample, loadExample, pickLayout, selectEvent } from './helpers.js';
+import { editExample, loadExample, pickLayout, selectEvent, tapNode } from './helpers.js';
 
 test.describe('Status bar', { tag: '@runner-1' }, () => {
   test.beforeEach(async ({ page }) => {
@@ -147,18 +147,19 @@ test.describe('Status bar', { tag: '@runner-1' }, () => {
     });
   }
 
+  // The options carry no title of their own, so the hint shows the select's.
   test('describes a hovered option of a select list inside a panel', async ({ page }) => {
-    await loadExample(page);
-    await page.click('#settings-toggle');
-    await page.click('#settings [data-default="level"]');
+    await selectEvent(page, 1);
+    await tapNode(page, 'field:node.event:field_media');
 
-    const option = page.locator('#settings [data-default="level"] sl-option').nth(1);
+    const select = page.locator('#inspector sl-select[title="The field type"]');
+    await select.click();
+
+    const option = select.locator('sl-option').nth(1);
     await expect(option).toBeVisible();
-    const title = await option.getAttribute('title');
-    expect(title).toBeTruthy();
 
     await option.hover();
-    await expect(page.locator('#statusbar-hint')).toHaveText(title);
+    await expect(page.locator('#statusbar-hint')).toHaveText('The field type');
   });
 
   test('moves the status bar hint between controls in different regions', async ({ page }) => {
@@ -249,7 +250,6 @@ test.describe('Status bar', { tag: '@runner-1' }, () => {
       ['an Entities panel row', withPanel('#entities-toggle'), '#entities .entity-row__name'],
       ['a Fields table header', withPanel('#table-toggle'), '#table .field-table__sort'],
       ['a History panel version', withPanel('#history-toggle'), '#history .panel__body [title]'],
-      ['a Settings control', withPanel('#settings-toggle'), '#settings [data-default="layout"]'],
       ['an Inspector control', (page) => selectEvent(page, 1), '#inspector .panel__body [title]'],
       ['a canvas handle', (page) => selectEvent(page, 1), '.handle--right'],
       ['an edit palette button', (page) => editExample(page), '#add-node'],

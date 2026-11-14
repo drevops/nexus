@@ -42,6 +42,28 @@ export async function openBeforeAppStarts(page) {
   return start;
 }
 
+// Opens the Settings dialog on a tab. The dialog's content mounts on its
+// sl-show, so the tab is waited for before it is clicked.
+export async function openSettings(page, tab) {
+  if (!(await page.locator('#settings').evaluate((el) => el.open))) {
+    await page.click('#settings-toggle');
+  }
+
+  const button = page.locator(`#settings sl-tab[data-settings-tab="${tab}"]`);
+
+  await button.click();
+  await expect(button).toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator(`#settings sl-tab-panel[name="${tab}"]`)).toBeVisible();
+}
+
+// Closes the Settings dialog and waits for its close animation, so the
+// canvas takes the pointer again.
+export async function closeSettings(page) {
+  await page.click('#settings-close');
+  await expect(page.locator('#settings')).not.toHaveAttribute('open');
+  await expect(page.locator('#settings sl-tab-group')).toHaveCount(0);
+}
+
 // Imports the conference fixture folder, with its annotation overlay.
 export async function loadExample(page) {
   await page.setInputFiles('#folder-input', EXAMPLE_DIR);

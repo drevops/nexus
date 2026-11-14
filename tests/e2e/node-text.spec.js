@@ -1,5 +1,17 @@
 import { test, expect } from '@playwright/test';
-import { loadExample, slFill, slSelect, createEntity, buildStoryWithField, tapNode, captionsOf, openDiagram, pickLayout, stepLevel } from './helpers.js';
+import {
+  loadExample,
+  openSettings,
+  slFill,
+  slSelect,
+  createEntity,
+  buildStoryWithField,
+  tapNode,
+  captionsOf,
+  openDiagram,
+  pickLayout,
+  stepLevel,
+} from './helpers.js';
 
 test.describe('Node text', { tag: '@runner-2' }, () => {
   test.beforeEach(async ({ page }) => {
@@ -298,7 +310,7 @@ test.describe('Node text', { tag: '@runner-2' }, () => {
     const width = () => page.evaluate(() => window.__nexus.cy.getElementById('node.event').outerWidth());
     const rounded = await width();
 
-    await page.click('#settings-toggle');
+    await openSettings(page, 'types');
     await slSelect(page, '#settings sl-select[data-symbol="node"]', 'diamond');
 
     await expect.poll(width).toBeGreaterThan(rounded * 1.5);
@@ -334,7 +346,7 @@ test.describe('Node text', { tag: '@runner-2' }, () => {
       expect(rounded.labelX).toBeCloseTo(0, 2);
       expect(rounded.labelY).toBeCloseTo(0, 2);
 
-      await page.click('#settings-toggle');
+      await openSettings(page, 'types');
       await slSelect(page, '#settings sl-select[data-symbol="node"]', symbol);
 
       // Captions follow the label 1 frame after Cytoscape redraws, so the
@@ -369,7 +381,7 @@ test.describe('Node text', { tag: '@runner-2' }, () => {
   for (const [symbol, end] of dataProviderFixedEnds()) {
     test(`keeps the ends of the ${symbol} symbol the same size when its name gets longer`, async ({ page }) => {
       await openDiagram(page, 'example');
-      await page.click('#settings-toggle');
+      await openSettings(page, 'types');
       await slSelect(page, '#settings sl-select[data-symbol="node"]', symbol);
 
       // The size of the shape's end in model pixels, and the size the shape

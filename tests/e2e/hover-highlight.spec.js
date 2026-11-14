@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { HOVER_DELAY } from '../../src/hover-highlight.js';
-import { hoverNode, openDocument, pagePosition, slFill, tapNode } from './helpers.js';
+import { hoverNode, openDocument, openSettings, pagePosition, slFill, tapNode } from './helpers.js';
 
 test.describe('Hover highlight', { tag: '@runner-2' }, () => {
   // A references B, B has no fields and C stands apart with 1 field.
@@ -257,17 +257,17 @@ test.describe('Hover highlight', { tag: '@runner-2' }, () => {
     expect(await noHighlight(page)).toBe(0);
   });
 
-  // The Settings panel can cover the diagram, so the pointer's arrival on a
-  // node is emitted rather than moved.
+  // The Settings dialog covers the diagram, so the pointer's arrival on a node
+  // is emitted rather than moved.
   test('turns the highlight off from Settings and back on with Reset to defaults', async ({ page }) => {
-    await page.click('#settings-toggle');
+    await openSettings(page, 'hover');
     await hoverNode(page, 'node.a');
     await page.waitForFunction(() => window.__nexus.cy.elements('.hover-lit').length > 0);
     await page.evaluate(() => {
       window.__nexus.cy.getElementById('node.a').emit('mouseout');
     });
 
-    await page.click('#hover-toggle');
+    await page.click('#hover-toggle [part~="control"]');
     await expect.poll(() => page.evaluate(() => JSON.parse(window.localStorage.getItem('nexusSettings')).hover)).toEqual({ enabled: false });
     await hoverNode(page, 'node.a');
     await page.waitForTimeout(HOVER_DELAY * 2);

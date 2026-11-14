@@ -70,7 +70,6 @@ const html = htmBase.bind(h);
 const TITLES = {
   entities: 'Entities',
   table: 'Fields',
-  settings: 'Settings',
   legend: 'Legend',
   history: 'History',
   checks: 'Checks',
@@ -85,7 +84,6 @@ const PANEL_TOGGLES = [
   ['history-toggle', 'history'],
   ['checks-toggle', 'checks'],
   ['changes-toggle', 'changes'],
-  ['settings-toggle', 'settings'],
 ];
 
 const SWATCHES = {
@@ -543,17 +541,14 @@ function body(id, s) {
   if (id === 'entities') {
     return html`<${EntitiesBody} controller=${controller} />`;
   }
-  if (id === 'table') {
-    return html`<${TableBody}
-      controller=${controller}
-      filter=${s.tableFilter}
-      term=${s.tableSearch}
-      sort=${s.tableSort}
-      editMode=${s.editMode}
-      readOnly=${!!s.comparison}
-    />`;
-  }
-  return html`<${SettingsBody} controller=${controller} />`;
+  return html`<${TableBody}
+    controller=${controller}
+    filter=${s.tableFilter}
+    term=${s.tableSearch}
+    sort=${s.tableSort}
+    editMode=${s.editMode}
+    readOnly=${!!s.comparison}
+  />`;
 }
 
 function EntitiesBody({ controller }) {
@@ -1463,69 +1458,72 @@ const DEFAULT_SWITCHES = [
   ['machineNames', 'Machine names', 'Show each machine name under its node'],
 ];
 
-// The settings a new diagram opens with, 1 per line with its label on the
-// left.
+// The settings a new diagram opens with, 1 per line with its label and help
+// text on the left.
 function DiagramDefaults({ controller }) {
   const defaults = controller.diagramDefaults();
 
-  return html`<h3 class="settings-section__title">New diagrams</h3>
-    <div class="diagram-defaults">
-      <sl-select
-        class="default-row"
-        size="small"
-        hoist
-        label="Layout"
-        data-default="layout"
-        title="The layout a new diagram opens with"
-        value=${defaults.layout}
-        onsl-change=${(e) => controller.setDiagramDefault('layout', e.target.value)}
-      >
-        ${controller.layoutOptions().map((o) => html`<sl-option value=${o.value}>${o.name}</sl-option>`)}
-      </sl-select>
-      <sl-select
-        class="default-row"
-        size="small"
-        hoist
-        label="Mode"
-        data-default="mode"
-        title="The mode a new diagram opens in"
-        value=${defaults.mode}
-        onsl-change=${(e) => controller.setDiagramDefault('mode', e.target.value)}
-      >
-        ${MODES.map((mode) => html`<sl-option value=${mode.id}>${mode.label}</sl-option>`)}
-      </sl-select>
-      <sl-select
-        class="default-row"
-        size="small"
-        hoist
-        label="Fields"
-        data-default="level"
-        title="The detail level a new diagram opens with"
-        value=${defaults.level}
-        onsl-change=${(e) => controller.setDiagramDefault('level', e.target.value)}
-      >
-        ${DETAIL_LEVELS.map((level) => html`<sl-option value=${level.id} title=${level.title}>${level.label}</sl-option>`)}
-      </sl-select>
-      ${DEFAULT_SWITCHES.map(
-        ([key, label, title]) =>
-          html`<sl-switch
-            class="default-row default-row--switch"
-            size="small"
-            data-default=${key}
-            title=${title + ' in a new diagram'}
-            checked=${defaults[key]}
-            onsl-change=${(e) => controller.setDiagramDefault(key, e.target.checked)}
-            >${label}</sl-switch
-          >`,
-      )}
-    </div>`;
+  return html`<div class="settings-rows">
+    <sl-select
+      class="default-row"
+      size="small"
+      hoist
+      label="Layout"
+      help-text="The layout a new diagram opens with"
+      data-default="layout"
+      title="The layout a new diagram opens with"
+      value=${defaults.layout}
+      onsl-change=${(e) => controller.setDiagramDefault('layout', e.target.value)}
+    >
+      ${controller.layoutOptions().map((o) => html`<sl-option value=${o.value}>${o.name}</sl-option>`)}
+    </sl-select>
+    <sl-select
+      class="default-row"
+      size="small"
+      hoist
+      label="Mode"
+      help-text="The mode a new diagram opens in"
+      data-default="mode"
+      title="The mode a new diagram opens in"
+      value=${defaults.mode}
+      onsl-change=${(e) => controller.setDiagramDefault('mode', e.target.value)}
+    >
+      ${MODES.map((mode) => html`<sl-option value=${mode.id}>${mode.label}</sl-option>`)}
+    </sl-select>
+    <sl-select
+      class="default-row"
+      size="small"
+      hoist
+      label="Fields"
+      help-text="The detail level a new diagram opens with"
+      data-default="level"
+      title="The detail level a new diagram opens with"
+      value=${defaults.level}
+      onsl-change=${(e) => controller.setDiagramDefault('level', e.target.value)}
+    >
+      ${DETAIL_LEVELS.map((level) => html`<sl-option value=${level.id} title=${level.title}>${level.label}</sl-option>`)}
+    </sl-select>
+    ${DEFAULT_SWITCHES.map(
+      ([key, label, title]) =>
+        html`<sl-switch
+          class="default-row default-row--switch"
+          size="small"
+          data-default=${key}
+          help-text=${title}
+          title=${title + ' in a new diagram'}
+          checked=${defaults[key]}
+          onsl-change=${(e) => controller.setDiagramDefault(key, e.target.checked)}
+          >${label}</sl-switch
+        >`,
+    )}
+  </div>`;
 }
 
 // Below this width, in rem, each entity type's label leaves too little room
 // beside its controls.
 const NARROW_SETTINGS_REM = 17;
 
-function SettingsBody({ controller }) {
+function TypeSettings({ controller }) {
   const [nt, setNt] = useState({ name: '', label: '', color: '#cfe3f7', symbol: 'rounded' });
   const [narrow, setNarrow] = useState(false);
   const bodyRef = useRef(null);
@@ -1557,14 +1555,13 @@ function SettingsBody({ controller }) {
   }
 
   // The removed row takes its focused button with it, so the focus moves to
-  // the new type's name instead of leaving the panel.
+  // the new type's name instead of leaving the dialog.
   function remove(type) {
     controller.removeCustomType(type);
     bodyRef.current.querySelector('[data-new-type]').focus();
   }
 
   return html` <div class=${'settings-body' + (narrow ? ' is-narrow' : '')} ref=${bodyRef}>
-    <h3 class="settings-section__title">Entity types</h3>
     <div id="type-settings" class="type-settings">
       ${controller.allTypes().map(
         (t) =>
@@ -1577,6 +1574,7 @@ function SettingsBody({ controller }) {
               size="small"
               no-format-toggle
               hoist
+              label=${'Colour of ' + controller.typeLabel(t)}
               title=${'Colour of ' + controller.typeLabel(t)}
               onsl-input=${(e) => controller.applyColor(t, e.target.value)}
             ></sl-color-picker>
@@ -1623,6 +1621,7 @@ function SettingsBody({ controller }) {
         size="small"
         no-format-toggle
         hoist
+        label="Colour of the new type"
         title="Colour of the new type"
         onsl-input=${(e) => setNt((p) => ({ ...p, color: e.target.value }))}
       ></sl-color-picker>
@@ -1638,58 +1637,60 @@ function SettingsBody({ controller }) {
         >${rawIcon('plus', 14)}</sl-button
       >
     </div>
-    <${DiagramDefaults} controller=${controller} />
-    <${FrameSettings} controller=${controller} />
-    <${HoverSettings} controller=${controller} />
-    <${MarkdownSettings} controller=${controller} />
-    <${CheckSettings} controller=${controller} />
-    <sl-button
-      id="settings-reset"
-      class="settings-reset"
-      size="small"
-      title="Restore the default colours, symbols, new diagram settings, mode frame, hover highlight, Markdown export and checks"
-      onClick=${() => controller.resetSettings()}
-      >${rawIcon('rotate-ccw')}Reset to defaults</sl-button
-    >
-    <p class="panel__note">Saved to this browser and reused across diagrams.</p>
   </div>`;
 }
 
-const FRAME_MODES = [
-  ['view', 'View mode'],
-  ['edit', 'Edit mode'],
+const FRAME_ROWS = [
+  ['view', 'View mode', 'Frame the canvas while viewing'],
+  ['edit', 'Edit mode', 'Frame the canvas while editing'],
 ];
 
+// Each mode has its own switch and colour, and its colour is disabled while
+// its switch is off.
 function FrameSettings({ controller }) {
   const frame = controller.frameSettings();
 
-  return html`<h3 class="settings-section__title settings-section__title--spaced">Mode frame</h3>
-    <sl-switch
-      id="frame-toggle"
-      class="frame-toggle"
-      size="small"
-      checked=${frame.enabled}
-      title="Draw a frame inside the canvas edge in the colour of the mode"
-      onsl-change=${(e) => controller.setFrame({ enabled: e.target.checked })}
-      >Frame the canvas</sl-switch
-    >
-    <div class="frame-settings">
-      ${FRAME_MODES.map(
-        ([mode, label]) =>
-          html`<div class="frame-row" data-frame-row=${mode}>
-            <span class="type-row__label">${label}</span>
+  return html`<div class="settings-rows">
+      ${FRAME_ROWS.map(
+        ([mode, label, help]) =>
+          html`<div class="setting-row" data-frame-row=${mode}>
+            <div class="setting-row__text">
+              <span class="setting-row__label">${label}</span>
+              <span class="setting-row__help">${help}</span>
+            </div>
             <sl-color-picker
               data-frame-color=${mode}
-              value=${frame[mode]}
+              value=${frame[mode].color}
               format="hex"
               size="small"
               opacity
               no-format-toggle
               hoist
-              disabled=${!frame.enabled}
+              disabled=${!frame[mode].enabled}
+              label=${'Frame colour in ' + label}
               title=${'Frame colour in ' + label}
-              onsl-input=${(e) => controller.setFrame({ [mode]: e.target.value })}
+              onsl-input=${(e) => controller.setFrame(mode, { color: e.target.value })}
             ></sl-color-picker>
+            <sl-switch
+              data-frame-toggle=${mode}
+              size="small"
+              checked=${frame[mode].enabled}
+              title=${help}
+              onsl-change=${(e) => controller.setFrame(mode, { enabled: e.target.checked })}
+              ><span class="visually-hidden">Frame the canvas in ${label}</span></sl-switch
+            >
+          </div>`,
+      )}
+    </div>
+    <div class="frame-preview" title="How the frame draws in each mode">
+      ${FRAME_ROWS.map(
+        ([mode, label]) =>
+          html`<div
+            class=${'frame-preview__box' + (frame[mode].enabled ? '' : ' is-off')}
+            data-frame-preview=${mode}
+            style=${{ borderColor: frame[mode].enabled ? frame[mode].color : '' }}
+          >
+            ${frame[mode].enabled ? label : 'No frame'}
           </div>`,
       )}
     </div>`;
@@ -1697,35 +1698,41 @@ function FrameSettings({ controller }) {
 
 function HoverSettings({ controller }) {
   const hover = controller.hoverSettings();
+  const help = 'Highlight the fields, references and connected entities of the node under the pointer, and fade the rest';
 
-  return html`<h3 class="settings-section__title settings-section__title--spaced">Hover highlight</h3>
+  return html`<div class="settings-rows">
     <sl-switch
       id="hover-toggle"
-      class="hover-toggle"
+      class="default-row default-row--switch"
       size="small"
       checked=${hover.enabled}
-      title="Highlight the fields, references and connected entities of the node under the pointer, and fade the rest"
+      help-text=${help}
+      title=${help}
       onsl-change=${(e) => controller.setHover({ enabled: e.target.checked })}
       >Highlight connections</sl-switch
-    >`;
+    >
+  </div>`;
 }
 
 function MarkdownSettings({ controller }) {
   const markdown = controller.markdownSettings();
+  const help = 'When a Markdown export starts with a Mermaid diagram of the model';
 
-  return html`<h3 class="settings-section__title settings-section__title--spaced">Markdown export</h3>
+  return html`<div class="settings-rows">
     <sl-select
       class="default-row"
       size="small"
       hoist
       label="Diagram"
+      help-text=${help}
       data-markdown="diagram"
-      title="When a Markdown export starts with a Mermaid diagram of the model"
+      title=${help}
       value=${markdown.diagram}
       onsl-change=${(e) => controller.setMarkdown({ diagram: e.target.value })}
     >
       ${MARKDOWN_DIAGRAM_OPTIONS.map((option) => html`<sl-option value=${option.id}>${option.label}</sl-option>`)}
-    </sl-select>`;
+    </sl-select>
+  </div>`;
 }
 
 function CheckSettings({ controller }) {
@@ -1743,20 +1750,168 @@ function CheckSettings({ controller }) {
     evt.target.value = String(controller.checkSettings().fieldLimit);
   }
 
-  return html`<h3 class="settings-section__title settings-section__title--spaced">Checks</h3>
+  const help = 'Warn about a bundle with more fields of its own than this, from 1 to ' + MAX_FIELD_LIMIT;
+
+  return html`<div class="settings-rows">
     <sl-input
-      class="default-row"
+      class="default-row default-row--number"
       type="number"
       size="small"
       min="1"
       max=${MAX_FIELD_LIMIT}
       step="1"
       label="Field limit"
+      help-text=${help}
       data-check-setting="fieldLimit"
-      title=${'Warn about a bundle with more fields of its own than this, from 1 to ' + MAX_FIELD_LIMIT}
+      title=${help}
       value=${String(fieldLimit)}
       onsl-change=${change}
-    ></sl-input>`;
+    ></sl-input>
+  </div>`;
+}
+
+// The tabs of the Settings dialog in order, each with the nexusSettings keys
+// its Reset this tab button clears.
+const SETTINGS_TABS = [
+  {
+    id: 'types',
+    label: 'Entity types',
+    description: 'Colours, symbols, custom types',
+    lead: "The colour and symbol each entity type draws with, and custom types for entities Nexus doesn't know.",
+    icon: 'layers',
+    keys: ['colors', 'symbols'],
+    body: TypeSettings,
+  },
+  {
+    id: 'defaults',
+    label: 'New diagrams',
+    description: 'Layout, mode, fields, switches',
+    lead: 'What every new diagram opens with. A layout or level picked in the toolbar lasts for the open diagram only.',
+    icon: 'file-plus',
+    keys: ['newDiagrams'],
+    body: DiagramDefaults,
+  },
+  {
+    id: 'frame',
+    label: 'Mode frame',
+    description: 'Canvas border per mode',
+    lead: 'A frame inside the canvas edge in the colour of the current mode. Turn it on for View mode, Edit mode or both.',
+    icon: 'maximize',
+    keys: ['frame'],
+    body: FrameSettings,
+  },
+  {
+    id: 'hover',
+    label: 'Hover highlight',
+    description: 'Light connections on hover',
+    lead: 'Light up what a node connects to while the pointer rests on it.',
+    icon: 'crosshair',
+    keys: ['hover'],
+    body: HoverSettings,
+  },
+  {
+    id: 'markdown',
+    label: 'Markdown export',
+    description: 'Mermaid diagram in exports',
+    lead: 'How Save as > Markdown writes the document.',
+    icon: 'file-text',
+    keys: ['markdown'],
+    body: MarkdownSettings,
+  },
+  {
+    id: 'checks',
+    label: 'Checks',
+    description: 'Field limit warning',
+    lead: 'The limits the Checks panel warns about.',
+    icon: 'list-checks',
+    keys: ['checks'],
+    body: CheckSettings,
+  },
+];
+
+// The tab shown when the dialog opens again in this session.
+let settingsTab = SETTINGS_TABS[0].id;
+
+function SettingsTabs({ controller }) {
+  return html`<sl-tab-group
+    class="settings-tabs"
+    placement="start"
+    onsl-tab-show=${(e) => {
+      settingsTab = e.detail.name;
+    }}
+  >
+    ${SETTINGS_TABS.map(
+      (tab) =>
+        html`<sl-tab slot="nav" panel=${tab.id} active=${tab.id === settingsTab} data-settings-tab=${tab.id} title=${tab.label + ': ' + tab.description}>
+          <span class="settings-tab__icon">${rawIcon(tab.icon, 18)}</span>
+          <span class="settings-tab__text">
+            <span class="settings-tab__label">${tab.label}</span>
+            <span class="settings-tab__description">${tab.description}</span>
+          </span>
+        </sl-tab>`,
+    )}
+    ${SETTINGS_TABS.map(
+      (tab) =>
+        html`<sl-tab-panel name=${tab.id}>
+          <div class="settings-pane__head">
+            <h3 class="settings-pane__title">${tab.label}</h3>
+            <sl-button
+              class="settings-pane__reset"
+              size="small"
+              variant="text"
+              data-reset-tab=${tab.id}
+              title=${'Restore the defaults of ' + tab.label + ' only'}
+              onClick=${() => controller.resetSettings(tab.keys)}
+              >Reset this tab</sl-button
+            >
+          </div>
+          <p class="settings-pane__lead">${tab.lead}</p>
+          <${tab.body} controller=${controller} />
+        </sl-tab-panel>`,
+    )}
+  </sl-tab-group>`;
+}
+
+// A colour picker keeps its dropdown in its shadow root.
+function hasOpenPopup(root) {
+  return (
+    !!root.querySelector('sl-select[open]') ||
+    [...root.querySelectorAll('sl-color-picker')].some((picker) => !!picker.shadowRoot.querySelector('sl-dropdown[open]'))
+  );
+}
+
+// Renders the tabs into #settings-body while the #settings dialog is open, so
+// graph edits don't redraw them. Nested selects and pickers fire their own
+// sl-show and sl-after-hide, which bubble to the dialog.
+function SettingsBody({ dialog }) {
+  useStore();
+  const [open, setOpen] = useState(false);
+  const controller = getController();
+
+  useEffect(() => {
+    const show = (e) => e.target === dialog && setOpen(true);
+    const hidden = (e) => e.target === dialog && setOpen(false);
+
+    // The dialog and an open select or picker both close on Escape, so the
+    // dialog stays open while one is.
+    const requestClose = (e) => {
+      if (e.target === dialog && e.detail.source === 'keyboard' && hasOpenPopup(dialog)) {
+        e.preventDefault();
+      }
+    };
+
+    dialog.addEventListener('sl-show', show);
+    dialog.addEventListener('sl-after-hide', hidden);
+    dialog.addEventListener('sl-request-close', requestClose);
+
+    return () => {
+      dialog.removeEventListener('sl-show', show);
+      dialog.removeEventListener('sl-after-hide', hidden);
+      dialog.removeEventListener('sl-request-close', requestClose);
+    };
+  }, []);
+
+  return open && controller ? html`<${SettingsTabs} controller=${controller} />` : null;
 }
 
 /* Boot -------------------------------------------------------------------- */
@@ -1793,6 +1948,12 @@ function syncToggles() {
 export function initUI() {
   titleShoelaceHosts(options);
   render(html`<${StageApp} />`, $('stage-root'));
+
+  const settings = $('settings');
+  render(html`<${SettingsBody} dialog=${settings} />`, $('settings-body'));
+  $('settings-toggle').addEventListener('click', () => settings.show());
+  $('settings-close').addEventListener('click', () => settings.hide());
+  $('settings-reset').addEventListener('click', () => getController()?.resetSettings());
 
   PANEL_TOGGLES.forEach(([btn, id]) => {
     const el = $(btn);

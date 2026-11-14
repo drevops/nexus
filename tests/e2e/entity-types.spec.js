@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-import { loadExample, slFill, slSelect } from './helpers.js';
+import { closeSettings, loadExample, openSettings, slFill, slSelect } from './helpers.js';
 
 test.describe('Entity types', { tag: '@runner-2' }, () => {
   test.beforeEach(async ({ page }) => {
@@ -10,7 +10,7 @@ test.describe('Entity types', { tag: '@runner-2' }, () => {
   test('persists a custom entity colour across reloads', async ({ page }) => {
     await loadExample(page);
 
-    await page.click('#settings-toggle');
+    await openSettings(page, 'types');
     await slFill(page, 'sl-color-picker[data-color="paragraph"]', '#112233');
 
     const stored = await page.evaluate(() => JSON.parse(window.localStorage.getItem('nexusSettings')));
@@ -26,7 +26,7 @@ test.describe('Entity types', { tag: '@runner-2' }, () => {
   for (const [name, color, expected] of dataProviderLabelColours()) {
     test(`draws labels that read on ${name}`, async ({ page }) => {
       await loadExample(page);
-      await page.click('#settings-toggle');
+      await openSettings(page, 'types');
       await slFill(page, 'sl-color-picker[data-color="taxonomy_term"]', color);
 
       const colors = await page.evaluate(() => {
@@ -81,7 +81,7 @@ test.describe('Entity types', { tag: '@runner-2' }, () => {
 
   test('changes a type symbol and adds a custom entity type in settings', async ({ page }) => {
     await loadExample(page);
-    await page.click('#settings-toggle');
+    await openSettings(page, 'types');
 
     await slSelect(page, '#settings sl-select[data-symbol="node"]', 'diamond');
     await expect.poll(() => page.evaluate(() => window.__nexus.cy.nodes('[group="entity"][entityType="node"]').first().style('shape'))).toBe('diamond');
@@ -93,11 +93,11 @@ test.describe('Entity types', { tag: '@runner-2' }, () => {
 
   test('labels an entity of a custom type with the custom label in the inspector', async ({ page }) => {
     await page.click('#new-btn');
-    await page.click('#settings-toggle');
+    await openSettings(page, 'types');
     await page.fill('#settings [data-new-type]', 'widget');
     await page.fill('#settings input[placeholder="Label"]', 'Gadget widget');
     await page.click('#settings [data-add-type]');
-    await page.click('#settings .panel__close');
+    await closeSettings(page);
     await page.click('#mode-build');
 
     await page.click('[data-add-entity="node"]');
@@ -111,7 +111,7 @@ test.describe('Entity types', { tag: '@runner-2' }, () => {
 
   test('resets colours and symbols to defaults from settings', async ({ page }) => {
     await loadExample(page);
-    await page.click('#settings-toggle');
+    await openSettings(page, 'types');
 
     await slSelect(page, '#settings sl-select[data-symbol="node"]', 'diamond');
     await expect.poll(() => page.evaluate(() => window.__nexus.cy.nodes('[group="entity"][entityType="node"]').first().style('shape'))).toBe('diamond');
@@ -124,11 +124,12 @@ test.describe('Entity types', { tag: '@runner-2' }, () => {
 
   test('round-trips custom types and symbols through a saved document', async ({ page }) => {
     await loadExample(page);
-    await page.click('#settings-toggle');
+    await openSettings(page, 'types');
 
     await slSelect(page, '#settings sl-select[data-symbol="node"]', 'diamond');
     await page.fill('#settings [data-new-type]', 'gadget');
     await page.click('#settings [data-add-type]');
+    await closeSettings(page);
 
     const [download] = await Promise.all([page.waitForEvent('download'), page.click('#doc-save')]);
     const doc = JSON.parse(readFileSync(await download.path(), 'utf8'));
@@ -136,29 +137,18 @@ test.describe('Entity types', { tag: '@runner-2' }, () => {
     expect(doc.customTypes.some((t) => t.type === 'gadget')).toBe(true);
   });
 
-  // Opens Settings with a custom type, then docks it in the right rail when
-  // asked, narrowed to the rail's minimum width when asked.
+  // Opens the Entity types tab of Settings with a custom type, in a window as
+  // narrow as a phone's when asked.
   async function openTypeSettings(page, placement) {
+    if (placement === 'narrow window') {
+      await page.setViewportSize({ width: 420, height: 800 });
+    }
+
     await loadExample(page);
-    await page.click('#settings-toggle');
+    await openSettings(page, 'types');
     await page.fill('#settings [data-new-type]', 'widget');
     await page.click('#settings [data-add-type]');
-
-    if (placement === 'floating') {
-      return;
-    }
-
-    await page.click('#settings .panel__pin');
-    await expect(page.locator('#dock-right #settings')).toHaveCount(1);
-
-    if (placement === 'narrowest rail') {
-      const handle = await page.locator('#dock-right .dock__resize').boundingBox();
-      await page.mouse.move(handle.x + handle.width / 2, handle.y + 120);
-      await page.mouse.down();
-      await page.mouse.move(handle.x + 400, handle.y + 120, { steps: 6 });
-      await page.mouse.up();
-      await expect.poll(async () => (await page.locator('#dock-right').boundingBox()).width).toBe(220);
-    }
+    await expect(page.locator('#settings [data-type-row="widget"]')).toHaveCount(1);
   }
 
   // Each type row and the add row as the number of lines its cells take, the
@@ -202,7 +192,7 @@ test.describe('Entity types', { tag: '@runner-2' }, () => {
   }
 
   for (const placement of dataProviderOneLineTypeSettings()) {
-    test(`lays out each entity type and the add form on 1 line in columns in a ${placement}`, async ({ page }) => {
+    test(`lays out each entity type and the add form on 1 line in columns in the ${placement}`, async ({ page }) => {
       await openTypeSettings(page, placement);
 
       const rows = await typeRowLayout(page);
@@ -218,11 +208,11 @@ test.describe('Entity types', { tag: '@runner-2' }, () => {
   }
 
   function dataProviderOneLineTypeSettings() {
-    return ['floating panel', 'side rail'];
+    return ['dialog'];
   }
 
-  test('puts each entity type label and the new type names above their controls in the narrowest side rail', async ({ page }) => {
-    await openTypeSettings(page, 'narrowest rail');
+  test('puts each entity type label and the new type names above their controls in a narrow window', async ({ page }) => {
+    await openTypeSettings(page, 'narrow window');
     await expect(page.locator('#settings .settings-body')).toHaveClass(/is-narrow/);
 
     const rows = await typeRowLayout(page);
@@ -235,7 +225,7 @@ test.describe('Entity types', { tag: '@runner-2' }, () => {
   });
 
   test('removes a custom type with its minus button and offers none on the built-in types', async ({ page }) => {
-    await openTypeSettings(page, 'floating panel');
+    await openTypeSettings(page, 'dialog');
 
     await expect(page.locator('#settings [data-remove-type]')).toHaveCount(1);
     const remove = page.locator('#settings [data-type-row="widget"] [data-remove-type="widget"]');
@@ -251,7 +241,7 @@ test.describe('Entity types', { tag: '@runner-2' }, () => {
 
   test('adds a custom type with the plus button and empties the new type names', async ({ page }) => {
     await loadExample(page);
-    await page.click('#settings-toggle');
+    await openSettings(page, 'types');
     await expect(page.locator('#settings [data-add-type]')).toHaveAttribute('aria-label', 'Add a custom entity type');
     await expect(page.locator('#settings [data-add-type]')).toHaveText('');
 
@@ -266,7 +256,7 @@ test.describe('Entity types', { tag: '@runner-2' }, () => {
 
   test('draws the picked symbol in its select and names it in the title', async ({ page }) => {
     await loadExample(page);
-    await page.click('#settings-toggle');
+    await openSettings(page, 'types');
     const select = page.locator('#settings sl-select[data-symbol="node"]');
     await expect(select).toHaveAttribute('title', 'Symbol: Rounded rectangle');
     await expect(select.locator(':scope > .type-row__preview rect')).toHaveCount(1);
@@ -278,7 +268,7 @@ test.describe('Entity types', { tag: '@runner-2' }, () => {
   });
 
   for (const placement of dataProviderSymbolListPlacements()) {
-    test(`opens the symbol list inside the window in a ${placement}`, async ({ page }) => {
+    test(`opens the symbol list inside the window in the ${placement}`, async ({ page }) => {
       await openTypeSettings(page, placement);
       const select = page.locator('#settings sl-select[data-symbol="node"]');
 
@@ -295,6 +285,6 @@ test.describe('Entity types', { tag: '@runner-2' }, () => {
   }
 
   function dataProviderSymbolListPlacements() {
-    return ['floating panel', 'narrowest rail'];
+    return ['dialog', 'narrow window'];
   }
 });

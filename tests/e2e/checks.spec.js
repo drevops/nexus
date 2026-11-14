@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { TEMPLATES } from '../../src/templates.js';
 import { CHECK_DEFAULTS } from '../../src/model-checks.js';
-import { CHECKS_DOC, buildEntities, openDocument, selectedNodes, slFill, waitForGraph, activeLevel, stepLevel } from './helpers.js';
+import { CHECKS_DOC, buildEntities, openDocument, openSettings, selectedNodes, slFill, waitForGraph, activeLevel, stepLevel } from './helpers.js';
 
 const TAGS_FIELD = 'field:node.article:field_tags';
 
@@ -159,11 +159,11 @@ test.describe('Checks', { tag: '@runner-2' }, () => {
     await expect(badge(page)).toBeHidden();
   });
 
-  test('takes the field limit from the Settings panel', async ({ page }) => {
+  test('takes the field limit from Settings', async ({ page }) => {
     const limitWarning = '“Article” has 2 fields, more than the limit of 1';
     const input = page.locator('#settings [data-check-setting="fieldLimit"]');
     await openChecks(page, CHECKS_DOC);
-    await page.click('#settings-toggle');
+    await openSettings(page, 'checks');
     await expect(input).toHaveJSProperty('value', String(CHECK_DEFAULTS.fieldLimit));
 
     await slFill(page, '#settings [data-check-setting="fieldLimit"]', '1');
@@ -182,7 +182,7 @@ test.describe('Checks', { tag: '@runner-2' }, () => {
 
   test('keeps the field limit for the next visit', async ({ page }) => {
     await openDocument(page, CHECKS_DOC);
-    await page.click('#settings-toggle');
+    await openSettings(page, 'checks');
     await slFill(page, '#settings [data-check-setting="fieldLimit"]', '1');
     await expect(badge(page)).toHaveText('4');
 

@@ -441,14 +441,15 @@ test.describe('Panels', { tag: '@runner-1' }, () => {
 
     await page.click('#legend-toggle');
     await page.click('#table-toggle');
-    await page.click('#settings-toggle');
-    await expect.poll(() => topmostOf(page, ['#table', '#settings'])).toBe('#settings');
+    await page.click('#mode-build');
+    await tapNode(page, 'node.event');
+    await expect.poll(() => topmostOf(page, ['#table', '#inspector'])).toBe('#inspector');
 
     await page.locator('#table').dispatchEvent('mousedown');
-    await expect.poll(() => topmostOf(page, ['#table', '#settings'])).toBe('#table');
+    await expect.poll(() => topmostOf(page, ['#table', '#inspector'])).toBe('#table');
 
-    await page.locator('#settings').dispatchEvent('mousedown');
-    await expect.poll(() => topmostOf(page, ['#table', '#settings'])).toBe('#settings');
+    await page.locator('#inspector').dispatchEvent('mousedown');
+    await expect.poll(() => topmostOf(page, ['#table', '#inspector'])).toBe('#inspector');
   });
 
   test('keeps a panel clicked many times below the zoom menu and the import screen', async ({ page }) => {
@@ -485,15 +486,27 @@ test.describe('Panels', { tag: '@runner-1' }, () => {
   });
 
   // A short window leaves the select no room below, so its list opens upward
-  // across the toolbar.
+  // across the toolbar. The lowest type cell in view of the Fields table opens
+  // the select.
   test('draws a panel select that opens upward over the toolbar', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 400 });
     await loadExample(page);
     await page.click('#legend-toggle');
-    await page.click('#settings-toggle');
+    await page.click('#table-toggle');
 
-    const select = '#settings sl-select[data-symbol="node"]';
-    await page.click(select);
+    const cell = await page.evaluate(() => {
+      const body = document.querySelector('#table .panel__body').getBoundingClientRect();
+      const cells = [...document.querySelectorAll('#field-table [data-edit-cell$="|type"]')].filter((element) => {
+        const box = element.getBoundingClientRect();
+
+        return box.top >= body.top && box.bottom <= body.bottom;
+      });
+
+      return cells.at(-1).dataset.editCell;
+    });
+    await page.click(`#field-table [data-edit-cell="${cell}"]`);
+
+    const select = '#field-table sl-select.field-table__editor';
     await expect(page.locator(select)).toHaveJSProperty('open', true);
 
     await expect.poll(() => listOverToolbar(page, select)).toBe('list');

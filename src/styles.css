@@ -743,11 +743,12 @@ sl-button#zoom-level::part(base) {
   pointer-events: none;
 }
 
-.stage.has-frame .mode-frame {
+.stage.has-frame-view:not([data-mode='edit']) .mode-frame,
+.stage.has-frame-edit[data-mode='edit'] .mode-frame {
   display: block;
 }
 
-.stage.has-frame[data-mode='edit'] .mode-frame {
+.stage[data-mode='edit'] .mode-frame {
   border-color: var(--frame-edit, transparent);
 }
 
@@ -1939,44 +1940,196 @@ body.is-dragging-panel * {
   word-break: break-word;
 }
 
-/* Settings panel body. */
-#settings .panel__body {
-  padding: 0.9rem 1rem;
+.panel__note {
+  margin: 0.6rem 0 0;
+  font-size: 0.72rem;
+  color: var(--muted);
 }
 
-.settings-reset {
-  margin-top: 0.9rem;
+/* Settings dialog: vertical tabs on the left, the picked tab's settings on
+   the right, and the resets in the footer. */
+.settings-dialog {
+  --width: min(52rem, 100vw - 2rem);
 }
 
-/* New diagrams: each setting on 1 line, its label on the left and its
-   control on the right. A switch draws its label after the control, so its
-   base is reversed. */
-.diagram-defaults {
+.settings-dialog::part(body) {
+  padding: 0;
+  display: flex;
+}
+
+.settings-dialog__body {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.settings-dialog::part(footer) {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border-top: 1px solid var(--border);
+  padding: 0.75rem 1.25rem;
+}
+
+.settings-dialog__note {
+  flex: 1 1 auto;
+  margin: 0;
+  font-size: 0.78rem;
+  text-align: start;
+  color: var(--muted);
+}
+
+.settings-reset svg.icon {
+  margin-inline-end: 0.35rem;
+}
+
+.settings-tabs {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: min(30rem, 100dvh - 12rem);
+  --indicator-color: var(--accent);
+  --track-color: var(--border);
+}
+
+.settings-tabs::part(base) {
+  height: 100%;
+}
+
+.settings-tabs::part(nav) {
+  width: 15.5rem;
+  flex: 0 0 auto;
+  padding: 0.6rem 0;
+  border-inline-end: 1px solid var(--border);
+}
+
+.settings-tabs::part(body) {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-y: auto;
+}
+
+.settings-tabs sl-tab::part(base) {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.6rem 1rem;
+  white-space: normal;
+  text-align: start;
+}
+
+.settings-tabs sl-tab[active]::part(base) {
+  background: var(--sl-color-primary-50);
+}
+
+.settings-tab__icon {
+  display: inline-flex;
+  margin-top: 0.1rem;
+}
+
+.settings-tab__text {
   display: flex;
   flex-direction: column;
+  min-width: 0;
+}
+
+.settings-tab__label {
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.settings-tab__description {
+  font-size: 0.74rem;
+  font-weight: 400;
+  line-height: 1.3;
+  color: var(--muted);
+}
+
+.settings-tabs sl-tab-panel::part(base) {
+  padding: 1.1rem 1.4rem 1.4rem;
+}
+
+.settings-pane__head {
+  display: flex;
+  align-items: baseline;
   gap: 0.5rem;
 }
 
-.type-add + .settings-section__title {
-  margin-top: 1.1rem;
+.settings-pane__title {
+  flex: 1 1 auto;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.settings-pane__lead {
+  margin: 0.2rem 0 1rem;
+  font-size: 0.83rem;
+  color: var(--muted);
+}
+
+/* In a narrow window the tabs drop their descriptions to leave room for the
+   settings. */
+@media (max-width: 40rem) {
+  .settings-tabs::part(nav) {
+    width: 8.5rem;
+  }
+
+  .settings-tab__description,
+  .settings-tab__icon {
+    display: none;
+  }
+
+  .settings-tabs sl-tab-panel::part(base) {
+    padding: 0.9rem 0.9rem 1.1rem;
+  }
+}
+
+/* Each setting on 1 line, with its label and help text on the left and its
+   control on the right. A switch draws its label after the control, so its
+   base is reversed. */
+.settings-rows > * {
+  display: block;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-rows > :last-child {
+  border-bottom: 0;
 }
 
 .default-row {
-  display: block;
   font-size: 0.82rem;
 }
 
 .default-row::part(form-control) {
   display: grid;
-  grid-template-columns: auto minmax(0, 12rem);
-  justify-content: space-between;
+  grid-template-areas: 'label input' 'help input';
+  grid-template-columns: minmax(0, 1fr) minmax(0, 13rem);
   align-items: center;
-  gap: 0.4rem;
+  column-gap: 1rem;
+}
+
+.default-row--number::part(form-control) {
+  grid-template-columns: minmax(0, 1fr) 6rem;
 }
 
 .default-row::part(form-control-label) {
+  grid-area: label;
   margin: 0;
-  font-size: 0.82rem;
+  font-size: 0.86rem;
+}
+
+.default-row::part(form-control-input) {
+  grid-area: input;
+}
+
+.default-row::part(form-control-help-text),
+.default-row--switch::part(form-control-help-text) {
+  grid-area: help;
+  margin: 0;
+  font-size: 0.77rem;
+  color: var(--muted);
 }
 
 .default-row--switch::part(base) {
@@ -1987,44 +2140,72 @@ body.is-dragging-panel * {
 
 .default-row--switch::part(label) {
   margin-inline-start: 0;
-  font-size: 0.82rem;
+  font-size: 0.86rem;
 }
 
-.settings-reset svg.icon {
-  margin-inline-end: 0.35rem;
+/* In a narrow window the control leaves the label no room beside it, so the
+   label, help text and control stack. */
+@media (max-width: 40rem) {
+  .default-row::part(form-control),
+  .default-row--number::part(form-control) {
+    grid-template-areas: 'label' 'help' 'input';
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 0.3rem;
+  }
 }
 
-.panel__note {
-  margin: 0.6rem 0 0;
-  font-size: 0.72rem;
-  color: var(--muted);
+.setting-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.75rem;
 }
 
-.settings-section__title {
-  margin: 0 0 0.6rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--muted);
+/* The switch's label is visually hidden, so its slot keeps no margin. */
+.setting-row sl-switch::part(label) {
+  margin: 0;
 }
 
-.settings-section__title--spaced {
-  margin-top: 1.1rem;
-}
-
-.frame-settings {
+.setting-row__text {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  margin-top: 0.6rem;
+  min-width: 0;
 }
 
-.frame-row {
+.setting-row__label {
+  font-size: 0.86rem;
+}
+
+.setting-row__help {
+  font-size: 0.77rem;
+  color: var(--muted);
+}
+
+.frame-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.9rem;
+  padding: 0.75rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--sl-border-radius-medium);
+  background: var(--surface);
+}
+
+.frame-preview__box {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 0.4rem;
+  place-items: center;
+  width: 7rem;
+  height: 4.2rem;
+  border: 3px solid;
+  border-radius: var(--sl-border-radius-medium);
+  background: var(--bg);
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.frame-preview__box.is-off {
+  border: 3px dashed var(--border);
 }
 
 .color-settings {
