@@ -304,15 +304,16 @@ test.describe('Panels', { tag: '@runner-1' }, () => {
     expect(accent).not.toBe(muted);
   });
 
-  test('starts each panel header with a grip handle before the title', async ({ page }) => {
+  test('starts each panel header with a grip handle and an icon before the title', async ({ page }) => {
     await loadExample(page);
     await page.click('#entities-toggle');
 
     for (const id of ['legend', 'entities']) {
-      const classes = await page.locator('#' + id + ' .panel__head > *').evaluateAll((children) => children.slice(0, 2).map((child) => child.className));
+      const classes = await page.locator('#' + id + ' .panel__head > *').evaluateAll((children) => children.slice(0, 3).map((child) => child.className));
 
-      expect(classes).toEqual(['panel__grip', 'panel__title']);
+      expect(classes).toEqual(['panel__grip', 'panel__icon', 'panel__title']);
       await expect(page.locator('#' + id + ' .panel__grip svg')).toBeVisible();
+      await expect(page.locator('#' + id + ' .panel__icon svg')).toBeVisible();
     }
   });
 

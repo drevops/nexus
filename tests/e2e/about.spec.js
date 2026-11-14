@@ -30,6 +30,19 @@ test.describe('About', { tag: '@runner-1' }, () => {
     await expect(page.locator('#about-dialog')).not.toBeVisible();
   });
 
+  test('heads the about dialog with the icon of the About button', async ({ page }) => {
+    await loadExample(page);
+    await page.click('#about-toggle');
+
+    const buttonIcon = await page.locator('#about-toggle > svg.icon').evaluate((svg) => svg.outerHTML);
+    const label = page.locator('#about-dialog .dialog__label');
+
+    await expect(page.getByRole('dialog', { name: 'About Nexus' })).toBeVisible();
+    await expect(label).toHaveText('About Nexus');
+    await expect(label.locator('svg')).toBeVisible();
+    expect(await label.locator('svg').evaluate((svg) => svg.outerHTML)).toBe(buttonIcon);
+  });
+
   test('shows the app version on the landing screen and in the about dialog', async ({ page }) => {
     await expect(page.locator('#landing-version')).toHaveText('dev');
 

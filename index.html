@@ -253,7 +253,8 @@
 
 <div id="shortcut-hints" class="shortcut-hints" aria-hidden="true" hidden></div>
 
-<sl-dialog id="about-dialog" class="about-dialog" label="About Nexus">
+<sl-dialog id="about-dialog" class="about-dialog">
+  <span slot="label" class="dialog__label" data-icon="help-circle">About Nexus</span>
   <div class="about">
     <p>Nexus is a content-model visual builder. It reconstructs a Drupal site's content model - its entities, fields and relationships - from exported configuration, and lets you explore and edit it as an interactive diagram.</p>
     <p>Press F1 to label every button with its keyboard shortcut.</p>
@@ -266,7 +267,8 @@
   <sl-button id="about-close" slot="footer" variant="primary" title="Close the About box">Close</sl-button>
 </sl-dialog>
 
-<sl-dialog id="ai-dialog" class="ai-dialog" label="Create with AI">
+<sl-dialog id="ai-dialog" class="ai-dialog">
+  <span slot="label" class="dialog__label" data-icon="sparkles">Create with AI</span>
   <div class="ai">
     <p class="ai__intro">Give an AI agent a screenshot, a spreadsheet, a spec or a list of content types, and it writes a Nexus diagram by following the <code>create-nexus-diagram</code> skill. Pick how to hand the skill over, then paste what the agent writes back below.</p>
     <sl-tab-group id="ai-tabs" class="ai__tabs">
@@ -303,7 +305,8 @@
   <sl-button id="ai-open" slot="footer" variant="primary" data-icon="folder-open" title="Open the pasted document as the diagram">Open diagram</sl-button>
 </sl-dialog>
 
-<sl-dialog id="link-dialog" class="link-dialog" label="Copy link">
+<sl-dialog id="link-dialog" class="link-dialog">
+  <span slot="label" class="dialog__label" data-icon="link">Copy link</span>
   <div class="link">
     <p id="link-text" class="link__text"></p>
     <sl-input id="link-url" class="link__url" size="small" readonly title="The link to this diagram" aria-label="Link to this diagram"></sl-input>

@@ -146,6 +146,21 @@ test.describe('Toolbar', { tag: '@runner-2' }, () => {
     });
   }
 
+  for (const [button, panel] of [...dataProviderPanelToggles(), ['settings-toggle', 'settings']]) {
+    test(`heads the ${panel} panel with the icon of ${button}`, async ({ page }) => {
+      await loadExample(page);
+
+      if ((await page.locator('#' + panel).count()) === 0) {
+        await page.click('#' + button);
+      }
+
+      const buttonIcon = await page.locator('#' + button + ' > svg.icon').evaluate((svg) => svg.outerHTML);
+
+      await expect(page.locator('#' + panel + ' .panel__icon svg')).toBeVisible();
+      expect(await page.locator('#' + panel + ' .panel__icon svg').evaluate((svg) => svg.outerHTML)).toBe(buttonIcon);
+    });
+  }
+
   function dataProviderPanelToggles() {
     return [
       ['entities-toggle', 'entities', 'Entities'],

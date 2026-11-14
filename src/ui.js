@@ -28,6 +28,7 @@ import { SelectEditor, TextEditor } from './table-editors.js';
 import { parseRichText, richTextPlain } from './rich-text.js';
 import { usedInTitle } from './shared-fields.js';
 import { RESIZE_HANDLES, resizeBox } from './panel-resize.js';
+import { PANEL_ICONS } from './panel-icons.js';
 import { goToVersion, historyState } from './undo.js';
 import { MODES } from './diagram-defaults.js';
 import { DETAIL_LEVELS, levelHidesTitle } from './detail-levels.js';
@@ -398,6 +399,7 @@ function Panel({ id, panel, dragging, header, children }) {
         title=${docked ? 'Drag to move up or down, or to the other side' : FLOAT_DRAG_TITLE}
         dangerouslySetInnerHTML=${{ __html: icon('grip-vertical') }}
       ></span>
+      <span class="panel__icon" dangerouslySetInnerHTML=${{ __html: icon(PANEL_ICONS[id]) }}></span>
       <span class="panel__title">${TITLES[id]}</span>
       ${header}
       <span class="panel__spacer"></span>

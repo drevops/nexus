@@ -45,6 +45,18 @@ test.describe('Create with AI', { tag: '@runner-2' }, () => {
     ];
   }
 
+  test('heads the dialog with the icon of the buttons that open it', async ({ page }) => {
+    await page.click('#landing-ai');
+
+    const label = page.locator('#ai-dialog .dialog__label');
+    const labelIcon = await label.locator('svg').evaluate((svg) => svg.outerHTML);
+
+    await expect(page.getByRole('dialog', { name: 'Create with AI' })).toBeVisible();
+    await expect(label).toHaveText('Create with AI');
+    expect(labelIcon).toBe(await page.locator('#landing-ai > svg.icon').evaluate((svg) => svg.outerHTML));
+    expect(labelIcon).toBe(await page.locator('sl-menu-item[value="ai"] > [slot="prefix"] > svg').evaluate((svg) => svg.outerHTML));
+  });
+
   for (const width of dataProviderActionWidths()) {
     test(`puts Create with AI below the other landing actions, across their width, in a ${width}px window`, async ({ page }) => {
       await page.setViewportSize({ width, height: 800 });
