@@ -47,17 +47,19 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       # The latest release excludes drafts and prereleases. A repository with
-      # no release yet has no base, so the branch is measured alone.
+      # no release yet has no base, so the branch is measured alone, while a
+      # failed lookup fails the step. The checkout keeps other branches only
+      # as remote-tracking refs.
       - name: Pick the base commit
         id: base
         run: |
           ref="$INPUT_BASE"
           if [ -z "$ref" ]; then
-            ref=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName || true)
+            ref=$(gh release list --repo "$GITHUB_REPOSITORY" --exclude-drafts --exclude-pre-releases --limit 1 --json tagName --jq '.[0].tagName // ""')
           fi
           sha=''
           if [ -n "$ref" ]; then
-            sha=$(git rev-parse --verify --quiet --end-of-options "${ref}^{commit}" || true)
+            sha=$(git rev-parse --verify --quiet --end-of-options "${ref}^{commit}" || git rev-parse --verify --quiet --end-of-options "refs/remotes/origin/${ref}^{commit}" || true)
             if [ -z "$sha" ]; then
               echo "::error::${ref} is not a commit in this repository."
               exit 1

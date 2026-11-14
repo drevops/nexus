@@ -229,6 +229,18 @@ function plural(count, one, many) {
   return count + ' ' + (count === 1 ? one : many);
 }
 
+function isCompared(row) {
+  return row.gated && row.status !== 'n/a';
+}
+
+/**
+ * Returns whether compared rows fail the benchmark: a gated row regressed,
+ * or a base was measured and no gated row has values on both sides.
+ */
+export function benchmarkFailed(compared, hasBase) {
+  return compared.some((row) => row.regression) || (hasBase && !compared.some(isCompared));
+}
+
 /**
  * The Markdown report of compared rows. `info` holds the `runs`, `throttle`,
  * `threshold` and `minDiff` of the benchmark, the `head` commit and the
@@ -249,9 +261,13 @@ export function benchmarkMarkdown(compared, info) {
 
   const rule = info.threshold + '% and ' + info.minDiff + ' ms';
   const regressions = compared.filter((row) => row.regression);
-  const summary = regressions.length
-    ? '**' + plural(regressions.length, 'scenario', 'scenarios') + ' regressed:** ' + regressions.map((row) => row.label).join(', ') + '.'
-    : 'No scenario regressed.';
+  let summary = 'No scenario regressed.';
+
+  if (regressions.length) {
+    summary = '**' + plural(regressions.length, 'scenario', 'scenarios') + ' regressed:** ' + regressions.map((row) => row.label).join(', ') + '.';
+  } else if (!compared.some(isCompared)) {
+    summary = '**No load or interaction could be compared with the base.**';
+  }
 
   lines.push(
     'Base `' + info.base + '` against head `' + info.head + '`: ' + runs + '.',

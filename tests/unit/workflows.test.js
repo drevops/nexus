@@ -161,7 +161,16 @@ test('compares the branch with the latest release unless a base is given', () =>
   assert.equal(checkout.with['fetch-depth'], 0);
   assert.equal(base.env.INPUT_BASE, '${{ inputs.base }}');
   assert.match(base.run, /ref="\$INPUT_BASE"/);
-  assert.match(base.run, /gh release view --repo "\$GITHUB_REPOSITORY" --json tagName --jq \.tagName/);
+  assert.match(
+    base.run,
+    /ref=\$\(gh release list --repo "\$GITHUB_REPOSITORY" --exclude-drafts --exclude-pre-releases --limit 1 --json tagName --jq '\.\[0\]\.tagName \/\/ ""'\)\n/,
+  );
+  assert.doesNotMatch(
+    base.run.split('\n').find((line) => line.includes('gh release')),
+    /\|\|/,
+    'a failed release lookup must fail the step',
+  );
+  assert.match(base.run, /"refs\/remotes\/origin\/\$\{ref\}\^\{commit\}"/);
   assert.equal(run.env.BASE_SHA, '${{ steps.base.outputs.sha }}');
   assert.match(run.run, /^npm run benchmark -- .*\$\{BASE_SHA:\+--base-ref "\$BASE_SHA"\}/);
 });

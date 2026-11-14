@@ -232,6 +232,8 @@ To publish a release:
        git tag 1.2.3 origin/main
        git push origin 1.2.3
 
+   Check that `origin/main` is the commit the benchmark measured, which the report names as its head. When `main` has moved on since, run the benchmark again before you tag.
+
 The tag push runs `.github/workflows/release.yml` in 3 jobs:
 
 1. **Build** assembles `index.html`, `llms.txt`, `src/`, `assets/`, `templates/`, `schema/` and `skills/` with `npm run assemble` and stamps the tag as the app version. It packs the site into `nexus-<version>.tar.gz`, lists the checksum of every file in `checksums.txt` and attests the provenance of both files into `nexus-<version>.intoto.jsonl`.

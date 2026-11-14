@@ -9,8 +9,8 @@
  * both copies open the working tree's diagrams, so only the code differs.
  * Each run measures the base and the head in turn. Writes benchmark.json and
  * benchmark.md to the output folder and prints the report. Exits with 1 when
- * a scenario regressed or a measurement failed on the head, and with 2 on a
- * bad argument.
+ * a scenario regressed, no load or interaction could be compared with the
+ * base or a measurement failed on the head, and with 2 on a bad argument.
  */
 
 import { execFileSync, spawn } from 'node:child_process';
@@ -20,7 +20,17 @@ import { chromium } from '@playwright/test';
 import { documentLink, encodeDocument } from '../src/doc-link.js';
 import { createStaticServer } from '../tests/static-server.mjs';
 import { BENCHMARK_DIAGRAMS, INTERACTIONS, benchmarkDocument, measureDiagram } from './lib/benchmark-page.mjs';
-import { addSample, benchmarkMarkdown, benchmarkRows, compareRows, formatValue, readOptions, sampleOrder, shippedBytes } from './lib/benchmark.mjs';
+import {
+  addSample,
+  benchmarkFailed,
+  benchmarkMarkdown,
+  benchmarkRows,
+  compareRows,
+  formatValue,
+  readOptions,
+  sampleOrder,
+  shippedBytes,
+} from './lib/benchmark.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
 
@@ -155,7 +165,7 @@ async function benchmark(options) {
   writeFileSync(join(out, 'benchmark.md'), markdown);
   console.log('\n' + markdown);
 
-  return rows.some((row) => row.regression) ? 1 : 0;
+  return benchmarkFailed(rows, Boolean(sides.base)) ? 1 : 0;
 }
 
 async function main(args) {

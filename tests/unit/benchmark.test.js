@@ -7,6 +7,7 @@ import {
   DEFAULTS,
   SHIPPED_PATHS,
   addSample,
+  benchmarkFailed,
   benchmarkMarkdown,
   benchmarkRows,
   compareRows,
@@ -349,6 +350,34 @@ test('counts every regression', () => {
 
   assert.match(benchmarkMarkdown(rows, { ...DEFAULTS, base: 'abc1234', head: 'def5678' }), /\*\*2 scenarios regressed:\*\* A: load, B: load\.\n$/);
 });
+
+test('says when no load or interaction could be compared with the base', () => {
+  const rows = compareRows(ROWS, { 'a:heap': [1024] }, { 'a:load': [100], 'a:heap': [1024] }, COMPARE);
+
+  assert.match(
+    benchmarkMarkdown(rows, { ...DEFAULTS, base: 'abc1234', head: 'def5678' }),
+    /\n\*\*No load or interaction could be compared with the base\.\*\*\n$/,
+  );
+});
+
+test('fails on a regression or a base with nothing to compare', async (t) => {
+  for (const [name, base, head, hasBase, expected] of dataProviderFailed()) {
+    await t.test(name, () => {
+      assert.equal(benchmarkFailed(compareRows(ROWS, hasBase ? base : null, head, COMPARE), hasBase), expected);
+    });
+  }
+});
+
+function dataProviderFailed() {
+  return [
+    ['a gated row in range passes', { 'a:load': [100], 'a:heap': [1] }, { 'a:load': [105], 'a:heap': [1] }, true, false],
+    ['a gated row that regressed fails', { 'a:load': [100], 'a:heap': [1] }, { 'a:load': [200], 'a:heap': [1] }, true, true],
+    ['a base with no gated values fails', { 'a:heap': [1] }, { 'a:load': [100], 'a:heap': [1] }, true, true],
+    ['a base with no values at all fails', {}, { 'a:load': [100], 'a:heap': [1] }, true, true],
+    ['a larger ungated row alone passes', { 'a:load': [100], 'a:heap': [1] }, { 'a:load': [100], 'a:heap': [9] }, true, false],
+    ['a run without a base passes', null, { 'a:load': [100], 'a:heap': [1] }, false, false],
+  ];
+}
 
 test('writes a report of the head alone without a base', () => {
   const rows = compareRows(ROWS, null, { 'a:load': [130, 100, 160], 'a:heap': [1024] }, COMPARE);
