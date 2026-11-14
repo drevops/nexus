@@ -1,6 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { allowedValueLabels, allowedValueList, allowedValuesText, parseAllowedValues, settingText } from '../../src/field-settings.js';
+import {
+  allowedValueLabels,
+  allowedValueList,
+  allowedValuesText,
+  parseAllowedValues,
+  settingText,
+  translatableChoice,
+  translatableValue,
+  TRANSLATABLE_OPTIONS,
+} from '../../src/field-settings.js';
 
 test('keeps text with more than white space and drops the rest', async (t) => {
   for (const [name, value, expected] of dataProviderSettingText()) {
@@ -143,4 +152,51 @@ test('labels each allowed value for display', () => {
 
   assert.deepEqual(allowedValueLabels(list), ['Wide (wide)', 'narrow']);
   assert.deepEqual(allowedValueLabels([]), []);
+});
+
+test('offers translatable and not translatable', () => {
+  assert.deepEqual(TRANSLATABLE_OPTIONS, [
+    ['yes', 'Yes'],
+    ['no', 'No'],
+  ]);
+});
+
+test('turns a translatability into its choice and back', async (t) => {
+  for (const [name, translatable, choice] of dataProviderTranslatableChoice()) {
+    await t.test(name, () => {
+      assert.equal(translatableChoice(translatable), choice);
+      assert.equal(translatableValue(choice), translatable);
+    });
+  }
+});
+
+function dataProviderTranslatableChoice() {
+  return [
+    ['translatable', true, 'yes'],
+    ['not translatable', false, 'no'],
+    ['unknown', null, ''],
+  ];
+}
+
+test('reads an unknown choice as an unknown translatability', async (t) => {
+  for (const [name, choice] of dataProviderUnknownChoice()) {
+    await t.test(name, () => {
+      assert.equal(translatableValue(choice), null);
+    });
+  }
+});
+
+function dataProviderUnknownChoice() {
+  return [
+    ['an empty choice', ''],
+    ['an unknown word', 'maybe'],
+    ['a capitalised choice', 'Yes'],
+    ['an inherited property', 'constructor'],
+    ['no choice', undefined],
+  ];
+}
+
+test('gives no choice for a value that is not a boolean', () => {
+  assert.equal(translatableChoice('yes'), '');
+  assert.equal(translatableChoice(undefined), '');
 });

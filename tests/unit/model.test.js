@@ -17,6 +17,10 @@ import {
   collapsedEdgeId,
   identifierSegments,
   fitFontSize,
+  typeOptions,
+  cardinalityOptions,
+  FIELD_TYPES,
+  MAX_CARDINALITY,
 } from '../../src/model.js';
 
 function edgesByGroup(data, group) {
@@ -99,6 +103,51 @@ function dataProviderKindForCardinality() {
     ['unlimited values', -1, KIND_MULTI],
     ['a limit of 2', 2, KIND_MULTI],
     ['a limit of 10', 10, KIND_MULTI],
+  ];
+}
+
+test('offers the builder field types and a type the list lacks', async (t) => {
+  for (const [name, current, extra] of dataProviderTypeOptions()) {
+    await t.test(name, () => {
+      assert.deepEqual(typeOptions(current), [...FIELD_TYPES, ...extra]);
+    });
+  }
+});
+
+function dataProviderTypeOptions() {
+  return [
+    ['a builder type', 'string', []],
+    ['an imported type', 'address', ['address']],
+    ['no type', undefined, []],
+    ['an empty type', '', []],
+  ];
+}
+
+test('leaves the field types alone when it adds a type', () => {
+  typeOptions('address').push('geofield');
+
+  assert.equal(FIELD_TYPES.includes('address'), false);
+  assert.equal(FIELD_TYPES.includes('geofield'), false);
+});
+
+test('offers single, each limit and unlimited, and a limit above the highest', async (t) => {
+  for (const [name, current, extra] of dataProviderCardinalityOptions()) {
+    await t.test(name, () => {
+      const limits = Array.from({ length: MAX_CARDINALITY - 1 }, (_, index) => String(index + 2));
+
+      assert.deepEqual(cardinalityOptions(current), [['1', 'Single'], ...[...limits, ...extra].map((value) => [value, value]), ['-1', 'Unlimited']]);
+    });
+  }
+});
+
+function dataProviderCardinalityOptions() {
+  return [
+    ['no cardinality', undefined, []],
+    ['single', 1, []],
+    ['unlimited', -1, []],
+    ['the highest limit', MAX_CARDINALITY, []],
+    ['a limit above the highest', MAX_CARDINALITY + 5, [String(MAX_CARDINALITY + 5)]],
+    ['a fraction above the highest', MAX_CARDINALITY + 0.5, []],
   ];
 }
 

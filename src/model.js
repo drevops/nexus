@@ -41,6 +41,29 @@ export function kindForCardinality(cardinality) {
 }
 
 /**
+ * Returns the field types a field can be given: FIELD_TYPES, then `current`
+ * when it is a type the list lacks, such as one read from imported config.
+ */
+export function typeOptions(current) {
+  return current && !FIELD_TYPES.includes(current) ? [...FIELD_TYPES, current] : [...FIELD_TYPES];
+}
+
+/**
+ * Returns the cardinalities a field can be given as [value, label] pairs:
+ * single, 2 to MAX_CARDINALITY, then unlimited. A `current` cardinality
+ * above MAX_CARDINALITY comes before unlimited.
+ */
+export function cardinalityOptions(current) {
+  const limited = Array.from({ length: MAX_CARDINALITY - 1 }, (_, index) => String(index + 2));
+
+  if (Number.isInteger(current) && current > MAX_CARDINALITY) {
+    limited.push(String(current));
+  }
+
+  return [['1', 'Single'], ...limited.map((value) => [value, value]), ['-1', 'Unlimited']];
+}
+
+/**
  * Graph ids: an entity node is '<entityType>.<bundle>' and a field node is
  * 'field:<entityId>:<name>'. Each field has a 'has:' edge from its entity and
  * 1 'ref:' edge per reference target.

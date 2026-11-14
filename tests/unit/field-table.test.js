@@ -1,6 +1,16 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_SORT, SORT_COLUMNS, numberFields, sortFields, isDefaultSort, nextSort } from '../../src/field-table.js';
+import {
+  DEFAULT_SORT,
+  EDITABLE_COLUMNS,
+  SORT_COLUMNS,
+  cellEditor,
+  numberFields,
+  referenceChanges,
+  sortFields,
+  isDefaultSort,
+  nextSort,
+} from '../../src/field-table.js';
 
 // Returns a field record as the controller's records() lists it, with the
 // given values over blank defaults.
@@ -88,6 +98,17 @@ function dataProviderSortColumn() {
       'field',
       ['z', 'y', 'x'],
       ['x', 'y', 'z'],
+    ],
+    [
+      'machine name, ignoring case and reading numbers as numbers',
+      [
+        ['field_item_10', {}],
+        ['Field_item_2', {}],
+        ['body', {}],
+      ],
+      'name',
+      ['body', 'Field_item_2', 'field_item_10'],
+      ['field_item_10', 'Field_item_2', 'body'],
     ],
     [
       'field type',
@@ -232,5 +253,66 @@ function dataProviderNextSort() {
     ['another column from a descending one', { column: 'type', direction: 'descending' }, 'field', { column: 'field', direction: 'ascending' }],
     ['position from the default', DEFAULT_SORT, 'position', { column: 'position', direction: 'descending' }],
     ['position from descending', { column: 'position', direction: 'descending' }, 'position', DEFAULT_SORT],
+  ];
+}
+
+test('picks the editor of each cell', async (t) => {
+  for (const [name, values, column, expected] of dataProviderCellEditor()) {
+    await t.test(name, () => {
+      assert.equal(cellEditor(record('node.article', 'field_x', values), column), expected);
+    });
+  }
+});
+
+// Each case gives the record's values, the column and the editor it opens.
+function dataProviderCellEditor() {
+  return [
+    ['the label', {}, 'field', 'text'],
+    ['the machine name', {}, 'name', 'text'],
+    ['the type', {}, 'type', 'select'],
+    ['the cardinality of a single field', {}, 'cardinality', 'select'],
+    ['the cardinality of a multi field', { kind: 'multi', cardinality: -1 }, 'cardinality', 'select'],
+    ['the cardinality of a system field', { kind: 'system' }, 'cardinality', null],
+    ['the cardinality of a calculated field', { kind: 'calculated' }, 'cardinality', null],
+    ['required', {}, 'required', 'toggle'],
+    ['the references of an entity reference', { type: 'entity_reference' }, 'references', 'multiselect'],
+    ['the references of a revisions reference', { type: 'entity_reference_revisions' }, 'references', 'multiselect'],
+    ['the references of a text field', { type: 'string' }, 'references', null],
+    ['the help text', {}, 'description', 'multiline'],
+    ['the default value', {}, 'defaultValue', 'text'],
+    ['the allowed values of a list field', { type: 'list_string' }, 'allowedValues', 'multiline'],
+    ['the allowed values of an integer list field', { type: 'list_integer' }, 'allowedValues', 'multiline'],
+    ['the allowed values of a text field that has some', { allowedValues: [{ value: 'a', label: 'A' }] }, 'allowedValues', 'multiline'],
+    ['the allowed values of a text field', {}, 'allowedValues', null],
+    ['the translatability', {}, 'translatable', 'select'],
+    ['the position', {}, 'position', null],
+    ['an unknown column', {}, 'colour', null],
+    ['an inherited property', {}, 'constructor', null],
+  ];
+}
+
+test('edits only columns the table sorts by', () => {
+  assert.deepEqual(
+    EDITABLE_COLUMNS.filter((column) => !SORT_COLUMNS.includes(column)),
+    [],
+  );
+});
+
+test('works out the references to add and to remove', async (t) => {
+  for (const [name, current, picked, expected] of dataProviderReferenceChanges()) {
+    await t.test(name, () => {
+      assert.deepEqual(referenceChanges(current, picked), expected);
+    });
+  }
+});
+
+function dataProviderReferenceChanges() {
+  return [
+    ['no change', ['node.a', 'node.b'], ['node.b', 'node.a'], { added: [], removed: [] }],
+    ['a first target', [], ['node.a'], { added: ['node.a'], removed: [] }],
+    ['the last target removed', ['node.a'], [], { added: [], removed: ['node.a'] }],
+    ['1 added and 1 removed', ['node.a', 'node.b'], ['node.b', 'node.c'], { added: ['node.c'], removed: ['node.a'] }],
+    ['a target picked twice', [], ['node.a', 'node.a'], { added: ['node.a'], removed: [] }],
+    ['several in the order given', ['node.x'], ['node.c', 'node.a'], { added: ['node.c', 'node.a'], removed: ['node.x'] }],
   ];
 }

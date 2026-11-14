@@ -5,7 +5,9 @@
  * the dock widths. Each panel's `order` places it in its side rail, and its
  * `size` sets its width and height while it floats.
  *
- * `revision` counts the times the history changed the graph.
+ * `revision` counts the times the graph changed under the Inspector: by the
+ * history or by an edit in the Fields table. Its forms remount on each.
+ * `editMode` is true while the app is in Edit mode.
  */
 
 import { DEFAULT_SORT } from './field-table.js';
@@ -137,6 +139,7 @@ function initialState() {
     tableFilter: '__all__',
     tableSearch: '',
     tableSort: DEFAULT_SORT,
+    editMode: false,
     version: 0,
     revision: 0,
     dragging: null,
@@ -206,6 +209,12 @@ export function setTableSearch(value) {
 
 export function setTableSort(sort) {
   emit({ tableSort: sort });
+}
+
+export function setEditMode(editMode) {
+  if (state.editMode !== editMode) {
+    emit({ editMode });
+  }
 }
 
 export function openTableFor(entityId) {

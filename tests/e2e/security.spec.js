@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { copyLink, entityCount, linkTo, loadExample, openDocument, openFrom, pasteDiagram, saveFrom, waitForGraph } from './helpers.js';
+import { copyLink, entityCount, hoverNode, linkTo, loadExample, openDocument, openFrom, pasteDiagram, saveFrom, waitForGraph } from './helpers.js';
 
 test.describe('Security', { tag: '@runner-1' }, () => {
   // Markup that runs script when a colour reaches innerHTML unchecked.
@@ -78,6 +78,48 @@ test.describe('Security', { tag: '@runner-1' }, () => {
       ],
     ];
   }
+
+  // Help text and a bundle description that run script if their markup is
+  // drawn as written.
+  const HOSTILE_TEXT =
+    'Use <em>this</em><img src="x" onerror="window.__injected = true"><script>window.__injected = true</script>' +
+    '<a href="javascript:window.__injected = true" onclick="window.__injected = true">here</a>&lt;img src=x onerror=1&gt;';
+
+  test('draws the allowed markup of help text and descriptions and nothing that runs', async ({ page }) => {
+    await openDocument(page, {
+      nexus: 1,
+      title: 'Hostile text',
+      entities: [
+        {
+          entityType: 'node',
+          bundle: 'article',
+          label: 'Article',
+          description: HOSTILE_TEXT,
+          fields: [{ name: 'field_summary', label: 'Summary', fieldType: 'string', kind: 'single', description: HOSTILE_TEXT }],
+        },
+      ],
+    });
+    await page.click('#table-toggle');
+
+    const help = page.locator('#field-table td[data-column="description"]');
+    const description = page.locator('#field-table .field-table__description');
+
+    await hoverNode(page, 'field:node.article:field_summary');
+    const tooltip = page.locator('#tooltip .tooltip__text');
+
+    for (const area of [help, description, tooltip]) {
+      await expect(area.locator('em')).toHaveText('this');
+      await expect(area.locator('img, script, a')).toHaveCount(0);
+      await expect(area.locator('.rich-text__link')).toHaveText('here');
+      await expect(area).toContainText('<img src=x onerror=1>');
+    }
+
+    await help.locator('.rich-text__link').click();
+    await page.keyboard.press('Escape');
+
+    expect(await page.evaluate(() => window.__injected)).toBeUndefined();
+    expect(await page.evaluate(() => window.__violations)).toEqual([]);
+  });
 
   test('ignores stored type styles carrying markup', async ({ page }) => {
     await page.evaluate((markup) => {

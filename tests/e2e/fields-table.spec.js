@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-import { loadExample, openDocument, saveFrom, slFill } from './helpers.js';
+import { loadExample, openDocument, saveFrom, slFill, tapNode } from './helpers.js';
 
 test.describe('Fields table', { tag: '@runner-2' }, () => {
   // Returns the text of each rendered line in every matched element. A character
@@ -134,14 +134,14 @@ test.describe('Fields table', { tag: '@runner-2' }, () => {
     await page.click('#table-toggle');
     await expect(page.locator('#field-table')).toContainText('entity_reference_revisions');
 
-    const types = await renderedLines(page.locator('#field-table tbody td:nth-child(3)'));
-    const names = await renderedLines(page.locator('#field-table tbody td:nth-child(2) code'));
+    const types = await renderedLines(page.locator('#field-table tbody td[data-column="type"]'));
+    const names = await renderedLines(page.locator('#field-table tbody td[data-column="name"] code'));
     const midWord = [...types, ...names].filter((lines) => lines.slice(0, -1).some((line) => !line.endsWith('_')));
     expect(midWord).toEqual([]);
 
     // entity_reference_revisions is far wider than its column, so its cell must
     // wrap.
-    const revisions = page.locator('#field-table tbody td:nth-child(3)', { hasText: 'entity_reference_revisions' }).first();
+    const revisions = page.locator('#field-table tbody td[data-column="type"]', { hasText: 'entity_reference_revisions' }).first();
     await expect(revisions).toHaveText('entity_reference_revisions');
     const [revisionLines] = await renderedLines(revisions);
     expect(revisionLines.length).toBeGreaterThan(1);
@@ -231,11 +231,13 @@ test.describe('Fields table', { tag: '@runner-2' }, () => {
           break;
         }
 
+        const cell = (column) => row.querySelector('td[data-column="' + column + '"]');
+
         rows.push({
-          position: Number(row.cells[0].textContent),
-          label: row.cells[1].firstChild.textContent.trim(),
-          name: row.cells[1].querySelector('code').textContent,
-          type: row.cells[2].textContent,
+          position: Number(cell('position').textContent),
+          label: cell('field').textContent.trim(),
+          name: cell('name').querySelector('code').textContent,
+          type: cell('type').textContent.trim(),
         });
       }
 
@@ -402,5 +404,336 @@ test.describe('Fields table', { tag: '@runner-2' }, () => {
     expect(Math.abs(scroll.toolbarLeft - scroll.bodyLeft)).toBeLessThanOrEqual(1);
     expect(scroll.tableLeft).toBeLessThan(scroll.bodyLeft - 150);
     expect(Math.abs(scroll.headerTop - scroll.bodyTop)).toBeLessThanOrEqual(1);
+  });
+
+  // A diagram with no field settings: a text field, a reference field, a
+  // list field and a system field on Article, and 2 entities to reference.
+  const EDIT_DOC = {
+    nexus: 1,
+    title: 'Editing',
+    entities: [
+      {
+        entityType: 'node',
+        bundle: 'article',
+        label: 'Article',
+        fields: [
+          { name: 'title', label: 'Title', fieldType: 'string', kind: 'system' },
+          { name: 'field_summary', label: 'Summary', fieldType: 'string', kind: 'single' },
+          {
+            name: 'field_tags',
+            label: 'Tags',
+            fieldType: 'entity_reference',
+            kind: 'multi',
+            cardinality: -1,
+            targetType: 'taxonomy_term',
+            targetBundles: ['tags'],
+          },
+          { name: 'field_layout', label: 'Layout', fieldType: 'list_string', kind: 'single' },
+        ],
+      },
+      { entityType: 'taxonomy_term', bundle: 'tags', label: 'Tags', fields: [] },
+      { entityType: 'node', bundle: 'page', label: 'Page', fields: [] },
+    ],
+  };
+
+  const SUMMARY = 'field:node.article:field_summary';
+  const TAGS = 'field:node.article:field_tags';
+
+  function editCell(page, id, column) {
+    return page.locator('#field-table [data-edit-cell="' + id + '|' + column + '"]');
+  }
+
+  function tableEditor(page) {
+    return page.locator('#field-table .field-table__editor');
+  }
+
+  function fieldData(page, id, key) {
+    return page.evaluate(([fieldId, dataKey]) => window.__nexus.cy.getElementById(fieldId).data(dataKey), [id, key]);
+  }
+
+  function undoTitle(page) {
+    return page.locator('#undo').getAttribute('title');
+  }
+
+  // Opens the editor of a text cell and replaces its text, which the editor
+  // selects once it has the focus.
+  async function typeInCell(page, id, column, text) {
+    await editCell(page, id, column).click();
+    await expect(tableEditor(page)).toBeFocused();
+    await page.keyboard.type(text);
+  }
+
+  // Opens the editor of a select cell and picks an option.
+  async function pickInCell(page, id, column, value) {
+    await editCell(page, id, column).click();
+    await page.locator('#field-table .field-table__editor sl-option[value="' + value + '"]').click();
+  }
+
+  async function editDiagram(page) {
+    await openDocument(page, EDIT_DOC);
+    await page.click('#table-toggle');
+    await page.click('#mode-build');
+  }
+
+  test('puts the go-to and show columns first, unsorted, and the machine name in a column of its own', async ({ page }) => {
+    await loadExample(page);
+    await page.click('#table-toggle');
+
+    expect(await page.locator('#field-table thead th').allTextContents()).toEqual([
+      'Go to',
+      'Show',
+      '#',
+      'Field',
+      'Machine name',
+      'Type',
+      'Card.',
+      'Req',
+      'Refs',
+      'Used in',
+    ]);
+    await expect(page.locator('#field-table thead th').nth(0).locator('[data-sort]')).toHaveCount(0);
+    await expect(page.locator('#field-table thead th').nth(1).locator('[data-sort]')).toHaveCount(0);
+
+    const row = page.locator('#field-table tbody tr:not(.is-group)').first();
+    await expect(row.locator('td').nth(0).locator('[data-field-go-to]')).toHaveCount(1);
+    await expect(row.locator('td').nth(1).locator('[data-field-visibility]')).toHaveCount(1);
+  });
+
+  test('sorts the fields by machine name', async ({ page }) => {
+    await openDocument(page, EDIT_DOC);
+    await page.click('#table-toggle');
+    await page.click('#field-table [data-sort="name"]');
+
+    expect((await firstGroupRows(page)).map((r) => r.name)).toEqual(['field_layout', 'field_summary', 'field_tags', 'title']);
+  });
+
+  test('edits cells in View mode, and shows the settings columns in Edit mode', async ({ page }) => {
+    await openDocument(page, EDIT_DOC);
+    await page.click('#table-toggle');
+
+    // A diagram opens in View mode, where a click edits a cell all the same.
+    await expect(page.locator('#stage-root')).toHaveAttribute('data-mode', 'view');
+    await expect(page.locator('#field-table')).not.toHaveClass(/has-settings/);
+    await typeInCell(page, SUMMARY, 'field', 'Teaser');
+    await page.keyboard.press('Enter');
+    expect(await fieldData(page, SUMMARY, 'label')).toBe('Teaser');
+
+    await page.click('#mode-build');
+    await expect(page.locator('#field-table')).toHaveClass(/has-settings/);
+    await expect(editCell(page, SUMMARY, 'description')).toHaveAttribute('title', 'Edit the help text of Teaser');
+
+    await editCell(page, SUMMARY, 'description').click();
+    await expect(tableEditor(page)).toBeVisible();
+
+    // The settings column the editor sits in goes away in View mode.
+    await page.click('#mode-view');
+    await expect(tableEditor(page)).toHaveCount(0);
+    await expect(page.locator('#field-table')).not.toHaveClass(/has-settings/);
+    await expect(editCell(page, SUMMARY, 'field')).toHaveCount(1);
+  });
+
+  test('edits a label in place, saves it with Enter and cancels with Escape', async ({ page }) => {
+    await editDiagram(page);
+
+    await typeInCell(page, SUMMARY, 'field', 'Teaser');
+    await page.keyboard.press('Enter');
+
+    await expect(tableEditor(page)).toHaveCount(0);
+    expect(await fieldData(page, SUMMARY, 'label')).toBe('Teaser');
+    expect(await undoTitle(page)).toMatch(/^Undo: Relabelled field “Teaser”/);
+    await expect(editCell(page, SUMMARY, 'field')).toBeFocused();
+
+    await typeInCell(page, SUMMARY, 'field', 'Discarded');
+    await page.keyboard.press('Escape');
+
+    await expect(tableEditor(page)).toHaveCount(0);
+    expect(await fieldData(page, SUMMARY, 'label')).toBe('Teaser');
+    await expect(editCell(page, SUMMARY, 'field')).toHaveText('Teaser');
+
+    // A blank label is no label, so it changes nothing.
+    await typeInCell(page, SUMMARY, 'field', '   ');
+    await page.keyboard.press('Enter');
+    expect(await fieldData(page, SUMMARY, 'label')).toBe('Teaser');
+  });
+
+  test('saves a text cell when the focus leaves it', async ({ page }) => {
+    await editDiagram(page);
+
+    await typeInCell(page, SUMMARY, 'defaultValue', 'Read on');
+    await page.locator('#table-search').click();
+
+    await expect(tableEditor(page)).toHaveCount(0);
+    expect(await fieldData(page, SUMMARY, 'defaultValue')).toBe('Read on');
+    await expect(editCell(page, SUMMARY, 'defaultValue')).toHaveText('Read on');
+  });
+
+  test('edits help text and allowed values over several lines', async ({ page }) => {
+    await editDiagram(page);
+
+    await typeInCell(page, SUMMARY, 'description', 'Line one');
+
+    // The help text cell keeps line breaks, and the box draws at the top of
+    // the cell all the same.
+    const offset = await tableEditor(page).evaluate((editor) => {
+      const box = editor.shadowRoot.querySelector('[part~="base"]').getBoundingClientRect();
+
+      return [box.top - editor.closest('td').getBoundingClientRect().top, editor.getBoundingClientRect().height - box.height];
+    });
+    expect(offset[0]).toBeLessThan(8);
+    expect(offset[1]).toBeLessThan(2);
+
+    await page.keyboard.press('Shift+Enter');
+    await page.keyboard.type('Line two');
+    await page.keyboard.press('Enter');
+
+    expect(await fieldData(page, SUMMARY, 'description')).toBe('Line one\nLine two');
+    expect(await undoTitle(page)).toMatch(/^Undo: Edited the help text of field “Summary”/);
+
+    const layout = 'field:node.article:field_layout';
+    await typeInCell(page, layout, 'allowedValues', 'wide|Wide');
+    await page.keyboard.press('Shift+Enter');
+    await page.keyboard.type('narrow');
+    await page.keyboard.press('Enter');
+
+    expect(await fieldData(page, layout, 'allowedValues')).toEqual([
+      { value: 'wide', label: 'Wide' },
+      { value: 'narrow', label: 'narrow' },
+    ]);
+    await expect(editCell(page, layout, 'allowedValues')).toHaveText('Wide (wide), narrow');
+
+    // Clearing the text removes the setting rather than storing a blank.
+    await typeInCell(page, SUMMARY, 'description', ' ');
+    await page.keyboard.press('Enter');
+    expect(await fieldData(page, SUMMARY, 'description')).toBeUndefined();
+    await expect(editCell(page, SUMMARY, 'description')).toHaveText('');
+  });
+
+  test('renames a machine name from the table without opening the Inspector', async ({ page }) => {
+    await editDiagram(page);
+
+    await typeInCell(page, SUMMARY, 'name', 'field_teaser');
+    await page.keyboard.press('Enter');
+
+    const renamed = 'field:node.article:field_teaser';
+    expect(
+      await page.evaluate(
+        ([from, to]) => [window.__nexus.cy.getElementById(from).empty(), window.__nexus.cy.getElementById(to).nonempty()],
+        [SUMMARY, renamed],
+      ),
+    ).toEqual([true, true]);
+    await expect(editCell(page, renamed, 'name')).toBeFocused();
+    await expect(page.locator('#inspector')).toHaveCount(0);
+
+    // A name another field has is refused.
+    await typeInCell(page, renamed, 'name', 'field_tags');
+    await page.keyboard.press('Enter');
+    await expect(editCell(page, renamed, 'name')).toHaveText('field_teaser');
+  });
+
+  test('picks a type, a cardinality and a translatability from a list', async ({ page }) => {
+    await editDiagram(page);
+
+    await pickInCell(page, SUMMARY, 'type', 'text_long');
+    await expect(tableEditor(page)).toHaveCount(0);
+    expect(await fieldData(page, SUMMARY, 'fieldType')).toBe('text_long');
+    await expect(editCell(page, SUMMARY, 'type')).toBeFocused();
+
+    await pickInCell(page, SUMMARY, 'cardinality', '3');
+    expect(
+      await page.evaluate((id) => [window.__nexus.cy.getElementById(id).data('cardinality'), window.__nexus.cy.getElementById(id).data('kind')], SUMMARY),
+    ).toEqual([3, 'multi']);
+    await expect(editCell(page, SUMMARY, 'cardinality')).toHaveText('1..3');
+
+    await pickInCell(page, SUMMARY, 'translatable', 'no');
+    expect(await fieldData(page, SUMMARY, 'translatable')).toBe(false);
+    await expect(editCell(page, SUMMARY, 'translatable').locator('span')).toHaveAttribute('title', /^Not translatable/);
+
+    // Escape closes a list without a change.
+    await editCell(page, SUMMARY, 'type').click();
+    await expect(tableEditor(page)).toHaveJSProperty('open', true);
+    await page.keyboard.press('Escape');
+    await expect(tableEditor(page)).toHaveCount(0);
+    expect(await fieldData(page, SUMMARY, 'fieldType')).toBe('text_long');
+  });
+
+  test('makes a field required and optional with its checkbox', async ({ page }) => {
+    await editDiagram(page);
+
+    const checkbox = editCell(page, SUMMARY, 'required');
+    await expect(checkbox).toHaveAttribute('title', 'Make Summary required');
+
+    await checkbox.check();
+    expect(await fieldData(page, SUMMARY, 'required')).toBe(true);
+    expect(await undoTitle(page)).toMatch(/^Undo: Made field “Summary” required/);
+    await expect(checkbox).toHaveAttribute('title', 'Make Summary optional');
+
+    await checkbox.uncheck();
+    expect(await fieldData(page, SUMMARY, 'required')).toBe(false);
+  });
+
+  test('adds and removes the references of a field from a list', async ({ page }) => {
+    await editDiagram(page);
+
+    await editCell(page, TAGS, 'references').click();
+    await page.locator('#field-table .field-table__editor sl-option[value="node.page"]').click();
+    await page.locator('#field-table .field-table__editor sl-option[value="taxonomy_term.tags"]').click();
+    await page.keyboard.press('Escape');
+
+    await expect(tableEditor(page)).toHaveCount(0);
+    expect(
+      await page.evaluate(
+        (id) =>
+          window.__nexus.cy
+            .getElementById(id)
+            .connectedEdges('[group="ref"]')
+            .map((e) => e.target().id()),
+        TAGS,
+      ),
+    ).toEqual(['node.page']);
+    await expect(editCell(page, TAGS, 'references').locator('xpath=..')).toHaveText('Page');
+    expect(await undoTitle(page)).toMatch(/^Undo: Removed the reference from field “Tags” to entity “Tags”/);
+  });
+
+  test('leaves cells that a field cannot change as they are', async ({ page }) => {
+    await editDiagram(page);
+
+    // A system field keeps its badge, references edit only on reference
+    // fields and allowed values only on list fields.
+    await expect(editCell(page, 'field:node.article:title', 'cardinality')).toHaveCount(0);
+    await expect(editCell(page, SUMMARY, 'references')).toHaveCount(0);
+    await expect(editCell(page, SUMMARY, 'allowedValues')).toHaveCount(0);
+    await expect(editCell(page, SUMMARY, 'cardinality')).toHaveCount(1);
+    await expect(editCell(page, TAGS, 'references')).toHaveCount(1);
+    await expect(editCell(page, 'field:node.article:field_layout', 'allowedValues')).toHaveCount(1);
+  });
+
+  test('records each table edit as its own history step', async ({ page }) => {
+    await editDiagram(page);
+
+    await typeInCell(page, SUMMARY, 'field', 'First');
+    await page.keyboard.press('Enter');
+    await typeInCell(page, SUMMARY, 'field', 'Second');
+    await page.keyboard.press('Enter');
+
+    await page.click('#undo');
+    expect(await fieldData(page, SUMMARY, 'label')).toBe('First');
+    await expect(editCell(page, SUMMARY, 'field')).toHaveText('First');
+
+    await page.click('#undo');
+    expect(await fieldData(page, SUMMARY, 'label')).toBe('Summary');
+  });
+
+  test('refreshes the Inspector when the table edits the field it shows', async ({ page }) => {
+    await editDiagram(page);
+    await tapNode(page, SUMMARY);
+    await expect(page.locator('#inspector [data-label]')).toHaveJSProperty('value', 'Summary');
+
+    await typeInCell(page, SUMMARY, 'field', 'Teaser');
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#inspector [data-label]')).toHaveJSProperty('value', 'Teaser');
+
+    await typeInCell(page, SUMMARY, 'name', 'field_teaser');
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#inspector [data-machine-name]')).toHaveJSProperty('value', 'field_teaser');
   });
 });

@@ -16,10 +16,11 @@ import { h } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import htmBase from 'htm';
 import { icon } from './icons.js';
-import { cardinalityLabel, kindForCardinality, FIELD_TYPES, KIND_SYSTEM, MAX_CARDINALITY, REFERENCE_FIELD_TYPES } from './model.js';
+import { cardinalityLabel, cardinalityOptions, typeOptions, FIELD_TYPES, KIND_SYSTEM, REFERENCE_FIELD_TYPES } from './model.js';
 import { ANNOTATION_KINDS } from './annotations.js';
 import { formatFieldLine, parseFieldLines } from './bulk-fields.js';
-import { allowedValuesText, parseAllowedValues, settingText } from './field-settings.js';
+import { allowedValuesText, parseAllowedValues, translatableChoice, translatableValue, TRANSLATABLE_OPTIONS } from './field-settings.js';
+import { setFieldCardinality, setFieldLabel, setFieldRequired, setFieldTranslatable, setFieldType, setSetting } from './field-edits.js';
 import { BULK_FIELDS_LABEL, inspectorTrail, NEW_FIELD_LABEL, nodeLookup } from './inspector-trail.js';
 import { describeNode } from './history.js';
 import { checkpoint } from './undo.js';
@@ -27,11 +28,7 @@ import { getController, getBuilder, openInspector, bump } from './store.js';
 
 const html = htmBase.bind(h);
 
-const CARDINALITY_OPTIONS = [
-  ['1', 'Single'],
-  ...Array.from({ length: MAX_CARDINALITY - 1 }, (_, index) => [String(index + 2), String(index + 2)]),
-  ['-1', 'Unlimited'],
-];
+const CARDINALITY_OPTIONS = cardinalityOptions();
 const ANNOTATION_OPTIONS = ANNOTATION_KINDS.map((entry) => [entry.kind, entry.label]);
 const ANNOTATION_KIND_TITLE = 'The kind of annotation: ' + ANNOTATION_KINDS.map((entry) => entry.label).join(', ');
 const METHOD_TITLE = 'A method shown under the label, such as an HTTP verb';
@@ -105,18 +102,6 @@ function NoteField({ node }) {
   </div>`;
 }
 
-// Sets a description or field setting, or removes its key when the value is
-// blank, so a cleared setting matches one never set.
-function setSetting(node, key, value) {
-  const blank = Array.isArray(value) ? value.length === 0 : typeof value === 'string' ? settingText(value) === '' : value === null;
-
-  if (blank) {
-    node.removeData(key);
-  } else {
-    node.data(key, value);
-  }
-}
-
 // A text setting of a node. `toText` and `fromText` convert between the value
 // the node holds and the text the control shows.
 function TextSetting({ node, dataKey, label, title, placeholder, multiline, action, toText = (value) => value || '', fromText = (text) => text }) {
@@ -124,9 +109,7 @@ function TextSetting({ node, dataKey, label, title, placeholder, multiline, acti
 
   function onInput(e) {
     setText(e.target.value);
-    setSetting(node, dataKey, fromText(e.target.value));
-    bump();
-    checkpoint(action + ' ' + describeNode(node), dataKey + ':' + node.id());
+    setSetting(node, dataKey, fromText(e.target.value), action, true);
   }
 
   if (!multiline) {
@@ -150,24 +133,12 @@ function TextSetting({ node, dataKey, label, title, placeholder, multiline, acti
   </div>`;
 }
 
-const TRANSLATABLE_VALUES = { yes: true, no: false };
-
 function TranslatableSetting({ node }) {
-  const current = node.data('translatable');
-  const [value, setValue] = useState(current === true ? 'yes' : current === false ? 'no' : '');
+  const [value, setValue] = useState(translatableChoice(node.data('translatable')));
 
   function onChange(e) {
-    const picked = Object.hasOwn(TRANSLATABLE_VALUES, e.target.value) ? TRANSLATABLE_VALUES[e.target.value] : null;
-
     setValue(e.target.value);
-    setSetting(node, 'translatable', picked);
-    bump();
-
-    if (picked === null) {
-      checkpoint('Cleared whether ' + describeNode(node) + ' is translatable');
-    } else {
-      checkpoint('Made ' + describeNode(node) + (picked ? ' translatable' : ' not translatable'));
-    }
+    setFieldTranslatable(node, translatableValue(e.target.value));
   }
 
   return html`<${Row} label="Translatable"
@@ -179,7 +150,7 @@ function TranslatableSetting({ node }) {
       title="Whether the field's value can differ per language. Clear it when the source doesn't say."
       value=${value}
       onsl-change=${onChange}
-      ><sl-option value="yes">Yes</sl-option><sl-option value="no">No</sl-option></sl-select
+      >${slOptions(TRANSLATABLE_OPTIONS)}</sl-select
     ><//
   >`;
 }
@@ -347,22 +318,9 @@ export function FieldForm({ id }) {
   // Read once, so clearing the list doesn't remove its box mid-edit.
   const [hasAllowedValues] = useState(Boolean(node.data('allowedValues')));
 
-  function set(key, value) {
-    node.data(key, value);
+  function set(key, value, edit) {
     setS((prev) => ({ ...prev, [key]: value }));
-    bump();
-  }
-
-  function setCardinality(value) {
-    const cardinality = parseInt(value, 10);
-    node.data('cardinality', cardinality);
-    node.data('kind', kindForCardinality(cardinality));
-    node.connectedEdges('[group="ref"]').data('cardinality', cardinalityLabel(cardinality));
-    // Each proxy edge holds a copy of its ref edge's cardinality.
-    getController().syncReferences();
-    setS((prev) => ({ ...prev, cardinality: cardinality }));
-    bump();
-    checkpoint('Changed the cardinality of ' + describeNode(node));
+    edit(node, value);
   }
 
   const isRef = REFERENCE_FIELD_TYPES.includes(s.fieldType);
@@ -379,10 +337,7 @@ export function FieldForm({ id }) {
         data-label
         title="The field's label"
         value=${s.label}
-        onsl-input=${(e) => {
-          set('label', e.target.value);
-          checkpoint('Relabelled ' + describeNode(node), 'label:' + id);
-        }}
+        onsl-input=${(e) => set('label', e.target.value, (field, label) => setFieldLabel(field, label, true))}
       ></sl-input
     ><//>
     <${Row} label="Machine name"
@@ -395,15 +350,8 @@ export function FieldForm({ id }) {
       ></sl-input
     ><//>
     <${Row} label="Type"
-      ><sl-select
-        size="small"
-        title="The field type"
-        value=${s.fieldType}
-        onsl-change=${(e) => {
-          set('fieldType', e.target.value);
-          checkpoint('Changed the type of ' + describeNode(node));
-        }}
-        >${slOptions(FIELD_TYPES)}</sl-select
+      ><sl-select size="small" title="The field type" value=${s.fieldType} onsl-change=${(e) => set('fieldType', e.target.value, setFieldType)}
+        >${slOptions(typeOptions(s.fieldType))}</sl-select
       ><//
     >
     <${Row} label="Cardinality"
@@ -412,8 +360,8 @@ export function FieldForm({ id }) {
         data-cardinality
         title="How many values the field holds"
         value=${String(s.cardinality)}
-        onsl-change=${(e) => setCardinality(e.target.value)}
-        >${slOptions(CARDINALITY_OPTIONS)}</sl-select
+        onsl-change=${(e) => set('cardinality', parseInt(e.target.value, 10), setFieldCardinality)}
+        >${slOptions(cardinalityOptions(s.cardinality))}</sl-select
       ><//
     >
     <${Row} label="Required"
@@ -421,10 +369,7 @@ export function FieldForm({ id }) {
         size="small"
         title="Whether the field must have a value"
         checked=${s.required}
-        onsl-change=${(e) => {
-          set('required', e.target.checked);
-          checkpoint('Made ' + describeNode(node) + (e.target.checked ? ' required' : ' optional'));
-        }}
+        onsl-change=${(e) => set('required', e.target.checked, setFieldRequired)}
       ></sl-switch
     ><//>
     <${TranslatableSetting} node=${node} />

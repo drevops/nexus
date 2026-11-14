@@ -1,10 +1,11 @@
 /**
  * Values of the descriptions and field settings read from config: help text,
- * default values and allowed values.
+ * default values, allowed values and translatability.
  *
- * An allowed value is `{ value, label }`, both strings. The Inspector edits
- * the list as 1 `value|label` line per value, the format Drupal's own field
- * settings form uses. A line without `|` uses the value as its label.
+ * An allowed value is `{ value, label }`, both strings. The Inspector and the
+ * Fields table edit the list as 1 `value|label` line per value, the format
+ * Drupal's own field settings form uses. A line without `|` uses the value as
+ * its label.
  */
 
 /**
@@ -62,6 +63,38 @@ export function parseAllowedValues(text) {
  */
 export function allowedValueLabels(list) {
   return list.map((item) => (item.label === item.value ? item.value : item.label + ' (' + item.value + ')'));
+}
+
+// The choices a translatability select offers, as [choice, label, value].
+const TRANSLATABLE_CHOICES = [
+  ['yes', 'Yes', true],
+  ['no', 'No', false],
+];
+
+/**
+ * The choices a translatability select offers, as [choice, label] pairs.
+ * Clearing the select stands for an unknown translatability.
+ */
+export const TRANSLATABLE_OPTIONS = TRANSLATABLE_CHOICES.map(([choice, label]) => [choice, label]);
+
+/**
+ * Returns the select choice for a translatability: `yes`, `no`, or an empty
+ * string when it is unknown.
+ */
+export function translatableChoice(translatable) {
+  const found = TRANSLATABLE_CHOICES.find((entry) => entry[2] === translatable);
+
+  return found ? found[0] : '';
+}
+
+/**
+ * Returns the translatability a select choice stands for, or null for an
+ * empty or unknown choice.
+ */
+export function translatableValue(choice) {
+  const found = TRANSLATABLE_CHOICES.find((entry) => entry[0] === choice);
+
+  return found ? found[2] : null;
 }
 
 function allowedValue(value, label) {

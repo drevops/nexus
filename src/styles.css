@@ -1130,81 +1130,89 @@ body.is-dragging-panel * {
 
 /* The fixed layout takes each column's width from its header cell. */
 .field-table .field-table__col--position {
-  width: 6%;
+  width: 5%;
 }
 
 .field-table .field-table__col--field {
-  width: 24.5%;
+  width: 11%;
+}
+
+.field-table .field-table__col--name {
+  width: 24%;
 }
 
 .field-table .field-table__col--type {
   width: 16.5%;
 }
 
-.field-table .field-table__col--references {
-  width: 15%;
-}
-
 .field-table .field-table__col--cardinality {
-  width: 10%;
+  width: 9.5%;
 }
 
 .field-table .field-table__col--required {
   width: 7.5%;
 }
 
+.field-table .field-table__col--references {
+  width: 8%;
+}
+
 .field-table .field-table__col--usedIn {
-  width: 11.5%;
+  width: 10.5%;
 }
 
 .field-table .field-table__action {
-  width: 4.5%;
+  width: 4%;
   padding-inline: 0;
   text-align: center;
 }
 
-/* 13 columns don't fit a docked panel, so the panel body scrolls sideways. */
+/* 14 columns don't fit a docked panel, so the panel body scrolls sideways. */
 .field-table.has-settings {
-  width: max(100%, 68rem);
+  width: max(100%, 76rem);
 }
 
 .field-table.has-settings .field-table__col--position,
 .field-table.has-settings .field-table__action {
-  width: 4%;
+  width: 3%;
 }
 
 .field-table.has-settings .field-table__col--field {
+  width: 9%;
+}
+
+.field-table.has-settings .field-table__col--name {
   width: 12%;
 }
 
-.field-table.has-settings .field-table__col--description {
-  width: 11%;
-}
-
 .field-table.has-settings .field-table__col--type,
-.field-table.has-settings .field-table__col--references {
-  width: 10%;
-}
-
-.field-table.has-settings .field-table__col--cardinality,
-.field-table.has-settings .field-table__col--translatable {
-  width: 7%;
-}
-
-.field-table.has-settings .field-table__col--required {
-  width: 6%;
-}
-
-.field-table.has-settings .field-table__col--usedIn {
-  width: 7%;
-}
-
 .field-table.has-settings .field-table__col--defaultValue {
   width: 8%;
 }
 
+.field-table.has-settings .field-table__col--cardinality,
+.field-table.has-settings .field-table__col--translatable {
+  width: 5.5%;
+}
+
+.field-table.has-settings .field-table__col--required {
+  width: 4%;
+}
+
+.field-table.has-settings .field-table__col--references {
+  width: 7%;
+}
+
+.field-table.has-settings .field-table__col--usedIn {
+  width: 5%;
+}
+
+.field-table.has-settings .field-table__col--description {
+  width: 16%;
+}
+
 .field-table.has-settings .field-table__col--allowedValues {
-  width: 10%;
+  width: 11%;
 }
 
 .field-table .field-table__col--position,
@@ -1258,6 +1266,60 @@ body.is-dragging-panel * {
 
 .field-table__text {
   white-space: pre-wrap;
+}
+
+/* The button fills its cell and reaches into the cell's padding, so a click
+   anywhere in the cell, even an empty one, opens the editor. */
+.field-table__edit {
+  display: block;
+  width: calc(100% + 0.6rem);
+  min-height: 1.5em;
+  margin: -0.15rem -0.3rem;
+  padding: 0.15rem 0.3rem;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  white-space: inherit;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+.field-table__edit:hover,
+.field-table__edit:focus-visible {
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.field-table__edit-refs {
+  vertical-align: middle;
+  margin-left: 0.15rem;
+}
+
+.field-table__check {
+  margin: 0;
+  cursor: pointer;
+}
+
+.field-table td.is-editing {
+  padding: 0.15rem 0.3rem;
+}
+
+/* A help text cell sets white-space: pre-wrap, which the editor's shadow DOM
+   inherits, so the whitespace in its template would draw as blank lines. */
+.field-table__editor {
+  width: 100%;
+  white-space: normal;
+}
+
+.field-table__editor::part(listbox) {
+  width: max(100%, 14rem);
+}
+
+.field-table__editor.is-list-end::part(listbox) {
+  margin-inline-start: min(0px, calc(100% - 14rem));
 }
 
 .field-table__description {
@@ -1691,6 +1753,20 @@ body.is-dragging-panel * {
   margin-top: 0.3rem;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+/* Help text and descriptions keep their own line breaks, so their paragraphs
+   and lists add no margin of their own. */
+:is(.tooltip__text, .field-table__text, .field-table__description) :is(p, ul, ol) {
+  margin: 0;
+}
+
+:is(.tooltip__text, .field-table__text, .field-table__description) :is(ul, ol) {
+  padding-left: 1.2em;
+}
+
+.rich-text__link {
+  text-decoration: underline dotted;
 }
 
 /* Landing / upload screen. */
