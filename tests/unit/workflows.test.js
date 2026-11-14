@@ -143,3 +143,51 @@ test('keeps the files OpenSSF Scorecard reads in source archives', async (t) => 
     });
   }
 });
+
+test('runs the benchmark only on demand, with read access only', () => {
+  const benchmark = WORKFLOWS.find(({ name }) => name === 'benchmark.yml').workflow;
+
+  assert.deepEqual(Object.keys(benchmark.on), ['workflow_dispatch']);
+  assert.deepEqual(Object.keys(benchmark.jobs), ['benchmark']);
+  assert.deepEqual(benchmark.jobs.benchmark.permissions, { contents: 'read' });
+});
+
+test('compares the branch with the latest release unless a base is given', () => {
+  const steps = WORKFLOWS.find(({ name }) => name === 'benchmark.yml').workflow.jobs.benchmark.steps;
+  const checkout = steps.find((step) => String(step.uses).startsWith('actions/checkout@'));
+  const base = steps.find((step) => step.name === 'Pick the base commit');
+  const run = steps.find((step) => step.name === 'Run the benchmark');
+
+  assert.equal(checkout.with['fetch-depth'], 0);
+  assert.equal(base.env.INPUT_BASE, '${{ inputs.base }}');
+  assert.match(base.run, /ref="\$INPUT_BASE"/);
+  assert.match(
+    base.run,
+    /ref=\$\(gh release list --repo "\$GITHUB_REPOSITORY" --exclude-drafts --exclude-pre-releases --limit 1 --json tagName --jq '\.\[0\]\.tagName \/\/ ""'\)\n/,
+  );
+  assert.doesNotMatch(
+    base.run.split('\n').find((line) => line.includes('gh release')),
+    /\|\|/,
+    'a failed release lookup must fail the step',
+  );
+  assert.match(base.run, /"refs\/remotes\/origin\/\$\{ref\}\^\{commit\}"/);
+  assert.equal(run.env.BASE_SHA, '${{ steps.base.outputs.sha }}');
+  assert.match(run.run, /^npm run benchmark -- .*\$\{BASE_SHA:\+--base-ref "\$BASE_SHA"\}/);
+});
+
+test('takes the threshold and the minimum difference from repository variables', () => {
+  const run = WORKFLOWS.find(({ name }) => name === 'benchmark.yml').workflow.jobs.benchmark.steps.find((step) => step.name === 'Run the benchmark');
+
+  assert.equal(run.env.THRESHOLD, '${{ vars.BENCHMARK_THRESHOLD }}');
+  assert.equal(run.env.MIN_DIFF, '${{ vars.BENCHMARK_MIN_DIFF }}');
+  assert.match(run.run, /\$\{THRESHOLD:\+--threshold "\$THRESHOLD"\}/);
+  assert.match(run.run, /\$\{MIN_DIFF:\+--min-diff "\$MIN_DIFF"\}/);
+});
+
+test('passes event values to the benchmark scripts through the environment', () => {
+  const benchmark = WORKFLOWS.find(({ name }) => name === 'benchmark.yml').workflow;
+
+  Object.entries(benchmark.jobs).forEach(([job, definition]) =>
+    definition.steps.filter((step) => step.run).forEach((step) => assert.doesNotMatch(step.run, /\$\{\{/, job + ': ' + step.name)),
+  );
+});

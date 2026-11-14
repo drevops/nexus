@@ -104,6 +104,46 @@ To check a `.nexus.json` document before you open it, such as one an AI agent wr
 
 The command prints each error and warning with the JSON Pointer of the part it's about, and `OK` for a document with neither. An error marks a break in the format, a part of the model that gets lost, such as 2 entities with the same id, or a model Drupal would reject. A warning marks a part that opens but isn't drawn, such as an annotation edge to an unknown id, or a model that breaks common practice. The command also runs the rules of the Checks panel, from `src/model-checks.js`, at their default settings. It exits with 1 when any document has an error.
 
+## Measure performance
+
+The benchmark times how long the app takes to draw a diagram and run its interactions in Chromium. It compares your working tree with a base commit, such as the last release. Install the browser once with `npx playwright install chromium`, then compare your changes with `main`:
+
+    npm run benchmark -- --base-ref main
+
+The command exports the base commit with `git archive` into `.artifacts/tmp/benchmark/`, so your branch and working tree stay as they are. Both copies open the diagrams from your working tree, so only the code differs. Each run measures the base and then your working tree, and the side that goes first swaps every run.
+
+The benchmark measures 3 diagrams:
+
+- CivicTheme, the largest template
+- Open Social, for its load only
+- A stress diagram of 300 entities, built by `scripts/lib/stress-diagram.mjs`
+
+For each diagram, the report gives the time until the diagram is drawn, the total blocking time and the JS heap. For CivicTheme and the stress diagram, it also times each layout, **Tidy up**, turning **Fields** and **Proxies** off and on, and undoing and redoing a move of every node. The last row gives the bytes in `src/` and `assets/vendor/`.
+
+The command takes these options:
+
+| Option | Default | Sets |
+| --- | --- | --- |
+| `--base-ref <ref>` | None | The commit, branch or tag to compare with. Without it, the report lists your working tree alone. |
+| `--runs <n>` | `5` | The number of runs, from 1 to 50 |
+| `--throttle <n>` | `4` | How many times slower the CPU runs, from 1 to 20 |
+| `--threshold <percent>` | `15` | How much slower a load or an interaction can get before it regresses |
+| `--min-diff <ms>` | `10` | How many milliseconds slower a load or an interaction can get before it regresses |
+| `--out <dir>` | `.artifacts/benchmark` | The folder for `benchmark.md` and for `benchmark.json`, which holds every sample |
+
+The report shows the median of each value. A load or an interaction regresses when its median is slower than the base by more than both `--threshold` and `--min-diff`. Blocking time, heap and bytes never regress, because they vary too much between runs or grow with every feature. A diagram that fails on the base shows `n/a`, because the base can predate a control the benchmark uses. The command exits with 1 on a regression or a failure in your working tree, and with 2 on a bad argument.
+
+The **Benchmark** workflow runs only when you start it, as a check before a release. It compares the latest commit of the branch you run it on with the latest published release. To compare with another commit, branch or tag, enter it as **base**. With no release yet, it measures the branch alone. The workflow runs the command with 7 runs, writes the report to the job summary and uploads both files as the `benchmark` artifact. The run fails on a regression.
+
+To change when a run fails, set these repository variables under **Settings > Secrets and variables > Actions > Variables**:
+
+- `BENCHMARK_THRESHOLD` sets `--threshold`, such as `20`.
+- `BENCHMARK_MIN_DIFF` sets `--min-diff`, such as `25`.
+
+An unset variable keeps the command's default.
+
+The benchmark steps live in `scripts/lib/benchmark-page.mjs` and drive the app through its controls. `npm run test-e2e` runs every step once, so a change to a control the benchmark uses fails there first.
+
 ## Updating the templates
 
 The landing screen's templates are listed in `src/templates.js`, and each ships as a saved diagram, `templates/<id>.nexus.json`. Each template is pinned to exact upstream tags and rebuilt from them by 1 command:
@@ -184,12 +224,15 @@ Every push to `main` updates a draft release that lists the pull requests merged
 
 To publish a release:
 
-1. Open the draft release on GitHub and note its tag, such as `1.2.3`.
-2. Fetch `main`, tag its latest commit with that version and push the tag:
+1. Run the **Benchmark** workflow on `main` from the **Actions** tab, and wait for it to pass. A failed run lists the scenarios that got slower since the last release in its summary. Fix them, or accept the slowdown, before you tag. [Measure performance](#measure-performance) covers the workflow.
+2. Open the draft release on GitHub and note its tag, such as `1.2.3`.
+3. Fetch `main`, tag its latest commit with that version and push the tag:
 
        git fetch origin main
        git tag 1.2.3 origin/main
        git push origin 1.2.3
+
+   Check that `origin/main` is the commit the benchmark measured, which the report names as its head. When `main` has moved on since, run the benchmark again before you tag.
 
 The tag push runs `.github/workflows/release.yml` in 3 jobs:
 

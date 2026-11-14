@@ -19,7 +19,8 @@
     },
     "scripts": {
         "start": "node tests/server.mjs",
-        "assemble": "rm -rf _site && mkdir _site && cp -R index.html llms.txt src assets templates schema skills _site/",
+        "benchmark": "node scripts/benchmark.mjs",
+        "assemble":"rm -rf _site && mkdir _site && cp -R index.html llms.txt src assets templates schema skills _site/",
         "check-diagram": "node scripts/check-diagram.mjs",
         "check-vendor": "node scripts/check-vendor.mjs",
         "lint": "eslint src scripts tests eslint.config.js playwright.config.js && prettier --check \"src/*.js\" \"scripts/**/*.mjs\" \"tests/**/*.{js,mjs}\" eslint.config.js playwright.config.js",
