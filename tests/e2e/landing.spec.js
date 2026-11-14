@@ -103,6 +103,15 @@ test.describe('Landing', { tag: '@runner-1' }, () => {
     expect(ai.y + ai.height).toBeCloseTo(more.y + more.height, 0);
   });
 
+  test('puts the name and tagline below the Nexus mark in a narrow window', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    const [mark, name, tag] = await boxesOf(page, ['.landing__mark svg.icon--nexus', '.landing__logo', '.landing__tag']);
+
+    expect(name.y).toBeGreaterThanOrEqual(mark.y + mark.height);
+    expect(name.x).toBeCloseTo(mark.x, 0);
+    expect(tag.x).toBeCloseTo(mark.x, 0);
+  });
+
   test('shows every template without a cap in a narrow window', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await addTemplateRows(page, 5);

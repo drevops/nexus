@@ -2065,6 +2065,29 @@ body.is-dragging-panel * {
   font-size: 0.88rem;
 }
 
+/* A narrow card puts the mark on a row of its own beside the corner buttons,
+   so the name and the tagline take the full width below it. */
+@container (max-width: 30rem) {
+  .landing__header {
+    grid-template-columns: auto 1fr;
+    padding-right: 0;
+  }
+
+  .landing__mark {
+    grid-row: auto;
+    grid-column: 1 / -1;
+    margin-bottom: 0.5rem;
+  }
+
+  .landing__version {
+    margin-left: 0;
+  }
+
+  .landing__tag {
+    grid-column: 1 / -1;
+  }
+}
+
 /* Your configuration beside the templates, in 1 column when the card is too
    narrow for 2. The rows stretch, so the dropzone grows to the height of the
    template list. */
@@ -2144,9 +2167,11 @@ body.is-dragging-panel * {
   font-size: 0.75rem;
 }
 
+/* At most 2 columns, so Open and Start from scratch always fill the row above
+   Create with AI. */
 .landing__actions {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, max(11rem, calc(50% - 0.25rem))), 1fr));
   gap: 0.5rem;
   margin-top: 0.75rem;
 }
