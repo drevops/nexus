@@ -39,7 +39,7 @@ import { DIAGRAM_DEFAULTS, readDiagramDefaults } from './diagram-defaults.js';
 import { DETAIL_LEVELS, detailLevel, levelShowsField, levelToShow, nextLevel, showsFields } from './detail-levels.js';
 import { keepOrder, packColumns, tidyColumns } from './packing.js';
 import { freeArea } from './free-area.js';
-import { frameSettings } from './mode-frame.js';
+import { FRAME_MODES, frameSettings } from './mode-frame.js';
 import { readMarkdownSettings } from './markdown.js';
 import { checkModel, readCheckSettings } from './model-checks.js';
 import { documentFromGraph } from './document.js';
@@ -60,6 +60,10 @@ const FALLBACK_COLOR = '#eceff3';
 const FALLBACK_SYMBOL = 'rounded';
 
 const SETTINGS_KEY = 'nexusSettings';
+
+// The settings keys Reset to defaults clears. Custom types and the line style
+// are kept.
+const RESET_KEYS = ['colors', 'symbols', 'newDiagrams', 'frame', 'markdown', 'checks', 'hover'];
 
 // columnSep and islandSep space the islands that a packed layout stacks in
 // columns.
@@ -179,19 +183,22 @@ function setDiagramDefault(key, value) {
   bump();
 }
 
-// The stylesheet picks the frame colour from the stage's data-mode, which
-// the builder sets.
+// The stylesheet picks the frame of the stage's data-mode, which the builder
+// sets.
 function applyFrame() {
   const frame = frameSettings(settings.frame);
   const stage = $('stage-root');
 
-  stage.style.setProperty('--frame-view', frame.view);
-  stage.style.setProperty('--frame-edit', frame.edit);
-  stage.classList.toggle('has-frame', frame.enabled);
+  FRAME_MODES.forEach((mode) => {
+    stage.style.setProperty('--frame-' + mode, frame[mode].color);
+    stage.classList.toggle('has-frame-' + mode, frame[mode].enabled);
+  });
 }
 
-function setFrame(patch) {
-  settings.frame = frameSettings({ ...frameSettings(settings.frame), ...patch });
+function setFrame(mode, patch) {
+  const frame = frameSettings(settings.frame);
+
+  settings.frame = frameSettings({ ...frame, [mode]: { ...frame[mode], ...patch } });
   saveSettings();
   applyFrame();
   bump();
@@ -2173,21 +2180,22 @@ function buildController(model, options = {}) {
   }
 
   // The new diagram settings apply to the next diagram, so only the colours
-  // and symbols are redrawn.
-  function resetSettings() {
-    delete settings.colors;
-    delete settings.symbols;
-    delete settings.newDiagrams;
-    delete settings.frame;
-    delete settings.markdown;
-    delete settings.checks;
-    delete settings.hover;
+  // and symbols are redrawn. initColors() drops the colours and symbols the
+  // open document set, so it runs only when stored ones are cleared.
+  function resetSettings(keys = RESET_KEYS) {
+    const cleared = keys.filter((key) => RESET_KEYS.includes(key));
+
+    cleared.forEach((key) => delete settings[key]);
     saveSettings();
     applyFrame();
-    initColors();
-    cy.style(style());
-    positionCaptions();
-    positionNotes();
+
+    if (cleared.includes('colors') || cleared.includes('symbols')) {
+      initColors();
+      cy.style(style());
+      positionCaptions();
+      positionNotes();
+    }
+
     bump();
   }
 

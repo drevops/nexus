@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { CHECKS_DOC, copyLink, exploreFrom, loadExample, openDocument, openEntityMenu, tapNode } from './helpers.js';
+import { CHECKS_DOC, copyLink, exploreFrom, loadExample, openDocument, openEntityMenu, openSettings, tapNode } from './helpers.js';
 
 test.describe('Titles', { tag: '@runner-1' }, () => {
   // Describes each visible control, table header and badge that shows no
@@ -74,13 +74,20 @@ test.describe('Titles', { tag: '@runner-1' }, () => {
         async (page) => {
           await loadExample(page);
 
-          for (const toggle of ['#entities-toggle', '#table-toggle', '#history-toggle', '#checks-toggle', '#settings-toggle']) {
+          for (const toggle of ['#entities-toggle', '#table-toggle', '#history-toggle', '#checks-toggle']) {
             await page.click(toggle);
           }
 
-          await expect(page.locator('#settings [data-default="layout"]')).toBeVisible();
+          await expect(page.locator('#checks')).toBeVisible();
         },
       ],
+      ...['types', 'defaults', 'frame', 'hover', 'markdown', 'checks'].map((tab) => [
+        `the ${tab} tab of Settings`,
+        async (page) => {
+          await loadExample(page);
+          await openSettings(page, tab);
+        },
+      ]),
       [
         'the Checks panel with problems',
         async (page) => {
@@ -229,7 +236,7 @@ test.describe('Titles', { tag: '@runner-1' }, () => {
 
   test('titles the whole of a Shoelace control the app draws, not only its inner element', async ({ page }) => {
     await loadExample(page);
-    await page.click('#settings-toggle');
+    await openSettings(page, 'defaults');
 
     const proxies = page.locator('#settings [data-default="proxies"]');
     await expect(proxies).toHaveAttribute('title', 'Draw each reference as a faded copy of its target beside the field in a new diagram');

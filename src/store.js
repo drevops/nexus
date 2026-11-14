@@ -17,13 +17,12 @@ const listeners = new Set();
 
 // The default order of the panels, also the order of a side rail's panels
 // until they are moved.
-export const PANEL_ORDER = ['entities', 'table', 'settings', 'legend', 'history', 'checks', 'changes', 'inspector'];
+export const PANEL_ORDER = ['entities', 'table', 'legend', 'history', 'checks', 'changes', 'inspector'];
 
 const DEFAULT_POS = {
   entities: { left: 16, top: 16 },
   table: { right: 16, top: 16 },
   inspector: { right: 16, top: 16 },
-  settings: { right: 16, top: 16 },
   legend: { right: 16, bottom: 16 },
   history: { left: 16, bottom: 16 },
   checks: { left: 16, bottom: 16 },

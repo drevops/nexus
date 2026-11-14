@@ -102,7 +102,7 @@ test('opens a raised panel above every other and keeps the others in order', asy
 function dataProviderRaise() {
   return [
     ['focusing an open panel', 'legend', () => focusPanel('legend'), {}],
-    ['opening a closed panel', 'settings', () => openPanel('settings'), {}],
+    ['opening a closed panel', 'checks', () => openPanel('checks'), {}],
     ['toggling a closed panel', 'entities', () => togglePanel('entities'), {}],
     ['opening the fields table for an entity', 'table', () => openTableFor('node.article'), { tableFilter: 'node.article' }],
     ['opening the inspector', 'inspector', () => openInspector(SELECTION), { selected: SELECTION }],
@@ -157,7 +157,7 @@ test('keeps the raised panels in 1 band however often they are raised', async (t
 function dataProviderRaiseSequence() {
   return [
     ['1 panel 45 times', Array(45).fill('legend')],
-    ['2 panels in turn 500 times each', Array.from({ length: 1000 }, (_, i) => (i % 2 ? 'table' : 'settings'))],
+    ['2 panels in turn 500 times each', Array.from({ length: 1000 }, (_, i) => (i % 2 ? 'table' : 'checks'))],
     ['every panel in turn 200 times', Array.from({ length: 200 }, () => PANELS).flat()],
   ];
 }
@@ -170,13 +170,13 @@ function useLayout(entries) {
   importLayout({ panels });
 }
 
-// The right rail holds entities, table, a closed settings and inspector; the
+// The right rail holds entities, table, a closed checks and inspector; the
 // left rail holds history, and legend floats.
 function useRails() {
   useLayout({
     entities: { open: true, dock: 'right' },
     table: { open: true, dock: 'right' },
-    settings: { open: false, dock: 'right' },
+    checks: { open: false, dock: 'right' },
     legend: { open: true },
     history: { open: true, dock: 'left' },
     inspector: { open: true, dock: 'right' },
@@ -186,6 +186,14 @@ function useRails() {
 function rails() {
   return { left: dockedPanels('left'), right: dockedPanels('right') };
 }
+
+test('ignores a panel of an imported layout that the store has no panel for', () => {
+  importLayout({ panels: { settings: { open: true, dock: 'right', order: 0 } } });
+
+  assert.equal(Object.hasOwn(getState().panels, 'settings'), false);
+  assert.equal(Object.hasOwn(exportLayout().panels, 'settings'), false);
+  assert.equal(dockedPanels('right').includes('settings'), false);
+});
 
 test('starts with every panel in the default order', () => {
   assert.deepEqual(
@@ -235,16 +243,16 @@ function dataProviderDockPanel() {
     ],
     [
       'moves and opens a closed panel on the other side',
-      () => dockPanel('settings', 'left', 0),
-      { left: ['settings', 'history'], right: ['entities', 'table', 'inspector'] },
+      () => dockPanel('checks', 'left', 0),
+      { left: ['checks', 'history'], right: ['entities', 'table', 'inspector'] },
     ],
     [
       'keeps a closed panel after the panel it followed',
       () => {
         dockPanel('inspector', 'right', 0);
-        openPanel('settings');
+        openPanel('checks');
       },
-      { left: ['history'], right: ['inspector', 'entities', 'table', 'settings'] },
+      { left: ['history'], right: ['inspector', 'entities', 'table', 'checks'] },
     ],
   ];
 }
@@ -388,11 +396,11 @@ test('saves the size of a panel with the layout and restores it', () => {
 test('reads the size of a panel from an imported layout', async (t) => {
   for (const [name, entry, expected] of dataProviderImportedSize()) {
     await t.test(name, () => {
-      resizePanel('settings', { left: 0, top: 0, width: 333, height: 222 });
+      resizePanel('checks', { left: 0, top: 0, width: 333, height: 222 });
 
-      importLayout({ panels: { settings: { open: true, ...entry } } });
+      importLayout({ panels: { checks: { open: true, ...entry } } });
 
-      assert.deepEqual(getState().panels.settings.size, expected);
+      assert.deepEqual(getState().panels.checks.size, expected);
     });
   }
 });

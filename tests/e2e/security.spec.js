@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { copyLink, entityCount, hoverNode, linkTo, loadExample, openDocument, openFrom, pasteDiagram, saveFrom, waitForGraph } from './helpers.js';
+import { closeSettings, copyLink, entityCount, hoverNode, linkTo, loadExample, openDocument, openFrom, openSettings, pasteDiagram, saveFrom, waitForGraph } from './helpers.js';
 
 test.describe('Security', { tag: '@runner-1' }, () => {
   // Markup that runs script when a colour reaches innerHTML unchecked.
@@ -28,8 +28,8 @@ test.describe('Security', { tag: '@runner-1' }, () => {
     await page.click('#mode-build');
     await page.click('#table-toggle');
     await page.click('#history-toggle');
-    await page.click('#settings-toggle');
-    await expect(page.locator('#settings')).toBeVisible();
+    await openSettings(page, 'types');
+    await closeSettings(page);
 
     for (const format of ['png', 'svg', 'csv', 'json']) {
       await saveFrom(page, format);

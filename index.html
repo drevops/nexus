@@ -60,7 +60,7 @@
       <sl-button id="about-toggle" class="toolbar__button toolbar__button--icon" size="small" data-icon="help-circle" data-shortcut="?" title="About Nexus" aria-label="About Nexus"></sl-button>
       <sl-button id="github-link" class="toolbar__button toolbar__button--icon" size="small" href="https://github.com/drevops/nexus" target="_blank" rel="noopener" data-icon="github" title="View Nexus on GitHub" aria-label="View Nexus on GitHub"></sl-button>
       <sl-button id="theme-toggle" class="toolbar__button toolbar__button--icon" size="small" data-icon="moon" data-theme-toggle data-shortcut="D" title="Toggle light / dark theme" aria-label="Toggle theme"></sl-button>
-      <sl-button id="settings-toggle" class="toolbar__button toolbar__button--icon" size="small" data-icon="sliders" data-shortcut="," title="Toggle the settings panel" aria-label="Settings"></sl-button>
+      <sl-button id="settings-toggle" class="toolbar__button toolbar__button--icon" size="small" data-icon="sliders" data-shortcut="," title="Open the settings" aria-label="Settings"></sl-button>
     </div>
   </div>
   <div class="toolbar__tools">
@@ -304,6 +304,8 @@
   <sl-button id="ai-close" slot="footer" title="Close this dialog">Close</sl-button>
   <sl-button id="ai-open" slot="footer" variant="primary" data-icon="folder-open" title="Open the pasted document as the diagram">Open diagram</sl-button>
 </sl-dialog>
+
+<sl-dialog id="settings" class="settings-dialog" label="Settings"></sl-dialog>
 
 <sl-dialog id="link-dialog" class="link-dialog">
   <span slot="label" class="dialog__label" data-icon="link">Copy link</span>

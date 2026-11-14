@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-import { loadExample, slFill, slSelect, openDocument, createEntity, tapNode, selectEvent } from './helpers.js';
+import { loadExample, openSettings, slFill, slSelect, openDocument, createEntity, tapNode, selectEvent } from './helpers.js';
 
 test.describe('Builder', { tag: '@runner-1' }, () => {
   test.beforeEach(async ({ page }) => {
@@ -166,7 +166,7 @@ test.describe('Builder', { tag: '@runner-1' }, () => {
     await page.waitForFunction(() => window.__nexus.cy.getElementById('field:node.blog_post:field_1').nonempty());
     await slFill(page, '#inspector sl-input[data-machine-name]', 'Field__Body');
 
-    await page.click('#settings-toggle');
+    await openSettings(page, 'types');
     await page.fill('#settings [data-new-type]', 'My Widget__Type');
     await page.click('#settings [data-add-type]');
 

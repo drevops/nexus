@@ -68,7 +68,7 @@ test.describe('Keyboard', { tag: '@runner-2' }, () => {
   function dataProviderToolbarShortcuts() {
     return [
       ['the theme toggle', 'd', (page) => expect(page.locator('html')).toHaveClass(/sl-theme-dark/)],
-      ['Settings', ',', (page) => expect(page.locator('#settings')).toBeVisible()],
+      ['Settings', ',', (page) => expect(page.locator('#settings sl-tab-group')).toBeVisible()],
       ['the Open menu', 'Shift+O', (page) => expect(page.locator('#open-menu')).toBeVisible()],
       ['the Save as menu', 'Control+Shift+S', (page) => expect(page.locator('#save-menu')).toBeVisible()],
       ['Fields', 'f', (page) => expect(activeLevel(page)).toHaveAttribute('data-level', 'entities')],

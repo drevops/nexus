@@ -1,22 +1,14 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-import { nodePositions, waitForGraph, loadExample, slSelect, eventLayout, activeLevel } from './helpers.js';
+import { nodePositions, waitForGraph, loadExample, openSettings, slSelect, eventLayout, activeLevel } from './helpers.js';
 
 test.describe('Diagram defaults', { tag: '@runner-1' }, () => {
-  async function openSettings(page) {
-    if (!(await page.locator('#settings').isVisible())) {
-      await page.click('#settings-toggle');
-    }
-
-    await expect(page.locator('#settings [data-default="layout"]')).toBeVisible();
-  }
-
-  // Turns a new diagram switch in the Settings panel on or off.
+  // Turns a new diagram switch in Settings on or off.
   async function setDefaultSwitch(page, key, checked) {
     const control = page.locator('#settings [data-default="' + key + '"]');
 
     if ((await control.evaluate((el) => el.checked)) !== checked) {
-      await control.click();
+      await control.locator('[part~="control"]').click();
     }
 
     await expect(control).toHaveJSProperty('checked', checked);
@@ -29,9 +21,9 @@ test.describe('Diagram defaults', { tag: '@runner-1' }, () => {
   // Each case sets 1 new diagram setting, then checks a diagram drawn after a
   // reload.
   for (const [name, set, check] of dataProviderDiagramDefaults()) {
-    test(`opens the next diagram with ${name} from the Settings panel`, async ({ page }) => {
+    test(`opens the next diagram with ${name} from Settings`, async ({ page }) => {
       await loadExample(page);
-      await openSettings(page);
+      await openSettings(page, 'defaults');
       await set(page);
 
       await page.reload();
@@ -109,7 +101,7 @@ test.describe('Diagram defaults', { tag: '@runner-1' }, () => {
 
   test('opens the next diagram at the All level instead of Entities when it opens in Edit mode', async ({ page }) => {
     await loadExample(page);
-    await openSettings(page);
+    await openSettings(page, 'defaults');
     await slSelect(page, '#settings [data-default="level"]', 'entities');
     await slSelect(page, '#settings [data-default="mode"]', 'edit');
 
@@ -121,7 +113,7 @@ test.describe('Diagram defaults', { tag: '@runner-1' }, () => {
 
   test('keeps a level that shows fields when the next diagram opens in Edit mode', async ({ page }) => {
     await loadExample(page);
-    await openSettings(page);
+    await openSettings(page, 'defaults');
     await slSelect(page, '#settings [data-default="level"]', 'references');
     await slSelect(page, '#settings [data-default="mode"]', 'edit');
 
@@ -139,7 +131,7 @@ test.describe('Diagram defaults', { tag: '@runner-1' }, () => {
 
       await expect(activeLevel(page)).toHaveAttribute('data-level', label.toLowerCase());
       await expect(page.locator('#proxy-toggle')).toHaveJSProperty('checked', false);
-      await openSettings(page);
+      await openSettings(page, 'defaults');
       await expect(page.locator('#settings [data-default="level"]')).toHaveJSProperty('value', label.toLowerCase());
     });
   }
@@ -156,7 +148,7 @@ test.describe('Diagram defaults', { tag: '@runner-1' }, () => {
     const [download] = await Promise.all([page.waitForEvent('download'), page.click('#doc-save')]);
     const saved = await download.path();
     const doc = JSON.parse(readFileSync(saved, 'utf8'));
-    await openSettings(page);
+    await openSettings(page, 'defaults');
     await slSelect(page, '#settings [data-default="level"]', 'entities');
 
     await page.goto('/index.html');
@@ -171,7 +163,7 @@ test.describe('Diagram defaults', { tag: '@runner-1' }, () => {
 
   test('restores the new diagram settings with Reset to defaults', async ({ page }) => {
     await loadExample(page);
-    await openSettings(page);
+    await openSettings(page, 'defaults');
     await slSelect(page, '#settings [data-default="layout"]', 'tb');
     await slSelect(page, '#settings [data-default="level"]', 'entities');
 
