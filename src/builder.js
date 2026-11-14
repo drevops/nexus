@@ -18,6 +18,7 @@
 
 import { cardinalityLabel, kindForCardinality, entityNodeId, fieldNodeId, hasEdgeId, refEdgeId } from './model.js';
 import { ANNOTATION_KINDS } from './annotations.js';
+import { canvasCursor } from './canvas-cursor.js';
 import { findEntityType } from './entity-types.js';
 import { describeNode } from './history.js';
 import { humanize, machineName } from './names.js';
@@ -42,6 +43,9 @@ let drag = null;
 let pan = null;
 let taps = [null, null];
 let pressContainer = null;
+let hovered = null;
+let holding = false;
+let panning = false;
 
 // How far a new field is placed from its entity, and how far apart fields
 // added together are stacked.
@@ -56,16 +60,31 @@ function startPlaceNote(kind) {
   connectMode = false;
   applyConnect();
   placeKind = kind;
-  if (cy) {
-    cy.container().style.cursor = 'crosshair';
-  }
+  updateCursor();
 }
 
 function cancelPlace() {
   placeKind = null;
-  if (cy) {
-    cy.container().style.cursor = '';
+  updateCursor();
+}
+
+function updateCursor() {
+  if (!cy) {
+    return;
   }
+
+  const node = hovered ? { group: hovered.data('group'), grabbable: hovered.grabbable() } : null;
+
+  cy.container().style.cursor = canvasCursor({
+    node,
+    edit: buildMode,
+    connect: connectMode,
+    panning,
+    holding,
+    connecting: !!connectSource,
+    placing: !!placeKind,
+    comparing: !!getState().comparison,
+  });
 }
 
 /* Drag palette items onto the canvas ------------------------------------- */
@@ -225,6 +244,9 @@ export function attachBuilder(instance, build = false) {
   buildMode = build;
   connectSource = null;
   taps = [null, null];
+  hovered = null;
+  holding = false;
+  panning = false;
   closeEntityMenu();
   cy.on('tap', (evt) => {
     if (evt.target === cy && placeKind) {
@@ -286,6 +308,10 @@ export function attachBuilder(instance, build = false) {
   if (pressContainer !== cy.container()) {
     pressContainer = cy.container();
     pressContainer.addEventListener('mousedown', holdPanning, true);
+    pressContainer.addEventListener('mouseleave', () => {
+      hovered = null;
+      updateCursor();
+    });
   }
   cy.on('tap', (evt) => {
     if (evt.target === cy) {
@@ -322,6 +348,29 @@ export function attachBuilder(instance, build = false) {
     }
   });
 
+  cy.on('mouseover', 'node', (evt) => {
+    hovered = evt.target;
+    updateCursor();
+  });
+  cy.on('mouseout', 'node', () => {
+    hovered = null;
+    updateCursor();
+  });
+  cy.on('remove', 'node', (evt) => {
+    if (evt.target === hovered) {
+      hovered = null;
+      updateCursor();
+    }
+  });
+  cy.on('grabon', 'node', () => {
+    holding = true;
+    updateCursor();
+  });
+  cy.on('freeon', 'node', () => {
+    holding = false;
+    updateCursor();
+  });
+
   // Cytoscape pans with the left button only, and updateInteraction() turns
   // that off, so a right-drag pans here. Cytoscape fires no cxttap once the
   // pointer passes its tap threshold, so the drag does not also isolate.
@@ -336,12 +385,14 @@ export function attachBuilder(instance, build = false) {
     const point = { x: evt.originalEvent.clientX, y: evt.originalEvent.clientY };
 
     cy.panBy({ x: point.x - pan.x, y: point.y - pan.y });
-    cy.container().classList.add('is-panning');
     pan = point;
+    panning = true;
+    updateCursor();
   });
   cy.on('cxttapend', () => {
     pan = null;
-    cy.container().classList.remove('is-panning');
+    panning = false;
+    updateCursor();
   });
 
   // A tap on a node in View mode animates the view to it, so the second click
@@ -478,6 +529,7 @@ function updateInteraction() {
   cy.autounselectify(!editing);
   cy.boxSelectionEnabled(editing);
   syncSelection(true);
+  updateCursor();
 }
 
 // Isolates an entity, its fields and their proxies. Everything else is faded
@@ -500,6 +552,7 @@ function isolateEntity(entityId) {
   group.grabify();
   isolatedEntity = entityId;
   isolatedIds = new Set(group.map((node) => node.id()));
+  updateCursor();
 }
 
 function clearIsolation() {
@@ -511,6 +564,7 @@ function clearIsolation() {
   isolatedIds = new Set();
   drag = null;
   cy.nodes().grabify();
+  updateCursor();
 }
 
 /* Entity menu: opens at the pointer on a right-click on an entity. ------- */
@@ -630,6 +684,7 @@ function startConnect(field, position) {
     'target-arrow-color': '#2f6db3',
     events: 'no',
   });
+  updateCursor();
 }
 
 function moveGhost(position) {
@@ -645,6 +700,7 @@ function endConnect(target) {
   const source = connectSource;
   connectSource = null;
   cleanupGhost();
+  updateCursor();
 
   if (target && target !== cy && typeof target.isNode === 'function' && target.isNode() && target.data('group') === 'entity') {
     addReference(source, target.id());
