@@ -124,6 +124,38 @@ test.describe('Toolbar', { tag: '@runner-2' }, () => {
     ]);
   });
 
+  for (const [button, panel, label] of dataProviderPanelToggles()) {
+    test(`labels ${button} after the ${label} panel it opens`, async ({ page }) => {
+      await loadExample(page);
+
+      if ((await page.locator('#' + panel).count()) === 0) {
+        await page.click('#' + button);
+      }
+
+      // The label is the button's own text, without the Checks badge's count.
+      const ownText = await page.locator('#' + button).evaluate((element) =>
+        [...element.childNodes]
+          .filter((node) => node.nodeType === Node.TEXT_NODE)
+          .map((node) => node.textContent)
+          .join('')
+          .trim(),
+      );
+
+      expect(ownText).toBe(label);
+      await expect(page.locator('#' + panel + ' .panel__title')).toHaveText(label);
+    });
+  }
+
+  function dataProviderPanelToggles() {
+    return [
+      ['entities-toggle', 'entities', 'Entities'],
+      ['table-toggle', 'table', 'Fields'],
+      ['legend-toggle', 'legend', 'Legend'],
+      ['history-toggle', 'history', 'History'],
+      ['checks-toggle', 'checks', 'Checks'],
+    ];
+  }
+
   test('ends every toolbar section but the last in a separator', async ({ page }) => {
     await page.setViewportSize({ width: 3000, height: 800 });
     await loadExample(page);
