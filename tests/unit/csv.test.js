@@ -209,9 +209,12 @@ test('writes formulas in document text as text in every CSV', () => {
 
   assert.deepEqual(bundlesCsv(doc).split('\r\n').slice(1), ["node,article,'=1+1,'+cmd,1,1,'@SUM(A1)"]);
   assert.deepEqual(referencesCsv(doc).split('\r\n').slice(1), ["node,article,field_ref,'-2+3,node,article,1,no"]);
-  assert.deepEqual(fieldsCsv([record], () => 'Content type').split('\r\n').slice(1), [
-    "'=1+1,Content type,'-2+3,field_ref,entity_reference,1,no,'=1+1,,'@SUM(A1),-1,,",
-  ]);
+  assert.deepEqual(
+    fieldsCsv([record], () => 'Content type')
+      .split('\r\n')
+      .slice(1),
+    ["'=1+1,Content type,'-2+3,field_ref,entity_reference,1,no,'=1+1,,'@SUM(A1),-1,,"],
+  );
 });
 
 test('fills in what a sparse document leaves out', () => {
