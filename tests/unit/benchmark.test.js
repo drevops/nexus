@@ -329,7 +329,7 @@ test('says when no scenario regressed and words each result', () => {
   const markdown = benchmarkMarkdown(rows, { ...DEFAULTS, runs: 1, base: 'abc1234', head: 'def5678' });
 
   assert.match(markdown, /the median of 1 run of each scenario/);
-  assert.match(markdown, /^\| A: load \| 100 ms \| 101 ms \| \+1\.0% \|  \|$/m);
+  assert.match(markdown, /^\| A: load \| 100 ms \| 101 ms \| \+1\.0% \| {2}\|$/m);
   assert.match(markdown, /^\| A: JS heap \| 1\.0 KB \| 4\.0 KB \| \+300\.0% \| Larger \|$/m);
   assert.match(markdown, /^\| B: load \| 100 ms \| 300 ms \| \+200\.0% \| Slower \|$/m);
   assert.match(markdown, /^\| C: load \| 200 ms \| 100 ms \| -50\.0% \| Faster \|$/m);
