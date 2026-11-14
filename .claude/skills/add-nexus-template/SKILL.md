@@ -36,9 +36,9 @@ The template is only as good as the folders it reads. Work it out from the upstr
 
    Those prefixes are `MODEL_PREFIXES` in `src/parser.js`. Each folder that holds a match is a candidate for `paths`: `config/install`, `config/optional`, `recipes/<recipe>/config` and the same folders in submodules.
 
-5. **Choose the folders.** Keep a folder that ships a bundle or a field of a built-in entity type. Leave out a folder whose config depends on a module outside the template's sources (its `dependencies.module` list names it), because a site installing the distribution doesn't get it either. Leave out test modules, examples and demo content.
+5. **Choose the folders.** Keep a folder that ships a bundle or a field of a built-in entity type. Check each module in a folder's `dependencies.module` lists against what a site installing the distribution gets: Drupal core, the install profile and the recipes. Keep the folder when they install every module it lists, such as core's `menu_ui`. Leave it out when they don't, because the site doesn't get that config either. Leave out test modules, examples and demo content.
 6. **Order the sources.** List the sources in the order Drupal installs them: a dependency's folders before the folders of what depends on it. When 2 folders ship the same file, the first copy wins. A template made of several projects, such as Drupal CMS, gets 1 source per project.
-7. **Delete the clone** with `rm -rf .artifacts/tmp/<id>-source` after you choose the folders.
+7. **Delete the clone** in `.artifacts/tmp/<id>-source` after you choose the folders.
 
 ## Write the entry
 
