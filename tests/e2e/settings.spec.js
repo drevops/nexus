@@ -276,7 +276,12 @@ test.describe('Settings', { tag: '@runner-2' }, () => {
         const help = box('form-control-help-text');
         const input = box('form-control-input');
 
-        return { labelWidth: label.width > 40, helpWidth: help.width > 40, labelAboveInput: label.bottom <= input.top + 0.5, helpAboveInput: help.bottom <= input.top + 0.5 };
+        return {
+          labelWidth: label.width > 40,
+          helpWidth: help.width > 40,
+          labelAboveInput: label.bottom <= input.top + 0.5,
+          helpAboveInput: help.bottom <= input.top + 0.5,
+        };
       });
 
       expect(layout).toEqual({ labelWidth: true, helpWidth: true, labelAboveInput: true, helpAboveInput: true });
