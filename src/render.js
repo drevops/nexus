@@ -34,7 +34,7 @@ import { drawnShape, fitWidth, labelDrop, labelX, polygonPoints, wrapLabel } fro
 import { checkpoint, untracked } from './undo.js';
 import { describeNode } from './history.js';
 import { DIAGRAM_DEFAULTS, readDiagramDefaults } from './diagram-defaults.js';
-import { DETAIL_LEVELS, detailLevel, levelShowsField, nextLevel, showsFields } from './detail-levels.js';
+import { DETAIL_LEVELS, detailLevel, levelShowsField, levelToShow, nextLevel, showsFields } from './detail-levels.js';
 import { keepOrder, packColumns, tidyColumns } from './packing.js';
 import { freeArea } from './free-area.js';
 import { frameSettings } from './mode-frame.js';
@@ -2114,6 +2114,14 @@ function buildController(model, options = {}) {
     bump();
   }
 
+  // Moves to the first level that shows every field with the ids, when the
+  // level hides any of them.
+  function revealFields(ids) {
+    const fields = cy.nodes('[group="field"]').filter((field) => ids.includes(field.id()));
+
+    setDetailLevel(levelToShow(levelId, fields.map((field) => ({ kind: field.data('kind'), fieldType: field.data('fieldType') }))));
+  }
+
   $('proxy-toggle').checked = proxyMode;
   $('machine-names').checked = showMachineNames;
   $('search').value = '';
@@ -2148,6 +2156,7 @@ function buildController(model, options = {}) {
     setFieldHidden,
     detailLevel: () => levelId,
     setDetailLevel,
+    revealFields,
     rebuildCaptions,
     rebuildNotes,
     renderedBottom,

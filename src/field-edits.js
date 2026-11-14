@@ -43,6 +43,7 @@ export function setFieldType(node, fieldType) {
   node.data('fieldType', fieldType);
   bump();
   checkpoint('Changed the type of ' + describeNode(node));
+  getController().revealFields([node.id()]);
 
   return true;
 }

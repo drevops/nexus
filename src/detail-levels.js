@@ -66,6 +66,18 @@ export function lowestLevelFor(field) {
 }
 
 /**
+ * Returns the id of the first level that shows every field and is no lower
+ * than the level with the id, so the level with the id when it shows them
+ * all.
+ */
+export function levelToShow(id, fields) {
+  const index = (level) => DETAIL_LEVELS.indexOf(level);
+  const levels = [detailLevel(id) || detailLevel(DEFAULT_LEVEL), ...fields.map(lowestLevelFor)];
+
+  return levels.reduce((highest, level) => (index(level) > index(highest) ? level : highest)).id;
+}
+
+/**
  * The title of a field's go-to button while the level hides the field: it
  * names the level and the first level that shows the field.
  */

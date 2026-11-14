@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_LEVEL, DETAIL_LEVELS, detailLevel, levelHidesTitle, levelShowsField, lowestLevelFor, nextLevel, showsFields } from '../../src/detail-levels.js';
+import { DEFAULT_LEVEL, DETAIL_LEVELS, detailLevel, levelHidesTitle, levelShowsField, levelToShow, lowestLevelFor, nextLevel, showsFields } from '../../src/detail-levels.js';
 import { DIAGRAM_DEFAULTS } from '../../src/diagram-defaults.js';
 import { KIND_CALCULATED, KIND_MULTI, KIND_SINGLE, KIND_SYSTEM } from '../../src/model.js';
 
@@ -158,5 +158,27 @@ function dataProviderHiddenTitles() {
     ['references', 'text', 'Fields: References hides this field. Pick Configurable to go to it'],
     ['configurable', 'baseText', 'Fields: Configurable hides this field. Pick All to go to it'],
     ['configurable', 'baseReference', 'Fields: Configurable hides this field. Pick All to go to it'],
+  ];
+}
+
+test('finds the first level that shows every field, never below the level given', async (t) => {
+  for (const [name, level, fields, expected] of dataProviderLevelsToShow()) {
+    await t.test(name, () => {
+      assert.equal(levelToShow(level, fields.map((field) => FIELDS[field])), expected);
+    });
+  }
+});
+
+function dataProviderLevelsToShow() {
+  return [
+    ['no fields', 'references', [], 'references'],
+    ['a field the level shows', 'references', ['reference'], 'references'],
+    ['a field a higher level shows', 'entities', ['reference'], 'references'],
+    ['a text field at References', 'references', ['text'], 'configurable'],
+    ['a base field at Configurable', 'configurable', ['baseText'], 'all'],
+    ['a reference field at All', 'all', ['reference'], 'all'],
+    ['fields that need different levels', 'entities', ['reference', 'text', 'calculated'], 'configurable'],
+    ['a base field among others', 'references', ['reference', 'baseReference'], 'all'],
+    ['an unknown level', 'unknown', ['text'], 'all'],
   ];
 }

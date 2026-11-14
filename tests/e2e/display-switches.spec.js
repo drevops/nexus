@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
-import { loadExample, pickLevel, saveFrom } from './helpers.js';
+import { loadExample, pickLevel, saveFrom, selectTrackField, slSelect, tapNode, TRACK_FIELD } from './helpers.js';
 
 // The fields and edges the canvas shows, and the fields each level should
 // show, worked out from each field's kind and type in the browser.
@@ -189,6 +189,32 @@ test.describe('Display switches', { tag: '@runner-2' }, () => {
     await pickLevel(page, 'configurable');
     await page.click('#mode-build');
     await expect(page.locator('#detail-level')).toHaveText('Fields: Configurable');
+  });
+
+  test('moves to a level that shows a field created in Edit mode', async ({ page }) => {
+    await loadExample(page);
+    await page.click('#mode-build');
+    await pickLevel(page, 'references');
+    await tapNode(page, 'node.session');
+    await expect(page.locator('.handle--right')).toBeVisible();
+    const sessionFields = () => page.evaluate(() => window.__nexus.cy.nodes('[group="field"][entity="node.session"][kind!="system"]').map((field) => field.visible()));
+    const before = await sessionFields();
+
+    await page.click('.handle--right');
+
+    await expect(page.locator('#detail-level')).toHaveText('Fields: Configurable');
+    expect(await sessionFields()).toEqual(Array(before.length + 1).fill(true));
+    await expect(page.locator('#undo')).toHaveAttribute('title', /^Undo: Added field/);
+  });
+
+  test('moves to a level that shows a field whose type the Inspector changes', async ({ page }) => {
+    await selectTrackField(page);
+    await pickLevel(page, 'references');
+
+    await slSelect(page, '#inspector sl-select[title="The field type"]', 'string');
+
+    await expect(page.locator('#detail-level')).toHaveText('Fields: Configurable');
+    expect(await page.evaluate((id) => window.__nexus.cy.getElementById(id).visible(), TRACK_FIELD)).toBe(true);
   });
 
   test('applies the level to a field retyped after the level was picked', async ({ page }) => {

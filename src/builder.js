@@ -786,10 +786,12 @@ function syncSelection(exclusive) {
 }
 
 // Selects a node the user just created and records its creation.
+// A new field the detail level hides moves the level to one that shows it.
 function selectCreated(id) {
   selectNode(id);
   bump();
   checkpoint('Added ' + describeNode(cy.getElementById(id)));
+  getController().revealFields([id]);
 }
 
 // Brings the edit state in line with a graph the history changed: releases an
@@ -1124,6 +1126,7 @@ function createFields(entityId, fields) {
   selectNode(entityId);
   bump();
   checkpoint(added.length === 1 ? 'Added ' + describeNode(cy.getElementById(added[0])) : 'Added ' + added.length + ' fields to ' + describeNode(entity));
+  getController().revealFields(added);
 }
 
 function createAnnotation(form) {
