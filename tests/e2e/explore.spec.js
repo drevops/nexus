@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-import { createEntity, downloadFrom, exploreFrom, nodePositions, openDocument, openEntityMenu, slSelect, tapNode } from './helpers.js';
+import { createEntity, downloadFrom, exploreFrom, hoverNode, nodePositions, openDocument, openEntityMenu, slSelect, tapNode } from './helpers.js';
 
 test.describe('Explore', { tag: '@runner-2' }, () => {
   // Landing references Hero and Text, Hero references Image, Image
@@ -89,6 +89,29 @@ test.describe('Explore', { tag: '@runner-2' }, () => {
     await expect(page.locator('#explore-direction')).toHaveJSProperty('value', 'both');
     expect(await shownEntities(page)).toEqual(['media.image', 'node.article', 'paragraph.hero', 'taxonomy_term.tags']);
     await expect(page.locator('#undo')).toHaveAttribute('title', undo);
+  });
+
+  test('hides the tooltip of the entity when its menu opens and when the view lays the entities out', async ({ page }) => {
+    await hoverNode(page, 'media.image');
+    await expect(page.locator('#tooltip')).toBeVisible();
+
+    await openEntityMenu(page, 'media.image');
+    await expect(page.locator('#tooltip')).toBeHidden();
+
+    await hoverNode(page, 'media.image');
+    await page.click('#entity-menu [data-explore]');
+    await expect(page.locator('#tooltip')).toBeHidden();
+  });
+
+  test('keeps the status bar inside a narrow window while the view holds', async ({ page }) => {
+    await page.setViewportSize({ width: 760, height: 600 });
+    await exploreFrom(page, 'media.image');
+
+    const overflow = await page.locator('#statusbar').evaluate((bar) => bar.scrollWidth - bar.clientWidth);
+    const zoom = await page.locator('#zoom-level').boundingBox();
+
+    expect(overflow).toBe(0);
+    expect(zoom.x + zoom.width).toBeLessThanOrEqual(760);
   });
 
   test('closes the entity menu on Escape and on a press outside it', async ({ page }) => {
