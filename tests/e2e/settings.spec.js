@@ -261,4 +261,34 @@ test.describe('Settings', { tag: '@runner-2' }, () => {
     await expect(page.locator('#settings .settings-tab__label').first()).toBeVisible();
     await expect(page.locator('#settings [data-default="layout"]')).toBeVisible();
   });
+
+  // The label, help text and control of each select and input in a narrow
+  // window, as whether they have room and sit clear of each other.
+  for (const [tab, selector] of dataProviderNarrowRows()) {
+    test(`stacks the label above the control of ${selector} in a narrow window`, async ({ page }) => {
+      await page.setViewportSize({ width: 420, height: 800 });
+      await loadExample(page);
+      await openSettings(page, tab);
+
+      const layout = await page.locator('#settings ' + selector).evaluate((control) => {
+        const box = (part) => control.shadowRoot.querySelector(`[part~="${part}"]`).getBoundingClientRect();
+        const label = box('form-control-label');
+        const help = box('form-control-help-text');
+        const input = box('form-control-input');
+
+        return { labelWidth: label.width > 40, helpWidth: help.width > 40, labelAboveInput: label.bottom <= input.top + 0.5, helpAboveInput: help.bottom <= input.top + 0.5 };
+      });
+
+      expect(layout).toEqual({ labelWidth: true, helpWidth: true, labelAboveInput: true, helpAboveInput: true });
+    });
+  }
+
+  function dataProviderNarrowRows() {
+    return [
+      ['defaults', '[data-default="layout"]'],
+      ['defaults', '[data-default="level"]'],
+      ['markdown', '[data-markdown="diagram"]'],
+      ['checks', '[data-check-setting="fieldLimit"]'],
+    ];
+  }
 });

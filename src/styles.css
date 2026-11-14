@@ -2143,6 +2143,17 @@ body.is-dragging-panel * {
   font-size: 0.86rem;
 }
 
+/* In a narrow window the control leaves the label no room beside it, so the
+   label, help text and control stack. */
+@media (max-width: 40rem) {
+  .default-row::part(form-control),
+  .default-row--number::part(form-control) {
+    grid-template-areas: 'label' 'help' 'input';
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 0.3rem;
+  }
+}
+
 .setting-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
