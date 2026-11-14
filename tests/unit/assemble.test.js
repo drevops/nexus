@@ -5,6 +5,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, sep } from 'node:path';
 import { TEMPLATES, templatePath } from '../../src/templates.js';
 import { SKILL_PATH, skillUrl } from '../../src/agent-skill.js';
+import { MANUAL_PAGES } from '../../src/manual.js';
 
 const ROOT = join(import.meta.dirname, '..', '..');
 const SITE = join(ROOT, '_site');
@@ -73,6 +74,13 @@ test('ships the skill and an llms.txt that links it and the schema', () => {
   assert.equal(readFileSync(join(SITE, SKILL_PATH), 'utf8'), readFileSync(join(ROOT, SKILL_PATH), 'utf8'));
   assert.ok(llms.includes('](' + skillUrl(homepage + '/') + ')'), 'llms.txt does not link the skill');
   assert.ok(llms.includes('](' + schema.$id + ')'), 'llms.txt does not link the schema');
+});
+
+test('ships every image the manual shows', () => {
+  const images = MANUAL_PAGES.flatMap((page) => [...page.html.matchAll(/<img src="([^"]+)"/g)].map((match) => match[1]));
+
+  assert.ok(images.length > 0);
+  images.forEach((image) => assert.ok(existsSync(join(SITE, image)), image + ' is missing from _site'));
 });
 
 test('ships every template', () => {

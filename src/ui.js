@@ -38,6 +38,8 @@ import { CHECK_RULES, LEVEL_ERROR, LEVEL_WARNING, MAX_FIELD_LIMIT, isFieldLimit 
 import { titleShoelaceHosts } from './host-titles.js';
 import { CHANGE_KINDS, CHANGE_REMOVED, changeCounts, changeKind, groupChanges, propertyText } from './model-diff.js';
 import { canFocusChange, focusChange, stopComparison } from './compare.js';
+import { HelpBody } from './help-panel.js';
+import { helpTarget } from './help.js';
 import {
   getState,
   subscribe,
@@ -62,6 +64,7 @@ import {
   setTableSearch,
   setTableSort,
   openTableFor,
+  openHelp,
   PANEL_ORDER,
 } from './store.js';
 import { $ } from './dom.js';
@@ -75,9 +78,10 @@ const TITLES = {
   history: 'History',
   checks: 'Checks',
   changes: 'Changes',
+  help: 'Help',
   inspector: 'Inspector',
 };
-const WIDE = { table: true };
+const WIDE = { table: true, help: true };
 const PANEL_TOGGLES = [
   ['entities-toggle', 'entities'],
   ['table-toggle', 'table'],
@@ -85,6 +89,7 @@ const PANEL_TOGGLES = [
   ['history-toggle', 'history'],
   ['checks-toggle', 'checks'],
   ['changes-toggle', 'changes'],
+  ['help-toggle', 'help'],
 ];
 
 const SWATCHES = {
@@ -383,9 +388,9 @@ function Panel({ id, panel, dragging, header, children }) {
   const ref = useRef(null);
   const docked = !!panel.dock;
   const resizable = docked && id !== 'inspector';
-  const cls =
-    'panel' + (WIDE[id] ? ' panel--wide' : '') + (id === 'legend' ? ' panel--legend' : '') + (docked ? ' is-docked' : '') + (dragging ? ' is-dragging' : '');
+  const cls = 'panel' + (WIDE[id] ? ' panel--wide' : '') + (id === 'legend' || id === 'help' ? ' panel--' + id : '') + (docked ? ' is-docked' : '') + (dragging ? ' is-dragging' : '');
   const style = docked ? dockStyle(id, panel) : floatStyle(panel);
+  const help = helpTarget(id);
 
   return html` <section id=${id} ref=${ref} class=${cls} style=${style} onMouseDown=${() => focusPanel(id)}>
     <div
@@ -402,6 +407,16 @@ function Panel({ id, panel, dragging, header, children }) {
       <span class="panel__title">${TITLES[id]}</span>
       ${header}
       <span class="panel__spacer"></span>
+      ${help
+        ? html`<button
+            class="panel__help"
+            type="button"
+            title=${'Read about the ' + TITLES[id] + ' panel in the Help panel'}
+            aria-label=${'Help on ' + TITLES[id]}
+            onClick=${() => openHelp(help.page, help.anchor || null)}
+            dangerouslySetInnerHTML=${{ __html: icon('help-circle') }}
+          ></button>`
+        : null}
       <button
         class="panel__pin"
         type="button"
@@ -506,6 +521,9 @@ function body(id, s) {
   const controller = getController();
   if (id === 'inspector') {
     return html`<${InspectorBody} selected=${s.selected} revision=${s.revision} />`;
+  }
+  if (id === 'help') {
+    return html`<${HelpBody} help=${s.help} search=${s.helpSearch} />`;
   }
   if (!controller) {
     return null;

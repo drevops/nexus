@@ -104,6 +104,31 @@ To check a `.nexus.json` document before you open it, such as one an AI agent wr
 
 The command prints each error and warning with the JSON Pointer of the part it's about, and `OK` for a document with neither. An error marks a break in the format, a part of the model that gets lost, such as 2 entities with the same id, or a model Drupal would reject. A warning marks a part that opens but isn't drawn, such as an annotation edge to an unknown id, or a model that breaks common practice. The command also runs the rules of the Checks panel, from `src/model-checks.js`, at their default settings. It exits with 1 when any document has an error.
 
+## Write the user manual
+
+The user manual lives in `docs/`, 1 Markdown page per file. `docs/README.md` is its contents: each `## Section` heading and the `- [Title](page.md)` items under it set the sections and the page order. Each page starts with a `# Title` that matches its entry in the contents, followed by a summary of 1 or 2 sentences. Images go in `docs/assets/`, linked as `assets/name.png`.
+
+Follow 3 rules on every page:
+
+- Write the names of buttons, menus, panels, tabs and other controls in bold, such as **Save as**.
+- Write keys as code, such as `Ctrl`+`S`.
+- Link to another page as `page.md`, or to 1 of its headings as `page.md#heading`. In the app, these links open the page in the Help panel.
+
+The Help panel shows the manual from `src/manual.js`, so the app loads it with no request. After you change a page, rebuild that module and commit it with the page:
+
+    npm run build-manual
+
+The build fails on these problems and lists every one it finds:
+
+- Raw HTML
+- A page missing from the contents
+- A link to a page or heading that doesn't exist
+- An image outside `docs/assets/`, or one that no page shows
+
+The unit tests fail while `src/manual.js` is out of date.
+
+The `?` button of each panel, and of the Settings, Copy link and Create with AI dialogs, opens the page and heading that `HELP_TARGETS` in `src/help.js` names for it. When you rename 1 of those pages or headings, update `HELP_TARGETS` too. A unit test fails until they match.
+
 ## Measure performance
 
 The benchmark times how long the app takes to draw a diagram and run its interactions in Chromium. It compares your working tree with a base commit, such as the last release. Install the browser once with `npx playwright install chromium`, then compare your changes with `main`:

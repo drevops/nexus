@@ -8,7 +8,9 @@
  * `revision` counts the times the graph changed under the Inspector: by the
  * history or by an edit in the Fields table. Its forms remount on each.
  * `editMode` is true while the app is in Edit mode. `comparison` holds the
- * comparison on the canvas, as `{ source, changes }`, or null.
+ * comparison on the canvas, as `{ source, changes }`, or null. `help` holds
+ * the manual page and section the Help panel shows, and `helpSearch` the text
+ * its contents are filtered by.
  */
 
 import { DEFAULT_SORT } from './field-table.js';
@@ -17,7 +19,7 @@ const listeners = new Set();
 
 // The default order of the panels, also the order of a side rail's panels
 // until they are moved.
-export const PANEL_ORDER = ['entities', 'table', 'legend', 'history', 'checks', 'changes', 'inspector'];
+export const PANEL_ORDER = ['entities', 'table', 'legend', 'history', 'checks', 'changes', 'help', 'inspector'];
 
 const DEFAULT_POS = {
   entities: { left: 16, top: 16 },
@@ -27,6 +29,7 @@ const DEFAULT_POS = {
   history: { left: 16, bottom: 16 },
   checks: { left: 16, bottom: 16 },
   changes: { right: 16, top: 16 },
+  help: { right: 16, top: 16 },
 };
 
 // Raised panels hold distinct z-indexes in a band from PANEL_Z up, 1 per
@@ -143,6 +146,8 @@ function initialState() {
     tableSort: DEFAULT_SORT,
     editMode: false,
     comparison: null,
+    help: { page: null, anchor: null, jump: 0 },
+    helpSearch: '',
     version: 0,
     revision: 0,
     dragging: null,
@@ -224,6 +229,16 @@ export function setComparison(comparison) {
   if (state.comparison !== comparison) {
     emit({ comparison });
   }
+}
+
+// Opens the Help panel on a page and section. `jump` counts the calls, so the
+// panel scrolls to the section again when it is asked for twice.
+export function openHelp(page, anchor = null) {
+  emit({ help: { page, anchor, jump: state.help.jump + 1 }, panels: raisedPanels('help', { open: true }) });
+}
+
+export function setHelpSearch(value) {
+  emit({ helpSearch: value });
 }
 
 export function openTableFor(entityId) {

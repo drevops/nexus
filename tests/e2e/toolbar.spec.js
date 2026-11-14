@@ -39,15 +39,15 @@ test.describe('Toolbar', { tag: '@runner-2' }, () => {
     await expect(page.locator('#github-link svg.icon')).toHaveCount(1);
   });
 
-  test('keeps about, settings, theme and github on the brand line', async ({ page }) => {
-    await expect(page.locator('.toolbar__brandline #about-toggle')).toHaveCount(1);
+  test('keeps help, settings, theme and github on the brand line', async ({ page }) => {
+    await expect(page.locator('.toolbar__brandline #help-toggle')).toHaveCount(1);
     await expect(page.locator('.toolbar__brandline #settings-toggle')).toHaveCount(1);
     await expect(page.locator('.toolbar__brandline #github-link')).toHaveCount(1);
     await expect(page.locator('.toolbar__tools #settings-toggle')).toHaveCount(0);
     await expect(page.locator('#settings-toggle')).toHaveText('');
 
     const order = await page.evaluate(() => [...document.querySelectorAll('.toolbar__brandline [id]')].map((el) => el.id));
-    expect(order.indexOf('about-toggle')).toBeLessThan(order.indexOf('github-link'));
+    expect(order.indexOf('help-toggle')).toBeLessThan(order.indexOf('github-link'));
   });
 
   // The ids of the buttons and inputs in each section of the tools row.

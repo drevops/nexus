@@ -51,6 +51,7 @@ function dataProviderPanelOpeners() {
     ['history', 'id="history-toggle"'],
     ['checks', 'id="checks-toggle"'],
     ['changes', 'id="changes-toggle"'],
+    ['help', 'id="help-toggle"'],
     ['inspector', 'id="mode-build"'],
   ];
 }
@@ -68,13 +69,18 @@ test('gives each dialog the icon of every control that opens it', async (t) => {
 
 function dataProviderDialogOpeners() {
   return [
-    ['about-dialog', 'id="about-toggle"'],
     ['ai-dialog', 'id="landing-ai"'],
     ['ai-dialog', 'value="ai"'],
     ['settings', 'id="settings-toggle"'],
     ['link-dialog', 'value="link"'],
   ];
 }
+
+// The About dialog opens from the foot of the Help panel's contents, which
+// draws the same mark.
+test('gives the About dialog the Nexus mark', () => {
+  assert.equal(dialogIcon('about-dialog'), 'nexus');
+});
 
 test('labels every dialog in its header slot', () => {
   const dialogs = [...INDEX.matchAll(/<sl-dialog id="([^"]+)"([^>]*)>/g)];

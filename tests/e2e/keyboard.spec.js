@@ -12,6 +12,7 @@ import {
   buildEntities,
   dataProviderShortcutModifiers,
   activeLevel,
+  openAbout,
 } from './helpers.js';
 
 test.describe('Keyboard', { tag: '@runner-2' }, () => {
@@ -183,8 +184,7 @@ test.describe('Keyboard', { tag: '@runner-2' }, () => {
     await page.keyboard.press('Control+-');
 
     await page.click('#new-btn');
-    await page.click('#about-toggle');
-    await expect(page.locator('#about-dialog')).toHaveAttribute('open', '');
+    await openAbout(page);
     await page.keyboard.press('Control+0');
     await page.keyboard.press('Control+_');
 
@@ -415,7 +415,7 @@ test.describe('Keyboard', { tag: '@runner-2' }, () => {
     await expect(page.locator('#search')).toHaveJSProperty('value', 'f1?');
     await expect(activeLevel(page)).toHaveAttribute('data-level', 'all');
     await expect(page.locator('#entities')).toHaveCount(0);
-    await expect(page.locator('#about-dialog')).not.toBeVisible();
+    await expect(page.locator('#help')).toHaveCount(0);
     expect(await entityCount(page)).toBeGreaterThan(0);
   });
 

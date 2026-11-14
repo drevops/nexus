@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import { loadExample } from './helpers.js';
+import { loadExample, openAbout } from './helpers.js';
 
 test.describe('About', { tag: '@runner-1' }, () => {
   test.beforeEach(async ({ page }) => {
@@ -15,7 +15,7 @@ test.describe('About', { tag: '@runner-1' }, () => {
     await loadExample(page);
     await expect(page.locator('#about-dialog')).not.toBeVisible();
 
-    await page.click('#about-toggle');
+    await openAbout(page);
     await expect(page.locator('#about-dialog')).toBeVisible();
     await expect(page.locator('#about-dialog')).toContainText('content-model visual builder');
     await expect(page.locator('#about-dialog')).toContainText('Press F1 to label every button with its keyboard shortcut');
@@ -30,11 +30,11 @@ test.describe('About', { tag: '@runner-1' }, () => {
     await expect(page.locator('#about-dialog')).not.toBeVisible();
   });
 
-  test('heads the about dialog with the icon of the About button', async ({ page }) => {
+  test('heads the about dialog with the icon of the About button in the Help panel', async ({ page }) => {
     await loadExample(page);
-    await page.click('#about-toggle');
+    await openAbout(page);
 
-    const buttonIcon = await page.locator('#about-toggle > svg.icon').evaluate((svg) => svg.outerHTML);
+    const buttonIcon = await page.locator('#help-about svg.icon').evaluate((svg) => svg.outerHTML);
     const label = page.locator('#about-dialog .dialog__label');
 
     await expect(page.getByRole('dialog', { name: 'About Nexus' })).toBeVisible();
@@ -47,7 +47,7 @@ test.describe('About', { tag: '@runner-1' }, () => {
     await expect(page.locator('#landing-version')).toHaveText('dev');
 
     await loadExample(page);
-    await page.click('#about-toggle');
+    await openAbout(page);
     await expect(page.locator('#about-version')).toHaveText('dev');
   });
 });

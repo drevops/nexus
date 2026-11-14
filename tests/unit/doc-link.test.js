@@ -5,6 +5,8 @@ import { join } from 'node:path';
 import { deflateRawSync, deflateSync } from 'node:zlib';
 import { MAX_DOCUMENT_BYTES, MAX_LINK_LENGTH, decodeDocument, documentLink, encodeDocument, linkParams } from '../../src/doc-link.js';
 import { TEMPLATES, templatePath } from '../../src/templates.js';
+import { findHelpPage } from '../../src/help.js';
+import { MANUAL_PAGES } from '../../src/manual.js';
 import { savedDocument } from '../fixtures/saved-document.js';
 
 const ROOT = join(import.meta.dirname, '..', '..');
@@ -14,16 +16,6 @@ const PAGE = 'https://nexus.drevops.com/index.html';
 const DAMAGED = 'The link is incomplete or damaged.';
 
 const INDEX = readFileSync(join(ROOT, 'index.html'), 'utf8');
-
-const README = readFileSync(join(ROOT, 'README.md'), 'utf8');
-
-// The anchor GitHub gives a README heading.
-function anchor(heading) {
-  return heading
-    .toLowerCase()
-    .replace(/[^\w\- ]/g, '')
-    .replace(/ /g, '-');
-}
 
 function templateDocument(template) {
   return JSON.parse(readFileSync(join(ROOT, templatePath(template)), 'utf8'));
@@ -208,18 +200,17 @@ test('reads back the link it builds', async () => {
   assert.deepEqual(await decodeDocument(params.encoded), savedDocument);
 });
 
-test('links the Copy link dialog to the README sections on protection and limits', async (t) => {
-  const headings = [...README.matchAll(/^#+ (.+)$/gm)].map((match) => anchor(match[1]));
+test('links the Copy link dialog to the manual sections on protection and limits', async (t) => {
+  const sharing = findHelpPage(MANUAL_PAGES, 'sharing');
 
   for (const [id, section] of dataProviderDialogDocs()) {
     await t.test(id, () => {
       const link = INDEX.match(new RegExp('<a id="' + id + '" ([^>]*)>'));
 
       assert.ok(link, 'index.html has no #' + id + ' link');
-      assert.ok(link[1].includes('href="https://github.com/drevops/nexus#' + section + '"'), '#' + id + ' does not link #' + section);
-      assert.match(link[1], /target="_blank"/);
-      assert.match(link[1], /rel="noopener"/);
-      assert.ok(headings.includes(section), 'README.md has no heading for #' + section);
+      assert.ok(link[1].includes('href="docs/sharing.md#' + section + '"'), '#' + id + ' does not link docs/sharing.md#' + section);
+      assert.ok(link[1].includes('data-help-page="sharing" data-help-anchor="' + section + '"'), '#' + id + ' does not open sharing#' + section + ' in the Help panel');
+      assert.ok(sharing.headings.some((heading) => heading.id === section), 'docs/sharing.md has no heading for #' + section);
     });
   }
 });
