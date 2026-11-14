@@ -242,7 +242,9 @@ export function benchmarkMarkdown(compared, info) {
 
   if (!info.base) {
     lines.push('Head `' + info.head + '`: ' + runs + '.', '', '| Scenario | Median | Min | Max |', '| --- | ---: | ---: | ---: |');
-    compared.forEach((row) => lines.push(tableRow([row.label, formatValue(row.head, row.unit), formatValue(row.min, row.unit), formatValue(row.max, row.unit)])));
+    compared.forEach((row) =>
+      lines.push(tableRow([row.label, formatValue(row.head, row.unit), formatValue(row.min, row.unit), formatValue(row.max, row.unit)])),
+    );
 
     return lines.join('\n') + '\n';
   }

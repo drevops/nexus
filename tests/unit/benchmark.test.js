@@ -203,7 +203,12 @@ test('gives every row of the benchmark a value from a measurement', () => {
     }),
   );
 
-  assert.deepEqual(Object.keys(samples).sort(), benchmarkRows(BENCHMARK_DIAGRAMS, INTERACTIONS).map((row) => row.id).sort());
+  assert.deepEqual(
+    Object.keys(samples).sort(),
+    benchmarkRows(BENCHMARK_DIAGRAMS, INTERACTIONS)
+      .map((row) => row.id)
+      .sort(),
+  );
 });
 
 test('compares the median of the head with the base', async (t) => {
