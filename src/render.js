@@ -1536,6 +1536,7 @@ function buildController(model, options = {}) {
     clearFocus();
     // The layout moves nodes from under the pointer without a mouseout.
     $('tooltip').hidden = true;
+    clearHover();
     untracked(() => refresh(true));
     bump();
   }
@@ -1561,6 +1562,7 @@ function buildController(model, options = {}) {
     explore = null;
     clearFocus();
     $('tooltip').hidden = true;
+    clearHover();
     untracked(() => {
       if (saved.display !== displayKey()) {
         refresh(true);
