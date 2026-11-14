@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loadExample, pickLayout } from './helpers.js';
+import { editExample, loadExample, pickLayout, selectEvent } from './helpers.js';
 
 test.describe('Status bar', { tag: '@runner-1' }, () => {
   test.beforeEach(async ({ page }) => {
@@ -103,6 +103,89 @@ test.describe('Status bar', { tag: '@runner-1' }, () => {
     await expect(page.locator('#statusbar-hint')).toHaveText('');
   });
 
+  for (const [name, setup, selector] of dataProviderStageControls()) {
+    test(`echoes the description of ${name} into the status bar`, async ({ page }) => {
+      await setup(page);
+
+      const control = page.locator(selector).first();
+      const title = await control.getAttribute('title');
+      expect(title).toBeTruthy();
+
+      await control.hover();
+      await expect(page.locator('#statusbar-hint')).toHaveText(title);
+      await expect(page.locator('#statusbar .statusbar__tips')).toBeHidden();
+
+      // The zoom group starts with empty room before its buttons.
+      const zoom = await page.locator('.statusbar__zoom').boundingBox();
+      await page.mouse.move(zoom.x + 2, zoom.y + zoom.height / 2);
+      await expect(page.locator('#statusbar-hint')).toHaveText('');
+      await expect(page.locator('#statusbar .statusbar__tips')).toBeVisible();
+    });
+  }
+
+  test('describes a hovered option of a select list inside a panel', async ({ page }) => {
+    await loadExample(page);
+    await page.click('#settings-toggle');
+    await page.click('#settings [data-default="level"]');
+
+    const option = page.locator('#settings [data-default="level"] sl-option').nth(1);
+    await expect(option).toBeVisible();
+    const title = await option.getAttribute('title');
+    expect(title).toBeTruthy();
+
+    await option.hover();
+    await expect(page.locator('#statusbar-hint')).toHaveText(title);
+  });
+
+  test('moves the status bar hint between controls in different regions', async ({ page }) => {
+    await loadExample(page);
+    await page.click('#entities-toggle');
+
+    await page.locator('#entities .panel__close').hover();
+    await expect(page.locator('#statusbar-hint')).toHaveText('Close panel');
+
+    await page.locator('#fit').hover();
+    await expect(page.locator('#statusbar-hint')).toHaveText('Fit the whole diagram in view');
+
+    await page.locator('#layout-run').hover();
+    await expect(page.locator('#statusbar-hint')).toHaveText(LAYOUT_HINT);
+  });
+
+  test('drops the status bar hint of a panel closed from under the pointer', async ({ page }) => {
+    await loadExample(page);
+    await page.click('#entities-toggle');
+
+    await page.locator('#entities .panel__close').hover();
+    await expect(page.locator('#statusbar-hint')).toHaveText('Close panel');
+
+    await page.mouse.down();
+    await page.mouse.up();
+    await expect(page.locator('#entities')).toHaveCount(0);
+    await expect(page.locator('#statusbar-hint')).not.toHaveText('Close panel');
+  });
+
+  test('falls back to the title of an ancestor when the hovered control loses its own', async ({ page }) => {
+    await loadExample(page);
+    await page.click('#entities-toggle');
+
+    await page.locator('#entities .panel__close').hover();
+    await expect(page.locator('#statusbar-hint')).toHaveText('Close panel');
+
+    const headTitle = await page.locator('#entities .panel__head').getAttribute('title');
+    await page.locator('#entities .panel__close').evaluate((el) => el.removeAttribute('title'));
+    await expect(page.locator('#statusbar-hint')).toHaveText(headTitle);
+  });
+
+  test('shows the status bar tips over a control with an empty title', async ({ page }) => {
+    await loadExample(page);
+    await page.click('#entities-toggle');
+
+    await page.locator('#entities .panel__close').evaluate((el) => el.setAttribute('title', ''));
+    await page.locator('#entities .panel__close').hover();
+    await expect(page.locator('#statusbar-hint')).toHaveText('');
+    await expect(page.locator('#statusbar .statusbar__tips')).toBeVisible();
+  });
+
   test('shows interaction tips in the middle of the status bar', async ({ page }) => {
     await expect(page.locator('#statusbar .statusbar__tips')).toContainText('Right-click');
   });
@@ -128,6 +211,25 @@ test.describe('Status bar', { tag: '@runner-1' }, () => {
       expect(stage.y + stage.height).toBeLessThanOrEqual(statusbar.y);
       expect(statusbar.y + statusbar.height).toBeLessThanOrEqual(800);
     });
+  }
+
+  function dataProviderStageControls() {
+    const withPanel = (toggle) => async (page) => {
+      await loadExample(page);
+      await page.click(toggle);
+    };
+
+    return [
+      ['a panel pin', withPanel('#entities-toggle'), '#entities .panel__pin'],
+      ['a panel grip', withPanel('#entities-toggle'), '#entities .panel__grip'],
+      ['an Entities panel row', withPanel('#entities-toggle'), '#entities .entity-row__name'],
+      ['a Fields table header', withPanel('#table-toggle'), '#table .field-table__sort'],
+      ['a History panel version', withPanel('#history-toggle'), '#history .panel__body [title]'],
+      ['a Settings control', withPanel('#settings-toggle'), '#settings [data-default="layout"]'],
+      ['an Inspector control', (page) => selectEvent(page, 1), '#inspector .panel__body [title]'],
+      ['a canvas handle', (page) => selectEvent(page, 1), '.handle--right'],
+      ['an edit palette button', (page) => editExample(page), '#add-node'],
+    ];
   }
 
   function dataProviderStatusbarWidths() {

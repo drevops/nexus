@@ -105,12 +105,17 @@ function hideLoader() {
   $('loader').hidden = true;
 }
 
-// The landing covers the toolbar, the canvas and the status bar, so they
-// leave the tab order and the accessibility tree while it is open.
+// The toolbar, the stage with its panels and canvas, and the status bar.
+function appRegions() {
+  return [document.querySelector('.toolbar'), $('stage-root'), $('statusbar')];
+}
+
+// The landing covers the app regions, so they leave the tab order and the
+// accessibility tree while it is open.
 function setLandingOpen(open) {
   $('landing').hidden = !open;
 
-  for (const region of [document.querySelector('.toolbar'), $('stage-root'), $('statusbar')]) {
+  for (const region of appRegions()) {
     region.inert = open;
   }
 }
@@ -604,31 +609,31 @@ function initTheme() {
 
 // Echo a hovered control's title into the status bar immediately, so the
 // description appears without waiting for the native tooltip.
+// The hint is the title of the nearest titled ancestor in the region, as the
+// native tooltip picks it, and an empty title shows the default tips.
 function initStatusbar() {
   const hint = $('statusbar-hint');
   let hovered = null;
+  let hoveredRegion = null;
 
-  const echo = (el) => {
-    hovered = el;
-    hint.textContent = el ? el.getAttribute('title') || '' : '';
+  const echo = (target, region) => {
+    hovered = target;
+    hoveredRegion = region;
+    const el = target && target.isConnected ? target.closest('[title]') : null;
+    hint.textContent = el && region.contains(el) ? el.getAttribute('title') : '';
   };
 
   // A title change under a still pointer fires no mouseover, so watch the
-  // attribute too.
-  const observer = new MutationObserver(() => echo(hovered));
+  // attribute too, on the hovered element and on its ancestors.
+  const observer = new MutationObserver(() => echo(hovered, hoveredRegion));
 
-  document.querySelectorAll('.toolbar, .statusbar').forEach((zone) => {
-    const echoTarget = (evt) => {
-      const el = evt.target.closest('[title]');
-      echo(el && zone.contains(el) ? el : null);
-    };
-
+  for (const region of appRegions()) {
     // Captured, because a Shoelace menu item stops its mouseover from
     // bubbling.
-    zone.addEventListener('mouseover', echoTarget, true);
-    zone.addEventListener('mouseleave', () => echo(null));
-    observer.observe(zone, { attributes: true, attributeFilter: ['title'], subtree: true });
-  });
+    region.addEventListener('mouseover', (evt) => echo(evt.target, region), true);
+    region.addEventListener('mouseleave', () => echo(null, null));
+    observer.observe(region, { attributes: true, attributeFilter: ['title'], subtree: true });
+  }
 }
 
 // Marks each tool section that ends a wrapped line, so its separator hides.
