@@ -24,30 +24,76 @@ test.describe('Templates', { tag: '@runner-2' }, () => {
     await page.goto('/index.html');
   });
 
-  test('shows a loading screen while a template loads', async ({ page }) => {
-    await page.route('**/templates/civictheme.nexus.json', async (route) => {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      route.continue();
+  // Holds a template's diagram until the returned function is called.
+  async function holdDiagram(page, id) {
+    let release;
+    const held = new Promise((resolve) => {
+      release = resolve;
     });
+
+    await page.route('**/templates/' + id + '.nexus.json', async (route) => {
+      await held;
+      await route.continue();
+    });
+
+    return release;
+  }
+
+  function progressOpacity(page, id) {
+    return page.locator('#template-' + id + ' .template-row__progress').evaluate((element) => Number(getComputedStyle(element).opacity));
+  }
+
+  test('shows a loading screen when a template is opened before its diagram has downloaded', async ({ page }) => {
+    const release = await holdDiagram(page, 'civictheme');
+
+    await page.goto('/index.html');
+    await expect(page.locator('#landing')).not.toHaveAttribute('aria-busy');
     await page.click('#template-civictheme');
     await expect(page.locator('#loader')).toBeVisible();
+
+    release();
+
     await waitForGraph(page);
     await expect(page.locator('#loader')).toBeHidden();
   });
 
-  test('shows a loader in place of the templates until the app starts', async ({ page }) => {
+  test('draws the template rows and downloads their diagrams before the app starts', async ({ page }) => {
     const start = await openBeforeAppStarts(page);
-    const loader = page.locator('#template-list .template-list__loader');
+    const rows = page.locator('.template-row');
 
-    await expect(loader).toBeVisible();
-    await expect(loader).toHaveText('Loading templates…');
-    await expect(loader).toHaveAttribute('role', 'status');
-    await expect(page.locator('.template-row')).toHaveCount(0);
+    await expect(rows).toHaveCount(TEMPLATES.length);
+
+    for (const template of TEMPLATES) {
+      await expect(page.locator('#template-' + template.id)).toHaveAttribute('data-download', 'done');
+    }
+
+    // A downloaded row opens nothing until the app starts, so its bar stays.
+    await expect.poll(() => progressOpacity(page, 'civictheme')).toBe(1);
+    expect(await page.locator('#template-civictheme').evaluate((element) => element.style.getPropertyValue('--progress'))).toBe('1');
 
     start();
 
-    await expect(page.locator('.template-row')).toHaveCount(TEMPLATES.length);
-    await expect(loader).toHaveCount(0);
+    await expect(page.locator('#landing')).not.toHaveAttribute('aria-busy');
+    await expect.poll(() => progressOpacity(page, 'civictheme')).toBe(0);
+  });
+
+  test('shows the download of a template diagram as a bar along its row', async ({ page }) => {
+    const release = await holdDiagram(page, 'civictheme');
+    const row = page.locator('#template-civictheme');
+
+    await page.goto('/index.html');
+    await expect(page.locator('#landing')).not.toHaveAttribute('aria-busy');
+
+    await expect(row).toHaveAttribute('data-download', 'loading');
+    await expect(row).toHaveAttribute('aria-busy', 'true');
+    await expect.poll(() => progressOpacity(page, 'civictheme')).toBe(1);
+    await expect(page.locator('#template-umami')).toHaveAttribute('data-download', 'done');
+
+    release();
+
+    await expect(row).toHaveAttribute('data-download', 'done');
+    await expect(row).not.toHaveAttribute('aria-busy');
+    await expect.poll(() => progressOpacity(page, 'civictheme')).toBe(0);
   });
 
   test('lists every template with its badge, its counts and a drawn mark', async ({ page }) => {
@@ -118,7 +164,7 @@ test.describe('Templates', { tag: '@runner-2' }, () => {
     ];
   }
 
-  test('loads a template as 1 saved diagram', async ({ page }) => {
+  test('downloads each template diagram once and opens a template with no further request', async ({ page }) => {
     const fetched = [];
 
     page.on('request', (request) => {
@@ -127,15 +173,45 @@ test.describe('Templates', { tag: '@runner-2' }, () => {
       }
     });
 
+    await page.goto('/index.html');
+
+    for (const template of TEMPLATES) {
+      await expect(page.locator('#template-' + template.id)).toHaveAttribute('data-download', 'done');
+    }
+
+    expect([...fetched].sort()).toEqual(TEMPLATES.map((template) => '/templates/' + template.id + '.nexus.json').sort());
+
     await page.click('#template-civictheme');
     await waitForGraph(page);
 
-    expect(fetched).toEqual(['/templates/civictheme.nexus.json']);
+    expect(fetched).toHaveLength(TEMPLATES.length);
+  });
+
+  test('downloads the template diagrams once a link that fails to open shows the landing', async ({ page }) => {
+    const fetched = [];
+
+    page.on('request', (request) => {
+      if (request.url().includes('/templates/')) {
+        fetched.push(new URL(request.url()).pathname);
+      }
+    });
+
+    // A fresh document, since a change of fragment alone keeps the page.
+    await page.goto('about:blank');
+    await page.goto('/index.html#doc=broken');
+    await expect(page.locator('#landing-error')).toHaveAttribute('open', '');
+
+    for (const template of TEMPLATES) {
+      await expect(page.locator('#template-' + template.id)).toHaveAttribute('data-download', 'done');
+    }
+
+    expect(fetched).toHaveLength(TEMPLATES.length);
   });
 
   for (const [name, response, message] of dataProviderBrokenTemplates()) {
     test(`reports ${name} on the landing screen`, async ({ page }) => {
       await page.route('**/templates/civictheme.nexus.json', (route) => route.fulfill(response));
+      await page.goto('/index.html');
       await page.click('#template-civictheme');
 
       await expect(page.locator('#landing-error')).toHaveAttribute('open', '');
@@ -152,14 +228,62 @@ test.describe('Templates', { tag: '@runner-2' }, () => {
     ];
   }
 
+  test('downloads a diagram that does not open again on the next click', async ({ page }) => {
+    let broken = 1;
+
+    await page.route('**/templates/civictheme.nexus.json', (route) => {
+      if (broken-- > 0) {
+        return route.fulfill({ status: 200, contentType: 'application/json', body: '{ "nexus": 1 }' });
+      }
+
+      return route.continue();
+    });
+    await page.goto('/index.html');
+    await page.click('#template-civictheme');
+
+    await expect(page.locator('#landing-error-text')).toHaveText('Could not load ' + templateTitle(template('civictheme')) + ': Not a valid Nexus document.');
+    await expect(page.locator('#template-civictheme')).toHaveAttribute('data-download', 'failed');
+
+    await page.click('#template-civictheme');
+    await waitForGraph(page);
+
+    await expect(page.locator('#diagram-title')).toHaveJSProperty('value', templateTitle(template('civictheme')));
+  });
+
   test('asks to check the connection when a template cannot be downloaded', async ({ page }) => {
     await page.route('**/templates/civictheme.nexus.json', (route) => route.abort());
+    await page.goto('/index.html');
     await page.click('#template-civictheme');
 
     await expect(page.locator('#landing-error-text')).toHaveText(
       'Could not load ' + templateTitle(template('civictheme')) + ': civictheme.nexus.json could not be downloaded. Check your connection and try again.',
     );
     await expect(page.locator('#landing')).toBeVisible();
+  });
+
+  test('marks a row whose diagram fails to download and downloads it again when clicked', async ({ page }) => {
+    let failures = 1;
+    const row = page.locator('#template-civictheme');
+
+    await page.route('**/templates/civictheme.nexus.json', (route) => {
+      if (failures-- > 0) {
+        return route.abort();
+      }
+
+      return route.continue();
+    });
+    await page.goto('/index.html');
+
+    await expect(row).toHaveAttribute('data-download', 'failed');
+    await expect(row).toHaveAttribute('title', 'The ' + templateTitle(template('civictheme')) + ' diagram could not be downloaded. Click to try again.');
+    await expect.poll(() => progressOpacity(page, 'civictheme')).toBe(1);
+
+    await page.click('#template-civictheme');
+    await waitForGraph(page);
+
+    await expect(page.locator('#diagram-title')).toHaveJSProperty('value', templateTitle(template('civictheme')));
+    await expect(row).toHaveAttribute('data-download', 'done');
+    await expect(row).toHaveAttribute('title', 'Load the ' + templateTitle(template('civictheme')) + ' content model');
   });
 
   test('loads a template from the keyboard', async ({ page }) => {

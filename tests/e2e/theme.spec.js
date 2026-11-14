@@ -60,7 +60,8 @@ test.describe('Theme', { tag: '@runner-1' }, () => {
 
       const start = await openBeforeAppStarts(page);
 
-      await expect(page.locator('#template-list .template-list__loader')).toBeVisible();
+      await expect(page.locator('.landing__card')).toBeVisible();
+      await expect(page.locator('#landing')).toHaveAttribute('aria-busy', 'true');
       expect(await page.evaluate(() => document.documentElement.classList.contains('sl-theme-dark'))).toBe(dark);
 
       start();

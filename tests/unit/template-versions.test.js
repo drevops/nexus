@@ -120,21 +120,22 @@ test('orders bundle counts by entity type, with unknown types last', () => {
 
 test('leaves src/templates.js unchanged when written with the values it holds', () => {
   for (const template of TEMPLATES) {
-    const update = { version: template.version, refs: template.sources.map((source) => source.ref), counts: template.counts };
+    const update = { version: template.version, refs: template.sources.map((source) => source.ref), counts: template.counts, size: template.size };
 
     assert.equal(rewriteTemplates(TEMPLATES_SOURCE, template.id, update), TEMPLATES_SOURCE, template.id);
   }
 });
 
-test('writes the version, refs and counts of 1 template into src/templates.js and leaves the others alone', () => {
+test('writes the version, refs, counts and size of 1 template into src/templates.js and leaves the others alone', () => {
   for (const template of TEMPLATES) {
     const refs = template.sources.map((source, index) => '99.0.' + index);
-    const text = rewriteTemplates(TEMPLATES_SOURCE, template.id, { version: '99.9.9', refs, counts: { paragraph: 2, node: 1 } });
+    const text = rewriteTemplates(TEMPLATES_SOURCE, template.id, { version: '99.9.9', refs, counts: { paragraph: 2, node: 1 }, size: 1234 });
     const entry = entryOf(text, template.id);
     const written = [...entry.matchAll(/^ {8}ref: '([^']+)',$/gm)].map((match) => match[1]);
 
     assert.match(entry, /^ {4}version: '99\.9\.9',$/m, template.id);
     assert.match(entry, /^ {4}counts: \{ node: 1, paragraph: 2 \},$/m, template.id);
+    assert.match(entry, /^ {4}size: 1234,$/m, template.id);
     assert.deepEqual(written, refs, template.id);
 
     for (const other of TEMPLATES.filter((candidate) => candidate.id !== template.id)) {
@@ -146,7 +147,7 @@ test('writes the version, refs and counts of 1 template into src/templates.js an
 test('refuses to rewrite an entry that does not have the expected shape', async (t) => {
   for (const [name, text, id, refs, message] of dataProviderRewriteErrors()) {
     await t.test(name, () => {
-      assert.throws(() => rewriteTemplates(text, id, { version: '1.0.0', refs, counts: {} }), message);
+      assert.throws(() => rewriteTemplates(text, id, { version: '1.0.0', refs, counts: {}, size: 1 }), message);
     });
   }
 });
@@ -155,15 +156,30 @@ function dataProviderRewriteErrors() {
   const entry = (lines) => ['export const TEMPLATES = [', '  {', "    id: 'cms',", ...lines, '  },', '];', ''].join('\n');
   const version = "    version: '1.0.0',";
   const counts = '    counts: { node: 1 },';
+  const size = '    size: 100,';
   const ref = "        ref: '1.0.0',";
 
   return [
-    ['an unknown template', entry([version, counts, ref]), 'other', ['1.0.0'], /^Error: No template other in src\/templates\.js$/],
-    ['a missing version', entry([counts, ref]), 'cms', ['1.0.0'], /^Error: cms in src\/templates\.js: Expected 1 version line, found 0$/],
-    ['2 counts objects', entry([version, counts, counts, ref]), 'cms', ['1.0.0'], /^Error: cms in src\/templates\.js: Expected 1 counts object, found 2$/],
-    ['a missing counts object', entry([version, ref]), 'cms', ['1.0.0'], /^Error: cms in src\/templates\.js: Expected 1 counts object, found 0$/],
-    ['fewer refs than sources', entry([version, counts, ref]), 'cms', ['1.0.0', '2.0.0'], /^Error: cms in src\/templates\.js: Expected 2 ref lines, found 1$/],
-    ['more refs than sources', entry([version, counts, ref, ref]), 'cms', ['1.0.0'], /^Error: cms in src\/templates\.js: Expected 1 ref lines, found 2$/],
+    ['an unknown template', entry([version, counts, size, ref]), 'other', ['1.0.0'], /^Error: No template other in src\/templates\.js$/],
+    ['a missing version', entry([counts, size, ref]), 'cms', ['1.0.0'], /^Error: cms in src\/templates\.js: Expected 1 version line, found 0$/],
+    [
+      '2 counts objects',
+      entry([version, counts, counts, size, ref]),
+      'cms',
+      ['1.0.0'],
+      /^Error: cms in src\/templates\.js: Expected 1 counts object, found 2$/,
+    ],
+    ['a missing counts object', entry([version, size, ref]), 'cms', ['1.0.0'], /^Error: cms in src\/templates\.js: Expected 1 counts object, found 0$/],
+    ['a missing size', entry([version, counts, ref]), 'cms', ['1.0.0'], /^Error: cms in src\/templates\.js: Expected 1 size line, found 0$/],
+    ['2 sizes', entry([version, counts, size, size, ref]), 'cms', ['1.0.0'], /^Error: cms in src\/templates\.js: Expected 1 size line, found 2$/],
+    [
+      'fewer refs than sources',
+      entry([version, counts, size, ref]),
+      'cms',
+      ['1.0.0', '2.0.0'],
+      /^Error: cms in src\/templates\.js: Expected 2 ref lines, found 1$/,
+    ],
+    ['more refs than sources', entry([version, counts, size, ref, ref]), 'cms', ['1.0.0'], /^Error: cms in src\/templates\.js: Expected 1 ref lines, found 2$/],
   ];
 }
 
@@ -171,7 +187,7 @@ test('rewrites an entry at any indentation, with counts over several lines and k
   for (const [name, lines, expected] of dataProviderRewriteShapes()) {
     await t.test(name, () => {
       const text = ['export const TEMPLATES = [', ...lines, '];', ''].join('\n');
-      const rewritten = rewriteTemplates(text, 'cms', { version: '2.0.0', refs: ['11.1.0', '2.0.0'], counts: { paragraph: 4, node: 2 } });
+      const rewritten = rewriteTemplates(text, 'cms', { version: '2.0.0', refs: ['11.1.0', '2.0.0'], counts: { paragraph: 4, node: 2 }, size: 2048 });
 
       assert.equal(rewritten, ['export const TEMPLATES = [', ...expected, '];', ''].join('\n'));
     });
@@ -182,13 +198,42 @@ function dataProviderRewriteShapes() {
   return [
     [
       'tabs',
-      ['\t{', "\t\tid: 'cms',", "\t\tversion: '1.0.0',", '\t\tcounts: { node: 1 },', "\t\t\tref: '11.0.0',", "\t\t\tref: '1.0.0',", '\t},'],
-      ['\t{', "\t\tid: 'cms',", "\t\tversion: '2.0.0',", '\t\tcounts: { node: 2, paragraph: 4 },', "\t\t\tref: '11.1.0',", "\t\t\tref: '2.0.0',", '\t},'],
+      ['\t{', "\t\tid: 'cms',", "\t\tversion: '1.0.0',", '\t\tcounts: { node: 1 },', '\t\tsize: 1024,', "\t\t\tref: '11.0.0',", "\t\t\tref: '1.0.0',", '\t},'],
+      [
+        '\t{',
+        "\t\tid: 'cms',",
+        "\t\tversion: '2.0.0',",
+        '\t\tcounts: { node: 2, paragraph: 4 },',
+        '\t\tsize: 2048,',
+        "\t\t\tref: '11.1.0',",
+        "\t\t\tref: '2.0.0',",
+        '\t},',
+      ],
     ],
     [
-      'counts over several lines before the version',
-      ['  {', "    id: 'cms',", '    counts: {', '      node: 1,', '    },', "    version: '1.0.0',", "      ref: '11.0.0',", "      ref: '1.0.0'", '  },'],
-      ['  {', "    id: 'cms',", '    counts: { node: 2, paragraph: 4 },', "    version: '2.0.0',", "      ref: '11.1.0',", "      ref: '2.0.0'", '  },'],
+      'counts over several lines before the version and the size last',
+      [
+        '  {',
+        "    id: 'cms',",
+        '    counts: {',
+        '      node: 1,',
+        '    },',
+        "    version: '1.0.0',",
+        "      ref: '11.0.0',",
+        "      ref: '1.0.0'",
+        '    size: 1024',
+        '  },',
+      ],
+      [
+        '  {',
+        "    id: 'cms',",
+        '    counts: { node: 2, paragraph: 4 },',
+        "    version: '2.0.0',",
+        "      ref: '11.1.0',",
+        "      ref: '2.0.0'",
+        '    size: 2048',
+        '  },',
+      ],
     ],
     [
       'the entry after another template',
@@ -198,6 +243,7 @@ function dataProviderRewriteShapes() {
         "    id: 'cms',",
         "    version: '1.0.0',",
         '    counts: {},',
+        '    size: 0,',
         "    ref: '11.0.0',",
         "    ref: '1.0.0',",
         '  },',
@@ -208,6 +254,7 @@ function dataProviderRewriteShapes() {
         "    id: 'cms',",
         "    version: '2.0.0',",
         '    counts: { node: 2, paragraph: 4 },',
+        '    size: 2048,',
         "    ref: '11.1.0',",
         "    ref: '2.0.0',",
         '  },',

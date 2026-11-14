@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readdirSync, readFileSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { TEMPLATES, summaryCounts, templatePath, templateTitle } from '../../src/templates.js';
 import { documentToModel } from '../../src/document.js';
@@ -72,6 +72,12 @@ test('draws exactly the advertised bundles from each template diagram', () => {
     }
 
     assert.deepEqual(drawn, template.counts, template.id);
+  }
+});
+
+test('records the size of each template diagram in bytes', () => {
+  for (const template of TEMPLATES) {
+    assert.equal(template.size, statSync(join(ROOT, templatePath(template))).size, template.id);
   }
 });
 
