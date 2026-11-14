@@ -466,12 +466,18 @@ function joined(lines) {
  * starts with MERMAID_LARGE_NOTE.
  */
 export function toMermaid(graph, title = '', maxText = MERMAID_MAX_TEXT) {
+  const entities = graph.nodes.filter((node) => node.group === 'entity').length;
+  const large = entities > MERMAID_MAX_ENTITIES || graph.edges.length > MERMAID_MAX_EDGES;
+
+  // A graph that takes the large note anyway counts it against the limit.
+  const size = (candidate) => joined(candidate.lines).length + (large ? MERMAID_LARGE_NOTE.length + 1 : 0);
+
   let compaction = FULL_MERMAID;
   const notes = [];
   let result = mermaidLines(graph, title, compaction, '');
 
   for (const step of MERMAID_COMPACTIONS) {
-    if (joined(result.lines).length <= maxText) {
+    if (size(result) <= maxText) {
       break;
     }
 
@@ -480,9 +486,7 @@ export function toMermaid(graph, title = '', maxText = MERMAID_MAX_TEXT) {
     result = mermaidLines(graph, title, compaction, mermaidCompactionNote(notes));
   }
 
-  const entities = graph.nodes.filter((node) => node.group === 'entity').length;
-
-  if (entities > MERMAID_MAX_ENTITIES || graph.edges.length > MERMAID_MAX_EDGES || joined(result.lines).length > maxText) {
+  if (large || size(result) > maxText) {
     result.lines.splice(result.header, 0, MERMAID_LARGE_NOTE);
   }
 
@@ -509,8 +513,9 @@ function dotAttributes(attributes) {
   );
 }
 
+// Graphviz expands '\N', '\G' and the other escapes in HTML-like text too.
 function dotHtml(value) {
-  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return value.replace(/\\/g, '\\\\').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 // A label with captions is an HTML-like label, so the captions can be smaller

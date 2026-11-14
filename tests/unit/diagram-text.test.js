@@ -318,6 +318,12 @@ test('escapes captions in both formats', () => {
   assert.ok(toDot(graph).includes('[label=<A &amp; B<BR/><FONT POINT-SIZE="9" COLOR="#6b7280">&lt;i&gt;&quot;T&quot;&lt;/i&gt; #1</FONT>>, '), toDot(graph));
 });
 
+test('keeps the Graphviz escapes of a captioned DOT label literal', () => {
+  const graph = canvasGraph({ nodes: [{ data: { id: 'node.a', group: 'entity', entityType: 'node', label: 'A \\N \\G' } }] }, { typeLabel: () => 'T \\L' });
+
+  assert.ok(toDot(graph).includes('[label=<A \\\\N \\\\G<BR/><FONT POINT-SIZE="9" COLOR="#6b7280">T \\\\L</FONT>>, '), toDot(graph));
+});
+
 test('keeps a hex colour for each entity type and drops anything else', async (t) => {
   for (const [name, color, expected] of dataProviderColors()) {
     await t.test(name, () => {
@@ -674,6 +680,24 @@ test('shrinks a flowchart past the character limit 1 step at a time and notes wh
   const last = toMermaid(graph, 'T', limit).split('\n');
   assert.equal(last[7], MERMAID_LARGE_NOTE);
   assert.equal(last[8], note('node ids are shortened, machine names are left out and entity type captions are left out'));
+});
+
+test('counts the large-diagram note against the limit while it shrinks the flowchart', () => {
+  const nodes = Array.from({ length: MERMAID_MAX_ENTITIES + 1 }, (_, index) => ({
+    data: { id: 'node.bundle_' + index, group: 'entity', entityType: 'node', label: 'B' + index },
+  }));
+  const graph = canvasGraph({ nodes: nodes });
+  const full = toMermaid(graph, 'T', Infinity);
+
+  // Without the note the full flowchart fits this limit; with it, it doesn't.
+  const limit = full.length - 1;
+  const output = toMermaid(graph, 'T', limit);
+  const lines = output.split('\n');
+
+  assert.ok(full.length - MERMAID_LARGE_NOTE.length - 1 <= limit);
+  assert.ok(output.length <= limit, output.length + ' > ' + limit);
+  assert.equal(lines[7], MERMAID_LARGE_NOTE);
+  assert.equal(lines[8], "%% This diagram is past Mermaid's 50,000-character limit, so node ids are shortened.");
 });
 
 test('keeps the new syntax for shapes the classic syntax lacks', async (t) => {
