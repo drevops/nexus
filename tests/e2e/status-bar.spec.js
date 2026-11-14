@@ -17,6 +17,7 @@ test.describe('Status bar', { tag: '@runner-1' }, () => {
   });
 
   const LAYOUT_HINT = 'Stack the entities in columns that fill the screen';
+  const TIPS = /^F1 shows keyboard shortcuts · /;
 
   test('echoes a hovered control description into the status bar', async ({ page }) => {
     await loadExample(page);
@@ -25,19 +26,33 @@ test.describe('Status bar', { tag: '@runner-1' }, () => {
     await expect(page.locator('#statusbar-hint')).toHaveText(LAYOUT_HINT);
   });
 
-  test('shows a hovered control description in place of the status bar tips', async ({ page }) => {
+  test('shows a hovered control description in the same place as the status bar tips', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await loadExample(page);
 
+    const hint = page.locator('#statusbar-hint');
+    await expect(hint).toHaveText(TIPS);
+    await expect(hint).toHaveClass(/is-tips/);
+    const tipsBox = await hint.boundingBox();
+
     await page.locator('#layout-run').hover();
-    await expect(page.locator('#statusbar-hint')).toHaveText(LAYOUT_HINT);
-    await expect(page.locator('#statusbar-hint')).toBeVisible();
-    await expect(page.locator('#statusbar .statusbar__tips')).toBeHidden();
-    expect((await page.locator('#statusbar-hint').boundingBox()).width).toBeGreaterThan(200);
+    await expect(hint).toHaveText(LAYOUT_HINT);
+    await expect(hint).not.toHaveClass(/is-tips/);
+    expect(await hint.boundingBox()).toEqual(tipsBox);
+    expect(await hint.evaluate((el) => getComputedStyle(el).textAlign)).not.toBe('center');
+    expect(tipsBox.width).toBeGreaterThan(200);
 
     await page.locator('#cy').hover();
-    await expect(page.locator('#statusbar-hint')).toHaveText('');
-    await expect(page.locator('#statusbar .statusbar__tips')).toBeVisible();
+    await expect(hint).toHaveText(TIPS);
+    await expect(hint).toHaveClass(/is-tips/);
+    expect(await hint.boundingBox()).toEqual(tipsBox);
+  });
+
+  test('keeps a single text slot in the status bar', async ({ page }) => {
+    await loadExample(page);
+
+    const texts = await page.locator('#statusbar > span').evaluateAll((spans) => spans.map((span) => span.id));
+    expect(texts).toEqual(['statusbar-hint']);
   });
 
   test('describes the picked layout when the layout button is hovered', async ({ page }) => {
@@ -100,7 +115,7 @@ test.describe('Status bar', { tag: '@runner-1' }, () => {
     await page.locator('#cy').hover();
     await page.locator('#theme-toggle').evaluate((el) => el.click());
     await expect(page.locator('#theme-toggle')).toHaveAttribute('title', 'Switch to dark theme');
-    await expect(page.locator('#statusbar-hint')).toHaveText('');
+    await expect(page.locator('#statusbar-hint')).toHaveText(TIPS);
   });
 
   for (const [name, setup, selector] of dataProviderStageControls()) {
@@ -113,13 +128,12 @@ test.describe('Status bar', { tag: '@runner-1' }, () => {
 
       await control.hover();
       await expect(page.locator('#statusbar-hint')).toHaveText(title);
-      await expect(page.locator('#statusbar .statusbar__tips')).toBeHidden();
+      await expect(page.locator('#statusbar-hint')).not.toHaveClass(/is-tips/);
 
-      // The zoom group starts with empty room before its buttons.
-      const zoom = await page.locator('.statusbar__zoom').boundingBox();
-      await page.mouse.move(zoom.x + 2, zoom.y + zoom.height / 2);
-      await expect(page.locator('#statusbar-hint')).toHaveText('');
-      await expect(page.locator('#statusbar .statusbar__tips')).toBeVisible();
+      const hint = await page.locator('#statusbar-hint').boundingBox();
+      await page.mouse.move(hint.x + hint.width / 2, hint.y + hint.height / 2);
+      await expect(page.locator('#statusbar-hint')).toHaveText(TIPS);
+      await expect(page.locator('#statusbar-hint')).toHaveClass(/is-tips/);
     });
   }
 
@@ -182,18 +196,18 @@ test.describe('Status bar', { tag: '@runner-1' }, () => {
 
     await page.locator('#entities .panel__close').evaluate((el) => el.setAttribute('title', ''));
     await page.locator('#entities .panel__close').hover();
-    await expect(page.locator('#statusbar-hint')).toHaveText('');
-    await expect(page.locator('#statusbar .statusbar__tips')).toBeVisible();
+    await expect(page.locator('#statusbar-hint')).toHaveText(TIPS);
+    await expect(page.locator('#statusbar-hint')).toHaveClass(/is-tips/);
   });
 
-  test('shows interaction tips in the middle of the status bar', async ({ page }) => {
-    await expect(page.locator('#statusbar .statusbar__tips')).toContainText('Right-click');
+  test('shows interaction tips in the status bar', async ({ page }) => {
+    await expect(page.locator('#statusbar-hint')).toContainText('Right-click');
   });
 
   // The tips are cut off at the end in a narrow window, so the pointer to the
   // shortcuts comes first.
   test('leads the status bar tips with the F1 shortcut view', async ({ page }) => {
-    await expect(page.locator('#statusbar .statusbar__tips')).toHaveText(/^F1 shows keyboard shortcuts · /);
+    await expect(page.locator('#statusbar-hint')).toHaveText(TIPS);
   });
 
   for (const width of dataProviderStatusbarWidths()) {

@@ -608,11 +608,12 @@ function initTheme() {
 }
 
 // Echo a hovered control's title into the status bar immediately, so the
-// description appears without waiting for the native tooltip.
-// The hint is the title of the nearest titled ancestor in the region, as the
-// native tooltip picks it, and an empty title shows the default tips.
+// description appears without waiting for the native tooltip. The title is
+// the nearest titled ancestor's in the region, as the native tooltip picks
+// it, and the tips the hint holds on load show while there is none.
 function initStatusbar() {
   const hint = $('statusbar-hint');
+  const tips = hint.textContent;
   let hovered = null;
   let hoveredRegion = null;
 
@@ -620,7 +621,10 @@ function initStatusbar() {
     hovered = target;
     hoveredRegion = region;
     const el = target && target.isConnected ? target.closest('[title]') : null;
-    hint.textContent = el && region.contains(el) ? el.getAttribute('title') : '';
+    const title = el && region.contains(el) ? el.getAttribute('title') : '';
+
+    hint.textContent = title || tips;
+    hint.classList.toggle('is-tips', !title);
   };
 
   // A title change under a still pointer fires no mouseover, so watch the

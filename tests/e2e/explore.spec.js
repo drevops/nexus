@@ -82,7 +82,7 @@ test.describe('Explore', { tag: '@runner-2' }, () => {
 
     await expect(page.locator('#entity-menu')).toBeHidden();
     await expect(page.locator('#explore-bar')).toBeVisible();
-    await expect(page.locator('.statusbar__tips')).toBeHidden();
+    await expect(page.locator('#statusbar-hint')).toBeHidden();
     await expect(page.locator('#explore-entity')).toHaveText('Image');
     await expect(page.locator('#explore-entity')).toHaveAttribute('title', 'Showing Image and what it references or is referenced by, up to 1 reference away');
     await expect(page.locator('#explore-depth')).toHaveJSProperty('value', '1');
@@ -209,7 +209,7 @@ test.describe('Explore', { tag: '@runner-2' }, () => {
     await page.click('#explore-clear');
 
     await expect(page.locator('#explore-bar')).toBeHidden();
-    await expect(page.locator('.statusbar__tips')).toBeVisible();
+    await expect(page.locator('#statusbar-hint')).toBeVisible();
     expect(await shownEntities(page)).toEqual(ALL_ENTITIES);
     expect(await shownIds(page)).toEqual(shown);
     expect(await nodePositions(page)).toEqual(positions);

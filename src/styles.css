@@ -525,8 +525,9 @@ sl-button#zoom-level::part(base) {
   padding: 0 0.4rem;
 }
 
-.statusbar__hint,
-.statusbar__tips {
+/* 1 slot holds both the tips and a hovered control's description. */
+.statusbar__hint {
+  flex: 1 1 0;
   min-width: 0;
   color: var(--muted);
   font-size: 0.77rem;
@@ -535,22 +536,6 @@ sl-button#zoom-level::part(base) {
   text-overflow: ellipsis;
 }
 
-.statusbar__hint {
-  flex: 1 1 0;
-}
-
-.statusbar__tips {
-  flex: 0 1 auto;
-  text-align: center;
-}
-
-/* The tips fill the room the hint grows into, so a hovered control's
-   description takes their place while it shows. */
-.statusbar__hint:not(:empty) + .statusbar__tips {
-  display: none;
-}
-
-/* The explore bar takes the tips' place while an explore view holds. */
 .statusbar__explore {
   display: flex;
   align-items: center;
@@ -560,14 +545,18 @@ sl-button#zoom-level::part(base) {
   white-space: nowrap;
 }
 
-.statusbar__explore[hidden],
-.statusbar__explore:not([hidden]) ~ .statusbar__tips {
+.statusbar__explore[hidden] {
   display: none;
 }
 
-/* The tips are hidden while the bar shows and the hint and zoom controls
-   start at no width, so the row wraps only when the switches, the bar and the
-   zoom controls overflow it. */
+/* The explore bar takes the room of the tips, but a hovered control's
+   description still shows. */
+.statusbar__explore:not([hidden]) ~ .statusbar__hint.is-tips {
+  visibility: hidden;
+}
+
+/* The hint starts at no width, so the row wraps only when the switches, the
+   bar and the zoom controls overflow it. */
 .statusbar:has(.statusbar__explore:not([hidden])) {
   flex-wrap: wrap;
 }
@@ -593,12 +582,13 @@ sl-button#zoom-level::part(base) {
   align-items: center;
   justify-content: flex-end;
   gap: 0.1rem;
-  flex: 1 1 0;
+  flex: 0 0 auto;
+  margin-left: auto;
 }
 
 /* The display controls and the zoom controls fill about 41rem between them,
-   so a narrower window drops the hint and tips and moves the zoom controls to
-   a second line. */
+   so a narrower window drops the hint and moves the zoom controls to a second
+   line. */
 @media (max-width: 43rem) {
   .statusbar,
   .statusbar__display {
@@ -610,8 +600,7 @@ sl-button#zoom-level::part(base) {
     row-gap: 2px;
   }
 
-  .statusbar__hint,
-  .statusbar__tips {
+  .statusbar__hint {
     display: none;
   }
 }

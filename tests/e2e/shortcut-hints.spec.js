@@ -164,7 +164,7 @@ test.describe('Shortcut hints', { tag: '@runner-2' }, () => {
   function dataProviderHintClosers() {
     return [
       ['Escape', (page) => page.keyboard.press('Escape')],
-      ['a click', (page) => page.click('.statusbar__tips')],
+      ['a click', (page) => page.click('#statusbar-hint')],
       ['a shortcut', (page) => page.keyboard.press('m')],
       ['a resize', (page) => page.setViewportSize({ width: 1100, height: 700 })],
       ['a scroll', (page) => page.locator('#legend .panel__body').dispatchEvent('scroll')],
