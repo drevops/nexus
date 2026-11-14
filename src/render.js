@@ -2119,7 +2119,12 @@ function buildController(model, options = {}) {
   function revealFields(ids) {
     const fields = cy.nodes('[group="field"]').filter((field) => ids.includes(field.id()));
 
-    setDetailLevel(levelToShow(levelId, fields.map((field) => ({ kind: field.data('kind'), fieldType: field.data('fieldType') }))));
+    setDetailLevel(
+      levelToShow(
+        levelId,
+        fields.map((field) => ({ kind: field.data('kind'), fieldType: field.data('fieldType') })),
+      ),
+    );
   }
 
   $('proxy-toggle').checked = proxyMode;

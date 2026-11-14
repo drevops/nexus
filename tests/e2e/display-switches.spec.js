@@ -197,7 +197,8 @@ test.describe('Display switches', { tag: '@runner-2' }, () => {
     await pickLevel(page, 'references');
     await tapNode(page, 'node.session');
     await expect(page.locator('.handle--right')).toBeVisible();
-    const sessionFields = () => page.evaluate(() => window.__nexus.cy.nodes('[group="field"][entity="node.session"][kind!="system"]').map((field) => field.visible()));
+    const sessionFields = () =>
+      page.evaluate(() => window.__nexus.cy.nodes('[group="field"][entity="node.session"][kind!="system"]').map((field) => field.visible()));
     const before = await sessionFields();
 
     await page.click('.handle--right');

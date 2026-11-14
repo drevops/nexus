@@ -1,6 +1,16 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_LEVEL, DETAIL_LEVELS, detailLevel, levelHidesTitle, levelShowsField, levelToShow, lowestLevelFor, nextLevel, showsFields } from '../../src/detail-levels.js';
+import {
+  DEFAULT_LEVEL,
+  DETAIL_LEVELS,
+  detailLevel,
+  levelHidesTitle,
+  levelShowsField,
+  levelToShow,
+  lowestLevelFor,
+  nextLevel,
+  showsFields,
+} from '../../src/detail-levels.js';
 import { DIAGRAM_DEFAULTS } from '../../src/diagram-defaults.js';
 import { KIND_CALCULATED, KIND_MULTI, KIND_SINGLE, KIND_SYSTEM } from '../../src/model.js';
 
@@ -164,7 +174,13 @@ function dataProviderHiddenTitles() {
 test('finds the first level that shows every field, never below the level given', async (t) => {
   for (const [name, level, fields, expected] of dataProviderLevelsToShow()) {
     await t.test(name, () => {
-      assert.equal(levelToShow(level, fields.map((field) => FIELDS[field])), expected);
+      assert.equal(
+        levelToShow(
+          level,
+          fields.map((field) => FIELDS[field]),
+        ),
+        expected,
+      );
     });
   }
 });
