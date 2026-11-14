@@ -99,6 +99,7 @@ The unit tests read `TEMPLATES` and every diagram in `templates/` on their own. 
 - `README.md`: the template in the **Templates** feature bullet, the count in "Nexus ships N ready-made content models" and the project in the **License** paragraph. Add a row to the **Templates** table with the project link, the version and what it draws, then a sentence after the table for anything the diagram leaves out.
 - `CONTRIBUTING.md`: a sentence in **Updating the templates** on where the template keeps its content model and why each folder is in `paths`.
 - `AGENTS.md`: the template in the list of the **Templates** bullet.
+- `docs/templates.md`: the count in "Nexus ships the content models of N Drupal distributions and themes", a row in its table with the project link and what it draws, and a sentence after the table for anything the diagram leaves out. Then run `npm run build-manual`, which writes the page into `src/manual.js`.
 
 ## Check
 
