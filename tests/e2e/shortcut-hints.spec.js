@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loadExample, openFrom, slFill, boxesOverlap } from './helpers.js';
+import { loadExample, openFrom, slFill, boxesOverlap, activeLevel } from './helpers.js';
 
 test.describe('Shortcut hints', { tag: '@runner-2' }, () => {
   const MAC_LABELS = {
@@ -10,7 +10,7 @@ test.describe('Shortcut hints', { tag: '@runner-2' }, () => {
     fit: '⇧1',
     'zoom-in': '+',
     search: '/',
-    'fields-toggle': 'F',
+    'detail-levels': 'F',
   };
 
   const PC_LABELS = {
@@ -21,7 +21,7 @@ test.describe('Shortcut hints', { tag: '@runner-2' }, () => {
     fit: 'Shift+1',
     'zoom-in': '+',
     search: '/',
-    'fields-toggle': 'F',
+    'detail-levels': 'F',
   };
 
   // Reloads the page as a browser on the given platform, which decides how the
@@ -210,7 +210,7 @@ test.describe('Shortcut hints', { tag: '@runner-2' }, () => {
     await page.keyboard.press('f');
     await page.keyboard.press('F1');
 
-    await expect(page.locator('#fields-toggle')).toHaveJSProperty('checked', true);
+    await expect(activeLevel(page)).toHaveAttribute('data-level', 'all');
     await expect(page.locator('#shortcut-hints')).toBeHidden();
   });
 

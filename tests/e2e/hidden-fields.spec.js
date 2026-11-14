@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-import { waitForGraph, loadExample } from './helpers.js';
+import { waitForGraph, loadExample, pickLevel, stepLevel } from './helpers.js';
 
 test.describe('Hidden fields', { tag: '@runner-2' }, () => {
   // A reference field of the conference fixture to 2 media types, so it has 2
@@ -100,7 +100,7 @@ test.describe('Hidden fields', { tag: '@runner-2' }, () => {
   function dataProviderFieldOffCanvas() {
     return [
       ['its own eye', (page) => visibilityButton(page, EVENT_MEDIA).click(), 'Show this field to go to it'],
-      ['the Fields switch', (page) => page.click('#fields-toggle'), 'Turn on Fields to go to this field'],
+      ['the Entities level', (page) => stepLevel(page), 'The Entities level hides this field. Pick References to go to it'],
       [
         'its entity type filter',
         async (page) => {
@@ -112,14 +112,35 @@ test.describe('Hidden fields', { tag: '@runner-2' }, () => {
     ];
   }
 
-  test('keeps a hidden field hidden when the Fields switch turns back on', async ({ page }) => {
+  for (const [level, id, title] of dataProviderLevelHides()) {
+    test(`names the ${level} level on the go-to button of ${id}`, async ({ page }) => {
+      await loadExample(page);
+      await page.click('#table-toggle');
+      await pickLevel(page, level);
+
+      await expect(goToButton(page, id)).toHaveAttribute('title', title);
+      await expect(goToButton(page, id)).toHaveAttribute('aria-disabled', 'true');
+    });
+  }
+
+  function dataProviderLevelHides() {
+    return [
+      ['entities', EVENT_MEDIA, 'The Entities level hides this field. Pick References to go to it'],
+      ['entities', 'field:node.event:field_summary', 'The Entities level hides this field. Pick Configurable to go to it'],
+      ['references', 'field:node.event:field_summary', 'The References level hides this field. Pick Configurable to go to it'],
+      ['references', 'field:node.event:title', 'The References level hides this field. Pick All to go to it'],
+      ['configurable', 'field:node.event:title', 'The Configurable level hides this field. Pick All to go to it'],
+    ];
+  }
+
+  test('keeps a hidden field hidden at every level', async ({ page }) => {
     await hideEventMedia(page);
 
-    await page.click('#fields-toggle');
-    await page.click('#fields-toggle');
-
-    await expect(page.locator('#fields-toggle')).toHaveJSProperty('checked', true);
-    expect(await fieldOnCanvas(page, EVENT_MEDIA)).toEqual(MEDIA_HIDDEN);
+    for (const level of ['entities', 'references', 'configurable', 'all']) {
+      await pickLevel(page, level);
+      expect(await fieldOnCanvas(page, EVENT_MEDIA)).toEqual(MEDIA_HIDDEN);
+      await expect(goToButton(page, EVENT_MEDIA)).toHaveAttribute('title', 'Show this field to go to it');
+    }
   });
 
   test('keeps a hidden field beside its entity through a layout run', async ({ page }) => {

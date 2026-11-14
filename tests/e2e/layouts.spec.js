@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { nodePositions, loadExample, pickLayout, eventLayout } from './helpers.js';
+import { nodePositions, loadExample, pickLayout, eventLayout, stepLevel } from './helpers.js';
 
 test.describe('Layouts', { tag: '@runner-2' }, () => {
   test.beforeEach(async ({ page }) => {
@@ -7,7 +7,7 @@ test.describe('Layouts', { tag: '@runner-2' }, () => {
   });
 
   for (const [name, toggle] of dataProviderLayoutToggles()) {
-    test(`lays the diagram out as the layout button does after turning ${name} off and on`, async ({ page }) => {
+    test(`lays the diagram out as the layout button does after switching ${name} and back`, async ({ page }) => {
       await loadExample(page);
       await page.click('#entities-toggle');
       await page.click('#layout-run');
@@ -22,7 +22,13 @@ test.describe('Layouts', { tag: '@runner-2' }, () => {
 
   function dataProviderLayoutToggles() {
     return [
-      ['Fields', (page) => page.click('#fields-toggle')],
+      [
+        'the detail level through every level',
+        async (page) => {
+          await stepLevel(page);
+          await stepLevel(page);
+        },
+      ],
       ['Proxies', (page) => page.click('#proxy-toggle')],
       ['the Media filter', (page) => page.locator('#type-filters label', { hasText: 'Media' }).locator('input').click()],
     ];

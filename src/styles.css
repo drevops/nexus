@@ -517,6 +517,14 @@ sl-button#zoom-level::part(base) {
   color: var(--text);
 }
 
+.statusbar__level {
+  flex: 0 0 auto;
+}
+
+#detail-levels sl-button::part(label) {
+  padding: 0 0.4rem;
+}
+
 .statusbar__hint,
 .statusbar__tips {
   min-width: 0;
@@ -588,12 +596,18 @@ sl-button#zoom-level::part(base) {
   flex: 1 1 0;
 }
 
-/* The switches and the zoom controls fill about 38rem between them, so a
-   narrower window drops the hint and tips and moves the zoom controls to a
-   second line. */
-@media (max-width: 40rem) {
-  .statusbar {
+/* The display controls and the zoom controls fill about 41rem between them,
+   so a narrower window drops the hint and tips and moves the zoom controls to
+   a second line. */
+@media (max-width: 43rem) {
+  .statusbar,
+  .statusbar__display {
     flex-wrap: wrap;
+  }
+
+  .statusbar__display {
+    max-width: 100%;
+    row-gap: 2px;
   }
 
   .statusbar__hint,

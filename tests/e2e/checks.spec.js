@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { TEMPLATES } from '../../src/templates.js';
 import { CHECK_DEFAULTS } from '../../src/model-checks.js';
-import { CHECKS_DOC, buildEntities, openDocument, selectedNodes, slFill, waitForGraph } from './helpers.js';
+import { CHECKS_DOC, buildEntities, openDocument, selectedNodes, slFill, waitForGraph, activeLevel, stepLevel } from './helpers.js';
 
 const TAGS_FIELD = 'field:node.article:field_tags';
 
@@ -98,8 +98,8 @@ test.describe('Checks', { tag: '@runner-2' }, () => {
 
   test('focuses the entity of a field the canvas does not show', async ({ page }) => {
     await openChecks(page, CHECKS_DOC);
-    await page.click('#fields-toggle');
-    await expect(page.locator('#fields-toggle')).not.toHaveAttribute('checked', '');
+    await stepLevel(page);
+    await expect(activeLevel(page)).toHaveAttribute('data-level', 'entities');
 
     await page.click(`#checks [data-check-id="${TAGS_FIELD}"]`);
 

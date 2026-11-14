@@ -114,7 +114,7 @@ test.describe('Status bar', { tag: '@runner-1' }, () => {
   });
 
   for (const width of dataProviderStatusbarWidths()) {
-    test(`keeps the display switches and the zoom controls in the window and clear of each other ${width}px wide`, async ({ page }) => {
+    test(`keeps the display controls and the zoom controls in the window and clear of each other ${width}px wide`, async ({ page }) => {
       await page.setViewportSize({ width: width, height: 800 });
       await loadExample(page);
 
@@ -131,6 +131,6 @@ test.describe('Status bar', { tag: '@runner-1' }, () => {
   }
 
   function dataProviderStatusbarWidths() {
-    return [360, 420, 640, 641, 1280];
+    return [360, 420, 688, 689, 1280];
   }
 });

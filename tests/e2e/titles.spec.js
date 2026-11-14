@@ -218,10 +218,10 @@ test.describe('Titles', { tag: '@runner-1' }, () => {
     await loadExample(page);
     await page.click('#settings-toggle');
 
-    const fields = page.locator('#settings [data-default="fields"]');
-    await expect(fields).toHaveAttribute('title', 'Show the fields of each entity in a new diagram');
-    expect(await fields.evaluate((element) => element.shadowRoot.querySelector('input').getAttribute('title'))).toBe(
-      'Show the fields of each entity in a new diagram',
+    const proxies = page.locator('#settings [data-default="proxies"]');
+    await expect(proxies).toHaveAttribute('title', 'Draw each reference as a faded copy of its target beside the field in a new diagram');
+    expect(await proxies.evaluate((element) => element.shadowRoot.querySelector('input').getAttribute('title'))).toBe(
+      'Draw each reference as a faded copy of its target beside the field in a new diagram',
     );
   });
 });

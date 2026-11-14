@@ -314,6 +314,25 @@ export async function pickLayout(page, value) {
   await page.click('#layout-menu sl-menu-item[value="' + value + '"]');
 }
 
+// The status bar's button for the level the canvas shows.
+export function activeLevel(page) {
+  return page.locator('#detail-levels .is-active');
+}
+
+// Steps to the next detail level, as the F shortcut does, by clicking the
+// button group itself rather than 1 of its buttons.
+export function stepLevel(page) {
+  return page.locator('#detail-levels').evaluate((el) => el.click());
+}
+
+// Picks a detail level from the status bar's icon buttons.
+export async function pickLevel(page, value) {
+  const button = page.locator('#detail-levels [data-level="' + value + '"]');
+
+  await button.click();
+  await expect(button).toHaveClass(/is-active/);
+}
+
 // How the fields of the Event content type sit around it, and the direction
 // its field edges turn.
 export function eventLayout(page) {

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loadExample, slFill, slSelect, createEntity, buildStoryWithField, tapNode, captionsOf, openDiagram, pickLayout } from './helpers.js';
+import { loadExample, slFill, slSelect, createEntity, buildStoryWithField, tapNode, captionsOf, openDiagram, pickLayout, stepLevel } from './helpers.js';
 
 test.describe('Node text', { tag: '@runner-2' }, () => {
   test.beforeEach(async ({ page }) => {
@@ -434,7 +434,7 @@ test.describe('Node text', { tag: '@runner-2' }, () => {
       await openDiagram(page, source);
 
       if (view === 'overview') {
-        await page.click('#fields-toggle');
+        await stepLevel(page);
       }
 
       await pickLayout(page, layout.toLowerCase());

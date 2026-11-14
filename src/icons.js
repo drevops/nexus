@@ -77,6 +77,12 @@ const PATHS = {
   'lines-right-angled': '<path d="M3 12h18"/><path d="M3 12h4V5h14"/><path d="M3 12h9v7h9"/>',
   'lines-merged': '<path d="M3 12h18"/><path d="M8 5v14"/><path d="M8 5h13"/><path d="M8 19h13"/>',
   'lines-straight': '<path d="M3 12h18"/><path d="m3 12 18-7"/><path d="m3 12 18 7"/>',
+  'level-entities': '<rect x="6" y="6" width="12" height="12" rx="2"/>',
+  'level-references': '<rect x="2" y="8" width="8" height="8" rx="2"/><path d="M10 12h11"/><path d="m17 8 4 4-4 4"/>',
+  'level-configurable':
+    '<rect x="2" y="9" width="6" height="6" rx="1.5"/><path d="M8 12h3"/><path d="M11 5v14"/><path d="M11 5h5"/><path d="M11 12h5"/><path d="M11 19h5"/><circle cx="20" cy="5" r="1.5"/><circle cx="20" cy="12" r="1.5"/><circle cx="20" cy="19" r="1.5"/>',
+  'level-all':
+    '<rect x="2" y="9" width="6" height="6" rx="1.5" fill="currentColor"/><path d="M8 12h3"/><path d="M11 3v18"/><path d="M11 3h5"/><path d="M11 9h5"/><path d="M11 15h5"/><path d="M11 21h5"/><circle cx="20" cy="3" r="1" fill="currentColor"/><circle cx="20" cy="9" r="1" fill="currentColor"/><circle cx="20" cy="15" r="1" fill="currentColor"/><circle cx="20" cy="21" r="1" fill="currentColor"/>',
   'sticky-note': '<path d="M16 3H5a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h11l5-5V5a2 2 0 0 0-2-2Z"/><path d="M15 21v-5a1 1 0 0 1 1-1h5"/>',
   moon: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
