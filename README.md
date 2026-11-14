@@ -52,6 +52,7 @@ Nexus is a static web app. Give it a Drupal config sync directory or a module's 
 - **Editable.** Add and change entities, fields, references and annotations, with undo and history.
 - **Notes on the canvas.** A Note holds text in Markdown, anywhere on the diagram. See [Notes](#notes).
 - **Field editing in the Fields table.** Click a cell to change a field's label, machine name, type, cardinality, references, help text, default value, allowed values or translatability. Tick **Req** to make a field required.
+- **Hover highlight.** Rest the pointer on an entity to highlight its fields, its references and the entities at each end, and fade the rest. On a field, the highlight covers the field's own references. To turn it off, switch off **Highlight connections** in **Settings**.
 - **Checks.** The Checks panel lists the problems in the model after every edit, such as a reference with no target or a field name with 2 types. Click a problem to go to it.
 - **Saved as a document.** A `.nexus.json` document holds the model and its layout, and a [JSON Schema](schema/nexus.schema.json) defines the format.
 - **Exports.** PNG and SVG images of the diagram, and CSV files of its fields, bundles and references. A Markdown page documents each bundle, its fields and notes, with an optional Mermaid diagram. A standalone HTML report holds the same documentation and opens in any browser.
