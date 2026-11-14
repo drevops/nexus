@@ -1534,6 +1534,8 @@ function buildController(model, options = {}) {
   function applyExplore() {
     explore.outside = exploreOutside(explore.entityId);
     clearFocus();
+    // The layout moves nodes from under the pointer without a mouseout.
+    $('tooltip').hidden = true;
     untracked(() => refresh(true));
     bump();
   }
@@ -1558,6 +1560,7 @@ function buildController(model, options = {}) {
 
     explore = null;
     clearFocus();
+    $('tooltip').hidden = true;
     untracked(() => {
       if (saved.display !== displayKey()) {
         refresh(true);

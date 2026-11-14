@@ -523,6 +523,8 @@ function openEntityMenu(entityId, point) {
 
   menuEntityId = entityId;
   menu.hidden = false;
+  // The pointer moves onto the menu, which Cytoscape reports as no mouseout.
+  $('tooltip').hidden = true;
 
   const box = menu.getBoundingClientRect();
 
