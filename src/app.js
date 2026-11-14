@@ -38,7 +38,7 @@ const SAVERS = {
   json: saveDocument,
   png: (controller, title) => exportPng(controller.cy, title),
   svg: (controller, title) => exportSvg(controller.cy, title),
-  csv: (controller, title) => exportCsv(fieldsCsv(controller.records(), controller.typeLabel), title, 'fields'),
+  csv: (controller, title) => exportCsv(fieldsCsv(controller.records(), controller.typeLabel, controller.entities()), title, 'fields'),
   'bundles-csv': (controller, title) => exportCsv(bundlesCsv(currentDocument(controller, title)), title, 'bundles'),
   'references-csv': (controller, title) => exportCsv(referencesCsv(currentDocument(controller, title)), title, 'references'),
   md: saveMarkdown,

@@ -78,7 +78,9 @@ export function csvSeparator(text) {
  * break adds no row.
  *
  * A double quote opens a quoted cell only at the start of a cell; elsewhere
- * it is part of the text, as spreadsheets write it.
+ * it is part of the text, as spreadsheets write it. A quoted cell with no
+ * closing quote throws an error whose `row` is the row the cell starts on,
+ * counting from 1.
  */
 export function parseCsv(text, separator = ',') {
   const source = String(text ?? '').replace(/^\uFEFF/, '');
@@ -87,6 +89,7 @@ export function parseCsv(text, separator = ',') {
   let cell = '';
   let quoted = false;
   let started = false;
+  let quoteRow = 0;
 
   for (let i = 0; i < source.length; i++) {
     const char = source[i];
@@ -107,6 +110,7 @@ export function parseCsv(text, separator = ',') {
     if (char === '"' && cell === '') {
       quoted = true;
       started = true;
+      quoteRow = rows.length + 1;
     } else if (char === separator) {
       row.push(cell);
       cell = '';
@@ -125,6 +129,13 @@ export function parseCsv(text, separator = ',') {
       cell += char;
       started = true;
     }
+  }
+
+  if (quoted) {
+    const error = new Error('A quoted cell has no closing quote.');
+    error.row = quoteRow;
+
+    throw error;
   }
 
   if (started || cell !== '') {

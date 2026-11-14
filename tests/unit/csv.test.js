@@ -212,9 +212,24 @@ function dataProviderParseCsv() {
     ['a blank line between rows', 'a\n\nb', [['a'], [''], ['b']]],
     ['a quote inside an unquoted cell', 'say "hi",b', [['say "hi"', 'b']]],
     ['text after a closing quote', '"a"b,c', [['ab', 'c']]],
-    ['an unclosed quote', '"a,b', [['a,b']]],
     ['an empty string', '', []],
     ['null', null, []],
+  ];
+}
+
+test('rejects a quoted cell with no closing quote, naming the row it starts on', async (t) => {
+  for (const [name, text, row] of dataProviderUnclosedQuotes()) {
+    await t.test(name, () => {
+      assert.throws(() => parseCsv(text), { message: 'A quoted cell has no closing quote.', row: row });
+    });
+  }
+});
+
+function dataProviderUnclosedQuotes() {
+  return [
+    ['on the first row', '"a,b', 1],
+    ['after closed rows', 'a,b\n"c","d\ne,f', 2],
+    ['running over later rows', 'a,b\nc,"unfinished\nd,e\nf,g', 2],
   ];
 }
 

@@ -102,7 +102,7 @@ The import reads cells separated by commas, semicolons or tabs, taking the separ
 
 | Column | What it holds | When the cell is empty |
 |--------|---------------|------------------------|
-| Entity type | The entity type's machine name, label or bundle noun, such as `node`, `Content type` or `Paragraph type`. Any other value adds a custom entity type | The row is an error |
+| Entity type | The entity type's machine name, label or bundle noun, such as `node`, `Content type` or `Paragraph type`. Any other value adds a custom entity type, and `Product (commerce_product)` adds one with its label and machine name | The row is an error |
 | Bundle | The bundle's machine name | The machine name of **Entity** |
 | Entity | The bundle's label | The label from another row of the bundle, or a label made from the bundle's machine name |
 | Field | The field's label | A label made from the field's machine name |
@@ -116,9 +116,9 @@ The import reads cells separated by commas, semicolons or tabs, taking the separ
 | Allowed values | The field's allowed values, separated by `;`, each written as `Wide (wide)` or `wide\|Wide` | None |
 | Translatable | `yes` or `no` | Unknown |
 
-A row with an entity type and a bundle but no field adds a bundle with no fields. A base field, such as `title` on a content type, imports as a system field. A reference to an entity the file doesn't have adds that entity to the diagram, as a config import does. The import ignores any other column.
+A row with an entity type and a bundle but no field adds a bundle with no fields. In **References** and **Allowed values**, write `\;` for a `;` inside an item and `\\` for a `\`. A base field, such as `title` on a content type, imports as a system field. A reference to an entity the file doesn't have adds that entity to the diagram, as a config import does. The import ignores any other column.
 
-**Save as > CSV > Fields** writes the Fields table with the same columns and a **Used in** column. A CSV saved that way imports as the same entities, fields and references. Notes, bundle descriptions, hidden fields, annotations and the layout stay out of the CSV.
+**Save as > CSV > Fields** writes the Fields table with the same columns and a **Used in** column, plus a row for each bundle with no fields. A CSV saved that way imports as the same entities, fields and references. Notes, bundle descriptions, hidden fields, annotations and the layout stay out of the CSV.
 
 When a row has a problem, Nexus opens nothing and lists the first 5 problems with their row numbers. The header is row 1.
 

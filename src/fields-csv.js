@@ -2,10 +2,11 @@
  * The fields CSV: the Fields table as 1 row per field, the template a model
  * can be written in, and the import that reads either into a saved document.
  *
- * An entity is named by its entity type, its bundle and its label. A row
+ * An entity is named by its entity type, its bundle and its label, with a
+ * custom type whose label doesn't name it written as 'Label (type)'. A row
  * with no field label and no field machine name names an entity with no
  * fields. A reference is written as 'Label (entity id)', and an allowed value
- * as 'Label (value)', separated by ';'.
+ * as 'Label (value)', separated by ';', with '\;' and '\\' inside an item.
  *
  * The import matches headers in any order and case, reads '_' as a space and
  * ignores unknown columns, so an exported CSV imports as the model it came
@@ -114,7 +115,7 @@ const MAX_SHOWN_ERRORS = 5;
 // Greedy, so a label holding parentheses keeps them: 'Size (cm) (field_size)'.
 const LABELLED = /^(.*)\(([^()]*)\)$/;
 const ENTITY_ID = /^([a-z0-9_]+)\.([a-z0-9_]+|\*)$/;
-const LIST_SEPARATOR = /;|\r\n|\r|\n/;
+const TYPE_NAME = /^[a-z0-9_]+$/;
 const UNLIMITED = ['n', '*', '-1', 'unlimited', '1..n', '1..*'];
 const YES = ['yes', 'y', 'true', '1'];
 const NO = ['no', 'n', 'false', '0'];
@@ -122,32 +123,44 @@ const NO = ['no', 'n', 'false', '0'];
 /**
  * Writes field records as the fields CSV. `typeLabel` turns an entity type
  * into the label the CSV shows.
+ *
+ * `entities` lists the diagram's entities as { id, label, entityType,
+ * fieldCount }. Each one with no fields gets a row of its own, so it survives
+ * an import; an "Any <type>" placeholder gets none.
  */
-export function fieldsCsv(records, typeLabel) {
+export function fieldsCsv(records, typeLabel, entities = []) {
   const rows = records.map((record) => {
     const cells = {
       entity: record.entity,
-      entityType: typeLabel(record.entityType),
+      entityType: typeCell(record.entityType, typeLabel),
       bundle: record.entityType ? record.entityId.slice(record.entityType.length + 1) : record.entityId,
       field: record.field,
       name: record.name,
       fieldType: record.type,
       cardinality: cardinalityLabel(record.cardinality),
       required: record.required ? 'yes' : 'no',
-      references: record.refs.map(referenceCell).join('; '),
+      references: listCell(record.refs.map(referenceCell)),
       usedIn: record.usedIn.length || '',
       description: record.description,
       defaultValue: record.defaultValue,
-      allowedValues: allowedValueLabels(record.allowedValues).join('; '),
+      allowedValues: listCell(allowedValueLabels(record.allowedValues)),
       translatable: record.translatable === null ? '' : record.translatable ? 'yes' : 'no',
     };
 
     return CSV_COLUMNS.map((column) => cells[column.key]);
   });
 
+  const empty = entities
+    .filter((entity) => !entity.fieldCount && !entity.id.endsWith('.*'))
+    .map((entity) => {
+      const cells = { entity: entity.label, entityType: typeCell(entity.entityType, typeLabel), bundle: entity.id.slice(entity.entityType.length + 1) };
+
+      return CSV_COLUMNS.map((column) => cells[column.key]);
+    });
+
   return csvText(
     CSV_COLUMNS.map((column) => column.header),
-    rows,
+    [...rows, ...empty],
   );
 }
 
@@ -185,7 +198,14 @@ export function csvTitle(fileName) {
  * there is any.
  */
 export function csvDocument(text, title) {
-  const rows = parseCsv(text, csvSeparator(text));
+  let rows;
+
+  try {
+    rows = parseCsv(text, csvSeparator(text));
+  } catch (error) {
+    return { document: null, errors: [{ row: error.row, message: error.message }] };
+  }
+
   const header = rows[0] || [];
   const columns = columnIndexes(header);
   const headerErrors = headerProblems(header, columns).map((message) => ({ row: 1, message: message }));
@@ -245,6 +265,19 @@ export function csvErrorLines(errors) {
   }
 
   return lines;
+}
+
+// A custom type whose label doesn't name it is written 'Label (type)', so the
+// import keeps its machine name.
+function typeCell(type, typeLabel) {
+  const label = typeLabel(type);
+
+  return findEntityType(type) || !type || machineName(label) === type ? label : label + ' (' + type + ')';
+}
+
+// Escapes ';' and '\' in each item, so an item holding ';' stays 1 item.
+function listCell(items) {
+  return items.map((item) => String(item).replace(/[\\;]/g, '\\$&')).join('; ');
 }
 
 function referenceCell(reference) {
@@ -415,10 +448,18 @@ function readField(cell, fail, entity) {
 // Returns the machine name of an entity type cell, registering a type that
 // isn't built in, or an empty string.
 function entityTypeOf(state, text) {
-  const builtIn = findEntityTypeByName(text);
+  const labelled = text.match(LABELLED);
+  const named = labelled && TYPE_NAME.test(labelled[2].trim()) ? { type: labelled[2].trim(), label: labelled[1].trim() } : null;
+  const builtIn = findEntityTypeByName(named ? named.type : text);
 
   if (builtIn) {
     return builtIn.type;
+  }
+
+  if (named) {
+    registerType(state, named.type, named.label || humanize(named.type));
+
+    return named.type;
   }
 
   const type = machineName(text);
@@ -470,11 +511,29 @@ function flagOf(text, blank) {
   return NO.includes(value) ? false : undefined;
 }
 
+// Splits a list cell on ';' and line breaks. '\;' and '\\' stand for the
+// characters themselves; any other '\' is text.
 function listItems(text) {
-  return text
-    .split(LIST_SEPARATOR)
-    .map((item) => item.trim())
-    .filter(Boolean);
+  const items = [];
+  let item = '';
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+
+    if (char === '\\' && (text[i + 1] === ';' || text[i + 1] === '\\')) {
+      item += text[i + 1];
+      i++;
+    } else if (char === ';' || char === '\r' || char === '\n') {
+      items.push(item);
+      item = '';
+    } else {
+      item += char;
+    }
+  }
+
+  items.push(item);
+
+  return items.map((entry) => entry.trim()).filter(Boolean);
 }
 
 // Reads 'Label (value)' and 'value|label' items into allowed values.

@@ -51,15 +51,25 @@ function typeLabel(type) {
   return builtIn ? builtIn.label : humanize(type);
 }
 
+// The entities the controller's entities() lists for a saved document.
+function entitiesOf(doc) {
+  return doc.entities.map((entity) => ({
+    id: entity.entityType + '.' + entity.bundle,
+    label: entity.label,
+    entityType: entity.entityType,
+    fieldCount: entity.fields.length,
+  }));
+}
+
+function exported(doc) {
+  return fieldsCsv(recordsOf(doc), typeLabel, entitiesOf(doc));
+}
+
 // The parts of a document's entities the CSV carries, keyed by entity id.
 function csvShape(doc) {
   const shape = {};
 
   for (const entity of doc.entities) {
-    if (!entity.fields.length) {
-      continue;
-    }
-
     shape[entity.entityType + '.' + entity.bundle] = {
       label: entity.label,
       fields: entity.fields.map((field) => ({
@@ -133,6 +143,105 @@ test('exports formulas in document text as text and imports them back unchanged'
   assert.deepEqual([field.fields[0].label, field.fields[0].description, field.fields[0].defaultValue], ['-2+3', '@SUM(A1)', '-1']);
 });
 
+test('exports a row for each entity with no fields, but none for a placeholder', () => {
+  const entities = [
+    { id: 'node.article', label: 'Article', entityType: 'node', fieldCount: 2 },
+    { id: 'paragraph.divider', label: 'Divider', entityType: 'paragraph', fieldCount: 0 },
+    { id: 'media.*', label: 'Any Media', entityType: 'media', fieldCount: 0 },
+  ];
+  const rows = parseCsv(fieldsCsv([], typeLabel, entities));
+
+  assert.deepEqual(rows.slice(1), [['Divider', 'Paragraph', 'divider', '', '', '', '', '', '', '', '', '', '', '']]);
+  assert.deepEqual(csvDocument(fieldsCsv([], typeLabel, entities), 'Empty').document.entities, [
+    { entityType: 'paragraph', bundle: 'divider', label: 'Divider', note: '', fields: [] },
+  ]);
+});
+
+test('keeps the machine name of a custom type whose label differs', async (t) => {
+  for (const [name, type, label, cell, customTypes] of dataProviderCustomTypeCells()) {
+    await t.test(name, () => {
+      const records = [{ ...recordsOf(savedDocument)[1], entityId: type + '.shirt', entityType: type, refs: [] }];
+      const text = fieldsCsv(records, () => label);
+
+      assert.equal(parseCsv(text)[1][1], cell);
+
+      const result = csvDocument(text, 'Shop');
+
+      assert.equal(result.document.entities[0].entityType, type);
+      assert.deepEqual(result.document.customTypes, customTypes);
+    });
+  }
+});
+
+function dataProviderCustomTypeCells() {
+  return [
+    ['a label that names another type', 'commerce_product', 'Product', 'Product (commerce_product)', [{ type: 'commerce_product', label: 'Product' }]],
+    ['a label that names the type', 'commerce_product', 'Commerce product', 'Commerce product', [{ type: 'commerce_product', label: 'Commerce product' }]],
+    ['a built-in type', 'node', 'Content type', 'Content type', []],
+  ];
+}
+
+test('reads a type written as a label with its machine name', async (t) => {
+  for (const [name, row, entityType, customTypes] of dataProviderLabelledTypes()) {
+    await t.test(name, () => {
+      const result = imported([row]);
+
+      assert.deepEqual(result.errors, []);
+      assert.equal(result.document.entities[0].entityType, entityType);
+      assert.deepEqual(result.document.customTypes, customTypes);
+    });
+  }
+});
+
+function dataProviderLabelledTypes() {
+  return [
+    ['a custom type', 'Product (commerce_product),shirt,Shirt', 'commerce_product', [{ type: 'commerce_product', label: 'Product' }]],
+    ['a built-in type', 'Pages (node),page,Page', 'node', []],
+    ['empty brackets', 'Event (),talk,Talk', 'event', [{ type: 'event', label: 'Event ()' }]],
+    ['no label before the brackets', '(commerce_product),shirt,Shirt', 'commerce_product', [{ type: 'commerce_product', label: 'Commerce Product' }]],
+    ['an inherited object property', 'constructor,thing,Thing,Name,name', 'constructor', [{ type: 'constructor', label: 'Constructor' }]],
+  ];
+}
+
+test('keeps a semicolon inside an allowed value or a reference label', () => {
+  const record = {
+    ...recordsOf(savedDocument)[0],
+    refs: [{ id: 'taxonomy_term.tags', label: 'Tags; topics' }],
+    allowedValues: [
+      { value: 'rd', label: 'Research; development' },
+      { value: 'a\\b', label: 'a\\b' },
+    ],
+  };
+  const text = fieldsCsv([record], typeLabel, [{ id: 'taxonomy_term.tags', label: 'Tags; topics', entityType: 'taxonomy_term', fieldCount: 0 }]);
+  const row = parseCsv(text)[1];
+
+  assert.equal(row[8], 'Tags\\; topics (taxonomy_term.tags)');
+  assert.equal(row[12], 'Research\\; development (rd); a\\\\b');
+
+  const field = csvDocument(text, 'Lists').document.entities[0].fields[0];
+
+  assert.deepEqual(field.targetBundles, ['tags']);
+  assert.deepEqual(field.allowedValues, [
+    { value: 'rd', label: 'Research; development' },
+    { value: 'a\\b', label: 'a\\b' },
+  ]);
+});
+
+test('reads a backslash before any other character as text', () => {
+  const field = onlyField(['node,article,Article,Size,field_size,list_string,,,,,,"C:\\temp; a\\b"']);
+
+  assert.deepEqual(field.allowedValues, [
+    { value: 'C:\\temp', label: 'C:\\temp' },
+    { value: 'a\\b', label: 'a\\b' },
+  ]);
+});
+
+test('reports a quoted cell with no closing quote at the row it starts on', () => {
+  const result = imported(['node,article,Article,Body,,,,,,"unfinished', 'node,page,Page,Body']);
+
+  assert.deepEqual(result, { document: null, errors: [{ row: 2, message: 'A quoted cell has no closing quote.' }] });
+});
+
 test('exports a reference to a missing entity as its id alone', () => {
   const records = [{ ...recordsOf(savedDocument)[0], refs: [{ id: 'taxonomy_term.gone', label: 'taxonomy_term.gone' }] }];
 
@@ -140,7 +249,7 @@ test('exports a reference to a missing entity as its id alone', () => {
 });
 
 test('imports an exported CSV as the model it came from', () => {
-  const result = csvDocument(fieldsCsv(recordsOf(savedDocument), typeLabel), 'Saved model');
+  const result = csvDocument(exported(savedDocument), 'Saved model');
 
   assert.deepEqual(result.errors, []);
   assert.deepEqual(csvShape(result.document), csvShape(savedDocument));
@@ -150,7 +259,7 @@ test('imports the CSV of every template as the template model', async (t) => {
   for (const template of TEMPLATES) {
     await t.test(template.id, () => {
       const doc = JSON.parse(readFileSync(join(ROOT, templatePath(template)), 'utf8'));
-      const result = csvDocument(fieldsCsv(recordsOf(doc), typeLabel), template.label);
+      const result = csvDocument(exported(doc), template.label);
 
       assert.deepEqual(result.errors, []);
       assert.deepEqual(csvShape(result.document), csvShape(doc));

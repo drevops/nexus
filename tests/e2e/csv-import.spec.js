@@ -95,15 +95,21 @@ test.describe('CSV import', { tag: '@runner-1' }, () => {
     await expect(page.locator('#diagram-title')).toHaveJSProperty('value', 'Nexus template');
   });
 
-  test('imports an exported CSV as the same fields and references', async ({ page }) => {
+  test('imports an exported CSV as the same entities, fields and references', async ({ page }) => {
     await loadExample(page);
+    const entities = await entityIds(page);
     const fields = await fieldIds(page);
     const refs = await refEdgeIds(page);
 
     const download = await saveFrom(page, 'csv');
     await page.setInputFiles('#csv-open', { name: 'example-content-model-fields.csv', mimeType: 'text/csv', buffer: readFileSync(await download.path()) });
 
+    // The example is open already, so only the history shows that the
+    // import replaced it.
+    await page.click('#history-toggle');
+    await expect(page.locator('#history .history__label')).toHaveText(['Imported example-content-model-fields.csv']);
     await expect(page.locator('#diagram-title')).toHaveJSProperty('value', 'Example content model');
+    expect(await entityIds(page)).toEqual(entities);
     expect(await fieldIds(page)).toEqual(fields);
     expect(await refEdgeIds(page)).toEqual(refs);
   });
