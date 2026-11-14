@@ -53,6 +53,7 @@ import { fieldSharing } from './shared-fields.js';
 import { HOVER_DELAY, hoverNeighbourhood, readHoverSettings } from './hover-highlight.js';
 import { EXPLORE_DEFAULTS, exploreEntities, readExplore } from './explore.js';
 import { SYMBOLS, customTypeList, isHexColor, isSymbol, isTypeName, typeColors, typeSymbols } from './type-styles.js';
+import { blendColors, textOn } from './text-contrast.js';
 import { $ } from './dom.js';
 
 const FALLBACK_COLOR = '#eceff3';
@@ -122,6 +123,12 @@ const NAME_CAPTION = 'caption';
 const TYPE_CAPTION = 'caption caption--type';
 
 const FADED_OPACITY = 0.1;
+
+// A proxy draws its entity type's colour at this opacity over the canvas.
+const PROXY_OPACITY = 0.4;
+
+// The fill of a focused field.
+const TRACE_FILL = '#c3f0e8';
 
 let settings = loadSettings();
 const activeColors = Object.create(null);
@@ -626,6 +633,7 @@ function themeColors() {
       edge: '#5a636f',
       refEdge: '#8a94a3',
       labelBg: '#22262d',
+      canvas: '#2c2c31',
     };
   }
   return {
@@ -637,7 +645,12 @@ function themeColors() {
     edge: '#aeb4bd',
     refEdge: '#8a94a3',
     labelBg: '#f4f5f7',
+    canvas: '#f4f4f5',
   };
+}
+
+function proxyFill(entityType, tc) {
+  return blendColors(entityColor(entityType), tc.canvas, PROXY_OPACITY);
 }
 
 function style() {
@@ -669,7 +682,7 @@ function style() {
         'font-size': ENTITY_BOX.fontSize,
         'font-weight': ENTITY_BOX.fontWeight,
         'line-height': ENTITY_BOX.lineHeight,
-        color: '#1f2933',
+        color: (ele) => textOn(entityColor(ele.data('entityType'))).text,
         width: (ele) => nodeBox(ele).width,
         height: 'label',
         padding: ENTITY_BOX.padding + 'px',
@@ -723,7 +736,7 @@ function style() {
         shape: (ele) => drawnShape(entityShape(ele.data('entityType'))),
         'shape-polygon-points': (ele) => nodeBox(ele).points,
         'background-color': (ele) => entityColor(ele.data('entityType')),
-        'background-opacity': 0.4,
+        'background-opacity': PROXY_OPACITY,
         'border-color': '#8a94a3',
         'border-width': PROXY_BOX.border,
         'border-style': 'dashed',
@@ -738,7 +751,7 @@ function style() {
         'font-size': PROXY_BOX.fontSize,
         'font-style': PROXY_BOX.fontStyle,
         'line-height': PROXY_BOX.lineHeight,
-        color: tc.muted,
+        color: (ele) => textOn(proxyFill(ele.data('entityType'), tc)).muted,
         width: (ele) => nodeBox(ele).width,
         height: 'label',
         padding: PROXY_BOX.padding + 'px',
@@ -825,7 +838,10 @@ function style() {
     { selector: '.highlight', style: { 'border-color': '#2f6db3', 'border-width': 3 } },
     { selector: 'node.trace', style: { opacity: 1, 'border-color': '#0f9d8f', 'border-width': 3 } },
     { selector: 'edge.trace', style: { opacity: 1, 'line-color': '#0f9d8f', 'target-arrow-color': '#0f9d8f', width: 2.6, 'z-index': 20 } },
-    { selector: 'node.trace-source', style: { opacity: 1, 'border-color': '#0b7a70', 'border-width': 4, 'background-color': '#c3f0e8' } },
+    {
+      selector: 'node.trace-source',
+      style: { opacity: 1, 'border-color': '#0b7a70', 'border-width': 4, 'background-color': TRACE_FILL, color: textOn(TRACE_FILL).text },
+    },
     { selector: 'node:selected', style: { 'border-color': '#2f6db3', 'border-width': 3 } },
     // The hover classes come last, so they win over the fade and the trace
     // while a hover lasts and leave both in place for when it ends.
@@ -1959,6 +1975,7 @@ function buildController(model, options = {}) {
         div.style.fontSize = size + 'px';
         div.style.lineHeight = stack.step + 'px';
         if (div.classList.contains('caption--type')) {
+          div.style.color = textOn(entityColor(node.data('entityType'))).muted;
           div.style.left = stack.typeX + 'px';
           div.style.top = stack.typeTop + 'px';
         } else {
@@ -2130,7 +2147,10 @@ function buildController(model, options = {}) {
     }
 
     activeColors[type] = color;
-    cy.nodes('[group="entity"][entityType="' + type + '"]').style('background-color', color);
+    // The fill and text functions of entities and proxies read activeColors,
+    // which isn't element data, so Cytoscape restyles only when asked.
+    cy.nodes('[entityType="' + type + '"]').updateStyle();
+    positionCaptions();
     settings.colors = settings.colors || {};
     settings.colors[type] = color;
     saveSettings();
@@ -2165,9 +2185,6 @@ function buildController(model, options = {}) {
     saveSettings();
     applyFrame();
     initColors();
-    // applyColor sets inline overrides on the nodes; clear them so the
-    // stylesheet's default-reading functions take effect again.
-    cy.nodes().removeStyle('background-color');
     cy.style(style());
     positionCaptions();
     positionNotes();

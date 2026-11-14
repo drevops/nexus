@@ -23,6 +23,40 @@ test.describe('Entity types', { tag: '@runner-2' }, () => {
     expect(applied.replace(/\s/g, '')).toBe('rgb(17,34,51)');
   });
 
+  for (const [name, color, expected] of dataProviderLabelColours()) {
+    test(`draws labels that read on ${name}`, async ({ page }) => {
+      await loadExample(page);
+      await page.click('#settings-toggle');
+      await slFill(page, 'sl-color-picker[data-color="taxonomy_term"]', color);
+
+      const colors = await page.evaluate(() => {
+        const cy = window.__nexus.cy;
+        const entity = cy.nodes('[group="entity"][entityType="taxonomy_term"]').first();
+        const proxy = cy.nodes('[group="proxy"][entityType="taxonomy_term"]').first();
+        const caption = document.querySelector('.caption--type[data-node-id="' + entity.id() + '"]');
+
+        return {
+          entity: entity.style('color'),
+          caption: getComputedStyle(caption).color,
+          proxyFill: proxy.style('background-color'),
+          proxy: proxy.style('color'),
+        };
+      });
+
+      expect(Object.fromEntries(Object.entries(colors).map(([key, value]) => [key, value.replace(/\s/g, '')]))).toEqual(expected);
+    });
+  }
+
+  // A proxy draws its colour at 40% over the light canvas, which keeps dark
+  // text readable even on black.
+  function dataProviderLabelColours() {
+    return [
+      ['a pastel colour', '#d9e2f3', { entity: 'rgb(31,41,51)', caption: 'rgb(75,85,99)', proxyFill: 'rgb(217,226,243)', proxy: 'rgb(75,85,99)' }],
+      ['a dark colour', '#14532d', { entity: 'rgb(255,255,255)', caption: 'rgb(229,231,235)', proxyFill: 'rgb(20,83,45)', proxy: 'rgb(75,85,99)' }],
+      ['black', '#000000', { entity: 'rgb(255,255,255)', caption: 'rgb(229,231,235)', proxyFill: 'rgb(0,0,0)', proxy: 'rgb(75,85,99)' }],
+    ];
+  }
+
   test('draws entity types with their symbols and a dynamic legend', async ({ page }) => {
     await loadExample(page);
 

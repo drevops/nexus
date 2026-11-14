@@ -79,6 +79,31 @@ test.describe('Theme', { tag: '@runner-1' }, () => {
     ];
   }
 
+  for (const [kind, expected] of dataProviderFocusedFieldText()) {
+    test(`draws a focused ${kind} field's label in dark text in the dark theme`, async ({ page }) => {
+      await loadExample(page);
+      await page.click('#theme-toggle');
+
+      const colors = await page.evaluate((fieldKind) => {
+        const field = window.__nexus.cy.nodes('[group="field"][kind="' + fieldKind + '"]').first();
+
+        field.emit('tap');
+
+        return [field.hasClass('trace-source'), field.style('background-color'), field.style('color')].map((value) => String(value).replace(/\s/g, ''));
+      }, kind);
+
+      expect(colors).toEqual(['true', 'rgb(195,240,232)', expected]);
+    });
+  }
+
+  function dataProviderFocusedFieldText() {
+    return [
+      ['single', 'rgb(31,41,51)'],
+      ['multi', 'rgb(31,41,51)'],
+      ['system', 'rgb(31,41,51)'],
+    ];
+  }
+
   test('keeps the landing and toolbar theme toggles in step around an open diagram', async ({ page }) => {
     const fieldFill = () => page.evaluate(() => window.__nexus.cy.nodes('[group="field"][kind="single"]').first().style('background-color').replace(/\s/g, ''));
 
