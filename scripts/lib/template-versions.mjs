@@ -95,6 +95,7 @@ export function orderCounts(counts) {
 const ID_LINE = /^[ \t]*id: '([^'\n]*)',?[ \t]*$/gm;
 const VERSION_LINE = /^([ \t]*version: ')[^'\n]*(',?[ \t]*)$/gm;
 const COUNTS_LINES = /^([ \t]*counts: )\{[^}]*\}(,?[ \t]*)$/gm;
+const SIZE_LINE = /^([ \t]*size: )\d+(,?[ \t]*)$/gm;
 const REF_LINE = /^([ \t]*ref: ')[^'\n]*(',?[ \t]*)$/gm;
 
 // The text of 1 template's entry in TEMPLATES, from its id line to the next
@@ -125,20 +126,21 @@ function replaceAll(block, pattern, values, what) {
 }
 
 /**
- * Rewrites the version, the tag of each source, in order, and the bundle
- * counts of 1 template in the source of src/templates.js.
+ * Rewrites the version, the tag of each source, in order, the bundle counts
+ * and the diagram size of 1 template in the source of src/templates.js.
  *
- * The entry must start with its id and hold 1 version line, 1 counts object
- * and 1 ref line per source, at any indentation, or the rewrite throws. The
- * counts are written on 1 line.
+ * The entry must start with its id and hold 1 version line, 1 counts object,
+ * 1 size line and 1 ref line per source, at any indentation, or the rewrite
+ * throws. The counts are written on 1 line.
  */
-export function rewriteTemplates(text, id, { version, refs, counts }) {
+export function rewriteTemplates(text, id, { version, refs, counts, size }) {
   const { start, end } = templateBlock(text, id);
   let block = text.slice(start, end);
 
   try {
     block = replaceAll(block, VERSION_LINE, [version], 'version line');
     block = replaceAll(block, COUNTS_LINES, [renderCounts(orderCounts(counts))], 'counts object');
+    block = replaceAll(block, SIZE_LINE, [size], 'size line');
     block = replaceAll(block, REF_LINE, refs, 'ref lines');
   } catch (e) {
     throw new Error(id + ' in src/templates.js: ' + e.message);

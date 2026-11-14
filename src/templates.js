@@ -3,7 +3,9 @@
  *
  * Each template ships as a saved diagram, templates/<id>.nexus.json, which
  * 'npm run update-templates' builds from the config folders in 'sources'.
- * 'counts' holds the bundles the diagram draws, by entity type.
+ * 'counts' holds the bundles the diagram draws, by entity type, and 'size'
+ * its length in bytes, which the landing screen measures its download
+ * against.
  *
  * The sources are listed in the order Drupal installs them, because the first
  * folder to ship a file keeps it. 'version' is the tag of the source named
@@ -21,6 +23,7 @@ export const TEMPLATES = [
     icon: 'droplet',
     color: '#0678be',
     counts: { node: 2, taxonomy_term: 1, media: 5, user: 1 },
+    size: 19229,
     sources: [
       {
         name: 'Drupal core',
@@ -56,6 +59,7 @@ export const TEMPLATES = [
     icon: 'landmark',
     color: '#00698f',
     counts: { node: 3, taxonomy_term: 3, media: 6, paragraph: 31, block_content: 5 },
+    size: 140602,
     sources: [
       {
         name: 'CivicTheme',
@@ -73,6 +77,7 @@ export const TEMPLATES = [
     icon: 'chef-hat',
     color: '#008068',
     counts: { node: 3, taxonomy_term: 2, media: 5, block_content: 4, user: 1 },
+    size: 27139,
     sources: [
       {
         name: 'Umami',
@@ -90,6 +95,7 @@ export const TEMPLATES = [
     icon: 'zap',
     color: '#3d4fb8',
     counts: { node: 3, taxonomy_term: 2, media: 7, paragraph: 9, user: 1 },
+    size: 37861,
     sources: [
       {
         name: 'Thunder',
@@ -107,6 +113,7 @@ export const TEMPLATES = [
     icon: 'users',
     color: '#1f80aa',
     counts: { node: 8, taxonomy_term: 11, media: 1, paragraph: 20, block_content: 9, user: 1 },
+    size: 91593,
     sources: [
       {
         name: 'Open Social',

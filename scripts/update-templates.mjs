@@ -5,8 +5,8 @@
  *
  * Each source of a template is cloned at its tag into a temporary folder. The
  * config files the parser reads are merged and drawn into
- * templates/<id>.nexus.json, and the clones are deleted. The bundle counts of
- * the rebuilt diagram are written into src/templates.js.
+ * templates/<id>.nexus.json, and the clones are deleted. The bundle counts and
+ * the size of the rebuilt diagram are written into src/templates.js.
  *
  * --latest moves each source to its latest stable tag first and writes the
  * new tags and version into src/templates.js.
@@ -100,10 +100,11 @@ function buildTemplate(template, clones) {
   }
 
   const doc = buildDocument(parsed, templateTitle(template));
+  const text = renderDocument(doc);
 
-  writeFileSync(join(ROOT, templatePath(template)), renderDocument(doc));
+  writeFileSync(join(ROOT, templatePath(template)), text);
 
-  return doc;
+  return { doc, size: Buffer.byteLength(text) };
 }
 
 function updateTemplate(template, clones, latest) {
@@ -111,13 +112,13 @@ function updateTemplate(template, clones, latest) {
   const version = ownRef(template, refs);
   const target = { ...template, version, sources: template.sources.map((source, index) => ({ ...source, ref: refs[index] })) };
   const before = readDocument(template);
-  const after = buildTemplate(target, clones);
+  const { doc: after, size } = buildTemplate(target, clones);
   const counts = documentCounts(after);
 
   console.log(templateTitle(target) + ': ' + after.entities.length + ' entities, ' + renderCounts(counts));
 
   const text = readFileSync(TEMPLATES_MODULE, 'utf8');
-  const rewritten = rewriteTemplates(text, template.id, { version, refs, counts });
+  const rewritten = rewriteTemplates(text, template.id, { version, refs, counts, size });
 
   if (rewritten !== text) {
     writeFileSync(TEMPLATES_MODULE, rewritten);
