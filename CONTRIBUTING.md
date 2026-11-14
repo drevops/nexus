@@ -104,6 +104,41 @@ To check a `.nexus.json` document before you open it, such as one an AI agent wr
 
 The command prints each error and warning with the JSON Pointer of the part it's about, and `OK` for a document with neither. An error marks a break in the format, a part of the model that gets lost, such as 2 entities with the same id, or a model Drupal would reject. A warning marks a part that opens but isn't drawn, such as an annotation edge to an unknown id, or a model that breaks common practice. The command also runs the rules of the Checks panel, from `src/model-checks.js`, at their default settings. It exits with 1 when any document has an error.
 
+## Measure performance
+
+The benchmark times how long the app takes to draw a diagram and run its interactions in Chromium. It compares your working tree with a base commit, so a slowdown shows up in the pull request that causes it. Install the browser once with `npx playwright install chromium`, then compare your changes with `main`:
+
+    npm run benchmark -- --base-ref main
+
+The command exports the base commit with `git archive` into `.artifacts/tmp/benchmark/`, so your branch and working tree stay as they are. Both copies open the diagrams from your working tree, so only the code differs. Each run measures the base and then your working tree, and the side that goes first swaps every run.
+
+The benchmark measures 3 diagrams:
+
+- CivicTheme, the largest template
+- Open Social, for its load only
+- A stress diagram of 300 entities, built by `scripts/lib/stress-diagram.mjs`
+
+For each diagram, the report gives the time until the diagram is drawn, the total blocking time and the JS heap. For CivicTheme and the stress diagram, it also times each layout, **Tidy up**, turning **Fields** and **Proxies** off and on, and undoing and redoing a move of every node. The last row gives the bytes in `src/` and `assets/vendor/`.
+
+The command takes these options:
+
+| Option | Default | Sets |
+| --- | --- | --- |
+| `--base-ref <ref>` | None | The commit, branch or tag to compare with. Without it, the report lists your working tree alone. |
+| `--runs <n>` | `5` | The number of runs, from 1 to 50 |
+| `--throttle <n>` | `4` | How many times slower the CPU runs, from 1 to 20 |
+| `--threshold <percent>` | `20` | How much slower a load or an interaction can get before it regresses |
+| `--min-diff <ms>` | `10` | How many milliseconds slower a load or an interaction can get before it regresses |
+| `--out <dir>` | `.artifacts/benchmark` | The folder for `benchmark.md` and for `benchmark.json`, which holds every sample |
+
+The report shows the median of each value. A load or an interaction regresses when its median is slower than the base by more than both `--threshold` and `--min-diff`. Blocking time, heap and bytes never regress, because they vary too much between runs or grow with every feature. A diagram that fails on the base shows `n/a`, because the base can predate a control the benchmark uses. The command exits with 1 on a regression or a failure in your working tree, and with 2 on a bad argument.
+
+The **Benchmark** workflow runs the command with 7 runs on every pull request, against the pull request's base. It also runs on every push to `main`, against the commit before it. The report goes to the job summary, and the `benchmark` artifact holds both files. The **Report** job posts the report as a comment on the pull request. After a push to `main`, it posts the report on the open **Performance benchmarks** issue instead. Each run replaces the comment the job posted before. A pull request from a fork gets the job summary only. To compare a branch with another ref, run the workflow from the **Actions** tab and enter the ref.
+
+The workflow fails on a regression. It isn't a required check, so a change that is slower on purpose can still merge.
+
+The benchmark steps live in `scripts/lib/benchmark-page.mjs` and drive the app through its controls. `npm run test-e2e` runs every step once, so a change to a control the benchmark uses fails there first.
+
 ## Updating the templates
 
 The landing screen's templates are listed in `src/templates.js`, and each ships as a saved diagram, `templates/<id>.nexus.json`. Each template is pinned to exact upstream tags and rebuilt from them by 1 command:

@@ -143,3 +143,55 @@ test('keeps the files OpenSSF Scorecard reads in source archives', async (t) => 
     });
   }
 });
+
+test('runs the benchmark with read access only', () => {
+  const benchmark = WORKFLOWS.find(({ name }) => name === 'benchmark.yml').workflow;
+
+  assert.deepEqual(benchmark.jobs.benchmark.permissions, { contents: 'read' });
+  assert.ok('pull_request' in benchmark.on);
+  assert.ok('push' in benchmark.on);
+});
+
+test('compares the head with a base commit the benchmark checks out', () => {
+  const steps = WORKFLOWS.find(({ name }) => name === 'benchmark.yml').workflow.jobs.benchmark.steps;
+  const checkout = steps.find((step) => String(step.uses).startsWith('actions/checkout@'));
+  const run = steps.find((step) => step.name === 'Run the benchmark');
+
+  assert.equal(checkout.with['fetch-depth'], 0);
+  assert.equal(run.env.BASE_SHA, '${{ steps.base.outputs.sha }}');
+  assert.match(run.run, /^npm run benchmark -- .*--base-ref "\$BASE_SHA"/);
+});
+
+test('passes event values to the benchmark scripts through the environment', () => {
+  const benchmark = WORKFLOWS.find(({ name }) => name === 'benchmark.yml').workflow;
+
+  Object.entries(benchmark.jobs).forEach(([job, definition]) =>
+    definition.steps.filter((step) => step.run).forEach((step) => assert.doesNotMatch(step.run, /\$\{\{/, job + ': ' + step.name)),
+  );
+});
+
+test('posts the benchmark report without checking out or running the code', () => {
+  const report = WORKFLOWS.find(({ name }) => name === 'benchmark.yml').workflow.jobs.report;
+
+  assert.equal(report.needs, 'benchmark');
+  assert.deepEqual(report.permissions, { actions: 'read', issues: 'write', 'pull-requests': 'write' });
+  report.steps.forEach((step) => {
+    assert.equal(step.uses, undefined, step.name);
+    assert.doesNotMatch(step.run, /\b(?:npm|npx|node)\b/, step.name);
+  });
+});
+
+test('reports a regression too, but not for a pull request from a fork', () => {
+  const report = WORKFLOWS.find(({ name }) => name === 'benchmark.yml').workflow.jobs.report;
+
+  assert.match(report.if, /!cancelled\(\)/);
+  assert.match(report.if, /github\.event\.pull_request\.head\.repo\.full_name == github\.repository/);
+});
+
+test('finds the comment it posted by the marker the report starts with', async () => {
+  const { REPORT_MARKER } = await import('../../scripts/lib/benchmark.mjs');
+  const post = WORKFLOWS.find(({ name }) => name === 'benchmark.yml').workflow.jobs.report.steps.find((step) => step.name === 'Post the report');
+
+  assert.equal(post.env.MARKER, REPORT_MARKER);
+  assert.match(post.run, /select\(\.user\.login == \\"github-actions\[bot\]\\"/);
+});
