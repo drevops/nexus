@@ -34,6 +34,7 @@ import { drawnShape, fitWidth, labelDrop, labelX, polygonPoints, wrapLabel } fro
 import { checkpoint, untracked } from './undo.js';
 import { describeNode } from './history.js';
 import { DIAGRAM_DEFAULTS, readDiagramDefaults } from './diagram-defaults.js';
+import { DETAIL_LEVELS, detailLevel, levelShowsField, nextLevel, showsFields } from './detail-levels.js';
 import { keepOrder, packColumns, tidyColumns } from './packing.js';
 import { freeArea } from './free-area.js';
 import { frameSettings } from './mode-frame.js';
@@ -123,7 +124,7 @@ const nodeBoxes = new Map();
 const noteSizes = new Map();
 const captionStyles = {};
 
-let fieldsMode = false;
+let levelId = DIAGRAM_DEFAULTS.level;
 let proxyMode = false;
 let layoutName = DIAGRAM_DEFAULTS.layout;
 let showMachineNames = false;
@@ -878,9 +879,9 @@ function buildController(model, options = {}) {
 
   typeVisible = {};
   layoutName = defaults.layout;
-  // Edit mode turns Fields on, so the diagram starts with them rather than
-  // re-running the layout when the builder enters the mode.
-  fieldsMode = defaults.fields || defaults.mode === 'edit';
+  // Edit mode leaves the Entities level for All, so the diagram starts there
+  // rather than re-running the layout when the builder enters the mode.
+  levelId = defaults.mode === 'edit' && !showsFields(defaults.level) ? 'all' : defaults.level;
   proxyMode = defaults.proxies;
   showMachineNames = defaults.machineNames;
   initColors();
@@ -958,15 +959,15 @@ function buildController(model, options = {}) {
     return !outsideExplore(node);
   }
 
-  // What keeps a field off the canvas: the field itself, the Fields switch,
+  // What keeps a field off the canvas: the field itself, the detail level,
   // its entity type's filter, the explore view, or null when nothing does.
   function hiddenBy(field) {
     if (field.data('hidden')) {
       return 'field';
     }
 
-    if (!fieldsMode) {
-      return 'fields';
+    if (!levelShowsField(levelId, { kind: field.data('kind'), fieldType: field.data('fieldType') })) {
+      return 'level';
     }
 
     if (typeVisible[entityTypeOf(field.data('entity'))] === false) {
@@ -979,21 +980,22 @@ function buildController(model, options = {}) {
   function edgeVisible(edge) {
     const group = edge.data('group');
     const ends = !edge.source().hasClass('hidden') && !edge.target().hasClass('hidden');
+    const fields = showsFields(levelId);
 
     if (group === 'has') {
-      return fieldsMode && ends;
+      return fields && ends;
     }
 
     if (group === 'ref') {
-      return fieldsMode && !proxyMode && ends;
+      return fields && !proxyMode && ends;
     }
 
     if (group === 'proxyedge') {
-      return fieldsMode && proxyMode && ends;
+      return fields && proxyMode && ends;
     }
 
     if (group === 'collapsed') {
-      return !fieldsMode && ends;
+      return !fields && ends;
     }
 
     return ends;
@@ -1004,6 +1006,13 @@ function buildController(model, options = {}) {
   function applyVisibility(elements) {
     elements.nodes().forEach((node) => node.toggleClass('hidden', !nodeVisible(node)));
     elements.edges().forEach((edge) => edge.toggleClass('hidden', !edgeVisible(edge)));
+  }
+
+  // A field with its proxies and their edges.
+  function refreshField(field) {
+    const nodes = field.union(cy.nodes('[group="proxy"]').filter((proxy) => proxy.data('field') === field.id()));
+
+    applyVisibility(nodes.union(nodes.connectedEdges()));
   }
 
   function refresh(relayout) {
@@ -1023,7 +1032,7 @@ function buildController(model, options = {}) {
   // The Dagre options for the picked layout, and the gap between the islands
   // that packIslands() and tidy() line up.
   function layoutSettings() {
-    const spacing = fieldsMode ? LAYOUT_SPACING.fields : LAYOUT_SPACING.overview;
+    const spacing = showsFields(levelId) ? LAYOUT_SPACING.fields : LAYOUT_SPACING.overview;
     const options = {
       name: 'dagre',
       rankDir: LAYOUTS[layoutName].rankDir,
@@ -1510,7 +1519,7 @@ function buildController(model, options = {}) {
 
   // The display settings a layout run depends on.
   function displayKey() {
-    return JSON.stringify([fieldsMode, proxyMode, typeVisible]);
+    return JSON.stringify([levelId, proxyMode, typeVisible]);
   }
 
   // Shows only the entity and the entities within the chosen depth of it,
@@ -2073,6 +2082,9 @@ function buildController(model, options = {}) {
     positionCaptions();
     positionNotes();
   });
+  // refresh() covers only the fields present when it runs, so a field added,
+  // renamed or retyped later is checked against the level here.
+  cy.on('add data', 'node[group="field"]', (evt) => refreshField(evt.target));
   cy.on('remove', 'node', (evt) => {
     removeCaptions(evt.target);
     removeNoteBadge(evt.target);
@@ -2087,7 +2099,21 @@ function buildController(model, options = {}) {
     }
   });
 
-  $('fields-toggle').checked = fieldsMode;
+  // The level is a display setting, so its layout run is not a history step.
+  // The Fields table shows which fields are on the canvas, so the store is
+  // notified.
+  function setDetailLevel(id) {
+    if (!detailLevel(id) || id === levelId) {
+      return;
+    }
+
+    levelId = id;
+    showLevel();
+    clearFocus();
+    untracked(() => refresh(true));
+    bump();
+  }
+
   $('proxy-toggle').checked = proxyMode;
   $('machine-names').checked = showMachineNames;
   $('search').value = '';
@@ -2120,6 +2146,8 @@ function buildController(model, options = {}) {
       return node.nonempty() && outsideExplore(node.data('group') === 'field' ? cy.getElementById(node.data('entity')) : node);
     },
     setFieldHidden,
+    detailLevel: () => levelId,
+    setDetailLevel,
     rebuildCaptions,
     rebuildNotes,
     renderedBottom,
@@ -2292,6 +2320,38 @@ function showLines() {
     });
 }
 
+// Fills the detail level menu with an item for each level, in DETAIL_LEVELS
+// order.
+function fillLevelMenu() {
+  const items = DETAIL_LEVELS.map((option) => {
+    const item = document.createElement('sl-menu-item');
+
+    item.setAttribute('type', 'checkbox');
+    item.setAttribute('value', option.id);
+    item.setAttribute('title', option.title);
+    item.textContent = option.label;
+
+    return item;
+  });
+
+  $('detail-menu').append(...items);
+}
+
+// Names the level on the detail level button, titles the button with the
+// level it moves to and ticks the level in the menu.
+function showLevel() {
+  const button = $('detail-level');
+
+  button.textContent = 'Fields: ' + detailLevel(levelId).label;
+  // SlButton does not reflect its title property, so set the attribute.
+  button.setAttribute('title', 'Switch to the next detail level: ' + nextLevel(levelId).label);
+  $('detail-menu')
+    .querySelectorAll('sl-menu-item')
+    .forEach((item) => {
+      item.checked = item.getAttribute('value') === levelId;
+    });
+}
+
 function wire() {
   // A shortcut can export the diagram while the pointer rests on a node, and
   // an export draws the classes the graph has.
@@ -2355,24 +2415,26 @@ function wire() {
     controller.cy.zoom({ level: parseFloat(value), renderedPosition: { x: controller.cy.width() / 2, y: controller.cy.height() / 2 } });
   });
 
+  fillLevelMenu();
+  $('detail-level').addEventListener('click', () => controller.setDetailLevel(nextLevel(levelId).id));
+  // The menu flips a checkbox item on every select, so setDetailLevel()
+  // ticks the picked item again, and showLevel() does when it is the level
+  // already shown.
+  $('detail-menu').addEventListener('sl-select', (evt) => {
+    controller.setDetailLevel(evt.detail.item.value);
+    showLevel();
+  });
+
   // The display toggles re-run the layout too, but undo reverts edits only,
   // so their layout is not a history step. A click on a switch's label
   // clicks its input too, so the handlers take 'sl-change', which fires
-  // once per toggle.
-  // The Fields table shows which fields are on the canvas, so the Fields
-  // switch notifies the store.
-  $('fields-toggle').addEventListener('sl-change', (evt) => {
-    fieldsMode = evt.target.checked;
-    controller.clearFocus();
-    untracked(() => controller.refresh(true));
-    bump();
-  });
-
+  // once per toggle. Proxies draw beside reference fields, so turning them
+  // on at the Entities level moves to the References level.
   $('proxy-toggle').addEventListener('sl-change', (evt) => {
     proxyMode = evt.target.checked;
-    if (proxyMode && !fieldsMode) {
-      fieldsMode = true;
-      $('fields-toggle').checked = true;
+    if (proxyMode && !showsFields(levelId)) {
+      levelId = 'references';
+      showLevel();
     }
     controller.clearFocus();
     untracked(() => controller.refresh(true));
@@ -2417,6 +2479,7 @@ export function render(model, options = {}) {
   }
 
   showLayout();
+  showLevel();
   controller.showTidyTarget();
 
   if (options.layout && Object.keys(options.layout).length) {

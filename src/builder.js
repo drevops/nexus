@@ -426,9 +426,10 @@ function applyMode() {
   }
 
   if (buildMode) {
-    const fields = $('fields-toggle');
-    if (!fields.checked) {
-      fields.click();
+    // Fields are what Edit mode edits, so the Entities level gives way to
+    // All.
+    if (controller && controller.detailLevel() === 'entities') {
+      controller.setDetailLevel('all');
     }
   } else {
     closeInspector();

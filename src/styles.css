@@ -517,6 +517,22 @@ sl-button#zoom-level::part(base) {
   color: var(--text);
 }
 
+.statusbar__level {
+  flex: 0 0 auto;
+}
+
+.statusbar__level sl-button::part(base) {
+  font-size: 0.77rem;
+}
+
+/* Wide enough for the longest label, "Fields: Configurable", so cycling the
+   levels leaves the switches beside it in place. A "0" is wider than the
+   average letter, so 20ch covers its 20 characters in any font. */
+#detail-level::part(label) {
+  display: inline-block;
+  min-width: 20ch;
+}
+
 .statusbar__hint,
 .statusbar__tips {
   min-width: 0;
@@ -588,12 +604,18 @@ sl-button#zoom-level::part(base) {
   flex: 1 1 0;
 }
 
-/* The switches and the zoom controls fill about 38rem between them, so a
-   narrower window drops the hint and tips and moves the zoom controls to a
-   second line. */
-@media (max-width: 40rem) {
-  .statusbar {
+/* The display controls and the zoom controls fill about 45rem between them,
+   so a narrower window drops the hint and tips and moves the zoom controls to
+   a second line. */
+@media (max-width: 47rem) {
+  .statusbar,
+  .statusbar__display {
     flex-wrap: wrap;
+  }
+
+  .statusbar__display {
+    max-width: 100%;
+    row-gap: 2px;
   }
 
   .statusbar__hint,

@@ -30,6 +30,7 @@ import { usedInTitle } from './shared-fields.js';
 import { RESIZE_HANDLES, resizeBox } from './panel-resize.js';
 import { goToVersion, historyState } from './undo.js';
 import { MODES } from './diagram-defaults.js';
+import { DETAIL_LEVELS, levelHidesTitle } from './detail-levels.js';
 import { MARKDOWN_DIAGRAM_OPTIONS } from './markdown.js';
 import { CHECK_RULES, LEVEL_ERROR, LEVEL_WARNING, MAX_FIELD_LIMIT, isFieldLimit } from './model-checks.js';
 import { titleShoelaceHosts } from './host-titles.js';
@@ -768,16 +769,16 @@ function fitIdentifiers(table) {
 // The title of a field's go-to button for each reason the field is off the
 // canvas (see hiddenBy() in render.js).
 const GO_TO_TITLES = {
-  field: 'Show this field to go to it',
-  fields: 'Turn on Fields to go to this field',
-  type: 'Show its entity type to go to this field',
-  explore: 'Clear the explore view to go to this field',
+  field: () => 'Show this field to go to it',
+  level: (controller, r) => levelHidesTitle(controller.detailLevel(), { kind: r.kind, fieldType: r.type }),
+  type: () => 'Show its entity type to go to this field',
+  explore: () => 'Clear the explore view to go to this field',
 };
 
 // The go-to and show-or-hide cells of a field's row.
 function fieldActions(controller, r) {
   const visibilityTitle = r.hidden ? 'Show ' + r.field + ' on the canvas' : 'Hide ' + r.field + ' on the canvas';
-  const goToTitle = r.hiddenBy ? GO_TO_TITLES[r.hiddenBy] : 'Go to ' + r.field + ' on the canvas';
+  const goToTitle = r.hiddenBy ? GO_TO_TITLES[r.hiddenBy](controller, r) : 'Go to ' + r.field + ' on the canvas';
 
   return html`<td class="field-table__action">
       <button
@@ -1300,7 +1301,6 @@ function symbolSelect(controller, type, value, color, onChange) {
 }
 
 const DEFAULT_SWITCHES = [
-  ['fields', 'Fields', 'Show the fields of each entity'],
   ['proxies', 'Proxies', 'Draw each reference as a faded copy of its target beside the field'],
   ['machineNames', 'Machine names', 'Show each machine name under its node'],
 ];
@@ -1335,6 +1335,18 @@ function DiagramDefaults({ controller }) {
         onsl-change=${(e) => controller.setDiagramDefault('mode', e.target.value)}
       >
         ${MODES.map((mode) => html`<sl-option value=${mode.id}>${mode.label}</sl-option>`)}
+      </sl-select>
+      <sl-select
+        class="default-row"
+        size="small"
+        hoist
+        label="Fields"
+        data-default="level"
+        title="The detail level a new diagram opens with"
+        value=${defaults.level}
+        onsl-change=${(e) => controller.setDiagramDefault('level', e.target.value)}
+      >
+        ${DETAIL_LEVELS.map((level) => html`<sl-option value=${level.id} title=${level.title}>${level.label}</sl-option>`)}
       </sl-select>
       ${DEFAULT_SWITCHES.map(
         ([key, label, title]) =>

@@ -147,7 +147,13 @@
 
 <footer id="statusbar" class="statusbar">
   <div class="statusbar__display" role="group" aria-label="Display">
-    <sl-switch id="fields-toggle" size="small" data-shortcut="F" title="Show or hide entity fields">Fields</sl-switch>
+    <sl-button-group class="statusbar__level" label="Detail level">
+      <sl-button id="detail-level" class="toolbar__button" size="small" data-shortcut="F" title="Switch to the next detail level: Entities">Fields: All</sl-button>
+      <sl-dropdown placement="top-start" hoist>
+        <sl-button id="detail-choose" slot="trigger" class="toolbar__button" size="small" caret data-shortcut="Alt+F" title="Choose which fields the diagram shows" aria-label="Choose which fields the diagram shows"></sl-button>
+        <sl-menu id="detail-menu"></sl-menu>
+      </sl-dropdown>
+    </sl-button-group>
     <sl-switch id="proxy-toggle" size="small" data-shortcut="P" title="Show references as semi-opaque proxies instead of long edges">Proxies</sl-switch>
     <sl-switch id="machine-names" size="small" data-shortcut="M" title="Show or hide machine names under each symbol">Machine names</sl-switch>
   </div>
