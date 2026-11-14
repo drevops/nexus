@@ -20,6 +20,9 @@ const html = htmBase.bind(h);
 // Below this body width the contents sit above the page instead of beside it.
 const NARROW_WIDTH = 520;
 
+// The room left above a heading or contents entry scrolled to the top.
+const SCROLL_MARGIN = 8;
+
 function rawIcon(name, size) {
   return html`<span class="help__icon" dangerouslySetInnerHTML=${{ __html: icon(name, size) }}></span>`;
 }
@@ -37,11 +40,11 @@ function useNarrow(ref) {
   return narrow;
 }
 
-function Contents({ pages, current, anchor }) {
+function Contents({ navRef, pages, current, anchor }) {
   const shown = new Set(pages.map((page) => page.id));
   const sections = MANUAL_SECTIONS.map((section) => ({ section, pages: MANUAL_PAGES.filter((page) => page.section === section && shown.has(page.id)) }));
 
-  return html`<nav class="help__nav" aria-label="Manual contents">
+  return html`<nav ref=${navRef} class="help__nav" aria-label="Manual contents">
     ${sections
       .filter((group) => group.pages.length)
       .map(
@@ -104,6 +107,7 @@ function Pager({ page }) {
  */
 export function HelpBody({ help, search }) {
   const rootRef = useRef(null);
+  const navRef = useRef(null);
   const pageRef = useRef(null);
   const narrow = useNarrow(rootRef);
   const page = findHelpPage(MANUAL_PAGES, help.page) || MANUAL_PAGES[0];
@@ -120,11 +124,29 @@ export function HelpBody({ help, search }) {
       return;
     }
 
-    scroller.scrollTop = target.offsetTop - scroller.offsetTop;
+    scroller.scrollTop += target.getBoundingClientRect().top - scroller.getBoundingClientRect().top - SCROLL_MARGIN;
     target.classList.remove('is-flash');
     void target.offsetWidth;
     target.classList.add('is-flash');
   }, [page.id, help.anchor, help.jump]);
+
+  // The contents scroll on their own, so the open page's entry is brought
+  // into view when it lies outside them.
+  useLayoutEffect(() => {
+    const nav = navRef.current;
+    const link = nav.querySelector('.help__link.is-current');
+
+    if (!link) {
+      return;
+    }
+
+    const box = link.getBoundingClientRect();
+    const view = nav.getBoundingClientRect();
+
+    if (box.top < view.top || box.bottom > view.bottom) {
+      nav.scrollTop += box.top - view.top - SCROLL_MARGIN;
+    }
+  }, [page.id, help.jump, narrow]);
 
   function follow(evt) {
     const link = evt.target.closest('a[data-page]');
@@ -149,7 +171,7 @@ export function HelpBody({ help, search }) {
       ></sl-input>
     </div>
     <div ref=${rootRef} class=${'help' + (narrow ? ' is-narrow' : '')}>
-      <${Contents} pages=${pages} current=${page} anchor=${help.anchor} />
+      <${Contents} navRef=${navRef} pages=${pages} current=${page} anchor=${help.anchor} />
       <div ref=${pageRef} class="help__page" data-page=${page.id}>
         <article class="help__article">
           <p class="help__crumb">${page.section}</p>

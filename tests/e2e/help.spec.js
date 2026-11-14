@@ -25,6 +25,11 @@ function inPageView(page, selector) {
   }, selector);
 }
 
+// The distance from the top of the scrolling box to the element's top edge.
+function offsetIn(page, scroller, selector) {
+  return page.locator(scroller).evaluate((box, target) => box.querySelector(target).getBoundingClientRect().top - box.getBoundingClientRect().top, selector);
+}
+
 test.describe('Help', { tag: '@runner-2' }, () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/index.html');
@@ -152,6 +157,42 @@ test.describe('Help', { tag: '@runner-2' }, () => {
     await page.click('#help [data-help-anchor="' + last.id + '"]');
     await expect(page.locator('#help .help__sublink.is-current')).toHaveText(last.text);
     expect(await inPageView(page, '[id="' + last.id + '"]')).toBe(true);
+  });
+
+  test('scrolls a section to the top of the page', async ({ page }) => {
+    const target = MANUAL_PAGES.find((manualPage) => manualPage.headings.length >= 3);
+    const heading = target.headings[1];
+
+    await loadExample(page);
+    await page.click('#help-toggle');
+    await page.click('#help [data-help-link="' + target.id + '"]');
+    await page.click('#help [data-help-anchor="' + heading.id + '"]');
+
+    const offset = await offsetIn(page, '#help .help__page', '[id="' + heading.id + '"]');
+
+    expect(offset).toBeGreaterThanOrEqual(0);
+    expect(offset).toBeLessThan(20);
+  });
+
+  test('scrolls the docked contents to the page a ? button opens', async ({ page }) => {
+    const checks = MANUAL_PAGES.find((manualPage) => manualPage.id === HELP_TARGETS.checks.page);
+    const nav = page.locator('#help .help__nav');
+
+    await loadExample(page);
+    await page.click('#help-toggle');
+    await page.click('#help .panel__pin');
+    await expect(page.locator('#help .help')).toHaveClass(/is-narrow/);
+
+    await expect(nav).toHaveJSProperty('scrollTop', 0);
+    await page.click('#checks-toggle');
+    await page.locator('#checks .panel__help').click();
+
+    await expect(currentLink(page)).toHaveText(checks.title);
+
+    const offset = await offsetIn(page, '#help .help__nav', '.help__link.is-current');
+
+    expect(offset).toBeGreaterThanOrEqual(0);
+    expect(offset).toBeLessThan(await nav.evaluate((element) => element.clientHeight));
   });
 
   test('opens the page a link in the manual points to', async ({ page }) => {
