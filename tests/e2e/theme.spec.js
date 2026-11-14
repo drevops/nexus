@@ -32,7 +32,7 @@ test.describe('Theme', { tag: '@runner-1' }, () => {
     await page.click('#landing-theme');
     expect(await isDark()).toBe(true);
     expect(await page.evaluate(() => window.localStorage.getItem('nexusTheme'))).toBe('dark');
-    expect(await markFills(page, '.landing__logo')).toEqual(DARK_MARK);
+    expect(await markFills(page, '.landing__mark')).toEqual(DARK_MARK);
 
     for (const toggle of ['#landing-theme', '#theme-toggle']) {
       await expect(page.locator(toggle)).toHaveAttribute('title', 'Switch to light theme');

@@ -182,9 +182,12 @@
       <sl-button id="landing-theme" class="toolbar__button toolbar__button--icon" size="small" data-icon="moon" data-theme-toggle data-shortcut="D" title="Toggle light / dark theme" aria-label="Toggle theme"></sl-button>
       <sl-button id="landing-cancel" class="toolbar__button toolbar__button--icon" size="small" data-icon="x" data-shortcut="Escape" title="Close this screen and keep the current diagram" aria-label="Close" hidden></sl-button>
     </div>
-    <h1 class="landing__logo" data-icon="nexus">Nexus</h1>
-    <p class="landing__version" id="landing-version" data-version>dev</p>
-    <p class="landing__tag">Draw a Drupal site's content model from its exported configuration - entirely in your browser.</p>
+    <div class="landing__header">
+      <span class="landing__mark" data-icon="nexus"></span>
+      <h1 class="landing__logo">Nexus</h1>
+      <p class="landing__version" id="landing-version" data-version>dev</p>
+      <p class="landing__tag">Draw a Drupal site's content model from its exported configuration - entirely in your browser.</p>
+    </div>
     <div class="landing__columns">
       <section aria-labelledby="landing-own-heading">
         <h2 id="landing-own-heading" class="landing__heading">Your configuration</h2>
@@ -194,11 +197,12 @@
           <sl-button id="folder-btn" variant="primary" data-icon="folder-input" data-shortcut="Alt+I" title="Import a Drupal config folder">Choose a config folder</sl-button>
           <input id="folder-input" class="visually-hidden" type="file" webkitdirectory directory multiple tabindex="-1">
           <p class="dropzone__privacy">Your files never leave this page.</p>
+          <p class="landing__note">Point at an exported config sync directory (the folder of <code>*.yml</code> files) or a module's <code>config/install</code>. Add an <a href="https://github.com/drevops/nexus#annotation-overlay" target="_blank" rel="noopener" title="Read how to write an annotation overlay"><code>annotations.yml</code></a> to overlay events, APIs and callbacks.</p>
         </div>
         <div class="landing__actions">
-          <sl-button id="landing-open" size="small" data-icon="folder-open" data-shortcut="Mod+O" title="Open a saved Nexus diagram (.nexus.json)">Open a saved diagram</sl-button>
-          <sl-button id="new-btn" size="small" data-icon="file-plus" data-shortcut="Alt+N" title="Start a new empty content model">Start from scratch</sl-button>
-          <sl-button id="landing-ai" class="landing__ai" size="small" data-icon="sparkles" data-shortcut="Alt+A" title="Create a diagram with an AI agent from a screenshot, spreadsheet or spec">Create with AI</sl-button>
+          <sl-button id="landing-open" data-icon="folder-open" data-shortcut="Mod+O" title="Open a saved Nexus diagram (.nexus.json)">Open a saved diagram</sl-button>
+          <sl-button id="new-btn" data-icon="file-plus" data-shortcut="Alt+N" title="Start a new empty content model">Start from scratch</sl-button>
+          <sl-button id="landing-ai" class="landing__ai" data-icon="sparkles" data-shortcut="Alt+A" title="Create a diagram with an AI agent from a screenshot, spreadsheet or spec">Create with AI</sl-button>
         </div>
       </section>
       <section aria-labelledby="landing-templates-heading">
@@ -213,7 +217,6 @@
       </section>
     </div>
     <sl-alert id="landing-error" class="landing__error" variant="danger" closable><span id="landing-error-text"></span></sl-alert>
-    <p class="landing__note">Point at an exported config sync directory (the folder of <code>*.yml</code> files) or a module's <code>config/install</code>. Add an <a href="https://github.com/drevops/nexus#annotation-overlay" target="_blank" rel="noopener" title="Read how to write an annotation overlay"><code>annotations.yml</code></a> to overlay events, APIs and callbacks.</p>
   </sl-card>
 </div>
 

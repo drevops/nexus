@@ -80,6 +80,49 @@ test.describe('Landing', { tag: '@runner-1' }, () => {
     expect(scratch.width).toBe(open.width);
   });
 
+  test('keeps the card within 80% of a short window and scrolls the template list past it', async ({ page }) => {
+    await page.setViewportSize({ width: 1470, height: 820 });
+    await addTemplateRows(page, 5);
+    const list = page.locator('#template-list');
+
+    expect((await page.locator('.landing__card').boundingBox()).height).toBeLessThanOrEqual(820 * 0.8);
+    expect(await list.evaluate((element) => element.scrollHeight > element.clientHeight)).toBe(true);
+
+    await page.locator('.template-row').last().scrollIntoViewIfNeeded();
+    await expect(page.locator('.template-row').last()).toBeInViewport();
+  });
+
+  test('shows every template in a tall window and stretches the dropzone to the height of the list', async ({ page }) => {
+    await page.setViewportSize({ width: 1470, height: 1200 });
+    await addTemplateRows(page, 5);
+    const list = page.locator('#template-list');
+
+    expect(await list.evaluate((element) => element.scrollHeight - element.clientHeight)).toBeLessThanOrEqual(1);
+
+    const [ai, more] = await boxesOf(page, ['#landing-ai', '.landing__more']);
+    expect(ai.y + ai.height).toBeCloseTo(more.y + more.height, 0);
+  });
+
+  test('shows every template without a cap in a narrow window', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await addTemplateRows(page, 5);
+
+    expect(await page.locator('#template-list').evaluate((element) => element.scrollHeight - element.clientHeight)).toBeLessThanOrEqual(1);
+  });
+
+  // Copies the template rows the app drew, so the list holds more templates
+  // than ship.
+  async function addTemplateRows(page, count) {
+    await expect(page.locator('#landing')).not.toHaveAttribute('aria-busy');
+    await page.locator('#template-list').evaluate((list, total) => {
+      const rows = [...list.querySelectorAll('.template-row')];
+
+      for (let i = 0; i < total; i++) {
+        list.append(rows[i % rows.length].cloneNode(true));
+      }
+    }, count);
+  }
+
   test('offers a close button in the corner of the card only while a diagram is open', async ({ page }) => {
     await expect(page.locator('#landing-cancel')).toBeHidden();
 
@@ -116,7 +159,7 @@ test.describe('Landing', { tag: '@runner-1' }, () => {
       await openFrom(page, 'import');
       await expect(page.locator('#landing-cancel')).toBeVisible();
 
-      const [mark, toggle, close] = await boxesOf(page, ['.landing__logo svg.icon--nexus', '#landing-theme', '#landing-cancel']);
+      const [mark, toggle, close] = await boxesOf(page, ['.landing__mark svg.icon--nexus', '#landing-theme', '#landing-cancel']);
 
       expect(boxesOverlap(mark, toggle)).toBe(false);
       expect(boxesOverlap(mark, close)).toBe(false);
@@ -173,7 +216,7 @@ test.describe('Landing', { tag: '@runner-1' }, () => {
   });
 
   test('links the landing note to the annotation overlay documentation in a new tab', async ({ page }) => {
-    const link = page.locator('.landing__note').getByRole('link', { name: 'annotations.yml' });
+    const link = page.locator('#dropzone .landing__note').getByRole('link', { name: 'annotations.yml' });
 
     await expect(link).toBeVisible();
     await expect(link).toHaveAttribute('href', 'https://github.com/drevops/nexus#annotation-overlay');
