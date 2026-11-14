@@ -3,7 +3,9 @@
  * reference target.
  *
  * Every writer returns CSV text with CRLF line endings. A cell holding a
- * quote, a comma or a line break is quoted, with each quote doubled.
+ * quote, a comma or a line break is quoted, with each quote doubled. A cell
+ * that starts with `=`, `+`, `-`, `@`, a tab or a carriage return gets a
+ * leading `'`, so a spreadsheet shows it as text, unless it is a number.
  */
 
 import { cardinalityLabel, KIND_SYSTEM } from './model.js';
@@ -30,8 +32,18 @@ const BUNDLE_HEADERS = ['entity_type', 'bundle', 'label', 'description', 'fields
 
 const REFERENCE_HEADERS = ['source_entity_type', 'source_bundle', 'field', 'field_label', 'target_entity_type', 'target_bundle', 'cardinality', 'required'];
 
+// A spreadsheet evaluates a cell that starts with one of these characters as
+// a formula, and document text is untrusted.
+const FORMULA_START = /^[=+\-@\t\r]/;
+
+const NUMBER = /^[+-]?\d+(\.\d+)?$/;
+
 function csvCell(value) {
-  const text = String(value == null ? '' : value);
+  let text = String(value == null ? '' : value);
+
+  if (FORMULA_START.test(text) && !NUMBER.test(text)) {
+    text = "'" + text;
+  }
 
   return /[",\r\n]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
 }

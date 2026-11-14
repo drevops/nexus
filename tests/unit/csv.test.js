@@ -41,6 +41,18 @@ function dataProviderCsvCell() {
     ['a semicolon', 'a; b', 'a; b'],
     ['a single quote', "Editor's pick", "Editor's pick"],
     ['leading and trailing spaces', ' padded ', ' padded '],
+    ['a formula', '=1+1', "'=1+1"],
+    ['a formula with a comma', '=HYPERLINK("https://example.com","x")', '"\'=HYPERLINK(""https://example.com"",""x"")"'],
+    ['a leading plus', '+cmd', "'+cmd"],
+    ['a leading minus', '-cmd', "'-cmd"],
+    ['a leading at sign', '@SUM(A1)', "'@SUM(A1)"],
+    ['a leading tab', '\tx', "'\tx"],
+    ['a leading carriage return', '\rx', '"\'\rx"'],
+    ['an equals sign inside text', 'a=b', 'a=b'],
+    ['a negative number', -3, '-3'],
+    ['a negative number as text', '-3', '-3'],
+    ['a signed decimal as text', '+1.5', '+1.5'],
+    ['a minus on its own', '-', "'-"],
   ];
 }
 
@@ -164,6 +176,42 @@ test('escapes bundle and reference cells', () => {
 
   assert.deepEqual(bundlesCsv(doc).split('\r\n').slice(1), ['node,article,"News, ""daily""","Line 1\nLine 2",1,1,"A, b"']);
   assert.deepEqual(referencesCsv(doc).split('\r\n').slice(1), ['node,article,field_ref,"Ref, ""main""",node,article,1,no']);
+});
+
+test('writes formulas in document text as text in every CSV', () => {
+  const doc = {
+    entities: [
+      {
+        entityType: 'node',
+        bundle: 'article',
+        label: '=1+1',
+        description: '+cmd',
+        note: '@SUM(A1)',
+        fields: [{ name: 'field_ref', label: '-2+3', kind: 'single', targetType: 'node', targetBundles: ['article'] }],
+      },
+    ],
+  };
+  const record = {
+    entity: '=1+1',
+    entityType: 'node',
+    field: '-2+3',
+    name: 'field_ref',
+    type: 'entity_reference',
+    cardinality: 1,
+    required: false,
+    refs: [{ label: '=1+1' }],
+    usedIn: [],
+    description: '@SUM(A1)',
+    defaultValue: '-1',
+    allowedValues: [],
+    translatable: null,
+  };
+
+  assert.deepEqual(bundlesCsv(doc).split('\r\n').slice(1), ["node,article,'=1+1,'+cmd,1,1,'@SUM(A1)"]);
+  assert.deepEqual(referencesCsv(doc).split('\r\n').slice(1), ["node,article,field_ref,'-2+3,node,article,1,no"]);
+  assert.deepEqual(fieldsCsv([record], () => 'Content type').split('\r\n').slice(1), [
+    "'=1+1,Content type,'-2+3,field_ref,entity_reference,1,no,'=1+1,,'@SUM(A1),-1,,",
+  ]);
 });
 
 test('fills in what a sparse document leaves out', () => {
