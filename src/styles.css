@@ -1981,7 +1981,11 @@ body.is-dragging-panel * {
 
 /* When the card is taller than the window, its auto margins drop to 0, so
    the overlay scrolls to its top instead of clipping it. */
+/* --landing-chrome is the card's height without the template list: its
+   padding, the header and the template column's heading and footer line. */
 .landing__card {
+  --landing-chrome: 11.5rem;
+  --landing-list-min: 14rem;
   position: relative;
   width: 940px;
   max-width: 100%;
@@ -1995,8 +1999,7 @@ body.is-dragging-panel * {
 }
 
 .landing__card::part(body) {
-  padding: 2rem;
-  text-align: center;
+  padding: 1.5rem 1.75rem;
 }
 
 .landing__corner {
@@ -2012,48 +2015,106 @@ body.is-dragging-panel * {
   visibility: hidden;
 }
 
-.landing__logo {
-  display: flex;
-  flex-direction: column;
+/* The mark spans the name row and the tagline row. The right padding keeps
+   the name clear of the corner buttons. */
+.landing__header {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
   align-items: center;
-  gap: 0.6rem;
-  margin: 0 0 0.25rem;
-  font-size: 1.6rem;
+  column-gap: 0.9rem;
+  margin: 0 0 1.25rem;
+  padding: 0 4.5rem 1.1rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.landing__mark {
+  grid-row: 1 / 3;
+  line-height: 0;
+}
+
+.landing__mark .icon--nexus {
+  width: 46px;
+  height: 46px;
+}
+
+.landing__logo {
+  margin: 0;
+  font-size: 1.35rem;
   font-weight: 700;
-}
-
-.landing__logo .icon--nexus {
-  width: 64px;
-  height: 64px;
-}
-
-/* Below this width the corner buttons reach the centred mark, so the logo
-   starts below them. */
-@container (max-width: 18rem) {
-  .landing__logo {
-    margin-top: 1rem;
-  }
+  line-height: 1.3;
 }
 
 .landing__version {
-  margin: 0 0 1rem;
+  justify-self: start;
+  margin: 0 0 0 -0.4rem;
+  padding: 1px 7px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
   color: var(--muted);
-  font-size: 0.8rem;
+  font-size: 0.66rem;
+  font-weight: 600;
   letter-spacing: 0.03em;
+  line-height: 1.5;
 }
 
 .landing__tag {
-  margin: 0 0 1.5rem;
+  grid-column: 2 / -1;
+  margin: 0.1rem 0 0;
   color: var(--muted);
+  font-size: 0.88rem;
 }
 
-/* Your configuration beside the templates, stacking into 1 column when the
-   card is too narrow for 2. */
+/* A narrow card puts the mark on a row of its own beside the corner buttons,
+   so the name and the tagline take the full width below it. */
+@container (max-width: 30rem) {
+  .landing__header {
+    grid-template-columns: auto 1fr;
+    padding-right: 0;
+  }
+
+  .landing__mark {
+    grid-row: auto;
+    grid-column: 1 / -1;
+    margin-bottom: 0.5rem;
+  }
+
+  .landing__version {
+    margin-left: 0;
+  }
+
+  .landing__tag {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Your configuration beside the templates, in 1 column when the card is too
+   narrow for 2. The rows stretch, so the dropzone grows to the height of the
+   template list. */
 .landing__columns {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  grid-template-columns: 1fr;
   gap: 1.75rem;
-  text-align: left;
+}
+
+.landing__columns > section {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+@container (min-width: 50rem) {
+  .landing__columns {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* The card stays within 80% of the window: the template list takes the
+     height the rest of the card leaves and scrolls past it, and keeps room
+     for a few rows in a short window. */
+  .template-list {
+    max-height: max(calc(80dvh - var(--landing-chrome)), var(--landing-list-min));
+    overflow-y: auto;
+  }
 }
 
 .landing__heading {
@@ -2067,12 +2128,12 @@ body.is-dragging-panel * {
 
 .dropzone {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  min-height: 15rem;
-  padding: 2rem 1.5rem;
+  gap: 0.4rem;
+  padding: 1.25rem 1.25rem 1rem;
   border: 2px dashed var(--border);
   border-radius: 12px;
   text-align: center;
@@ -2090,8 +2151,8 @@ body.is-dragging-panel * {
 }
 
 .dropzone__glyph .icon {
-  width: 40px;
-  height: 40px;
+  width: 30px;
+  height: 30px;
 }
 
 .dropzone__hint {
@@ -2106,9 +2167,11 @@ body.is-dragging-panel * {
   font-size: 0.75rem;
 }
 
+/* At most 2 columns, so Open and Start from scratch always fill the row above
+   Create with AI. */
 .landing__actions {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, max(11rem, calc(50% - 0.25rem))), 1fr));
   gap: 0.5rem;
   margin-top: 0.75rem;
 }
@@ -2151,9 +2214,10 @@ body.is-dragging-panel * {
 
 .template-row {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
-  gap: 0.85rem;
-  padding: 0.85rem 1rem;
+  gap: 0.75rem;
+  padding: 0.55rem 0.85rem;
   border: 0;
   border-top: 1px solid var(--border);
   background: var(--panel-bg);
@@ -2182,23 +2246,23 @@ body.is-dragging-panel * {
   display: grid;
   flex: 0 0 auto;
   place-items: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 11px;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
   background: var(--template-color);
   color: #fff;
 }
 
 .template-row__mark .icon {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
 }
 
 .template-row__body {
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.05rem;
   min-width: 0;
 }
 
@@ -2228,8 +2292,8 @@ body.is-dragging-panel * {
 
 .template-row__summary {
   color: var(--muted);
-  font-size: 0.78rem;
-  line-height: 1.4;
+  font-size: 0.75rem;
+  line-height: 1.3;
 }
 
 .template-row__counts {
@@ -2272,9 +2336,13 @@ sl-button[hidden] {
 }
 
 .landing__note {
-  margin-top: 1.5rem;
-  font-size: 0.78rem;
+  max-width: 30rem;
+  margin: 0.5rem 0 0;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--border);
   color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.45;
 }
 
 .landing__error {

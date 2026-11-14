@@ -45,13 +45,20 @@ test.describe('Create with AI', { tag: '@runner-2' }, () => {
     ];
   }
 
-  test('puts Create with AI below the other landing actions, across their width', async ({ page }) => {
-    const [open, scratch, ai] = await Promise.all(['#landing-open', '#new-btn', '#landing-ai'].map((selector) => page.locator(selector).boundingBox()));
+  for (const width of dataProviderActionWidths()) {
+    test(`puts Create with AI below the other landing actions, across their width, in a ${width}px window`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 });
+      const [open, scratch, ai] = await Promise.all(['#landing-open', '#new-btn', '#landing-ai'].map((selector) => page.locator(selector).boundingBox()));
 
-    expect(ai.x).toBe(open.x);
-    expect(ai.y).toBeGreaterThan(open.y + open.height);
-    expect(ai.x + ai.width).toBeCloseTo(scratch.x + scratch.width, 0);
-  });
+      expect(ai.x).toBe(open.x);
+      expect(ai.y).toBeGreaterThan(open.y + open.height);
+      expect(ai.x + ai.width).toBeCloseTo(scratch.x + scratch.width, 0);
+    });
+  }
+
+  function dataProviderActionWidths() {
+    return [1280, 700];
+  }
 
   test('offers a prompt and an install command that name the skill this site serves', async ({ page, baseURL }) => {
     await page.click('#landing-ai');

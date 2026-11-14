@@ -19,17 +19,27 @@ test.describe('Logo', { tag: '@runner-1' }, () => {
   });
 
   test('draws the Nexus mark beside the name on the landing screen and in the toolbar', async ({ page }) => {
-    for (const brand of [page.locator('.landing__logo'), page.locator('.toolbar__brand')]) {
-      await expect(brand).toHaveText('Nexus');
-      await expect(brand.locator('svg.icon--nexus')).toBeVisible();
-      await expect(brand.locator('svg.icon--nexus')).toHaveAttribute('aria-hidden', 'true');
+    for (const [name, mark] of dataProviderBrands()) {
+      await expect(page.locator(name)).toHaveText('Nexus');
+      await expect(page.locator(mark)).toBeVisible();
+      await expect(page.locator(mark)).toHaveAttribute('aria-hidden', 'true');
     }
+
+    const [mark, name] = await Promise.all(['.landing__mark svg.icon--nexus', '.landing__logo'].map((selector) => page.locator(selector).boundingBox()));
+    expect(mark.x + mark.width).toBeLessThan(name.x);
   });
+
+  function dataProviderBrands() {
+    return [
+      ['.landing__logo', '.landing__mark svg.icon--nexus'],
+      ['.toolbar__brand', '.toolbar__brand svg.icon--nexus'],
+    ];
+  }
 
   test('colours the Nexus mark for the app theme, not the system one', async ({ page }) => {
     // The app reads the system scheme only at load, so it stays in the light theme.
     await page.emulateMedia({ colorScheme: 'dark' });
-    expect(await markFills(page, '.landing__logo')).toEqual(LIGHT_MARK);
+    expect(await markFills(page, '.landing__mark')).toEqual(LIGHT_MARK);
     expect(await markFills(page, '.toolbar__brand')).toEqual(LIGHT_MARK);
 
     await loadExample(page);
@@ -39,6 +49,6 @@ test.describe('Logo', { tag: '@runner-1' }, () => {
 
     await openFrom(page, 'import');
     await expect(page.locator('#landing')).toBeVisible();
-    expect(await markFills(page, '.landing__logo')).toEqual(DARK_MARK);
+    expect(await markFills(page, '.landing__mark')).toEqual(DARK_MARK);
   });
 });
