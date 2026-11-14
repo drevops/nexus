@@ -39,6 +39,43 @@ export function isTypeName(value) {
   return typeof value === 'string' && TYPE_NAME.test(value);
 }
 
+// Each symbol in 1 box of 28 by 20 units, with its outline on half-units, so
+// at 28 pixels wide every edge lands on whole pixels, and every size keeps the
+// same proportions.
+export const SYMBOL_SHAPES = {
+  rounded: ['rect', 'x="1.5" y="2.5" width="25" height="15" rx="3.5"'],
+  rectangle: ['rect', 'x="1.5" y="2.5" width="25" height="15"'],
+  ellipse: ['ellipse', 'cx="14" cy="10" rx="12.5" ry="7.5"'],
+  diamond: ['polygon', 'points="14,1.5 26.5,10 14,18.5 1.5,10"'],
+  hexagon: ['polygon', 'points="7.5,2.5 20.5,2.5 26.5,10 20.5,17.5 7.5,17.5 1.5,10"'],
+  tag: ['polygon', 'points="1.5,2.5 20.5,2.5 26.5,10 20.5,17.5 1.5,17.5"'],
+  barrel: ['path', 'd="M2.5,4.5 Q14,0.5 25.5,4.5 L25.5,15.5 Q14,19.5 2.5,15.5 Z"'],
+  cut: ['polygon', 'points="6.5,2.5 21.5,2.5 26.5,6.5 26.5,13.5 21.5,17.5 6.5,17.5 1.5,13.5 1.5,6.5"'],
+  rhomboid: ['polygon', 'points="6.5,2.5 26.5,2.5 21.5,17.5 1.5,17.5"'],
+  pentagon: ['polygon', 'points="14,1.5 26.5,8.5 22.5,18.5 5.5,18.5 1.5,8.5"'],
+  octagon: ['polygon', 'points="8.5,1.5 19.5,1.5 26.5,6.5 26.5,13.5 19.5,18.5 8.5,18.5 1.5,13.5 1.5,6.5"'],
+};
+
+export const SYMBOL_BOX = { width: 28, height: 20 };
+
+const SYMBOL_STROKE = '#5b6470';
+
+const DEFAULT_SYMBOL_WIDTH = 26;
+
+/**
+ * Returns the SVG of a symbol filled with a colour, `width` pixels wide and
+ * as tall as the 28 by 20 box allows. An unknown symbol draws as a rounded
+ * rectangle and a colour that isn't a hex value draws no fill, since the
+ * markup goes into innerHTML.
+ */
+export function symbolSvg(key, color, width = DEFAULT_SYMBOL_WIDTH) {
+  const [tag, geometry] = isSymbol(key) ? SYMBOL_SHAPES[key] : SYMBOL_SHAPES.rounded;
+  const height = Math.round((width * SYMBOL_BOX.height) / SYMBOL_BOX.width);
+  const fill = isHexColor(color) ? color : 'none';
+
+  return `<svg width="${width}" height="${height}" viewBox="0 0 ${SYMBOL_BOX.width} ${SYMBOL_BOX.height}"><${tag} ${geometry} fill="${fill}" stroke="${SYMBOL_STROKE}" stroke-linejoin="round"/></svg>`;
+}
+
 // Object.fromEntries() defines own properties, so a '__proto__' key can't
 // change the prototype of the result.
 function entriesWhere(map, isValid) {
