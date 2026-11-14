@@ -47,7 +47,6 @@ function dataProviderPanelOpeners() {
   return [
     ['entities', 'id="entities-toggle"'],
     ['table', 'id="table-toggle"'],
-    ['settings', 'id="settings-toggle"'],
     ['legend', 'id="legend-toggle"'],
     ['history', 'id="history-toggle"'],
     ['checks', 'id="checks-toggle"'],
@@ -72,6 +71,7 @@ function dataProviderDialogOpeners() {
     ['about-dialog', 'id="about-toggle"'],
     ['ai-dialog', 'id="landing-ai"'],
     ['ai-dialog', 'value="ai"'],
+    ['settings', 'id="settings-toggle"'],
     ['link-dialog', 'value="link"'],
   ];
 }
@@ -81,7 +81,7 @@ test('labels every dialog in its header slot', () => {
 
   assert.deepEqual(
     dialogs.map((match) => match[1]),
-    ['about-dialog', 'ai-dialog', 'link-dialog'],
+    ['about-dialog', 'ai-dialog', 'settings', 'link-dialog'],
   );
 
   for (const [, id, attributes] of dialogs) {

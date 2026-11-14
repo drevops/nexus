@@ -305,7 +305,13 @@
   <sl-button id="ai-open" slot="footer" variant="primary" data-icon="folder-open" title="Open the pasted document as the diagram">Open diagram</sl-button>
 </sl-dialog>
 
-<sl-dialog id="settings" class="settings-dialog"></sl-dialog>
+<sl-dialog id="settings" class="settings-dialog">
+  <span slot="label" class="dialog__label" data-icon="settings">Settings</span>
+  <div id="settings-body" class="settings-dialog__body"></div>
+  <p slot="footer" class="settings-dialog__note">Saved to this browser and reused across diagrams.</p>
+  <sl-button id="settings-reset" slot="footer" class="settings-reset" size="small" data-icon="rotate-ccw" title="Restore the default colours, symbols, new diagram settings, mode frame, hover highlight, Markdown export and checks">Reset all to defaults</sl-button>
+  <sl-button id="settings-close" slot="footer" size="small" variant="primary" title="Close the settings">Done</sl-button>
+</sl-dialog>
 
 <sl-dialog id="link-dialog" class="link-dialog">
   <span slot="label" class="dialog__label" data-icon="link">Copy link</span>

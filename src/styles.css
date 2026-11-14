@@ -1957,6 +1957,12 @@ body.is-dragging-panel * {
   display: flex;
 }
 
+.settings-dialog__body {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .settings-dialog::part(footer) {
   display: flex;
   align-items: center;

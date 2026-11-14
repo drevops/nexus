@@ -1880,10 +1880,10 @@ function hasOpenPopup(root) {
   );
 }
 
-// Renders into the #settings dialog. The tabs mount only while it is open, so
+// Renders the tabs into #settings-body while the #settings dialog is open, so
 // graph edits don't redraw them. Nested selects and pickers fire their own
 // sl-show and sl-after-hide, which bubble to the dialog.
-function SettingsDialog({ dialog }) {
+function SettingsBody({ dialog }) {
   useStore();
   const [open, setOpen] = useState(false);
   const controller = getController();
@@ -1911,19 +1911,7 @@ function SettingsDialog({ dialog }) {
     };
   }, []);
 
-  return html`<span slot="label" class="dialog__label" dangerouslySetInnerHTML=${{ __html: icon('settings') + 'Settings' }}></span>
-    ${open && controller ? html`<${SettingsTabs} controller=${controller} />` : null}
-    <p slot="footer" class="settings-dialog__note">Saved to this browser and reused across diagrams.</p>
-    <sl-button
-      slot="footer"
-      id="settings-reset"
-      class="settings-reset"
-      size="small"
-      title="Restore the default colours, symbols, new diagram settings, mode frame, hover highlight, Markdown export and checks"
-      onClick=${() => controller && controller.resetSettings()}
-      >${rawIcon('rotate-ccw')}Reset all to defaults</sl-button
-    >
-    <sl-button slot="footer" id="settings-close" size="small" variant="primary" title="Close the settings" onClick=${() => dialog.hide()}>Done</sl-button>`;
+  return open && controller ? html`<${SettingsTabs} controller=${controller} />` : null;
 }
 
 /* Boot -------------------------------------------------------------------- */
@@ -1962,8 +1950,10 @@ export function initUI() {
   render(html`<${StageApp} />`, $('stage-root'));
 
   const settings = $('settings');
-  render(html`<${SettingsDialog} dialog=${settings} />`, settings);
+  render(html`<${SettingsBody} dialog=${settings} />`, $('settings-body'));
   $('settings-toggle').addEventListener('click', () => settings.show());
+  $('settings-close').addEventListener('click', () => settings.hide());
+  $('settings-reset').addEventListener('click', () => getController()?.resetSettings());
 
   PANEL_TOGGLES.forEach(([btn, id]) => {
     const el = $(btn);

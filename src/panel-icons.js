@@ -9,7 +9,6 @@
 export const PANEL_ICONS = {
   entities: 'box',
   table: 'table',
-  settings: 'sliders',
   legend: 'info',
   history: 'history',
   checks: 'list-checks',
