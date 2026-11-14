@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-import { loadExample, openDocument, slFill, slSelect, downloadFrom, saveFrom, topmostOf } from './helpers.js';
+import { loadExample, openDocument, openSaveSubmenu, slFill, slSelect, downloadFrom, saveFrom, topmostOf } from './helpers.js';
 
 test.describe('Save', { tag: '@runner-1' }, () => {
   test.beforeEach(async ({ page }) => {
@@ -67,16 +67,12 @@ test.describe('Save', { tag: '@runner-1' }, () => {
 
     await expect(page.locator('#save-menu')).toBeVisible();
     await expect(page.locator('#save-menu sl-menu-label')).toHaveText('Save as');
-    await expect(page.locator('#save-menu sl-menu-item')).toHaveText([
-      'JSON',
-      'PNG',
-      'SVG',
-      'Fields CSV',
-      'Bundles CSV',
-      'References CSV',
-      'Markdown',
-      'HTML',
-      'Copy link',
+    // The CSV item's text includes its submenu's.
+    await expect(page.locator('#save-menu > sl-menu-item')).toHaveText(['JSON', 'PNG', 'SVG', /^CSV/, 'Markdown', 'HTML', 'Copy link']);
+    await expect(page.locator('#save-menu > sl-menu-item').nth(3).locator('> sl-menu[slot="submenu"] > sl-menu-item')).toHaveText([
+      'Fields',
+      'Bundles',
+      'References',
     ]);
     await expect(page.locator('#save-menu > sl-menu-item[value="html"] + sl-divider + sl-menu-item[value="link"]')).toHaveCount(1);
   });
@@ -239,6 +235,25 @@ test.describe('Save', { tag: '@runner-1' }, () => {
     await expect.poll(() => topmostOf(page, ['#save-menu', '#entities'])).toBe('#save-menu');
   });
 
+  for (const [name, target] of dataProviderCsvItemClicks()) {
+    test(`keeps the Save as menu open and shows the CSV submenu on a click on the CSV item's ${name}`, async ({ page }) => {
+      await loadExample(page);
+      await page.click('#save-choose');
+
+      await page.click('#save-menu > sl-menu-item:has(sl-menu-item[value="csv"])' + target);
+
+      await expect(page.locator('#save-menu')).toBeVisible();
+      await expect(page.locator('#save-menu sl-menu-item[value="bundles-csv"]')).toBeVisible();
+    });
+  }
+
+  function dataProviderCsvItemClicks() {
+    return [
+      ['label', ''],
+      ['icon', ' > [slot="prefix"]'],
+    ];
+  }
+
   test('describes a hovered save menu item in the status bar', async ({ page }) => {
     await loadExample(page);
 
@@ -246,6 +261,10 @@ test.describe('Save', { tag: '@runner-1' }, () => {
     await page.hover('#save-menu sl-menu-item[value="png"]');
     await expect(page.locator('#statusbar-hint')).toHaveText('Save the diagram as a PNG image');
 
+    await page.hover('#save-menu > sl-menu-item:has(sl-menu-item[value="csv"])');
+    await expect(page.locator('#statusbar-hint')).toHaveText('Save the fields, bundles or references as CSV');
+
+    await openSaveSubmenu(page, 'csv');
     await page.hover('#save-menu sl-menu-item[value="csv"]');
     await expect(page.locator('#statusbar-hint')).toHaveText('Save the fields table as CSV');
 

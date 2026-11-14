@@ -1,21 +1,46 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { SAVE_FORMATS, findSaveFormat } from '../../src/save-formats.js';
+import { SAVE_FORMATS, SAVE_MENU, findSaveFormat } from '../../src/save-formats.js';
 import { hasIcon } from '../../src/icons.js';
 
-test('lists JSON, PNG, SVG, the 3 CSVs, Markdown and HTML in menu order', () => {
+test('lists JSON, PNG, SVG, a CSV submenu, Markdown and HTML in menu order', () => {
+  assert.deepEqual(
+    SAVE_MENU.map((entry) => entry.label),
+    ['JSON', 'PNG', 'SVG', 'CSV', 'Markdown', 'HTML'],
+  );
+  assert.deepEqual(
+    SAVE_MENU[3].formats.map((format) => format.label),
+    ['Fields', 'Bundles', 'References'],
+  );
+});
+
+test('lists every format in menu order with the submenu in place', () => {
   assert.deepEqual(
     SAVE_FORMATS.map((format) => format.id),
     ['json', 'png', 'svg', 'csv', 'bundles-csv', 'references-csv', 'md', 'html'],
   );
 });
 
-test('describes every save format completely', () => {
-  for (const format of SAVE_FORMATS) {
-    assert.ok(format.label, format.id + ' has no label');
-    assert.ok(hasIcon(format.icon), format.id + ' has an icon that is not drawn');
-    assert.match(format.title, /^Save the /, format.id + ' has no title');
+test('describes every menu entry and save format completely', () => {
+  for (const entry of SAVE_MENU.concat(SAVE_FORMATS)) {
+    assert.ok(entry.label, entry.title + ' has no label');
+    assert.ok(hasIcon(entry.icon), entry.label + ' has an icon that is not drawn');
+    assert.match(entry.title, /^Save the /, entry.label + ' has no title');
   }
+});
+
+test('gives every format an id and no submenu entry one', () => {
+  for (const entry of SAVE_MENU) {
+    assert.equal(Object.hasOwn(entry, 'id'), !entry.formats, entry.label);
+  }
+
+  assert.ok(SAVE_FORMATS.every((format) => typeof format.id === 'string' && !format.formats));
+});
+
+test('draws a different icon for each menu entry and format', () => {
+  const icons = SAVE_MENU.concat(SAVE_FORMATS.filter((format) => !SAVE_MENU.includes(format))).map((entry) => entry.icon);
+
+  assert.equal(new Set(icons).size, icons.length);
 });
 
 test('finds a save format by its id', async (t) => {
@@ -33,9 +58,9 @@ function dataProviderFindSaveFormat() {
     ['JSON', 'json', 'JSON'],
     ['PNG', 'png', 'PNG'],
     ['SVG', 'svg', 'SVG'],
-    ['Fields CSV', 'csv', 'Fields CSV'],
-    ['Bundles CSV', 'bundles-csv', 'Bundles CSV'],
-    ['References CSV', 'references-csv', 'References CSV'],
+    ['the fields CSV', 'csv', 'Fields'],
+    ['the bundles CSV', 'bundles-csv', 'Bundles'],
+    ['the references CSV', 'references-csv', 'References'],
     ['Markdown', 'md', 'Markdown'],
     ['HTML', 'html', 'HTML'],
     ['an id in capitals', 'SVG', null],

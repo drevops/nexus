@@ -69,15 +69,32 @@ export async function downloadFrom(page, selector) {
   return download;
 }
 
-// Picks a format from the Save button's menu and returns its download once
-// the menu has closed. A dropdown reopened while its close animation runs
-// stays open but hidden.
+// Picks a format from the Save button's menu, through its submenu when it has
+// one, and returns its download once the menu has closed. A dropdown reopened
+// while its close animation runs stays open but hidden.
 export async function saveFrom(page, format) {
+  const item = '#save-menu sl-menu-item[value="' + format + '"]';
+
   await page.click('#save-choose');
-  const download = await downloadFrom(page, '#save-menu sl-menu-item[value="' + format + '"]');
+  await openSaveSubmenu(page, format);
+  const download = await downloadFrom(page, item);
   await expect(page.locator('#save-menu')).toBeHidden();
 
   return download;
+}
+
+// Hovers the Save menu item whose submenu holds the format, if any, and waits
+// for the format to show.
+export async function openSaveSubmenu(page, format) {
+  const item = 'sl-menu-item[value="' + format + '"]';
+  const parent = page.locator('#save-menu > sl-menu-item').filter({ has: page.locator(item) });
+
+  if ((await parent.count()) === 0) {
+    return;
+  }
+
+  await parent.hover();
+  await expect(page.locator('#save-menu ' + item)).toBeVisible();
 }
 
 // A link to the page that carries the document, built by the app's own

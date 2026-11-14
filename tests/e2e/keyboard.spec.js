@@ -244,6 +244,26 @@ test.describe('Keyboard', { tag: '@runner-2' }, () => {
     expect(download.suggestedFilename()).toBe('example-content-model.png');
   });
 
+  test('picks a CSV from the Save as submenu with the arrow keys', async ({ page }) => {
+    await loadExample(page);
+
+    await page.keyboard.press('Control+Shift+S');
+    await expect(page.locator('#save-menu')).toBeVisible();
+
+    for (let i = 0; i < 4; i++) {
+      await page.keyboard.press('ArrowDown');
+    }
+
+    await expect(page.locator('#save-menu > sl-menu-item:has(sl-menu-item[value="csv"])')).toBeFocused();
+    await page.keyboard.press('ArrowRight');
+    await expect(page.locator('#save-menu sl-menu-item[value="csv"]')).toBeFocused();
+    await page.keyboard.press('ArrowDown');
+    await expect(page.locator('#save-menu sl-menu-item[value="bundles-csv"]')).toBeFocused();
+
+    const [download] = await Promise.all([page.waitForEvent('download'), page.keyboard.press('Enter')]);
+    expect(download.suggestedFilename()).toBe('example-content-model-bundles.csv');
+  });
+
   for (const [name, key, input, open] of dataProviderFilePickerShortcuts()) {
     test(`opens the ${name} with ${key}`, async ({ page }) => {
       await open(page);
