@@ -137,13 +137,33 @@ async function runInteraction(id) {
     byId(elementId).dispatchEvent(new MouseEvent('click', { bubbles: true }));
   };
 
+  // Fields show at the All detail level and hide at the Entities level. A
+  // copy without detail levels has a Fields switch instead.
+  const showFields = (on) => () => {
+    const levels = byId('detail-levels');
+
+    if (!levels) {
+      setSwitch('fields-toggle', on)();
+      return;
+    }
+
+    const level = on ? 'all' : 'entities';
+    const button = levels.querySelector('[data-level="' + level + '"]');
+
+    if (button.classList.contains('is-active')) {
+      throw new Error('The ' + level + ' detail level is already on');
+    }
+
+    button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  };
+
   const actions = {
     'layout-lr': pickLayout('lr'),
     'layout-tb': pickLayout('tb'),
     'layout-columns': pickLayout('columns'),
     tidy: press('tidy'),
-    'fields-off': setSwitch('fields-toggle', false),
-    'fields-on': setSwitch('fields-toggle', true),
+    'fields-off': showFields(false),
+    'fields-on': showFields(true),
     'proxies-off': setSwitch('proxy-toggle', false),
     'proxies-on': setSwitch('proxy-toggle', true),
     undo: press('undo'),

@@ -7,18 +7,21 @@ test.describe('Documents', { tag: '@runner-1' }, () => {
     await page.goto('/index.html');
   });
 
-  test('lists a saved diagram, a config folder or template, a CSV file, the CSV template and Create with AI under Open', async ({ page }) => {
+  test('lists a saved diagram, a config folder or template, a CSV file, the CSV template, Create with AI and Compare with under Open', async ({ page }) => {
     await loadExample(page);
 
     await page.click('#open-choose');
 
-    await expect(page.locator('#open-menu sl-menu-item')).toHaveText([
+    await expect(page.locator('#open-menu > sl-menu-item')).toHaveText([
       'Saved diagram…',
       'Config folder or template…',
       'CSV file…',
       'CSV template',
       'Create with AI…',
+      /^Compare with/,
     ]);
+    await expect(page.locator('#compare-with > sl-menu[slot="submenu"] > sl-menu-item')).toHaveText(['Saved diagram…', 'Config folder…']);
+    await expect(page.locator('#open-menu > sl-menu-item[value="ai"] + sl-divider + #compare-with')).toHaveCount(1);
   });
 
   for (const [name, open] of dataProviderSavedDiagramPickers()) {

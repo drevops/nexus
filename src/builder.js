@@ -354,7 +354,8 @@ export function attachBuilder(instance, build = false) {
   cy.on('dbltap', () => {
     const node = taps[0];
 
-    if (buildMode || !node || node === cy || !node.isNode()) {
+    // A comparison turns Edit mode off until it ends.
+    if (buildMode || getState().comparison || !node || node === cy || !node.isNode()) {
       return;
     }
 

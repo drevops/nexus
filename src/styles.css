@@ -1768,6 +1768,150 @@ body.is-dragging-panel * {
   font-size: 0.82rem;
 }
 
+/* Changes panel: the compared source, the counts, then 1 group per bundle. */
+.changes__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.7rem 0.95rem 0.3rem;
+}
+
+.changes__source {
+  min-width: 0;
+  margin: 0;
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
+}
+
+.changes__counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.2rem 0.95rem 0.4rem;
+}
+
+.changes__count,
+.changes__kind {
+  flex: 0 0 auto;
+  padding: 0 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.15rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--change-color);
+  border: 1.5px solid var(--change-color);
+  border-radius: 999px;
+}
+
+.changes {
+  padding: 0 0.4rem 0.4rem;
+}
+
+.changes__heading {
+  margin: 0.45rem 0.55rem 0.2rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.changes__list,
+.changes__properties {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.changes__item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.35rem 0.55rem;
+  font: inherit;
+  font-size: 0.82rem;
+  color: var(--text);
+  text-align: left;
+  background: none;
+  border: 0;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.changes__item:hover {
+  background: var(--surface-2);
+}
+
+.changes__item[aria-disabled='true'] {
+  color: var(--muted);
+  background: none;
+  cursor: default;
+}
+
+.changes__item:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.changes__label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.changes__name {
+  flex: 0 1 auto;
+  min-width: 0;
+  font-size: 0.72rem;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.changes__properties {
+  padding: 0 0.55rem 0.3rem 1.4rem;
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+.changes__property {
+  font-weight: 600;
+}
+
+.changes__before {
+  text-decoration: line-through;
+}
+
+.changes__after {
+  color: var(--text);
+}
+
+.changes-empty {
+  margin: 0;
+  padding: 0.6rem 1rem;
+}
+
+.changes-note {
+  margin: 0;
+  padding: 0 0.95rem 0.75rem;
+}
+
+/* The count of changes on the Changes button. */
+.changes-badge {
+  min-width: 1.1rem;
+  padding: 0 0.3rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.1rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: #fff;
+  background: var(--accent);
+  border-radius: 999px;
+}
+
 .tooltip {
   position: absolute;
   z-index: 6;

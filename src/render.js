@@ -25,14 +25,16 @@
  * Safe to call repeatedly - each call tears down the previous graph.
  */
 
-import { setController, bump, closeInspector, getState, subscribe } from './store.js';
+import { setController, setComparison, bump, closeInspector, getState, subscribe } from './store.js';
 import { icon } from './icons.js';
 import { ENTITY_TYPE_ORDER, findEntityType } from './entity-types.js';
 import { humanize, machineName } from './names.js';
 import { REFERENCE_ELEMENTS, syncReferenceElements } from './references.js';
 import { drawnShape, fitWidth, labelDrop, labelX, polygonPoints, wrapLabel } from './label-fit.js';
 import { checkpoint, untracked } from './undo.js';
-import { describeNode } from './history.js';
+import { applyPartial, describeNode, diffSnapshots, snapshotGraph } from './history.js';
+import { CHANGE_ADDED, CHANGE_CHANGED, CHANGE_REMOVED, changeKind, changeMarks, sharedMark } from './model-diff.js';
+import { collapsedEdgeId, refEdgeId } from './model.js';
 import { DIAGRAM_DEFAULTS, readDiagramDefaults } from './diagram-defaults.js';
 import { DETAIL_LEVELS, detailLevel, levelShowsField, levelToShow, nextLevel, showsFields } from './detail-levels.js';
 import { keepOrder, packColumns, tidyColumns } from './packing.js';
@@ -102,6 +104,13 @@ const NODE_BOX_LIMIT = 2000;
 // plain-text label that exports draw matches the body's font size. The HTML
 // body draws above every node, so the box does too.
 const NOTE_BOX = { fontSize: 12, textMaxWidth: 240, minWidth: 80, minHeight: 16, padding: 10, border: 1, zIndex: 100 };
+
+// The space Fit leaves around the diagram, in rendered pixels.
+const FIT_PADDING = 45;
+
+// The classes a comparison marks elements with, 1 per kind of change.
+const DIFF_CLASS = { [CHANGE_ADDED]: 'diff-added', [CHANGE_REMOVED]: 'diff-removed', [CHANGE_CHANGED]: 'diff-changed' };
+const DIFF_CLASSES = Object.values(DIFF_CLASS).join(' ');
 
 // Model-space caption metrics: the font size, the height of 1 caption line
 // and the gap between a node's box and its first machine-name line.
@@ -810,6 +819,7 @@ function style() {
         color: '#8a5a76',
       },
     },
+    ...diffStyles(),
     { selector: '.faded', style: { opacity: FADED_OPACITY } },
     { selector: '.hidden', style: { display: 'none' } },
     { selector: '.highlight', style: { 'border-color': '#2f6db3', 'border-width': 3 } },
@@ -821,6 +831,22 @@ function style() {
     // while a hover lasts and leave both in place for when it ends.
     { selector: '.hover-lit', style: { opacity: 1 } },
     { selector: '.hover-faded', style: { opacity: FADED_OPACITY } },
+  ];
+}
+
+// A comparison draws each changed element in the colour of its kind, and a
+// removed one faded and dashed. A multi-value field keeps its double border.
+function diffStyles() {
+  const added = changeKind(CHANGE_ADDED).color;
+  const removed = changeKind(CHANGE_REMOVED).color;
+  const changed = changeKind(CHANGE_CHANGED).color;
+
+  return [
+    { selector: 'node.diff-added', style: { 'border-color': added, 'border-width': 3 } },
+    { selector: 'edge.diff-added', style: { 'line-color': added, 'target-arrow-color': added, width: 2.4 } },
+    { selector: 'node.diff-changed', style: { 'border-color': changed, 'border-width': 3 } },
+    { selector: 'node.diff-removed', style: { 'border-color': removed, 'border-width': 3, 'border-style': 'dashed', opacity: 0.45 } },
+    { selector: 'edge.diff-removed', style: { 'line-color': removed, 'target-arrow-color': removed, 'line-style': 'dashed', width: 2, opacity: 0.45 } },
   ];
 }
 
@@ -919,6 +945,8 @@ function buildController(model, options = {}) {
   // holds the ids of the entities and annotations the view hides, and
   // `saved` the positions, viewport and display it started from.
   let explore = null;
+  // What startComparison() saved to restore, or null while not comparing.
+  let comparison = null;
   syncReferenceElements(cy);
 
   const captionsEl = $('captions');
@@ -1116,7 +1144,13 @@ function buildController(model, options = {}) {
   // put.
   function tidy() {
     const target = tidyTarget();
-    const elements = target.nonempty() ? entityGroup(target) : shown(cy.elements());
+
+    arrange(target.nonempty() ? entityGroup(target) : shown(cy.elements()));
+  }
+
+  // Runs Dagre on each island of the elements and lines the islands up near
+  // where they were, keeping each entity's field order.
+  function arrange(elements) {
     const { options, gap } = layoutSettings();
     const before = new Map(elements.nodes().map((node) => [node.id(), { ...node.position() }]));
 
@@ -1648,6 +1682,177 @@ function buildController(model, options = {}) {
       moveTo(shownAt);
       applyVisibility(cy.elements());
     }
+  }
+
+  // The kind of change an element is marked with, or null. Proxies, proxy
+  // edges and collapsed edges take the mark of the ref edges they draw, and
+  // `collapsed` maps each collapsed edge's id to the ids of those ref edges.
+  function changeMarkOf(element, marks, collapsed) {
+    const group = element.data('group');
+
+    if (group === 'proxy' || group === 'proxyedge') {
+      const proxy = group === 'proxy' ? element : element.target();
+
+      return marks.get(refEdgeId(proxy.data('field'), proxy.data('target'))) || null;
+    }
+
+    if (group === 'collapsed') {
+      return sharedMark(marks, collapsed.get(element.id()) || []);
+    }
+
+    return marks.get(element.id()) || null;
+  }
+
+  function markChanges(marks) {
+    const collapsed = new Map();
+
+    cy.edges('[group="ref"]').forEach((ref) => {
+      const id = collapsedEdgeId(ref.source().data('entity'), ref.target().id());
+
+      collapsed.set(id, (collapsed.get(id) || []).concat([ref.id()]));
+    });
+
+    cy.elements().removeClass(DIFF_CLASSES);
+    cy.elements().forEach((element) => {
+      const mark = changeMarkOf(element, marks, collapsed);
+
+      if (mark) {
+        element.addClass(DIFF_CLASS[mark]);
+      }
+    });
+  }
+
+  // The element definitions of `data` a comparison adds. Added entities start
+  // in a column right of the diagram and added fields on their entity, for
+  // placeCompared() to lay out. An added field shows, even if it was saved
+  // hidden. Cytoscape keeps the position object it is given, so each node
+  // gets its own copy.
+  function comparedElements(data, marks) {
+    const box = cy.nodes().nonempty() ? cy.nodes().boundingBox() : { x2: 0, y1: 0 };
+    const isAdded = (definition) => marks.get(definition.data.id) === CHANGE_ADDED;
+    const entities = (data.nodes || []).filter((node) => isAdded(node) && node.data.group === 'entity');
+    const fields = (data.nodes || []).filter((node) => isAdded(node) && node.data.group === 'field');
+    const start = new Map(entities.map((node, index) => [node.data.id, { x: box.x2 + 200, y: box.y1 + index * 80 }]));
+    const fieldDefinitions = fields.map((node) => {
+      const fieldData = { ...node.data };
+      const anchor = { ...(start.get(fieldData.entity) || cy.getElementById(fieldData.entity).position()) };
+
+      delete fieldData.hidden;
+
+      return { group: 'nodes', data: fieldData, position: anchor };
+    });
+
+    return [
+      ...entities.map((node) => ({ group: 'nodes', data: { ...node.data }, position: { ...start.get(node.data.id) } })),
+      ...fieldDefinitions,
+      ...(data.edges || []).filter(isAdded).map((edge) => ({ group: 'edges', data: { ...edge.data } })),
+    ];
+  }
+
+  // Packs the islands made only of added elements right of the rest of the
+  // diagram. When an added element joined an island the diagram already had,
+  // the whole diagram is tidied as the Tidy button does.
+  function placeCompared() {
+    const { options, gap } = layoutSettings();
+    const islands = shown(cy.elements()).components();
+    const isAdded = (island) => island.nodes().every((node) => node.hasClass(DIFF_CLASS[CHANGE_ADDED]));
+    const fresh = islands.filter(isAdded).reduce((all, island) => all.union(island), cy.collection());
+    const rest = shown(cy.elements()).difference(fresh);
+    const joined = rest.some((element) => element.hasClass(DIFF_CLASS[CHANGE_ADDED]));
+
+    if (fresh.nonempty()) {
+      const box = rest.nodes().nonempty() ? rest.nodes().boundingBox() : { x2: -gap.x, y1: 0 };
+
+      packIslands(fresh, options, gap);
+
+      const packed = fresh.nodes().boundingBox();
+
+      fresh.nodes().shift({ x: box.x2 + gap.x - packed.x1, y: box.y1 - packed.y1 });
+    }
+
+    if (joined) {
+      arrange(shown(cy.elements()));
+    }
+  }
+
+  // Draws a comparison on the canvas: adds what only `after` has, marks
+  // every element `changes` names and shows the All level, so every field
+  // change shows. stopComparison() brings back the graph, the display
+  // settings and the view as they were before.
+  function startComparison(changes, after) {
+    stopComparison();
+    clearFocus();
+
+    comparison = {
+      snapshot: snapshotGraph(cy, ''),
+      display: { levelId, proxyMode, showMachineNames, layoutName, typeVisible: { ...typeVisible } },
+      view: { zoom: cy.zoom(), pan: { ...cy.pan() } },
+      problems: checkModel(documentFromGraph(cy), settings.checks),
+    };
+
+    const marks = changeMarks(changes);
+    const added = comparedElements(after, marks);
+
+    levelId = 'all';
+    showLevel();
+    cy.add(added);
+    syncReferences();
+    refresh(false);
+    markChanges(marks);
+
+    if (added.length) {
+      placeCompared();
+    }
+
+    rebuildCaptions();
+    rebuildNotes();
+  }
+
+  // Animates to the zoom, up to 100%, that fits every shown element in
+  // openArea().
+  function fitOpenArea() {
+    const area = openArea();
+    const box = shown(cy.elements()).boundingBox();
+    const room = { w: area.x2 - area.x1 - 2 * FIT_PADDING, h: area.y2 - area.y1 - 2 * FIT_PADDING };
+    const zoom = Math.max(cy.minZoom(), Math.min(1, room.w / Math.max(box.w, 1), room.h / Math.max(box.h, 1)));
+
+    centreOn(shown(cy.elements()), zoom);
+  }
+
+  function stopComparison() {
+    if (!comparison) {
+      return;
+    }
+
+    const saved = comparison;
+
+    comparison = null;
+    // An explore view moves the nodes it shows, which the snapshot puts back.
+    clearExplore();
+    clearFocus();
+    cy.elements().removeClass(DIFF_CLASSES);
+    ({ levelId, proxyMode, showMachineNames, layoutName } = saved.display);
+    typeVisible = { ...saved.display.typeVisible };
+    showLevel();
+    $('proxy-toggle').checked = proxyMode;
+    $('machine-names').checked = showMachineNames;
+
+    const change = diffSnapshots(snapshotGraph(cy, ''), saved.snapshot);
+
+    if (change) {
+      applyPartial(cy, change.after, () => {
+        refresh(false);
+        syncReferences();
+      });
+    }
+
+    refresh(false);
+    showLayout();
+    // A fit or focus can still be animating the view.
+    cy.stop(true);
+    cy.viewport(saved.view);
+    rebuildCaptions();
+    rebuildNotes();
   }
 
   // Under each node: the entity type (always, de-emphasised) then, when
@@ -2182,7 +2387,16 @@ function buildController(model, options = {}) {
     setChecks,
     hoverSettings: () => readHoverSettings(settings.hover),
     setHover,
-    problems: () => checkModel(documentFromGraph(cy), settings.checks),
+    // A comparison adds elements the open diagram lacks, so the checks keep
+    // the problems the diagram had before it.
+    problems: () => (comparison ? comparison.problems : checkModel(documentFromGraph(cy), settings.checks)),
+    startComparison,
+    stopComparison,
+    fitOpenArea,
+    modelData: () => ({
+      nodes: cy.nodes('[group="entity"], [group="field"]').map((node) => ({ data: node.data() })),
+      edges: cy.edges('[group="ref"]').map((edge) => ({ data: edge.data() })),
+    }),
     focusProblem,
     canFocusProblem: (id) => problemTarget(id) !== null,
     setLines,
@@ -2380,7 +2594,7 @@ function wire() {
   $('zoom-out').addEventListener('click', () =>
     controller.cy.zoom({ level: controller.cy.zoom() * 0.8, renderedPosition: { x: controller.cy.width() / 2, y: controller.cy.height() / 2 } }),
   );
-  $('fit').addEventListener('click', () => controller.cy.fit(undefined, 45));
+  $('fit').addEventListener('click', () => controller.cy.fit(undefined, FIT_PADDING));
   $('reset').addEventListener('click', () => {
     controller.clearFocus();
     controller.resetView();
@@ -2424,7 +2638,7 @@ function wire() {
   $('zoom-menu').addEventListener('sl-select', (evt) => {
     const value = evt.detail.item.value;
     if (value === 'fit') {
-      controller.cy.fit(undefined, 45);
+      controller.cy.fit(undefined, FIT_PADDING);
       return;
     }
     controller.cy.zoom({ level: parseFloat(value), renderedPosition: { x: controller.cy.width() / 2, y: controller.cy.height() / 2 } });
@@ -2483,6 +2697,8 @@ export function render(model, options = {}) {
 
   controller = buildController(model, options);
   setController(controller);
+  // A comparison is drawn on the graph it started on, which is gone.
+  setComparison(null);
   closeInspector();
   applyFrame();
 

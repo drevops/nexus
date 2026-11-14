@@ -34,6 +34,8 @@ import { DETAIL_LEVELS, levelHidesTitle } from './detail-levels.js';
 import { MARKDOWN_DIAGRAM_OPTIONS } from './markdown.js';
 import { CHECK_RULES, LEVEL_ERROR, LEVEL_WARNING, MAX_FIELD_LIMIT, isFieldLimit } from './model-checks.js';
 import { titleShoelaceHosts } from './host-titles.js';
+import { CHANGE_KINDS, CHANGE_REMOVED, changeCounts, changeKind, groupChanges, propertyText } from './model-diff.js';
+import { canFocusChange, focusChange, stopComparison } from './compare.js';
 import {
   getState,
   subscribe,
@@ -64,7 +66,16 @@ import { $ } from './dom.js';
 
 const html = htmBase.bind(h);
 
-const TITLES = { entities: 'Entities', table: 'Fields', settings: 'Settings', legend: 'Legend', history: 'History', checks: 'Checks', inspector: 'Inspector' };
+const TITLES = {
+  entities: 'Entities',
+  table: 'Fields',
+  settings: 'Settings',
+  legend: 'Legend',
+  history: 'History',
+  checks: 'Checks',
+  changes: 'Changes',
+  inspector: 'Inspector',
+};
 const WIDE = { table: true };
 const PANEL_TOGGLES = [
   ['entities-toggle', 'entities'],
@@ -72,6 +83,7 @@ const PANEL_TOGGLES = [
   ['legend-toggle', 'legend'],
   ['history-toggle', 'history'],
   ['checks-toggle', 'checks'],
+  ['changes-toggle', 'changes'],
   ['settings-toggle', 'settings'],
 ];
 
@@ -503,6 +515,9 @@ function body(id, s) {
   if (id === 'checks') {
     return html`<${ChecksBody} controller=${controller} problems=${currentProblems()} />`;
   }
+  if (id === 'changes') {
+    return html`<${ChangesBody} controller=${controller} comparison=${s.comparison} />`;
+  }
   if (id === 'legend') {
     return html`<div class="legend-body">
       ${controller
@@ -520,13 +535,21 @@ function body(id, s) {
             <span class="legend__swatch" dangerouslySetInnerHTML=${{ __html: SWATCHES[item[0]] }}></span><span class="legend__label">${item[1]}</span>
           </div>`,
       )}
+      ${s.comparison ? CHANGE_KINDS.map(changeLegendItem) : null}
     </div>`;
   }
   if (id === 'entities') {
     return html`<${EntitiesBody} controller=${controller} />`;
   }
   if (id === 'table') {
-    return html`<${TableBody} controller=${controller} filter=${s.tableFilter} term=${s.tableSearch} sort=${s.tableSort} editMode=${s.editMode} />`;
+    return html`<${TableBody}
+      controller=${controller}
+      filter=${s.tableFilter}
+      term=${s.tableSearch}
+      sort=${s.tableSort}
+      editMode=${s.editMode}
+      readOnly=${!!s.comparison}
+    />`;
   }
   return html`<${SettingsBody} controller=${controller} />`;
 }
@@ -560,7 +583,7 @@ const TIME_FORMAT = { hour: '2-digit', minute: '2-digit' };
 // The versions of the open diagram, newest first. Versions after the current
 // one were undone and stay listed until the next edit drops them.
 function HistoryBody() {
-  const { versions, index } = historyState();
+  const { versions, index, paused } = historyState();
   const listRef = useRef(null);
 
   // Undo and redo move the current version, which can scroll out of view.
@@ -582,7 +605,8 @@ function HistoryBody() {
         class=${'history__version' + state}
         data-history-index=${i}
         aria-current=${i === index ? 'step' : null}
-        title=${'Return to this version, made ' + time.toLocaleString()}
+        aria-disabled=${paused ? 'true' : null}
+        title=${(paused ? 'Stop comparing to return to this version, made ' : 'Return to this version, made ') + time.toLocaleString()}
         onClick=${() => goToVersion(i)}
       >
         <span class="history__label">${version.label}</span>
@@ -594,7 +618,13 @@ function HistoryBody() {
   return html`<ol class="history-list" ref=${listRef}>
       ${rows.reverse()}
     </ol>
-    <p class="panel__note history-note">Click a version to return to it. The versions after it stay until your next edit.</p>`;
+    <p class="panel__note history-note">
+      ${
+        paused
+          ? 'The history is paused while comparing. Stop comparing to return to a version.'
+          : 'Click a version to return to it. The versions after it stay until your next edit.'
+      }
+    </p>`;
 }
 
 const CHECK_LEVELS = [
@@ -688,6 +718,122 @@ function ChecksBody({ controller, problems }) {
     <p class="panel__note checks-note">Click a problem to go to it. The list follows every edit, undo and redo.</p>`;
 }
 
+// The noun each changed element is listed under.
+const CHANGE_NOUNS = { entity: 'bundle', field: 'field', reference: 'reference' };
+
+// The colours are constants of CHANGE_KINDS, so they are safe in markup.
+function changeSwatch(kind) {
+  const dashed = kind.change === CHANGE_REMOVED ? ' stroke-dasharray="4 2" opacity="0.6"' : '';
+
+  return (
+    '<svg width="34" height="24"><rect x="2" y="4" width="30" height="16" rx="3" fill="none" stroke="' +
+    kind.color +
+    '" stroke-width="2.5"' +
+    dashed +
+    '/></svg>'
+  );
+}
+
+function changeLegendItem(kind) {
+  return html`<div class="legend__item" data-change=${kind.change} title=${kind.title}>
+    <span class="legend__swatch" dangerouslySetInnerHTML=${{ __html: changeSwatch(kind) }}></span><span class="legend__label">${kind.label}</span>
+  </div>`;
+}
+
+function changeGroupHeading(controller, entityId) {
+  const entity = controller.cy.getElementById(entityId);
+
+  return entity.nonempty() ? entity.data('label') + ' · ' + controller.typeLabel(entity.data('entityType')) : entityId;
+}
+
+function changeProperties(change) {
+  if (!change.properties.length) {
+    return null;
+  }
+
+  // htm drops whitespace that holds a line break, and Prettier wraps long
+  // templates, so each line is built with h() to keep its spaces.
+  const line = (property) => [
+    h('span', { class: 'changes__property' }, property.label + ':'),
+    ' ',
+    h('span', { class: 'changes__before' }, propertyText(property.key, property.before)),
+    ' → ',
+    h('span', { class: 'changes__after' }, propertyText(property.key, property.after)),
+  ];
+
+  return html`<ul class="changes__properties">
+    ${change.properties.map((property) => html`<li data-property=${property.key}>${line(property)}</li>`)}
+  </ul>`;
+}
+
+function changeRow(change) {
+  const kind = changeKind(change.change);
+  const reachable = canFocusChange(change);
+  const noun = CHANGE_NOUNS[change.element];
+  const action = reachable ? '. Click to go to it on the canvas' : '. Show its entity type to go to it';
+
+  return html`<li key=${change.id}>
+    <button
+      type="button"
+      class="changes__item"
+      data-change=${change.change}
+      data-change-id=${change.id}
+      aria-disabled=${reachable ? null : 'true'}
+      title=${kind.label + ' ' + noun + ' ' + change.label + action}
+      onClick=${() => focusChange(change)}
+    >
+      <span class="changes__kind" style=${{ '--change-color': kind.color }}>${kind.label}</span>
+      <span class="changes__label">${noun} ${change.label}</span>
+      ${change.name ? html`<code class="changes__name">${change.name}</code>` : null}
+    </button>
+    ${changeProperties(change)}
+  </li>`;
+}
+
+// The changes of the comparison on the canvas, grouped by bundle, each a
+// button that goes to its element.
+function ChangesBody({ controller, comparison }) {
+  if (!comparison) {
+    return html`<p class="panel__note changes-empty">No comparison is open. Pick Compare with in the Open menu to compare this diagram with another.</p>`;
+  }
+
+  const counts = changeCounts(comparison.changes);
+  const groups = groupChanges(comparison.changes);
+
+  return html`<div class="changes__head">
+      <p class="changes__source" title=${'The open diagram compared with ' + comparison.source}>Compared with <b>${comparison.source}</b></p>
+      <sl-button id="compare-stop" size="small" variant="primary" title="Stop comparing and bring the diagram back as it was" onClick=${stopComparison}
+        >Stop comparing</sl-button
+      >
+    </div>
+    <div class="changes__counts">
+      ${CHANGE_KINDS.map(
+        (kind) =>
+          html`<span class="changes__count" data-change=${kind.change} style=${{ '--change-color': kind.color }} title=${kind.title}
+            >${counts[kind.change]} ${kind.label.toLowerCase()}</span
+          >`,
+      )}
+    </div>
+    ${
+      groups.length
+        ? html`<div class="changes">
+            ${groups.map(
+              (group) =>
+                html`<section class="changes__group" data-entity=${group.entityId} key=${group.entityId}>
+                  <h3 class="changes__heading">${changeGroupHeading(controller, group.entityId)}</h3>
+                  <ul class="changes__list">
+                    ${group.changes.map(changeRow)}
+                  </ul>
+                </section>`,
+            )}
+          </div>`
+        : html`<p class="panel__note changes-empty">No changes. Both models have the same bundles, fields and references.</p>`
+    }
+    <p class="panel__note changes-note">
+      ${groups.length ? 'Click a change to go to it. ' : ''}The open diagram can't be edited or saved until you stop comparing.
+    </p>`;
+}
+
 const KIND_BADGE_TITLES = {
   system: 'System field: a base field every bundle of the entity type has',
   calculated: 'Calculated field: a value worked out rather than stored',
@@ -776,8 +922,12 @@ const GO_TO_TITLES = {
 };
 
 // The go-to and show-or-hide cells of a field's row.
-function fieldActions(controller, r) {
-  const visibilityTitle = r.hidden ? 'Show ' + r.field + ' on the canvas' : 'Hide ' + r.field + ' on the canvas';
+function fieldActions(controller, r, readOnly) {
+  const visibilityTitle = readOnly
+    ? 'Stop comparing to show or hide ' + r.field
+    : r.hidden
+      ? 'Show ' + r.field + ' on the canvas'
+      : 'Hide ' + r.field + ' on the canvas';
   const goToTitle = r.hiddenBy ? GO_TO_TITLES[r.hiddenBy](controller, r) : 'Go to ' + r.field + ' on the canvas';
 
   return html`<td class="field-table__action">
@@ -803,7 +953,12 @@ function fieldActions(controller, r) {
         data-field-visibility=${r.id}
         title=${visibilityTitle}
         aria-label=${visibilityTitle}
-        onClick=${() => controller.setFieldHidden(r.id, !r.hidden)}
+        aria-disabled=${readOnly ? 'true' : null}
+        onClick=${() => {
+          if (!readOnly) {
+            controller.setFieldHidden(r.id, !r.hidden);
+          }
+        }}
         dangerouslySetInnerHTML=${{ __html: icon(r.hidden ? 'eye-off' : 'eye', 14) }}
       ></button>
     </td>`;
@@ -1017,7 +1172,7 @@ function cellKey(id, column) {
   return id + '|' + column;
 }
 
-function TableBody({ controller, filter, term, sort, editMode }) {
+function TableBody({ controller, filter, term, sort, editMode, readOnly }) {
   const tableRef = useRef(null);
   const fitKey = useRef('');
 
@@ -1082,8 +1237,9 @@ function TableBody({ controller, filter, term, sort, editMode }) {
     reviseInspectorFor(r);
   }
 
-  // A mode switch can hide the settings column an editor sits in.
-  useEffect(() => edit(null), [editMode]);
+  // A mode switch can hide the settings column an editor sits in, and a
+  // comparison turns the editors off.
+  useEffect(() => edit(null), [editMode, readOnly]);
 
   useLayoutEffect(() => {
     const cell = refocus.current;
@@ -1149,7 +1305,7 @@ function TableBody({ controller, filter, term, sort, editMode }) {
   function cell(r, column) {
     const content = CELL_CONTENT[column.key](r, controller);
     const className = CELL_CLASSES[column.key] || null;
-    const kind = cellEditor(r, column.key);
+    const kind = readOnly ? null : cellEditor(r, column.key);
     const key = cellKey(r.id, column.key);
     const name = r.field || r.name;
 
@@ -1215,7 +1371,7 @@ function TableBody({ controller, filter, term, sort, editMode }) {
     }
     rows.push(
       html`<tr class=${r.hidden ? 'is-hidden-field' : null} key=${r.id}>
-        ${fieldActions(controller, r)} ${columns.map((column) => cell(r, column))}
+        ${fieldActions(controller, r, readOnly)} ${columns.map((column) => cell(r, column))}
       </tr>`,
     );
   });

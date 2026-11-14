@@ -90,6 +90,19 @@ test.describe('Titles', { tag: '@runner-1' }, () => {
         },
       ],
       [
+        'the Changes panel and the Legend during a comparison',
+        async (page) => {
+          const after = structuredClone(CHECKS_DOC);
+          after.entities[0].fields[1].required = true;
+          after.entities.push({ entityType: 'node', bundle: 'page', label: 'Page', fields: [] });
+
+          await openDocument(page, CHECKS_DOC);
+          await page.setInputFiles('#compare-doc', { name: 'after.nexus.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(after)) });
+          await expect(page.locator('#changes .changes__item')).toHaveCount(2);
+          await expect(page.locator('#legend .legend__item[data-change]')).toHaveCount(3);
+        },
+      ],
+      [
         'the entity Inspector',
         async (page) => {
           await editing(page);
