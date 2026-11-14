@@ -15,11 +15,12 @@
  * them in line with a changed graph.
  *
  * The toolbar's layout menu picks the layout that each layout run of the
- * open diagram uses (see LAYOUTS).
+ * open diagram uses (see LAYOUTS). Its lines menu picks the line style of
+ * every diagram (see src/connection-lines.js).
  *
  * The controller that render() returns sets entity type colours and symbols,
- * adds or removes custom entity types and sets the new diagram settings,
- * saving each change to localStorage.
+ * adds or removes custom entity types and sets the new diagram settings and
+ * the connection lines, saving each change to localStorage.
  *
  * Safe to call repeatedly - each call tears down the previous graph.
  */
@@ -39,6 +40,7 @@ import { frameSettings } from './mode-frame.js';
 import { readMarkdownSettings } from './markdown.js';
 import { checkModel, readCheckSettings } from './model-checks.js';
 import { documentFromGraph } from './document.js';
+import { LINE_OPTIONS, lineOption, lineStyle, readLineSettings } from './connection-lines.js';
 import { nodeLookup, selectionEntity } from './inspector-trail.js';
 import { parseRichText, richTextHtml } from './rich-text.js';
 import { NOTE_KIND } from './annotations.js';
@@ -760,10 +762,9 @@ function style() {
     {
       selector: 'edge',
       style: {
-        'curve-style': 'taxi',
         'taxi-direction': () => (LAYOUTS[layoutName].rankDir === 'TB' ? 'vertical' : 'horizontal'),
-        'taxi-turn': '50%',
         'taxi-turn-min-distance': '8px',
+        ...lineStyle(settings.lines),
         width: 1.2,
         'line-color': tc.edge,
         'target-arrow-shape': 'none',
@@ -1700,6 +1701,13 @@ function buildController(model, options = {}) {
     bump();
   }
 
+  function setLines(patch) {
+    settings.lines = readLineSettings({ ...readLineSettings(settings.lines), ...patch });
+    saveSettings();
+    cy.style(style());
+    showLines();
+  }
+
   function addCustomType(type, label, color, symbol) {
     const key = machineName(type);
     if (!key || allTypeKeys().includes(key)) {
@@ -1855,6 +1863,7 @@ function buildController(model, options = {}) {
     problems: () => checkModel(documentFromGraph(cy), settings.checks),
     focusProblem,
     canFocusProblem: (id) => problemTarget(id) !== null,
+    setLines,
     applyTheme: () => {
       cy.style(style());
       positionCaptions();
@@ -1951,6 +1960,41 @@ function showLayout() {
   });
 }
 
+// Fills the lines menu with an item for each line style, in LINE_OPTIONS
+// order.
+function fillLinesMenu() {
+  const items = LINE_OPTIONS.map((option) => {
+    const item = document.createElement('sl-menu-item');
+    const prefix = document.createElement('span');
+
+    prefix.setAttribute('slot', 'prefix');
+    prefix.innerHTML = icon(option.icon);
+    item.setAttribute('type', 'checkbox');
+    item.setAttribute('value', option.id);
+    item.setAttribute('title', option.title);
+    item.append(prefix, option.label);
+
+    return item;
+  });
+
+  $('lines-menu').append(...items);
+}
+
+// Names the line style on the lines button and ticks it in the menu.
+function showLines() {
+  const option = lineOption(readLineSettings(settings.lines).style);
+  const button = $('lines-choose');
+
+  button.querySelector('.lines-label').textContent = 'Lines: ' + option.label;
+  // SlButton does not reflect its title property, so set the attribute.
+  button.setAttribute('title', option.title);
+  $('lines-menu')
+    .querySelectorAll('sl-menu-item')
+    .forEach((item) => {
+      item.checked = item.getAttribute('value') === option.id;
+    });
+}
+
 function wire() {
   $('zoom-in').addEventListener('click', () =>
     controller.cy.zoom({ level: controller.cy.zoom() * 1.25, renderedPosition: { x: controller.cy.width() / 2, y: controller.cy.height() / 2 } }),
@@ -1979,6 +2023,13 @@ function wire() {
   subscribe(() => controller.showTidyTarget());
 
   fillLayoutMenu();
+  fillLinesMenu();
+  showLines();
+
+  // A line style is a display preference, so it is not a history step.
+  $('lines-menu').addEventListener('sl-select', (evt) => {
+    controller.setLines({ style: evt.detail.item.value });
+  });
 
   // The menu flips a checkbox item on every select, so showLayout() ticks
   // the picked item again even when it was already ticked. Cytoscape caches

@@ -119,7 +119,7 @@ test.describe('Toolbar', { tag: '@runner-2' }, () => {
       ['undo', 'redo'],
       ['mode-view', 'mode-build'],
       ['search', 'search-btn'],
-      ['layout-run', 'layout-choose', 'tidy'],
+      ['layout-run', 'layout-choose', 'tidy', 'lines-choose'],
       ['entities-toggle', 'table-toggle', 'legend-toggle', 'history-toggle', 'checks-toggle'],
     ]);
   });
