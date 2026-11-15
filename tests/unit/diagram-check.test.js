@@ -246,7 +246,12 @@ test('prints the problems of each file and exits by the worst of them', async (t
 function dataProviderCommand() {
   return [
     ['a clean document', ['clean.nexus.json'], 0, ['clean.nexus.json: OK']],
-    ['a document with a warning', ['warning.nexus.json'], 0, ['warning.nexus.json: warning: /entities/1 “Tags” has no fields of its own']],
+    [
+      'a document with a warning',
+      ['warning.nexus.json'],
+      0,
+      ['warning.nexus.json: warning: /entities/1/fields/0 field_size on “Tags” is a list with no allowed values'],
+    ],
     ['a document with an error', ['error.nexus.json'], 1, ['error.nexus.json: error: /entities/1 repeats the entity node.page from /entities/0']],
     [
       'a document that breaks a model rule',

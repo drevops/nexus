@@ -6,7 +6,7 @@ The **Checks** panel lists the problems in the open model, such as a reference w
 
 Click **Checks** in the toolbar, or press `5`. The **Checks** button carries a badge with the number of problems, in red when at least 1 is an error and in amber when all are warnings. The badge hides when the model has no problems. [Getting started](getting-started.md#arrange-the-panels) explains how to move, dock and resize a panel.
 
-![The Checks panel over the Umami diagram, listing 10 warnings such as media and block types that no field references](assets/checks-panel.png)
+![The Checks panel over the Open Social diagram, listing 5 warnings: 2 fields that share a label and 3 paragraph types that no field references](assets/checks-panel.png)
 
 ## Read the problems
 
@@ -27,14 +27,20 @@ The following table lists each rule:
 | Field name with a different type or cardinality on 2 bundles of 1 entity type | Error |
 | Machine name that breaks Drupal's pattern or length limit | Error |
 | 2 fields on 1 bundle with the same label | Warning |
-| Paragraph, media or block type no field references | Warning |
-| Bundle with no fields of its own | Warning |
-| List field with no allowed values | Warning |
+| Paragraph type no field references | Warning |
+| Content, paragraph, media or block type with no fields of its own | Warning |
+| List field with no allowed values or allowed values function | Warning |
 | Bundle with more fields than the field limit | Warning |
 
 Drupal's machine name pattern allows lowercase letters, digits and underscores, up to 32 characters. The field limit is 30 by default. Set it from 1 to 999 on the **Checks** tab of [Settings](settings.md#checks).
 
 Base fields need no reference target and have no storage of their own, so the target, storage and field limit rules skip them. The `*` bundle, which stands for every bundle of its type, has no rules of its own.
+
+Some bundles are fine without what the rules look for:
+
+- Drupal places blocks in the block layout and embeds media in text, so a block or media type needs no field that references it. A paragraph only shows through a field.
+- A vocabulary keeps its terms in the name and description base fields, so it needs no fields of its own. Neither does a user or another entity type, whose base fields Nexus can't see.
+- A list field can take its allowed values from a PHP function set in its storage, `allowed_values_function`. The [Fields table](fields-table.md#read-the-columns) shows the function in **Allowed values**.
 
 ## Go to a problem
 
