@@ -46,6 +46,7 @@ let pressContainer = null;
 let hovered = null;
 let holding = false;
 let panning = false;
+let deleteButtonRaf = false;
 
 // How far a new field is placed from its entity, and how far apart fields
 // added together are stacked.
@@ -55,6 +56,8 @@ const FIELD_SPACING = 56;
 // Screen pixels kept between a node placed without a position and the nodes
 // around it.
 const CLEARANCE = 24;
+
+const DELETABLE_GROUPS = ['entity', 'field', 'annotation'];
 
 function startPlaceNote(kind) {
   connectMode = false;
@@ -217,6 +220,7 @@ export function initBuilder() {
     connectMode = !connectMode;
     applyConnect();
   });
+  $('delete-selection').addEventListener('click', deleteSelection);
   $('handles').addEventListener('click', (evt) => {
     const btn = evt.target.closest('.handle');
 
@@ -430,6 +434,7 @@ export function attachBuilder(instance, build = false) {
     });
   });
   cy.on('captions', positionHandles);
+  cy.on('select unselect add remove', 'node', updateDeleteButton);
   setBuilder({
     select: selectNode,
     createEntity,
@@ -530,6 +535,7 @@ function updateInteraction() {
   cy.boxSelectionEnabled(editing);
   syncSelection(true);
   updateCursor();
+  updateDeleteButton();
 }
 
 // Isolates an entity, its fields and their proxies. Everything else is faded
@@ -1107,11 +1113,48 @@ function removeReference(fieldId, targetId) {
 
 function deleteNode(id) {
   const node = cy.getElementById(id);
-  const change = 'Deleted ' + describeNode(node);
-  if (node.data('group') === 'entity') {
-    cy.nodes('[group="field"][entity="' + id + '"]').remove();
+
+  removeNodes(node, 'Deleted ' + describeNode(node));
+}
+
+// Deletes every selected entity, field and annotation as 1 step. A proxy
+// only draws a reference, so a selected proxy stays.
+function deleteSelection() {
+  const nodes = deletableSelection();
+
+  if (nodes.empty()) {
+    return;
   }
-  node.remove();
+
+  removeNodes(nodes, nodes.length === 1 ? 'Deleted ' + describeNode(nodes) : 'Deleted ' + nodes.length + ' items');
+}
+
+function deletableSelection() {
+  return cy.nodes(':selected').filter((node) => DELETABLE_GROUPS.includes(node.data('group')));
+}
+
+// A load or an undo adds many nodes at once, so the button updates once per
+// frame.
+function updateDeleteButton() {
+  if (deleteButtonRaf) {
+    return;
+  }
+
+  deleteButtonRaf = true;
+  requestAnimationFrame(() => {
+    deleteButtonRaf = false;
+    $('delete-selection').disabled = !cy || deletableSelection().empty();
+  });
+}
+
+// Removes the nodes, with the fields of each entity among them, as 1 step.
+function removeNodes(nodes, change) {
+  nodes.forEach((node) => {
+    if (node.data('group') === 'entity') {
+      cy.nodes('[group="field"][entity="' + node.id() + '"]').remove();
+    }
+  });
+  nodes.remove();
   getController().syncReferences();
   closeInspector();
   hideHandles();

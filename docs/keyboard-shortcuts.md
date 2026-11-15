@@ -77,6 +77,7 @@ These shortcuts work in Edit mode:
 | Place a callback | `Shift`+`K` |
 | Place a Note | `Shift`+`N` |
 | Turn **Connect** on or off | `C` |
+| Delete the selected entities, fields and annotations | `Delete` or `Backspace` |
 
 ## Status bar
 

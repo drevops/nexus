@@ -9,8 +9,8 @@
  * Mod is Cmd on a Mac and Ctrl elsewhere, and either key matches it on every
  * platform. Ctrl matches the Ctrl key alone.
  *
- * A key is a letter, a digit, F1 to F12, Escape, Plus for '+' or another
- * printable character. A letter or a digit names the key that types it, so
+ * A key is a letter, a digit, F1 to F12, Escape, Delete, Backspace, Plus for
+ * '+' or another printable character. A letter or a digit names the key that types it, so
  * Shift has to match.
  *
  * Any other character matches as typed, whatever Shift the keyboard layout
@@ -42,8 +42,11 @@ const NAMES = [
 
 const LABELS = new Map([
   ['Escape', 'Esc'],
+  ['Delete', 'Del'],
   ['Plus', '+'],
 ]);
+
+const MAC_LABELS = new Map([['Backspace', '⌫']]);
 
 // Text fields undo and redo their own typing with these keys.
 const TEXT_UNDO_KEYS = ['Z', 'Y'];
@@ -62,7 +65,7 @@ function keyKind(key) {
     return 'digit';
   }
 
-  if (/^(F[1-9]|F1[0-2]|Escape)$/.test(key)) {
+  if (/^(F[1-9]|F1[0-2]|Escape|Delete|Backspace)$/.test(key)) {
     return 'named';
   }
 
@@ -172,7 +175,7 @@ export function matchShortcut(shortcut, evt) {
  */
 export function formatShortcut(shortcut, mac) {
   const combination = parseShortcut(shortcut)[0];
-  const key = LABELS.get(combination.key) || combination.key;
+  const key = (mac && MAC_LABELS.get(combination.key)) || LABELS.get(combination.key) || combination.key;
   const modifiers = (mac ? MAC_SYMBOLS : NAMES).filter(([flag]) => combination[flag]).map(([, label]) => label);
 
   return mac ? modifiers.join('') + key : [...modifiers, key].join('+');

@@ -93,3 +93,5 @@ Drag a node to move it. To move several nodes together, select them with a box o
 ## Delete a node
 
 Select the node and click the delete button at the foot of the Inspector: **Delete entity**, **Delete field**, **Delete note**, or **Delete** for an event, API or callback. Deleting an entity deletes its fields and the references to it.
+
+To delete several nodes at once, select them with a box or by holding `Shift` as you click, then click the trash button at the end of the **Add** bar or press `Delete`. On a Mac, the `delete` key (`Backspace`) works too. It removes the selected entities, fields and annotations as 1 step, so 1 undo brings them all back. It leaves a selected proxy alone, since a proxy only draws a reference. The button is off while nothing it can delete is selected, and the keys type as usual while you edit a text box.

@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-import { loadExample, openSettings, slFill, slSelect, openDocument, createEntity, tapNode, selectEvent } from './helpers.js';
+import { loadExample, openSettings, slFill, slSelect, openDocument, createEntity, tapNode, selectEvent, hasNode } from './helpers.js';
 
 test.describe('Builder', { tag: '@runner-1' }, () => {
   test.beforeEach(async ({ page }) => {
@@ -236,5 +236,75 @@ test.describe('Builder', { tag: '@runner-1' }, () => {
     });
     expect(data.cardinality).toBe(5);
     expect(data.kind).toBe('multi');
+  });
+
+  test('deletes the selected node with the Delete key as 1 step', async ({ page }) => {
+    const bio = 'field:node.speaker:field_bio';
+    const deleteButton = page.locator('#delete-selection');
+    await loadExample(page);
+    await page.click('#mode-build');
+    await expect(deleteButton).toBeDisabled();
+
+    await tapNode(page, bio);
+    await expect(deleteButton).toBeEnabled();
+    await page.keyboard.press('Delete');
+
+    await expect.poll(() => hasNode(page, bio)).toBe(false);
+    await expect(page.locator('#inspector')).toBeHidden();
+    await expect(deleteButton).toBeDisabled();
+    await expect(page.locator('#undo')).toHaveAttribute('title', /^Undo: Deleted field “Biography” \(/);
+
+    await page.click('#undo');
+    await expect.poll(() => hasNode(page, bio)).toBe(true);
+  });
+
+  test('deletes every selected entity with its fields on Backspace, and 1 undo brings them back', async ({ page }) => {
+    const entities = ['node.speaker', 'paragraph.quote', 'taxonomy_term.venues'];
+    const counts = () => page.evaluate(() => ({ entities: window.__nexus.cy.nodes('[group="entity"]').length, fields: window.__nexus.cy.nodes('[group="field"]').length }));
+    await loadExample(page);
+    await page.click('#mode-build');
+    const before = await counts();
+    const fields = await page.evaluate((ids) => ids.reduce((sum, id) => sum + window.__nexus.cy.nodes('[group="field"][entity="' + id + '"]').length, 0), entities);
+
+    await page.evaluate((ids) => {
+      ids.forEach((id) => window.__nexus.cy.getElementById(id).select());
+    }, entities);
+    await expect(page.locator('#delete-selection')).toBeEnabled();
+    await page.keyboard.press('Backspace');
+
+    await expect.poll(counts).toEqual({ entities: before.entities - 3, fields: before.fields - fields });
+    await expect(page.locator('#undo')).toHaveAttribute('title', /^Undo: Deleted 3 items \(/);
+
+    await page.click('#undo');
+    await expect.poll(counts).toEqual(before);
+  });
+
+  test('leaves the delete keys to a text field, to View mode and to a selected proxy', async ({ page }) => {
+    const speaker = 'node.speaker';
+    await loadExample(page);
+    await page.click('#mode-build');
+
+    await tapNode(page, speaker);
+    await page.locator('#inspector sl-input[data-label]').evaluate((input) => input.focus());
+    await page.keyboard.press('Backspace');
+    await page.keyboard.press('Delete');
+    expect(await hasNode(page, speaker)).toBe(true);
+
+    await page.evaluate(() => {
+      const cy = window.__nexus.cy;
+
+      cy.nodes(':selected').unselect();
+      cy.nodes('[group="proxy"]').first().select();
+    });
+    await page.locator('#mode-build').evaluate((button) => button.focus());
+    await expect(page.locator('#delete-selection')).toBeDisabled();
+    const nodes = await page.evaluate(() => window.__nexus.cy.nodes().length);
+    await page.keyboard.press('Delete');
+    expect(await page.evaluate(() => window.__nexus.cy.nodes().length)).toBe(nodes);
+
+    await page.click('#mode-view');
+    await tapNode(page, speaker);
+    await page.keyboard.press('Delete');
+    expect(await hasNode(page, speaker)).toBe(true);
   });
 });
