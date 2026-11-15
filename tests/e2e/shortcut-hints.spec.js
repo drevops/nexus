@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loadExample, openFrom, slFill, boxesOverlap, activeLevel } from './helpers.js';
+import { loadExample, openAbout, openFrom, slFill, boxesOverlap, activeLevel } from './helpers.js';
 
 test.describe('Shortcut hints', { tag: '@runner-2' }, () => {
   const MAC_LABELS = {
@@ -71,7 +71,7 @@ test.describe('Shortcut hints', { tag: '@runner-2' }, () => {
     await expect(page.locator('#shortcut-hints')).toBeVisible();
     const labelled = (await shortcutHints(page)).map(([id]) => id);
     expect(labelled).toEqual(await availableShortcuts(page));
-    expect(labelled).toEqual(expect.arrayContaining(['about-toggle', 'doc-save', 'undo', 'search', 'history-toggle', 'zoom-level']));
+    expect(labelled).toEqual(expect.arrayContaining(['help-toggle', 'doc-save', 'undo', 'search', 'history-toggle', 'zoom-level']));
     expect(labelled).not.toContain('add-node');
 
     await page.keyboard.press('F1');
@@ -194,18 +194,16 @@ test.describe('Shortcut hints', { tag: '@runner-2' }, () => {
         'the About box',
         async (page) => {
           await loadExample(page);
-          await page.click('#about-toggle');
-          await expect(page.locator('#about-dialog')).toBeVisible();
+          await openAbout(page);
         },
       ],
     ];
   }
 
-  test('opens the About box with ? and leaves every shortcut off while it is open', async ({ page }) => {
+  test('leaves every shortcut off while the About box is open', async ({ page }) => {
     await loadExample(page);
 
-    await page.keyboard.press('?');
-    await expect(page.locator('#about-dialog')).toBeVisible();
+    await openAbout(page);
 
     await page.keyboard.press('f');
     await page.keyboard.press('F1');

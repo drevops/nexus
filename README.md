@@ -29,7 +29,7 @@ A Drupal content model has a shape of its own. Entity types hold bundles, and bu
 1. **There's no established way to draw a Drupal content model.** ER diagrams, UML and whiteboards have no symbol for a bundle, a base field, a paragraph or a reference's cardinality. Each team invents a notation of its own, and the next team has to learn it.
 2. **There's no easy way to build the diagram from a site that exists.** The model is spread across the site's exported configuration, 1 YAML file per bundle, field storage and field instance. Drawing it means reading those files by hand, and the drawing goes stale when the site changes.
 
-Nexus answers both. It gives a Drupal content model 1 [visual language](#the-visual-language): a color and shape per entity type and a symbol per kind of field. It also reads a site's exported configuration and draws the model from it, so the diagram follows the site's own config. When the model lives in a spreadsheet, a screenshot or a spec instead, an [AI agent](#build-a-diagram-with-an-ai-agent) can write the diagram.
+Nexus answers both. It gives a Drupal content model 1 [visual language](docs/visual-language.md): a color and shape per entity type and a symbol per kind of field. It also reads a site's exported configuration and draws the model from it, so the diagram follows the site's own config. When the model lives in a spreadsheet, a screenshot or a spec instead, an [AI agent](#build-a-diagram-with-an-ai-agent) can write the diagram.
 
 Nexus reads the fields of content types, vocabularies, media, paragraphs, blocks and users. It skips fields on other entity types. It draws base fields from a curated list per entity type. Review a diagram of a site with custom entity types for what it leaves out.
 
@@ -48,19 +48,23 @@ Nexus is a static web app. Give it a Drupal config sync directory or a module's 
 - **Descriptions and field settings.** Bundle descriptions, help text, default values, allowed values and translatability show in tooltips, the Inspector, the Fields table and its CSV. Tooltips and the Fields table draw basic formatting in help text and descriptions, such as `<em>` and `<strong>`, and drop scripts and other markup.
 - **Shared fields.** The Fields table and its CSV count the bundles of an entity type that have each field. The field Inspector lists the other bundles with the label each one gives the field.
 - **Templates.** The content models of Drupal CMS, CivicTheme, the Umami demo, Thunder and Open Social open in 1 click.
-- **CSV import.** Write a content model in a spreadsheet with 1 row per field and open it as a diagram. See [Import a CSV](#import-a-csv).
+- **CSV import.** Write a content model in a spreadsheet with 1 row per field and open it as a diagram. See [Import a CSV](docs/csv-import.md).
 - **Editable.** Add and change entities, fields, references and annotations, with undo and history.
-- **Notes on the canvas.** A Note holds text in Markdown, anywhere on the diagram. See [Notes](#notes).
+- **Notes on the canvas.** A Note holds text in Markdown, anywhere on the diagram. See [Notes](docs/notes.md).
 - **Field editing in the Fields table.** Click a cell to change a field's label, machine name, type, cardinality, references, help text, default value, allowed values or translatability. Tick **Req** to make a field required.
 - **Hover highlight.** Rest the pointer on an entity to highlight its fields, its references and the entities at each end, and fade the rest. On a field, the highlight covers the field's own references. To turn it off, switch off **Highlight connections** on the **Hover highlight** tab of **Settings**.
 - **Help in the status bar.** Rest the pointer on a control in the toolbar, a panel or the status bar, and the status bar shows its description. With no control under the pointer, the status bar shows tips for using the canvas and the keyboard shortcuts.
 - **Explore from 1 entity.** Right-click an entity and pick **Explore from here**, or click **Explore from here** in its Inspector. The diagram then shows only the entities within 1 to 5 references of it. Pick the depth and the direction in the status bar: **Outward**, **Inward** or **Both**. **Clear** puts the whole diagram back where it was.
 - **Checks.** The Checks panel lists the problems in the model after every edit, such as a reference with no target or a field name with 2 types. Click a problem to go to it.
-- **Comparisons.** Compare the open diagram with a saved diagram or a config folder to see the bundles, fields and references each one adds, removes or changes. See [Compare 2 versions](#compare-2-versions).
+- **Comparisons.** Compare the open diagram with a saved diagram or a config folder to see the bundles, fields and references each one adds, removes or changes. See [Compare 2 versions](docs/comparing.md).
 - **Saved as a document.** A `.nexus.json` document holds the model and its layout, and a [JSON Schema](schema/nexus.schema.json) defines the format.
 - **Exports.** PNG and SVG images of the diagram, and CSV files of its fields, bundles and references. A Markdown page documents each bundle, its fields and notes, with an optional Mermaid diagram. A standalone HTML report holds the same documentation and opens in any browser. Mermaid and Graphviz DOT text keeps the diagram in a README, a pull request or a wiki. Both draw the nodes and edges the canvas shows, in its shapes and colors. DOT keeps each node where the canvas has it, and Mermaid lays the diagram out itself. The Mermaid file uses node shapes that need Mermaid 11.3 or later. A diagram past Mermaid's 50,000-character limit gets short node ids, then loses machine names and type captions until it fits. A note at the top of the file says what changed. For a site with more than about 100 entities, pick DOT.
-- **Shared as a link.** **Copy link** puts the whole diagram inside a link. See [Shared links](#shared-links).
+- **Shared as a link.** **Copy link** puts the whole diagram inside a link. See [Shared links](docs/sharing.md).
 - **Built by AI agents.** An agent can write a diagram from a screenshot, a spreadsheet or a spec.
+
+## Documentation
+
+The [user manual](docs/README.md) covers everything you can do in Nexus, from opening your first diagram to sharing it as a link. The same manual is in the app's **Help** panel: click **?** in the toolbar, or press `?`.
 
 ## Build a diagram with an AI agent
 
@@ -95,174 +99,6 @@ Nexus ships 5 ready-made content models:
 | [Open Social](https://www.drupal.org/project/social) | 13.1.0 | The community and intranet distribution: topics, events, pages, albums, landing pages and courses, with 20 paragraph types, 11 vocabularies, 1 media type and 9 block types |
 
 Each template is drawn from the configuration of an exact release. Drupal CMS builds its landing pages with Canvas, so its diagram has no landing page content type. Umami ships with Drupal core, so its version is the core release it comes from. Open Social keeps groups, profiles and posts in entity types that Nexus doesn't draw, so the diagram leaves out their fields. A field that references a group points to a placeholder entity.
-
-## Import a CSV
-
-A CSV file can hold a content model with 1 row per field. To start from an example, pick **Open > CSV template** in the toolbar and fill the file in with any spreadsheet app.
-
-To open a CSV file as a diagram, pick **Open > CSV file…** in the toolbar or drop the file on the landing screen. Nexus lays the diagram out and titles it after the filename.
-
-The import reads cells separated by commas, semicolons or tabs, taking the separator the header row uses most. It matches these columns by their header, in any order and case:
-
-| Column | What it holds | When the cell is empty |
-|--------|---------------|------------------------|
-| Entity type | The entity type's machine name, label or bundle noun, such as `node`, `Content type` or `Paragraph type`. Any other value adds a custom entity type, and `Product (commerce_product)` adds one with its label and machine name | The row is an error |
-| Bundle | The bundle's machine name | The machine name of **Entity** |
-| Entity | The bundle's label | The label from another row of the bundle, or a label made from the bundle's machine name |
-| Field | The field's label | A label made from the field's machine name |
-| Machine name | The field's machine name | `field_` and the machine name of **Field** |
-| Field type | The Drupal field type, such as `string` or `entity_reference_revisions` | `entity_reference` on a row with references, `string` on any other row |
-| Cardinality | `1`, a number above 1, `1..5` or `1..n` for unlimited | `1` |
-| Required | `yes` or `no` | `no` |
-| References | The entities the field references, separated by `;`. Write each as `Tags (taxonomy_term.tags)`, as an entity id or as the label of an entity in the file. `media.*` or `media` references every media type | None |
-| Help text | The field's help text | None |
-| Default | The field's default value | None |
-| Allowed values | The field's allowed values, separated by `;`, each written as `Wide (wide)` or `wide\|Wide` | None |
-| Translatable | `yes` or `no` | Unknown |
-
-A row with an entity type and a bundle but no field adds a bundle with no fields. In **References** and **Allowed values**, write `\;` for a `;` inside an item and `\\` for a `\`. A base field, such as `title` on a content type, imports as a system field. A reference to an entity the file doesn't have adds that entity to the diagram, as a config import does. The import ignores any other column.
-
-**Save as > CSV > Fields** writes the Fields table with the same columns and a **Used in** column, plus a row for each bundle with no fields. A CSV saved that way imports as the same entities, fields and references. Notes, bundle descriptions, hidden fields, annotations and the layout stay out of the CSV.
-
-When a row has a problem, Nexus opens nothing and lists the first 5 problems with their row numbers. The header is row 1.
-
-## Compare 2 versions
-
-A comparison shows what changed between 2 versions of a content model, such as the config export on `main` and the one on a branch. The open diagram is the earlier version. Nexus lists what the other version adds, removes or changes.
-
-To compare the open diagram with another version:
-
-1. Pick **Open > Compare with** in the toolbar.
-2. Pick **Saved diagram…** for a `.nexus.json` file, or **Config folder…** for a Drupal config folder. Nexus reads a config folder as an import does, `annotations.yml` included.
-
-The **Changes** panel lists each change under its bundle. Click a change to go to it on the canvas. Nexus matches bundles by entity type and machine name, and fields by bundle and machine name, so a renamed bundle shows as 1 removed and 1 added. The following table lists what the comparison checks:
-
-| Item | Changed when it differs in |
-|------|----------------------------|
-| Bundle | Label or description |
-| Field | Label, type, cardinality, required, help text, default value, allowed values or translatability |
-| Reference | None: each target of a field is added or removed |
-
-Notes, hidden fields and annotations stay out of the comparison. The canvas switches to the **All** detail level and draws added elements in green, changed ones in amber and removed ones faded with a dashed red border, and the Legend lists the 3 colors. Nexus places added bundles to the right of the diagram.
-
-While a comparison is open, Edit mode, **Save**, **Undo**, **Redo** and the Fields table's editors are off. The detail levels, display switches and layouts still work. Click **Stop comparing** in the **Changes** panel to bring the diagram back as it was, with its layout, detail level, display switches and view. The history gains no step. Opening another diagram also ends the comparison.
-
-## The visual language
-
-Nexus draws entities, fields and references from configuration. Events, APIs, callbacks and calculated fields come from an [annotation overlay](#annotation-overlay).
-
-| Symbol | Meaning | Source |
-|--------|---------|--------|
-| Colored shape, set per entity type | An entity bundle - content type, vocabulary, media, paragraph, block, user or external entity | Config |
-| Faded copy of an entity, dashed border | A proxy: a reference's target, drawn beside the field that references it | Config |
-| Ellipse, solid border | Single-value field | Config |
-| Ellipse, double border | Multi-value field | Config |
-| Ellipse, dashed border | System (base) field | Curated per entity type |
-| Ellipse, yellow fill | Calculated field | Annotation |
-| Diamond | Event | Annotation |
-| Hexagon | API | Annotation |
-| Rounded rectangle with a method | Callback | Annotation |
-| Yellow rectangle with formatted text | Note | Annotation |
-
-Content types are rounded rectangles, vocabularies are tags, media are barrels, paragraphs are cut rectangles, blocks are rectangles, users are ellipses and external entities are hexagons. A field label ending in `*` marks a required field. A reference arrow carries the field's cardinality: `1`, `1..N` for a limit of N or `1..n` for unlimited.
-
-## Notes
-
-A Note holds text anywhere on the diagram. To add one, switch to **Edit**, click **Note** in the **Add** bar (<kbd>Shift</kbd>+<kbd>N</kbd>) and click the canvas. Write the text in the Inspector. The Note grows to fit it and wraps lines at 240 pixels.
-
-A Note reads this Markdown:
-
-| Markdown | Draws |
-|----------|-------|
-| `# Heading`, `## Heading`, `### Heading` | A heading. Levels 4 to 6 draw as level 3 |
-| `**bold**` | **Bold** text |
-| `*italic*` or `_italic_` | *Italic* text |
-| `__underline__` | Underlined text |
-| `~~strikethrough~~` | ~~Struck-through~~ text |
-| `` `code` `` | Code |
-| `[label](https://example.com)` | A link. Hover over it to see its address |
-| A blank line | A new paragraph |
-
-A backslash keeps the next punctuation mark as written, so `\*` draws `*`. An underscore inside a word stays as written, so `field_tags_more` draws as typed. HTML shows as written, and a link never opens a page. PNG and SVG exports show each Note's text without formatting.
-
-## Annotation overlay
-
-An annotation overlay draws the parts of a site that Drupal configuration leaves out, such as domain events, external APIs and integration callbacks. It's a YAML file named `annotations.yml` or `nexus.annotations.yml`, anywhere in the config folder you import. Nexus reads 1 overlay per import, so keep 1 in the folder. This one describes a conference site:
-
-```yaml
-title: 'Example content model'
-nodes:
-  - id: ticketing_api
-    kind: api
-    label: 'Ticketing API'
-  - id: sync_registrations
-    kind: callback
-    label: 'Sync registrations'
-    method: POST
-    attach: node.event
-  - id: session_published
-    kind: event
-    label: SessionPublished
-    attach: node.session
-edges:
-  - { from: session_published, to: ticketing_api, label: notifies }
-computed_fields:
-  node.session:
-    - { name: duration, label: 'Duration' }
-```
-
-Every key is optional. The following table lists what each key draws:
-
-| Key | What it draws |
-|-----|---------------|
-| `title` | The diagram's title, in place of `Content model` |
-| `nodes` | 1 Event, API, Callback or Note node per item |
-| `nodes[].id` | The node's id, which `attach` and `edges` refer to. An item without an `id` draws nothing |
-| `nodes[].kind` | The node's symbol: `event` (diamond), `api` (hexagon), `callback` (rounded rectangle) or `note` (a [Note](#notes)). A missing or unknown kind draws an Event |
-| `nodes[].label` | The text in the node. Defaults to its `id`. A Note doesn't draw it |
-| `nodes[].attach` | An edge to the node from the node with this id, such as `node.event` |
-| `nodes[].method` | A second line of text in the node, such as an HTTP verb |
-| `nodes[].note` | A note badge that shows this text. A Note draws this text as its Markdown instead |
-| `edges` | 1 edge between 2 nodes per item |
-| `edges[].from`, `edges[].to` | The ids of the edge's start and end nodes. An item without both draws nothing |
-| `edges[].label` | The text on the edge. Defaults to none |
-| `computed_fields` | Calculated fields, listed under the id of the entity they belong to, such as `node.session` |
-| `computed_fields.<id>[].name` | The field's machine name. An item without a `name` draws nothing |
-| `computed_fields.<id>[].label` | The field's label. Defaults to its `name` |
-
-`attach`, `edges` and `computed_fields` find nodes by id:
-
-- An entity's id is its entity type and bundle, joined by a dot: `node.session`.
-- A field's id is `field:`, its entity's id, a colon and the field's machine name: `field:node.session:field_speakers`.
-- An annotation's id is the `id` it's given in `nodes`. Give each annotation an `id` that no other node has.
-
-An `attach`, an edge or a `computed_fields` entry that names an id the diagram doesn't have draws nothing. `computed_fields` takes entity ids only.
-
-## Shared links
-
-**Copy link** in the Save menu puts the whole diagram inside the link, after `#doc=`. The diagram travels in the link itself. Anyone who opens the link sees the same model, layout and colors. Add `&focus=<entity id>`, such as `&focus=node.event`, to center the diagram on 1 bundle.
-
-### Link protection
-
-Nexus compresses the diagram with `deflate`, which ends the data with an Adler-32 checksum of the diagram. A chat app or a bad copy can change a character of the link, and the checksum then stops matching. Nexus shows "Could not open that diagram: The link is incomplete or damaged." and opens nothing.
-
-The checksum catches only accidental damage, because anyone can write a new link with a matching checksum. Treat a link like a file from the person who sent it. Nexus reads every link's diagram as data and runs none of it:
-
-- Labels, notes and descriptions are drawn as text, so markup in them shows as written. A Note formats only its [Markdown](#notes).
-- An entity type's color, symbol and name go through the checks listed under [Security](#security). Any other value falls back to the default.
-- The Content Security Policy runs only Nexus's own scripts, so a link can't run code in your browser.
-- Unpacking stops at 5 MB, so a crafted link can't fill the page's memory.
-- A `focus` that names anything but an entity is ignored.
-- Opening a link changes none of your stored settings, and the link carries no panel layout.
-
-### Link limits
-
-A link has these limits:
-
-- Copy link hands out links of up to 32,000 characters, counting the page address. For a bigger diagram, the dialog shows the link's length and offers **Save .nexus.json** instead.
-- Each character of a link holds about 10 bytes of diagram, and each node's position adds about 17 characters. The CivicTheme template, with 49 entities and 270 fields, makes a link of about 14,000 characters with its layout.
-- Chat apps, ticket trackers and email clients can cut or wrap a long link. If a link fails to open, send the `.nexus.json` file.
-- A link someone else built can be longer than 32,000 characters and still opens. Its diagram can unpack to at most 5 MB.
 
 ## Privacy
 

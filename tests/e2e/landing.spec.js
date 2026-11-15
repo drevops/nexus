@@ -278,7 +278,7 @@ test.describe('Landing', { tag: '@runner-1' }, () => {
     const link = page.locator('#dropzone .landing__note').getByRole('link', { name: 'annotations.yml' });
 
     await expect(link).toBeVisible();
-    await expect(link).toHaveAttribute('href', 'https://github.com/drevops/nexus#annotation-overlay');
+    await expect(link).toHaveAttribute('href', 'https://github.com/drevops/nexus/blob/main/docs/annotations.md');
     await expect(link).toHaveAttribute('target', '_blank');
     await expect(link).toHaveAttribute('rel', 'noopener');
     expect(await link.evaluate((element) => getComputedStyle(element).color)).toBe(

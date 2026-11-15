@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { CHECKS_DOC, copyLink, exploreFrom, loadExample, openDocument, openEntityMenu, openSettings, tapNode } from './helpers.js';
+import { CHECKS_DOC, copyLink, exploreFrom, loadExample, openAbout, openDocument, openEntityMenu, openSettings, tapNode } from './helpers.js';
 
 test.describe('Titles', { tag: '@runner-1' }, () => {
   // Describes each visible control, table header and badge that shows no
@@ -79,6 +79,15 @@ test.describe('Titles', { tag: '@runner-1' }, () => {
           }
 
           await expect(page.locator('#checks')).toBeVisible();
+        },
+      ],
+      [
+        'the Help panel on a page with a table and links',
+        async (page) => {
+          await loadExample(page);
+          await page.click('#help-toggle');
+          await page.click('#help [data-help-link="keyboard-shortcuts"]');
+          await expect(page.locator('#help .help__content table').first()).toBeVisible();
         },
       ],
       ...['types', 'defaults', 'frame', 'hover', 'markdown', 'checks'].map((tab) => [
@@ -227,7 +236,7 @@ test.describe('Titles', { tag: '@runner-1' }, () => {
         'the About box',
         async (page) => {
           await loadExample(page);
-          await page.click('#about-toggle');
+          await openAbout(page);
           await expect(page.locator('#about-close')).toBeVisible();
         },
       ],

@@ -158,6 +158,16 @@ export async function copyLink(page) {
   await expect(page.locator('#link-dialog')).toHaveAttribute('open', '');
 }
 
+// Opens the About box from the foot of the Help panel's contents.
+export async function openAbout(page) {
+  if ((await page.locator('#help').count()) === 0) {
+    await page.click('#help-toggle');
+  }
+
+  await page.click('#help-about');
+  await expect(page.locator('#about-dialog')).toHaveAttribute('open', '');
+}
+
 // Picks an item, by its value, from the Open button's menu and waits for the
 // menu to close.
 export async function openFrom(page, item) {

@@ -11,7 +11,7 @@ const SKILL = readFileSync(join(ROOT, '.claude', 'skills', NAME, 'SKILL.md'), 'u
 const PACKAGE = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
 
 // Fixtures hold made-up models, so they never list the templates.
-const SCANNED = ['README.md', 'CONTRIBUTING.md', 'AGENTS.md', 'src', 'scripts', 'tests'];
+const SCANNED = ['README.md', 'CONTRIBUTING.md', 'AGENTS.md', 'docs', 'src', 'scripts', 'tests'];
 const SKIPPED = new Set(['tests/fixtures']);
 
 function frontmatter() {

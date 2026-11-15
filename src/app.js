@@ -26,6 +26,7 @@ import { initShortcuts } from './keyboard.js';
 import { initCompare, startComparison } from './compare.js';
 import { initAiDialog, showAiDialog } from './ai-dialog.js';
 import { initLinkDialog, showLinkDialog } from './link-dialog.js';
+import { initHelpLinks } from './help-panel.js';
 import { decodeDocument, documentLink, encodeDocument, linkParams } from './doc-link.js';
 import { initIcons, icon } from './icons.js';
 import { DEFAULT_TITLE } from './model.js';
@@ -681,9 +682,7 @@ function initPageZoomGuard() {
 }
 
 function initAbout() {
-  const dialog = $('about-dialog');
-  $('about-toggle').addEventListener('click', () => dialog.show());
-  $('about-close').addEventListener('click', () => dialog.hide());
+  $('about-close').addEventListener('click', () => $('about-dialog').hide());
 }
 
 function enableLanding() {
@@ -707,6 +706,7 @@ initStatusbar();
 initToolbarSeparators();
 initPageZoomGuard();
 initAbout();
+initHelpLinks();
 initAiDialog(showDocument);
 initLinkDialog();
 enableLanding();

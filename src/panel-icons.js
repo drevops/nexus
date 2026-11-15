@@ -13,5 +13,6 @@ export const PANEL_ICONS = {
   history: 'history',
   checks: 'list-checks',
   changes: 'git-compare',
+  help: 'help-circle',
   inspector: 'pencil',
 };

@@ -1123,6 +1123,7 @@ body.is-dragging-panel * {
   min-width: 120px;
 }
 
+.panel__help,
 .panel__pin,
 .panel__close {
   display: inline-flex;
@@ -1139,6 +1140,33 @@ body.is-dragging-panel * {
 .panel__pin:hover,
 .panel__close:hover {
   color: var(--text);
+}
+
+.panel__help:hover,
+.dialog__help:hover {
+  color: var(--accent);
+}
+
+.dialog__help {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--sl-spacing-x-small);
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: var(--sl-font-size-large);
+  cursor: pointer;
+}
+
+.dialog__help .icon {
+  width: 1em;
+  height: 1em;
+}
+
+/* The Help panel sits under the landing screen, so a dialog opened there
+   offers no help button. */
+body:has(#landing:not([hidden])) .dialog__help {
+  display: none;
 }
 
 .panel__pin svg {
@@ -3177,4 +3205,280 @@ html.sl-theme-dark .icon--nexus .ink {
 
 .insp__delete:hover {
   background: #fdf1f0;
+}
+
+/* Help panel: the contents beside the page, each scrolling on its own. */
+.panel--help {
+  width: 720px;
+  height: min(680px, calc(100% - 2rem));
+}
+
+#help .panel__body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: 0;
+}
+
+.help {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.help.is-narrow {
+  flex-direction: column;
+}
+
+.help__nav {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 210px;
+  overflow: auto;
+  padding: 0.5rem 0.6rem 0.75rem;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.help.is-narrow .help__nav {
+  flex: 0 0 auto;
+  max-height: 35%;
+  border-right: none;
+  border-bottom: 1px solid var(--border);
+}
+
+.help__section-title {
+  margin: 0.75rem 0 0.25rem;
+  padding: 0 0.45rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.help__section:first-child .help__section-title {
+  margin-top: 0.1rem;
+}
+
+.help__link,
+.help__sublink,
+.help__about {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.22rem 0.45rem;
+  border: none;
+  border-radius: 5px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.83rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.help__sublink {
+  padding-left: 1.1rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.help__link:hover,
+.help__sublink:hover,
+.help__about:hover {
+  background: var(--surface-2);
+}
+
+.help__link.is-current {
+  background: var(--sl-color-primary-100);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.help__sublink.is-current {
+  color: var(--accent);
+}
+
+.help__about {
+  margin-top: auto;
+  padding-top: 0.6rem;
+  color: var(--muted);
+}
+
+.help__about .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.help__icon {
+  display: inline-flex;
+}
+
+.help__empty {
+  padding: 0.5rem 0.45rem;
+}
+
+.help__page {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: auto;
+  padding: 0.75rem 1.1rem 1rem;
+}
+
+.help__crumb {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.help__title {
+  margin: 0.15rem 0 0.6rem;
+  font-size: 1.2rem;
+}
+
+.help__content {
+  font-size: 0.87rem;
+  line-height: 1.55;
+}
+
+.help__content h2,
+.help__content h3,
+.help__content h4 {
+  margin: 1.2rem 0 0.4rem;
+  border-radius: 4px;
+}
+
+.help__content h2 {
+  font-size: 1rem;
+}
+
+.help__content h3 {
+  font-size: 0.92rem;
+}
+
+.help__content h4 {
+  font-size: 0.87rem;
+}
+
+.help__content .is-flash {
+  animation: help-flash 1.4s ease-out;
+}
+
+@keyframes help-flash {
+  from {
+    background: var(--sl-color-primary-200);
+  }
+}
+
+.help__content p,
+.help__content ul,
+.help__content ol,
+.help__content pre,
+.help__content blockquote {
+  margin: 0 0 0.65rem;
+}
+
+.help__content ul,
+.help__content ol {
+  padding-left: 1.3rem;
+}
+
+.help__content li > ul,
+.help__content li > ol {
+  margin-bottom: 0;
+}
+
+.help__content a {
+  color: var(--accent);
+}
+
+.help__content img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0.4rem 0 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.help__content code {
+  padding: 0.05rem 0.3rem;
+  border-radius: 4px;
+  background: var(--surface-2);
+  font-size: 0.8rem;
+}
+
+.help__content pre {
+  overflow: auto;
+  padding: 0.5rem 0.65rem;
+  border-radius: 6px;
+  background: var(--surface-2);
+}
+
+.help__content pre code {
+  padding: 0;
+  background: none;
+}
+
+.help__content blockquote {
+  padding-left: 0.75rem;
+  border-left: 3px solid var(--border);
+  color: var(--muted);
+}
+
+.help__content table {
+  display: block;
+  overflow-x: auto;
+  margin: 0.3rem 0 0.8rem;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.help__content th,
+.help__content td {
+  padding: 0.3rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.help__pager {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 1.2rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--border);
+}
+
+.help__pager-link {
+  display: flex;
+  flex-direction: column;
+  max-width: 48%;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.help__pager-link.is-next {
+  margin-left: auto;
+  text-align: right;
+}
+
+.help__pager-label {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.help__pager-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent);
 }
