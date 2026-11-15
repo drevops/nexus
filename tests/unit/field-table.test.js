@@ -291,6 +291,7 @@ function dataProviderCellEditor() {
     ['the allowed values of an integer list field', { type: 'list_integer' }, 'allowedValues', 'multiline'],
     ['the allowed values of a text field that has some', { allowedValues: [{ value: 'a', label: 'A' }] }, 'allowedValues', 'multiline'],
     ['the allowed values of a text field', {}, 'allowedValues', null],
+    ['the allowed values of a list field with an allowed values function', { type: 'list_string', allowedValuesFunction: 'icon_values' }, 'allowedValues', null],
     ['the translatability', {}, 'translatable', 'select'],
     ['the position', {}, 'position', null],
     ['an unknown column', {}, 'colour', null],

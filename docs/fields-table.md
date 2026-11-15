@@ -67,10 +67,10 @@ You can edit a field in the table in either mode. Click a cell to open its edito
 - **Refs** has a pencil button that opens a list of entities. Each entity you pick or unpick saves straight away. Press `Escape` to close the list.
 - **Req** is a checkbox. Tick it to make the field required.
 
-Some cells can't be edited. **Card.** stays fixed for base and calculated fields, **Refs** opens only for reference fields and **Allowed values** opens only for `list_*` fields or fields that already have values.
+Some cells can't be edited. **Card.** stays fixed for base and calculated fields, **Refs** opens only for reference fields and **Allowed values** opens only for `list_*` fields or fields that already have values, and never for a field whose values come from a PHP function.
 
 Each edit is 1 step in the [history](history.md). An edit to the field the Inspector shows, or to its entity, updates the Inspector too. The editors are off while you [compare 2 versions](comparing.md).
 
 ## Save the table as CSV
 
-To save the table as a spreadsheet, click the caret beside **Save**, then **CSV** > **Fields**. The CSV keeps the diagram's order and every column, whatever the filters and the sort. See [Exporting](exporting.md#csv).
+To save the table as a spreadsheet, click the caret beside **Save**, then **CSV** > **Fields**. The CSV keeps the diagram's order and every column, whatever the filters and the sort. It leaves out a field's allowed values function, so importing the CSV doesn't bring the function back. See [Exporting](exporting.md#csv).

@@ -43,7 +43,7 @@ Select a field to see its form:
 | **Translatable** | **Yes** or **No**. Clear it when the source doesn't say |
 | **Help text** | The help text editors see under the field |
 | **Default value** | The value a new item starts with |
-| **Allowed values** | The values a list field offers, 1 per line as `value\|label`. A line without a label uses its value. The box shows for `list_*` fields and fields that already have values |
+| **Allowed values** | The values a list field offers, 1 per line as `value\|label`. A line without a label uses its value. The box shows for `list_*` fields and fields that already have values. A field whose values come from a PHP function shows the function, as `From name()`, in place of the box |
 | **References** | The entities a reference field points to, as tags. Click a tag's **×** to remove the reference, and pick an entity in **Add target…** to add one. The section shows for reference fields only |
 | **Also used in** | The other bundles of the entity type that have a field with this machine name, each with the label it gives the field. Click a bundle to open it |
 | **Note** | A note badge on the field |

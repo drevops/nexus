@@ -19,7 +19,7 @@ import { icon } from './icons.js';
 import { cardinalityLabel, cardinalityOptions, typeOptions, FIELD_TYPES, KIND_SYSTEM, REFERENCE_FIELD_TYPES } from './model.js';
 import { ANNOTATION_KINDS, NOTE_KIND } from './annotations.js';
 import { formatFieldLine, parseFieldLines } from './bulk-fields.js';
-import { allowedValuesText, parseAllowedValues, translatableChoice, translatableValue, TRANSLATABLE_OPTIONS } from './field-settings.js';
+import { allowedValuesSummary, allowedValuesText, parseAllowedValues, translatableChoice, translatableValue, TRANSLATABLE_OPTIONS } from './field-settings.js';
 import { setFieldCardinality, setFieldLabel, setFieldRequired, setFieldTranslatable, setFieldType, setSetting } from './field-edits.js';
 import { BULK_FIELDS_LABEL, inspectorTrail, NEW_FIELD_LABEL, nodeLookup } from './inspector-trail.js';
 import { describeNode } from './history.js';
@@ -403,8 +403,14 @@ export function FieldForm({ id }) {
       action="Changed the default value of"
     />
     ${
-      (String(s.fieldType).startsWith('list_') || hasAllowedValues) &&
-      html`<${TextSetting}
+      node.data('allowedValuesFunction')
+        ? html`<${Row} label="Allowed values"
+            ><span class="insp__ro" data-allowed-values-function title="A PHP function returns the values the list offers"
+              >${allowedValuesSummary([], node.data('allowedValuesFunction'))}</span
+            ><//
+          >`
+        : (String(s.fieldType).startsWith('list_') || hasAllowedValues) &&
+          html`<${TextSetting}
         node=${node}
         dataKey="allowedValues"
         label="Allowed values"

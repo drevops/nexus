@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { TEMPLATES } from '../../src/templates.js';
 import { CHECK_DEFAULTS } from '../../src/model-checks.js';
-import { CHECKS_DOC, buildEntities, openDocument, openSettings, selectedNodes, slFill, waitForGraph, activeLevel, stepLevel } from './helpers.js';
+import { CHECKS_DOC, buildEntities, openDocument, openSettings, selectedNodes, slFill, tapNode, waitForGraph, activeLevel, stepLevel } from './helpers.js';
 
 const TAGS_FIELD = 'field:node.article:field_tags';
 
@@ -141,6 +141,12 @@ test.describe('Checks', { tag: '@runner-2' }, () => {
     await page.click('#table-toggle');
     const size = page.locator('#field-table tbody tr', { has: page.locator('code', { hasText: /^field_size$/ }) });
     await expect(size.locator('td[data-column="allowedValues"]')).toHaveText('From article_size_values()');
+
+    await page.click('#mode-build');
+    await expect(size.locator('td[data-column="allowedValues"] [data-edit-cell]')).toHaveCount(0);
+    await tapNode(page, 'field:node.article:field_size');
+    await expect(page.locator('#inspector [data-allowed-values-function]')).toHaveText('From article_size_values()');
+    await expect(page.locator('#inspector [data-setting="allowedValues"]')).toHaveCount(0);
   });
 
   test('opens the Inspector on the node a problem is on in Edit mode', async ({ page }) => {
