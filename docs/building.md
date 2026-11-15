@@ -82,7 +82,7 @@ Select the node and change **Machine name** in the Inspector. The new name appli
 An entity's type is fixed after you create it. To change it:
 
 1. Add a new entity of the right type.
-2. Copy the fields to it with [Adding fields in bulk](bulk-fields.md#copy-fields-from-another-entity).
+2. Copy the fields to it with [Adding fields in bulk](bulk-fields.md#copy-fields-from-another-entity). The copy keeps each field's label, machine name, type, cardinality, required flag and references. Set the help text, default value, allowed values, translatability and note of each new field in the Inspector.
 3. Point every reference that targets the old entity at the new one. Deleting an entity deletes the references to it.
 4. Delete the old entity.
 

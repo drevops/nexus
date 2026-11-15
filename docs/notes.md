@@ -31,4 +31,4 @@ Every entity, field and annotation has a **Note** box in the Inspector. Text you
 
 A note badge shows its text as written, without formatting. Badges hide when you zoom far out, and while their node is faded.
 
-The [Markdown](exporting.md#markdown) and [HTML](exporting.md#html) exports include every note, and so do the bundles CSV and the saved diagram.
+The [Markdown](exporting.md#markdown) and [HTML](exporting.md#html) exports include the note of every entity and field, and the bundles CSV includes each bundle's note. The saved diagram keeps every note, including Notes on the canvas and the notes of annotations.

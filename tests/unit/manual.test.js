@@ -89,7 +89,7 @@ test('reads the title, summary, sections and text of a page', () => {
     { id: 'saving-and-opening-1', text: 'Saving and opening' },
     { id: 'the-canvas', text: 'The canvas' },
   ]);
-  assert.deepEqual(anchors, ['saving-and-opening', 'saving-and-opening-1', 'the-canvas', 'zooming']);
+  assert.deepEqual(anchors, ['keyboard-shortcuts', 'saving-and-opening', 'saving-and-opening-1', 'the-canvas', 'zooming']);
   assert.match(page.text, /^Every key the app answers to, on each platform\. Press Ctrl\+S/);
   assert.equal(page.html, readFileSync(join(ROOT, 'tests', 'fixtures', 'manual', 'page.html'), 'utf8').trim());
 });
@@ -187,6 +187,12 @@ function dataProviderPageErrors() {
     ],
     ['an image outside assets', '# Page\n\n![Logo](../logo.svg)\n', ['page.md: shows "../logo.svg", which is not an image in assets/']],
     ['an image without alt text', '# Page\n\n![](assets/logo.png)\n', ['page.md: shows "assets/logo.png" without alt text']],
+    ['HTML in the title', '# Page <i>draft</i>\n\nSummary.\n', ['page.md: has raw HTML "<i>"', 'page.md: has raw HTML "</i>"']],
+    [
+      'a link outside docs in the title',
+      '# Page of [code](../src/app.js)\n\nSummary.\n',
+      ['page.md: links to "../src/app.js", which is neither another page in docs/ nor an external URL'],
+    ],
   ];
 }
 
@@ -206,6 +212,10 @@ test('builds the manual in contents order', () => {
 
 test('accepts a link to a heading below a section', () => {
   assert.doesNotThrow(() => buildManual(docs({ 'panels.md': '# Panels\n\nEvery panel.\n\nSee [twice](keys.md#saving-twice).\n' }), new Set(['landing.png'])));
+});
+
+test("accepts a link to a page's title", () => {
+  assert.doesNotThrow(() => buildManual(docs({ 'panels.md': '# Panels\n\nEvery panel.\n\nSee [the keys](keys.md#keys).\n' }), new Set(['landing.png'])));
 });
 
 test('lists every problem of the manual in 1 error', async (t) => {

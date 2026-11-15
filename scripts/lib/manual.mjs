@@ -150,8 +150,10 @@ export function renderPage(id, markdown) {
     return { page: null, anchors, links, images, errors };
   }
 
+  // The app draws the title itself, so a link to its anchor opens the top of
+  // the page.
   const title = collapse(plainText(first.tokens));
-  slugger(title);
+  anchors.push(slugger(title));
 
   const lead = tokens[0];
 
@@ -303,6 +305,10 @@ export function renderPage(id, markdown) {
   function blocks(list) {
     return list.map(renderBlock).join('');
   }
+
+  // The title's markup is dropped, but rendering it reports raw HTML and bad
+  // links in it like any other text.
+  inline(first.tokens);
 
   const html = blocks(tokens);
   const summary = lead && lead.type === 'paragraph' ? collapse(plainText(lead.tokens)) : '';
