@@ -8,7 +8,7 @@
  * with equal values keep their numbered order.
  */
 
-import { allowedValueLabels } from './field-settings.js';
+import { allowedValuesSummary } from './field-settings.js';
 import { KIND_CALCULATED, KIND_SYSTEM, REFERENCE_FIELD_TYPES } from './model.js';
 
 export const DEFAULT_SORT = { column: 'position', direction: 'ascending' };
@@ -32,7 +32,7 @@ const SORT_VALUES = {
   usedIn: (r) => r.usedIn.length || null,
   description: (r) => textValue(r.description),
   defaultValue: (r) => textValue(r.defaultValue),
-  allowedValues: (r) => textValue(allowedValueLabels(r.allowedValues).join(', ')),
+  allowedValues: (r) => textValue(allowedValuesSummary(r.allowedValues, r.allowedValuesFunction)),
   translatable: (r) => (r.translatable === null ? null : Number(!r.translatable)),
 };
 

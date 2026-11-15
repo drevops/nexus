@@ -118,6 +118,7 @@ Content model specs often describe each bundle and explain each field. Nexus sho
 | `description` | A field | The help text editors see under the field, such as "Use the speaker's full name" |
 | `defaultValue` | A field | The value a new item starts with, as text, such as `draft` or `now` |
 | `allowedValues` | A field | The options a `list_string` field offers, in order: `[{ "value": "keynote", "label": "Keynote" }]`. Leave out `label` when it matches the value |
+| `allowedValuesFunction` | A field | The PHP function that returns a list field's options in place of `allowedValues`, as Drupal's `allowed_values_function` names it |
 | `translatable` | A field | `true` when the field's value can differ per language, `false` when it can't |
 
 Every one is optional. Leave a key out when the source doesn't say, rather than writing an empty string, an empty list or a guess. Copy the text as the source writes it, markup included.
@@ -261,7 +262,7 @@ In a clone of the [Nexus repository](https://github.com/drevops/nexus), after `n
 npm run check-diagram -- path/to/diagram.nexus.json
 ```
 
-The command checks the document against the schema and the rules the schema can't express, including the rules of the Nexus Checks panel. It prints each problem with the JSON Pointer of the part it's about. Fix every error. A warning means the document opens but draws less than it says, or breaks common Drupal practice, such as a vocabulary with no fields of its own. Fix each warning, or say in your report why it stays.
+The command checks the document against the schema and the rules the schema can't express, including the rules of the Nexus Checks panel. It prints each problem with the JSON Pointer of the part it's about. Fix every error. A warning means the document opens but draws less than it says, or breaks common Drupal practice, such as a content type with no fields of its own. Fix each warning, or say in your report why it stays.
 
 Without the repository, validate the document against the published schema with any JSON Schema draft 2020-12 validator, then go through these checks yourself:
 

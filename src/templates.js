@@ -113,7 +113,7 @@ export const TEMPLATES = [
     icon: 'users',
     color: '#1f80aa',
     counts: { node: 8, taxonomy_term: 11, media: 1, paragraph: 20, block_content: 9, user: 1 },
-    size: 91593,
+    size: 92141,
     sources: [
       {
         name: 'Open Social',

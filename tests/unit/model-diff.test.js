@@ -166,6 +166,7 @@ function dataProviderChanges() {
     ['added help text', (doc) => (field(doc, 'field_title').description = 'Shown in lists'), [[CHANGE_CHANGED, 'field', TITLE_FIELD]]],
     ['a default value', (doc) => (field(doc, 'field_title').defaultValue = 'Untitled'), [[CHANGE_CHANGED, 'field', TITLE_FIELD]]],
     ['allowed values', (doc) => (field(doc, 'field_title').allowedValues = [{ value: 'a', label: 'A' }]), [[CHANGE_CHANGED, 'field', TITLE_FIELD]]],
+    ['an allowed values function', (doc) => (field(doc, 'field_title').allowedValuesFunction = 'title_values'), [[CHANGE_CHANGED, 'field', TITLE_FIELD]]],
     ['a translatability', (doc) => (field(doc, 'field_title').translatable = true), [[CHANGE_CHANGED, 'field', TITLE_FIELD]]],
     [
       'an added reference target',
@@ -239,6 +240,12 @@ function dataProviderProperties() {
       (doc) => (field(doc, 'field_title').allowedValues = [{ value: 'a', label: 'A' }]),
       'field',
       [['allowedValues', 'Allowed values', [], [{ value: 'a', label: 'A' }]]],
+    ],
+    [
+      'an allowed values function',
+      (doc) => (field(doc, 'field_title').allowedValuesFunction = 'title_values'),
+      'field',
+      [['allowedValuesFunction', 'Allowed values function', '', 'title_values']],
     ],
     ['a translatability', (doc) => (field(doc, 'field_title').translatable = false), 'field', [['translatable', 'Translatable', null, false]]],
   ];

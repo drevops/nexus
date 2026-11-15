@@ -57,6 +57,7 @@ const FIELD_PROPERTIES = [
   ['description', 'Help text'],
   ['defaultValue', 'Default value'],
   ['allowedValues', 'Allowed values'],
+  ['allowedValuesFunction', 'Allowed values function'],
   ['translatable', 'Translatable'],
 ];
 
@@ -72,6 +73,7 @@ const NORMALIZE = {
   cardinality: (value) => (value == null ? 1 : value),
   required: (value) => !!value,
   allowedValues: allowedValueList,
+  allowedValuesFunction: settingText,
   translatable: (value) => (typeof value === 'boolean' ? value : null),
 };
 

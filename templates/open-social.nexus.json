@@ -1258,6 +1258,7 @@
           "targetType": null,
           "targetBundles": [],
           "hidden": false,
+          "allowedValuesFunction": "social_event_type_allowed_values_function",
           "translatable": false
         }
       ]
@@ -1337,6 +1338,7 @@
           "targetType": null,
           "targetBundles": [],
           "hidden": false,
+          "allowedValuesFunction": "social_group_flexible_group_type_allowed_values_function",
           "translatable": false
         }
       ]
@@ -1609,6 +1611,7 @@
           "targetType": null,
           "targetBundles": [],
           "hidden": false,
+          "allowedValuesFunction": "social_topic_allowed_values_function",
           "translatable": false
         }
       ]
@@ -2818,6 +2821,7 @@
           "hidden": false,
           "description": "Select in what order selected content should be displayed",
           "defaultValue": "changed",
+          "allowedValuesFunction": "_social_content_block_allowed_values_callback",
           "translatable": false
         },
         {
@@ -3102,6 +3106,7 @@
           "targetType": null,
           "targetBundles": [],
           "hidden": false,
+          "allowedValuesFunction": "_kpi_data_formatter_allowed_values",
           "translatable": false
         },
         {
@@ -3115,6 +3120,7 @@
           "targetType": null,
           "targetBundles": [],
           "hidden": false,
+          "allowedValuesFunction": "_kpi_datasource_allowed_values",
           "translatable": false
         },
         {
@@ -3141,6 +3147,7 @@
           "targetType": null,
           "targetBundles": [],
           "hidden": false,
+          "allowedValuesFunction": "_kpi_visualization_allowed_values",
           "translatable": false
         }
       ]

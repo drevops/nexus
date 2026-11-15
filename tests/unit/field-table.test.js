@@ -182,6 +182,13 @@ function dataProviderSortColumn() {
       ['x', 'y', 'z'],
     ],
     [
+      'allowed values with a function by its name',
+      [['x', { allowedValues: [{ value: 'b', label: 'Beta' }] }], ['y', { allowedValuesFunction: 'icon_values' }], ['z']],
+      'allowedValues',
+      ['x', 'y', 'z'],
+      ['y', 'x', 'z'],
+    ],
+    [
       'translatability, with an unknown one as a blank',
       [['x', { translatable: false }], ['y'], ['z', { translatable: true }]],
       'translatable',

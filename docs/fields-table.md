@@ -33,7 +33,7 @@ Each entity starts a group with its label, its entity type and its description. 
 | **Used in** | How many bundles of the entity type have a field with this machine name. Rest the pointer on the number to see their names |
 | **Help text** | The text editors see under the field |
 | **Default** | The value a new item starts with |
-| **Allowed values** | The values a list field offers |
+| **Allowed values** | The values a list field offers, or `From name()` when a PHP function, `allowed_values_function`, provides them |
 | **Transl.** | ✓ when the field is translatable, ✕ when it isn't and blank when the source doesn't say |
 
 **Help text**, **Default**, **Allowed values** and **Transl.** show in Edit mode, and in View mode while any field of the diagram has 1 of those settings. Help text and descriptions show basic formatting, such as bold and lists, and a link shows its address when you rest the pointer on it. Base and calculated fields leave **Used in** blank.

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   allowedValueLabels,
   allowedValueList,
+  allowedValuesSummary,
   allowedValuesText,
   parseAllowedValues,
   settingText,
@@ -200,3 +201,27 @@ test('gives no choice for a value that is not a boolean', () => {
   assert.equal(translatableChoice('yes'), '');
   assert.equal(translatableChoice(undefined), '');
 });
+
+test('sums up allowed values as 1 line', async (t) => {
+  for (const [name, list, allowedValuesFunction, expected] of dataProviderAllowedValuesSummary()) {
+    await t.test(name, () => {
+      assert.equal(allowedValuesSummary(list, allowedValuesFunction), expected);
+    });
+  }
+});
+
+function dataProviderAllowedValuesSummary() {
+  const list = [
+    { value: 'wide', label: 'Wide' },
+    { value: 'narrow', label: 'narrow' },
+  ];
+
+  return [
+    ['values', list, '', 'Wide (wide), narrow'],
+    ['no values', [], '', ''],
+    ['a function', [], 'icon_values', 'From icon_values()'],
+    ['a function with values, which Drupal ignores', list, 'icon_values', 'From icon_values()'],
+    ['a blank function name', list, ' ', 'Wide (wide), narrow'],
+    ['no function name', list, undefined, 'Wide (wide), narrow'],
+  ];
+}

@@ -22,7 +22,7 @@ import htmBase from 'htm';
 import { icon } from './icons.js';
 import { cardinalityLabel, cardinalityOptions, identifierSegments, fitFontSize, typeOptions } from './model.js';
 import { InspectorBody } from './inspector.js';
-import { allowedValueLabels, allowedValuesText, parseAllowedValues, translatableChoice, translatableValue, TRANSLATABLE_OPTIONS } from './field-settings.js';
+import { allowedValuesSummary, allowedValuesText, parseAllowedValues, translatableChoice, translatableValue, TRANSLATABLE_OPTIONS } from './field-settings.js';
 import { numberFields, sortFields, nextSort, isDefaultSort, cellEditor, referenceChanges } from './field-table.js';
 import { setFieldCardinality, setFieldLabel, setFieldRequired, setFieldTranslatable, setFieldType, setSetting } from './field-edits.js';
 import { SelectEditor, TextEditor } from './table-editors.js';
@@ -988,7 +988,7 @@ function fieldActions(controller, r, readOnly) {
 }
 
 function hasSettings(r) {
-  return Boolean(r.description || r.defaultValue || r.allowedValues.length || r.translatable !== null);
+  return Boolean(r.description || r.defaultValue || r.allowedValues.length || r.allowedValuesFunction || r.translatable !== null);
 }
 
 // The sortable columns of the Fields table, left to right, each keyed by its
@@ -1090,7 +1090,7 @@ const CELL_CONTENT = {
   usedIn: (r) => (r.usedIn.length ? html`<span title=${usedInTitle(r.usedIn)}>${r.usedIn.length}</span>` : ''),
   description: (r) => richText(r.description),
   defaultValue: (r) => r.defaultValue,
-  allowedValues: (r) => allowedValueLabels(r.allowedValues).join(', '),
+  allowedValues: (r) => allowedValuesSummary(r.allowedValues, r.allowedValuesFunction),
   translatable: (r) => translatableMark(r.translatable),
 };
 

@@ -65,6 +65,17 @@ export function allowedValueLabels(list) {
   return list.map((item) => (item.label === item.value ? item.value : item.label + ' (' + item.value + ')'));
 }
 
+/**
+ * Returns the allowed values of a field as 1 line of text. Drupal ignores the
+ * list when an allowed values function is set, so the function is named
+ * instead.
+ */
+export function allowedValuesSummary(list, allowedValuesFunction) {
+  const name = settingText(allowedValuesFunction);
+
+  return name ? 'From ' + name + '()' : allowedValueLabels(list).join(', ');
+}
+
 // The choices a translatability select offers, as [choice, label, value].
 const TRANSLATABLE_CHOICES = [
   ['yes', 'Yes', true],
