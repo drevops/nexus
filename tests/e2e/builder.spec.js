@@ -260,11 +260,15 @@ test.describe('Builder', { tag: '@runner-1' }, () => {
 
   test('deletes every selected entity with its fields on Backspace, and 1 undo brings them back', async ({ page }) => {
     const entities = ['node.speaker', 'paragraph.quote', 'taxonomy_term.venues'];
-    const counts = () => page.evaluate(() => ({ entities: window.__nexus.cy.nodes('[group="entity"]').length, fields: window.__nexus.cy.nodes('[group="field"]').length }));
+    const counts = () =>
+      page.evaluate(() => ({ entities: window.__nexus.cy.nodes('[group="entity"]').length, fields: window.__nexus.cy.nodes('[group="field"]').length }));
     await loadExample(page);
     await page.click('#mode-build');
     const before = await counts();
-    const fields = await page.evaluate((ids) => ids.reduce((sum, id) => sum + window.__nexus.cy.nodes('[group="field"][entity="' + id + '"]').length, 0), entities);
+    const fields = await page.evaluate(
+      (ids) => ids.reduce((sum, id) => sum + window.__nexus.cy.nodes('[group="field"][entity="' + id + '"]').length, 0),
+      entities,
+    );
 
     await page.evaluate((ids) => {
       ids.forEach((id) => window.__nexus.cy.getElementById(id).select());

@@ -411,16 +411,16 @@ export function FieldForm({ id }) {
           >`
         : (String(s.fieldType).startsWith('list_') || hasAllowedValues) &&
           html`<${TextSetting}
-        node=${node}
-        dataKey="allowedValues"
-        label="Allowed values"
-        title="The values the list offers, 1 per line as value|label. A line without a label uses its value."
-        placeholder=${'draft|Draft\npublished|Published'}
-        multiline
-        action="Changed the allowed values of"
-        toText=${(list) => allowedValuesText(list || [])}
-        fromText=${parseAllowedValues}
-      />`
+            node=${node}
+            dataKey="allowedValues"
+            label="Allowed values"
+            title="The values the list offers, 1 per line as value|label. A line without a label uses its value."
+            placeholder=${'draft|Draft\npublished|Published'}
+            multiline
+            action="Changed the allowed values of"
+            toText=${(list) => allowedValuesText(list || [])}
+            fromText=${parseAllowedValues}
+          />`
     }
     ${
       isRef &&
