@@ -305,6 +305,37 @@ function dataProviderStorageAllowedValues() {
   ];
 }
 
+test('reads the allowed values function from the field storage', async (t) => {
+  for (const [name, allowedValuesFunction, expected] of dataProviderAllowedValuesFunction()) {
+    await t.test(name, () => {
+      const config = {
+        'field.storage.node.field_icon.yml': {
+          entity_type: 'node',
+          field_name: 'field_icon',
+          type: 'list_string',
+          settings: { allowed_values: [], allowed_values_function: allowedValuesFunction },
+        },
+        'field.field.node.page.field_icon.yml': { entity_type: 'node', bundle: 'page', field_name: 'field_icon', field_type: 'list_string' },
+      };
+      const model = parseConfig(config, { includeBaseFields: false });
+      const data = model.toArray().nodes.find((node) => node.data.id === 'field:node.page:field_icon').data;
+
+      assert.equal(field(model.getEntity('node.page'), 'field_icon').allowedValuesFunction, expected);
+      assert.equal(data.allowedValuesFunction, expected || undefined);
+    });
+  }
+});
+
+function dataProviderAllowedValuesFunction() {
+  return [
+    ['a function name', 'social_event_type_allowed_values_function', 'social_event_type_allowed_values_function'],
+    ['an empty name', '', ''],
+    ['a blank name', '  ', ''],
+    ['a name that is not text', ['callback'], ''],
+    ['no key', undefined, ''],
+  ];
+}
+
 test('produces deterministic output', () => {
   assert.deepEqual(parseConfig(configMin).toArray(), parseConfig(configMin).toArray());
 });

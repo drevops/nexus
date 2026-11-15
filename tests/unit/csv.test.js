@@ -76,7 +76,7 @@ test('writes 1 row per bundle in outline order', () => {
 test('writes the description and counts fields hidden on the canvas', () => {
   assert.deepEqual(bundlesCsv(savedDocument).split('\r\n'), [
     'entity_type,bundle,label,description,fields,referenced_by,note',
-    'node,article,Article,Use <em>articles</em> for news.,3,0,Long-form content.',
+    'node,article,Article,Use <em>articles</em> for news.,4,0,Long-form content.',
     'taxonomy_term,tags,Tags,,0,1,',
   ]);
 });

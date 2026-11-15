@@ -134,6 +134,7 @@ export function documentToModel(doc) {
       builtField.description = settingText(field.description);
       builtField.defaultValue = settingText(field.defaultValue);
       builtField.allowedValues = allowedValueList(field.allowedValues);
+      builtField.allowedValuesFunction = settingText(field.allowedValuesFunction);
       builtField.translatable = typeof field.translatable === 'boolean' ? field.translatable : null;
       built.addField(builtField);
     });

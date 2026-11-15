@@ -2320,6 +2320,7 @@ function buildController(model, options = {}) {
           description: f.data('description') || '',
           defaultValue: f.data('defaultValue') || '',
           allowedValues: f.data('allowedValues') || [],
+          allowedValuesFunction: f.data('allowedValuesFunction') || '',
           translatable: typeof f.data('translatable') === 'boolean' ? f.data('translatable') : null,
         };
       });

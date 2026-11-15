@@ -119,6 +119,7 @@ function collectStorages(files, filenames) {
       cardinality: data.cardinality != null ? parseInt(data.cardinality, 10) : 1,
       targetType: settings.target_type != null ? String(settings.target_type) : null,
       allowedValues: allowedValueList(settings.allowed_values),
+      allowedValuesFunction: settingText(settings.allowed_values_function),
     };
   }
 
@@ -147,6 +148,7 @@ function addFieldInstance(model, data, storages, negated) {
     cardinality: 1,
     targetType: null,
     allowedValues: [],
+    allowedValuesFunction: '',
   };
 
   const fieldType = data.field_type != null ? String(data.field_type) : storage.type;
@@ -167,6 +169,7 @@ function addFieldInstance(model, data, storages, negated) {
   field.description = settingText(data.description);
   field.defaultValue = defaultValueText(data.default_value);
   field.allowedValues = storage.allowedValues;
+  field.allowedValuesFunction = storage.allowedValuesFunction;
   field.translatable = typeof data.translatable === 'boolean' ? data.translatable : null;
 
   entity.addField(field);

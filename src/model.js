@@ -178,6 +178,7 @@ export function fieldSettingsData(field) {
     ...(field.description ? { description: field.description } : {}),
     ...(field.defaultValue ? { defaultValue: field.defaultValue } : {}),
     ...(field.allowedValues && field.allowedValues.length ? { allowedValues: field.allowedValues.map((item) => ({ ...item })) } : {}),
+    ...(field.allowedValuesFunction ? { allowedValuesFunction: field.allowedValuesFunction } : {}),
     ...(typeof field.translatable === 'boolean' ? { translatable: field.translatable } : {}),
   };
 }
@@ -200,6 +201,7 @@ export class Field {
     this.description = '';
     this.defaultValue = '';
     this.allowedValues = [];
+    this.allowedValuesFunction = '';
     this.translatable = null;
   }
 

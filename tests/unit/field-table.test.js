@@ -182,6 +182,13 @@ function dataProviderSortColumn() {
       ['x', 'y', 'z'],
     ],
     [
+      'allowed values with a function by its name',
+      [['x', { allowedValues: [{ value: 'b', label: 'Beta' }] }], ['y', { allowedValuesFunction: 'icon_values' }], ['z']],
+      'allowedValues',
+      ['x', 'y', 'z'],
+      ['y', 'x', 'z'],
+    ],
+    [
       'translatability, with an unknown one as a blank',
       [['x', { translatable: false }], ['y'], ['z', { translatable: true }]],
       'translatable',
@@ -284,6 +291,12 @@ function dataProviderCellEditor() {
     ['the allowed values of an integer list field', { type: 'list_integer' }, 'allowedValues', 'multiline'],
     ['the allowed values of a text field that has some', { allowedValues: [{ value: 'a', label: 'A' }] }, 'allowedValues', 'multiline'],
     ['the allowed values of a text field', {}, 'allowedValues', null],
+    [
+      'the allowed values of a list field with an allowed values function',
+      { type: 'list_string', allowedValuesFunction: 'icon_values' },
+      'allowedValues',
+      null,
+    ],
     ['the translatability', {}, 'translatable', 'select'],
     ['the position', {}, 'position', null],
     ['an unknown column', {}, 'colour', null],

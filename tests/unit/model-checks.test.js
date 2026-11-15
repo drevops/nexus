@@ -62,7 +62,7 @@ function problem(rule, id, message) {
 test('lists each rule once with a level and a label', () => {
   assert.deepEqual(
     CHECK_RULES.map((rule) => rule.id),
-    ['reference-target', 'shared-storage', 'machine-name', 'duplicate-label', 'unreferenced-bundle', 'no-fields', 'list-values', 'field-limit'],
+    ['reference-target', 'shared-storage', 'machine-name', 'duplicate-label', 'unreferenced-paragraph', 'no-fields', 'list-values', 'field-limit'],
   );
 
   for (const rule of CHECK_RULES) {
@@ -251,19 +251,7 @@ function dataProviderProblems() {
         fieldOf(doc, 'article', 'field_body').fieldType = 'text_long';
         fieldOf(doc, 'article', 'field_body').targetType = null;
       },
-      [problem('unreferenced-bundle', 'paragraph.hero', 'No field references the paragraph type “Hero”')],
-    ],
-    [
-      'a media type and a block type no field references',
-      (doc) =>
-        doc.entities.push(
-          { entityType: 'media', bundle: 'image', label: 'Image', fields: [field('field_media_image', 'Image', 'image')] },
-          { entityType: 'block_content', bundle: 'basic', label: 'Basic block', fields: [field('body', 'Body', 'text_long')] },
-        ),
-      [
-        problem('unreferenced-bundle', 'media.image', 'No field references the media type “Image”'),
-        problem('unreferenced-bundle', 'block_content.basic', 'No field references the block type “Basic block”'),
-      ],
+      [problem('unreferenced-paragraph', 'paragraph.hero', 'No field references the paragraph type “Hero”')],
     ],
     [
       'a paragraph type that only references itself is still referenced',
@@ -272,25 +260,37 @@ function dataProviderProblems() {
       [],
     ],
     [
-      'a bundle with only base fields',
-      (doc) => (entity(doc, 'tags').fields = [field('name', 'Name', 'string', { kind: 'system' })]),
-      [problem('no-fields', 'taxonomy_term.tags', '“Tags” has no fields of its own')],
+      'a content type with only base fields',
+      (doc) => doc.entities.push({ entityType: 'node', bundle: 'page', label: 'Page', fields: [field('title', 'Title', 'string', { kind: 'system' })] }),
+      [problem('no-fields', 'node.page', '“Page” has no fields of its own')],
     ],
     [
-      'a bundle with no fields key, named by its bundle when it has no label',
+      'a paragraph type with no fields key, named by its bundle when it has no label',
       (doc) => {
-        delete entity(doc, 'tags').fields;
-        delete entity(doc, 'tags').label;
+        delete entity(doc, 'hero').fields;
+        delete entity(doc, 'hero').label;
       },
-      [problem('no-fields', 'taxonomy_term.tags', '“tags” has no fields of its own')],
+      [problem('no-fields', 'paragraph.hero', '“hero” has no fields of its own')],
     ],
     [
-      'a list field of each type with no allowed values',
+      'a media type and a block type with no fields',
+      (doc) =>
+        doc.entities.push(
+          { entityType: 'media', bundle: 'image', label: 'Image', fields: [] },
+          { entityType: 'block_content', bundle: 'basic', label: 'Basic block', fields: [field('info', 'Block description', 'string', { kind: 'system' })] },
+        ),
+      [
+        problem('no-fields', 'media.image', '“Image” has no fields of its own'),
+        problem('no-fields', 'block_content.basic', '“Basic block” has no fields of its own'),
+      ],
+    ],
+    [
+      'a list field of each type with no allowed values and no function name',
       (doc) =>
         entity(doc, 'tags').fields.push(
           field('field_size', 'Size', 'list_string'),
           field('field_rank', 'Rank', 'list_integer', { allowedValues: [] }),
-          field('field_weight', 'Weight', 'list_float'),
+          field('field_weight', 'Weight', 'list_float', { allowedValuesFunction: ' ' }),
         ),
       [
         problem('list-values', 'field:taxonomy_term.tags:field_size', 'field_size on “Tags” is a list with no allowed values'),
@@ -388,6 +388,26 @@ function dataProviderAllowed() {
     [
       'an entity type no field needs to reference',
       (doc) => doc.entities.push({ entityType: 'user', bundle: 'user', label: 'User', fields: [field('field_bio', 'Bio', 'text_long')] }),
+    ],
+    [
+      'a media type and a block type no field references',
+      (doc) =>
+        doc.entities.push(
+          { entityType: 'media', bundle: 'image', label: 'Image', fields: [field('field_media_image', 'Image', 'image')] },
+          { entityType: 'block_content', bundle: 'basic', label: 'Basic block', fields: [field('body', 'Body', 'text_long')] },
+        ),
+    ],
+    ['a vocabulary with only base fields', (doc) => (entity(doc, 'tags').fields = [field('name', 'Name', 'string', { kind: 'system' })])],
+    [
+      'a vocabulary, a user and a custom type with no fields key',
+      (doc) => {
+        delete entity(doc, 'tags').fields;
+        doc.entities.push({ entityType: 'user', bundle: 'user', label: 'User' }, { entityType: 'group', bundle: 'flexible_group', label: 'Flexible group' });
+      },
+    ],
+    [
+      'a list field whose allowed values come from a function',
+      (doc) => entity(doc, 'tags').fields.push(field('field_icon', 'Icon', 'list_string', { allowedValues: [], allowedValuesFunction: 'tags_icon_values' })),
     ],
   ];
 }

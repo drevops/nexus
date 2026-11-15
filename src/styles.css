@@ -99,7 +99,7 @@ body {
    window. */
 .toolbar__palette .toolbar__button {
   flex: 0 0 auto;
-  padding-inline: 0.5rem;
+  padding-inline: 0.4rem;
 }
 
 .toolbar__palette-label {
@@ -460,6 +460,13 @@ sl-button#zoom-level::part(base) {
 .toolbar__button.is-active {
   background: var(--accent);
   color: #fff;
+}
+
+.toolbar__button:disabled {
+  background: transparent;
+  color: var(--muted);
+  cursor: default;
+  opacity: 0.6;
 }
 
 /* Standalone buttons (outside a segmented group) keep an outline. */

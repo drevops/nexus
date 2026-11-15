@@ -8,7 +8,7 @@
  * with equal values keep their numbered order.
  */
 
-import { allowedValueLabels } from './field-settings.js';
+import { allowedValuesSummary } from './field-settings.js';
 import { KIND_CALCULATED, KIND_SYSTEM, REFERENCE_FIELD_TYPES } from './model.js';
 
 export const DEFAULT_SORT = { column: 'position', direction: 'ascending' };
@@ -32,7 +32,7 @@ const SORT_VALUES = {
   usedIn: (r) => r.usedIn.length || null,
   description: (r) => textValue(r.description),
   defaultValue: (r) => textValue(r.defaultValue),
-  allowedValues: (r) => textValue(allowedValueLabels(r.allowedValues).join(', ')),
+  allowedValues: (r) => textValue(allowedValuesSummary(r.allowedValues, r.allowedValuesFunction)),
   translatable: (r) => (r.translatable === null ? null : Number(!r.translatable)),
 };
 
@@ -114,11 +114,12 @@ const EDITORS = {
 };
 
 // Columns that edit only some fields. A system or calculated field's badge
-// stands for its kind, which a new cardinality would replace.
+// stands for its kind, which a new cardinality would replace. Drupal ignores
+// the allowed values of a field with an allowed values function.
 const EDITABLE_WHEN = {
   cardinality: (r) => r.kind !== KIND_SYSTEM && r.kind !== KIND_CALCULATED,
   references: (r) => REFERENCE_FIELD_TYPES.includes(r.type),
-  allowedValues: (r) => String(r.type).startsWith('list_') || r.allowedValues.length > 0,
+  allowedValues: (r) => !r.allowedValuesFunction && (String(r.type).startsWith('list_') || r.allowedValues.length > 0),
 };
 
 export const EDITABLE_COLUMNS = Object.keys(EDITORS);

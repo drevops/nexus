@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { TEMPLATES } from '../../src/templates.js';
 import { CHECK_DEFAULTS } from '../../src/model-checks.js';
-import { CHECKS_DOC, buildEntities, openDocument, openSettings, selectedNodes, slFill, waitForGraph, activeLevel, stepLevel } from './helpers.js';
+import { CHECKS_DOC, buildEntities, openDocument, openSettings, selectedNodes, slFill, tapNode, waitForGraph, activeLevel, stepLevel } from './helpers.js';
 
 const TAGS_FIELD = 'field:node.article:field_tags';
 
@@ -115,7 +115,7 @@ test.describe('Checks', { tag: '@runner-2' }, () => {
 
     await paragraphs.uncheck();
     await expect(hero).toHaveAttribute('aria-disabled', 'true');
-    await expect(hero).toHaveAttribute('title', 'Paragraph, media or block type no field references. Show its entity type to go to it');
+    await expect(hero).toHaveAttribute('title', 'Paragraph type no field references. Show its entity type to go to it');
     // Playwright clicks an aria-disabled button only when forced.
     await hero.click({ force: true });
     expect(await page.evaluate(() => window.__nexus.cy.elements('.faded').length)).toBe(0);
@@ -125,6 +125,28 @@ test.describe('Checks', { tag: '@runner-2' }, () => {
     await hero.click();
     await expect.poll(() => hasClass(page, 'paragraph.hero', 'faded')).toBe(false);
     expect(await hasClass(page, 'node.article', 'faded')).toBe(true);
+  });
+
+  test('takes the allowed values of a list field from its function', async ({ page }) => {
+    const doc = structuredClone(CHECKS_DOC);
+    doc.entities[0].fields[1].allowedValuesFunction = 'article_size_values';
+
+    await openChecks(page, doc);
+
+    expect(await listedProblems(page)).toEqual([
+      ['error', ['field_tags on “Article” references no entity']],
+      ['warning', ['No field references the paragraph type “Hero”']],
+    ]);
+
+    await page.click('#table-toggle');
+    const size = page.locator('#field-table tbody tr', { has: page.locator('code', { hasText: /^field_size$/ }) });
+    await expect(size.locator('td[data-column="allowedValues"]')).toHaveText('From article_size_values()');
+
+    await page.click('#mode-build');
+    await expect(size.locator('td[data-column="allowedValues"] [data-edit-cell]')).toHaveCount(0);
+    await tapNode(page, 'field:node.article:field_size');
+    await expect(page.locator('#inspector [data-allowed-values-function]')).toHaveText('From article_size_values()');
+    await expect(page.locator('#inspector [data-setting="allowedValues"]')).toHaveCount(0);
   });
 
   test('opens the Inspector on the node a problem is on in Edit mode', async ({ page }) => {

@@ -150,6 +150,10 @@
           "type": "array",
           "items": { "$ref": "#/$defs/allowedValue" }
         },
+        "allowedValuesFunction": {
+          "description": "The PHP function that returns a list field's allowed values in place of a fixed list.",
+          "type": "string"
+        },
         "translatable": { "description": "Whether the field's value can differ per language. Leave it out when the source doesn't say.", "type": "boolean" }
       },
       "allOf": [

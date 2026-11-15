@@ -13,7 +13,7 @@
  * skip them.
  */
 
-import { findEntityType } from './entity-types.js';
+import { settingText } from './field-settings.js';
 import { KIND_SYSTEM, REFERENCE_FIELD_TYPES, cardinalityLabel, entityNodeId, fieldNodeId } from './model.js';
 
 export const LEVEL_ERROR = 'error';
@@ -24,9 +24,9 @@ export const CHECK_RULES = Object.freeze([
   { id: 'shared-storage', level: LEVEL_ERROR, label: 'Field name with a different type or cardinality on 2 bundles of 1 entity type' },
   { id: 'machine-name', level: LEVEL_ERROR, label: "Machine name that breaks Drupal's pattern or length limit" },
   { id: 'duplicate-label', level: LEVEL_WARNING, label: '2 fields on 1 bundle with the same label' },
-  { id: 'unreferenced-bundle', level: LEVEL_WARNING, label: 'Paragraph, media or block type no field references' },
-  { id: 'no-fields', level: LEVEL_WARNING, label: 'Bundle with no fields of its own' },
-  { id: 'list-values', level: LEVEL_WARNING, label: 'List field with no allowed values' },
+  { id: 'unreferenced-paragraph', level: LEVEL_WARNING, label: 'Paragraph type no field references' },
+  { id: 'no-fields', level: LEVEL_WARNING, label: 'Content, paragraph, media or block type with no fields of its own' },
+  { id: 'list-values', level: LEVEL_WARNING, label: 'List field with no allowed values or allowed values function' },
   { id: 'field-limit', level: LEVEL_WARNING, label: 'Bundle with more fields than the field limit' },
 ]);
 
@@ -41,8 +41,14 @@ const NAME_PATTERN = /^[a-z0-9_]+$/;
 
 const ANY_BUNDLE = '*';
 
-// The entity types whose bundles exist only to be referenced.
-const REFERENCED_TYPES = ['paragraph', 'media', 'block_content'];
+// Blocks are placed and media embedded without a reference field, so only a
+// paragraph exists solely as a reference target.
+const REFERENCED_TYPE = 'paragraph';
+
+// Vocabularies and users keep their content in base fields, and a custom
+// type's base fields are unknown, so only these types need fields of their
+// own.
+const CONTENT_TYPES = Object.freeze(['node', 'paragraph', 'media', 'block_content']);
 
 const LIST_FIELD_TYPES = ['list_string', 'list_integer', 'list_float'];
 
@@ -235,7 +241,7 @@ function checkUnreferenced(entities, report) {
   }
 
   for (const entity of entities) {
-    if (!REFERENCED_TYPES.includes(entity.entityType)) {
+    if (entity.entityType !== REFERENCED_TYPE) {
       continue;
     }
 
@@ -245,12 +251,7 @@ function checkUnreferenced(entities, report) {
       continue;
     }
 
-    report(
-      'unreferenced-bundle',
-      null,
-      entity,
-      'No field references the ' + findEntityType(entity.entityType).label.toLowerCase() + ' type ' + entityName(entity),
-    );
+    report('unreferenced-paragraph', null, entity, 'No field references the paragraph type ' + entityName(entity));
   }
 }
 
@@ -258,7 +259,7 @@ function checkFieldCounts(entities, fieldLimit, report) {
   for (const entity of entities) {
     const count = ownFields(entity).length;
 
-    if (count === 0) {
+    if (count === 0 && CONTENT_TYPES.includes(entity.entityType)) {
       report('no-fields', null, entity, entityName(entity) + ' has no fields of its own');
     }
 
@@ -271,7 +272,7 @@ function checkFieldCounts(entities, fieldLimit, report) {
 function checkListValues(entities, report) {
   for (const entity of entities) {
     for (const field of entity.fields) {
-      if (LIST_FIELD_TYPES.includes(field.fieldType) && field.allowedValues.length === 0) {
+      if (LIST_FIELD_TYPES.includes(field.fieldType) && field.allowedValues.length === 0 && !field.allowedValuesFunction) {
         report('list-values', field, entity, fieldName(field, entity) + ' is a list with no allowed values');
       }
     }
@@ -296,6 +297,7 @@ function normalizeEntity(entity) {
       targetType: field.targetType,
       targetBundles: Array.isArray(field.targetBundles) ? field.targetBundles : [],
       allowedValues: Array.isArray(field.allowedValues) ? field.allowedValues : [],
+      allowedValuesFunction: settingText(field.allowedValuesFunction),
     })),
   };
 }
