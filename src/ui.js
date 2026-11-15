@@ -1090,7 +1090,7 @@ const CELL_CONTENT = {
   usedIn: (r) => (r.usedIn.length ? html`<span title=${usedInTitle(r.usedIn)}>${r.usedIn.length}</span>` : ''),
   description: (r) => richText(r.description),
   defaultValue: (r) => r.defaultValue,
-  allowedValues: (r) => allowedValuesSummary(r.allowedValues, r.allowedValuesFunction),
+  allowedValues: (r) => wrappable(allowedValuesSummary(r.allowedValues, r.allowedValuesFunction)),
   translatable: (r) => translatableMark(r.translatable),
 };
 
