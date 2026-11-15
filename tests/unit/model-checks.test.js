@@ -397,10 +397,7 @@ function dataProviderAllowed() {
           { entityType: 'block_content', bundle: 'basic', label: 'Basic block', fields: [field('body', 'Body', 'text_long')] },
         ),
     ],
-    [
-      'a vocabulary with only base fields',
-      (doc) => (entity(doc, 'tags').fields = [field('name', 'Name', 'string', { kind: 'system' })]),
-    ],
+    ['a vocabulary with only base fields', (doc) => (entity(doc, 'tags').fields = [field('name', 'Name', 'string', { kind: 'system' })])],
     [
       'a vocabulary, a user and a custom type with no fields key',
       (doc) => {
