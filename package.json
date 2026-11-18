@@ -47,7 +47,7 @@
         "fast-check": "^4.10.2",
         "globals": "^15.15.0",
         "marked": "^18.2.0",
-        "prettier": "^3.9.10"
+        "prettier": "^3.10.0"
     },
     "overrides": {
         "test-exclude": {
