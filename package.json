@@ -47,11 +47,11 @@
         "fast-check": "^4.10.2",
         "globals": "^15.15.0",
         "marked": "^18.2.0",
-        "prettier": "^3.10.0"
+        "prettier": "^3.10.1"
     },
     "overrides": {
         "test-exclude": {
-            "glob": "^14.0.4",
+            "glob": "^14.0.5",
             "minimatch": "^11.0.1"
         }
     },
