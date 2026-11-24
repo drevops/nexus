@@ -108,17 +108,17 @@ export const TEMPLATES = [
   {
     id: 'open-social',
     label: 'Open Social',
-    version: '13.1.0',
+    version: '14.0.0',
     summary: 'Community and intranet: topics, events, courses',
     icon: 'users',
     color: '#1f80aa',
     counts: { node: 8, taxonomy_term: 11, media: 1, paragraph: 20, block_content: 9, user: 1 },
-    size: 92141,
+    size: 93038,
     sources: [
       {
         name: 'Open Social',
         repo: 'https://github.com/goalgorilla/open_social.git',
-        ref: '13.1.0',
+        ref: '14.0.0',
         paths: [
           'modules/social_features/social_core/config/install',
           'modules/social_features/social_node/config/install',
