@@ -1,6 +1,6 @@
 {
   "nexus": 1,
-  "title": "Open Social 13.1.0",
+  "title": "Open Social 14.0.0",
   "colors": {},
   "symbols": {},
   "customTypes": [],
@@ -722,6 +722,20 @@
           "translatable": false
         },
         {
+          "name": "field_event_registration_url",
+          "label": "Registration link",
+          "fieldType": "link",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "description": "Members will register using the link above, their enrollment won't show on the event page",
+          "translatable": false
+        },
+        {
           "name": "field_event_send_confirmation",
           "label": "Send confirmation after standalone enrolment",
           "fieldType": "boolean",
@@ -763,6 +777,20 @@
             "event_types"
           ],
           "hidden": false,
+          "translatable": false
+        },
+        {
+          "name": "field_external_registration",
+          "label": "Use external registration",
+          "fieldType": "boolean",
+          "kind": "single",
+          "cardinality": 1,
+          "required": false,
+          "note": "",
+          "targetType": null,
+          "targetBundles": [],
+          "hidden": false,
+          "defaultValue": "0",
           "translatable": false
         },
         {
