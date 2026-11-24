@@ -46,7 +46,7 @@
         "eslint-config-prettier": "^9.1.2",
         "fast-check": "^4.10.2",
         "globals": "^15.15.0",
-        "marked": "^18.2.0",
+        "marked": "^18.2.1",
         "prettier": "^3.10.1"
     },
     "overrides": {
