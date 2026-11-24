@@ -72,7 +72,7 @@ export const TEMPLATES = [
   {
     id: 'umami',
     label: 'Umami',
-    version: '11.4.12',
+    version: '11.4.13',
     summary: 'Food magazine demo: recipes, articles, pages',
     icon: 'chef-hat',
     color: '#008068',
@@ -82,7 +82,7 @@ export const TEMPLATES = [
       {
         name: 'Umami',
         repo: 'https://git.drupalcode.org/project/drupal.git',
-        ref: '11.4.12',
+        ref: '11.4.13',
         paths: ['core/profiles/demo_umami/config/install'],
       },
     ],
