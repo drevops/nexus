@@ -34,7 +34,7 @@
         "reset": "rm -Rf node_modules"
     },
     "engines": {
-        "npm": ">=10.9.10",
+        "npm": ">=10.9.11",
         "node": ">=22.0.0"
     },
     "devDependencies": {
