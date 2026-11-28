@@ -28,7 +28,7 @@ export const TEMPLATES = [
       {
         name: 'Drupal core',
         repo: 'https://git.drupalcode.org/project/drupal.git',
-        ref: '11.4.13',
+        ref: '11.4.14',
         paths: [
           'core/recipes/document_media_type/config',
           'core/recipes/image_media_type/config',
